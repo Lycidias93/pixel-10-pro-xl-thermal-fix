@@ -46,6 +46,17 @@ This fork avoids blind patching. It changes only proven `PollingDelay=300000` `V
 
 In daily use, the intended difference is more responsive thermal skin-sensor polling. Selected `VIRTUAL-SKIN*` sensors are checked every `5000ms` instead of every `300000ms`, so Android can notice relevant skin/thermal changes sooner during charging, navigation, camera use, gaming, hotspot use or other sustained loads. This is not an overclock, benchmark unlock, cooling bypass or guaranteed FPS tweak. The stock thermal policy remains in charge.
 
+<!-- README_CREDITS_UNIVERSAL_20260601_START -->
+## Credits
+
+- Original thermal polling fix idea and upstream inspiration: `marx161`. The module metadata intentionally keeps the upstream credit as `based on marx161`.
+- Pixel 10-series fork, Mustang controlled bisect, profile materialization fix, runtime verification and public release packaging: [Lycidias93](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix).
+- External bootloop safety during testing: [AshLooper](https://github.com/RipperHybrid/AshLooper) by RipperHybrid. AshLooper is not bundled and not required by the ZIP itself, but it is strongly recommended while testing ports, universal prereleases or new firmware.
+- Future Pixel 10 Pro / `blazer` testers should be credited only after a real install, reboot, mount and ThermalHAL verification report is available.
+
+AshLooper should stay outside the module and this module should not be added to the AshLooper whitelist, so AshLooper can still protect against a bad boot.
+<!-- README_CREDITS_UNIVERSAL_20260601_END -->
+
 ## Supported profiles
 
 ### Stable verified
