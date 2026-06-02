@@ -133,3 +133,40 @@
 
 - Initial Pixel 10 Pro XL / `mustang` port.
 - Narrowed to `VIRTUAL-SKIN*` semantic changes.
+
+<!-- UNIVERSAL_FIRST_V141_RC1_START -->
+## 1.4.1-universal.1-rc1
+Added:
+- Universal-first release identity and installer flow.
+- Install-time profile materialization for `mustang` and `blazer`.
+- `install-state.txt` with selected profile/build/runtime model.
+- Read-only post-boot `health.log` for support/verification.
+- Release-scope and verify docs under `docs/`.
+
+Changed:
+- Public release naming moves from Pixel 10 Pro XL-only wording to Pixel 10-series universal wording.
+- `module.prop` name/description updated while keeping stable module ID.
+
+Not changed:
+- No polling values changed by this release.
+- No stable `update.json` rollout in this RC build step.
+- No service bind mount model.
+- No live runtime text patching.
+- No generic Tensor compatibility claim.
+
+Credits:
+- Keeps `marx161`, `Lycidias93`, AshLooper/RipperHybrid and future Blazer tester credits.
+- Adds `teoweed` / `teozazaa` as external Tensor thermal tweak analysis inspiration only; no code or values reused.
+<!-- UNIVERSAL_FIRST_V141_RC1_END -->
+
+<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1-rc1_START -->
+## 1.4.1-universal.1-rc1 - Universal-first RC
+
+- Converted the release candidate to a universal-first package identity while keeping the existing module ID stable.
+- Added install-time profile materialization for supported Pixel 10 profiles.
+- Added read-only post-boot health evidence.
+- No polling values are changed by this release candidate.
+- No bind-mount model is used.
+- No live text patching is used.
+- Credits: `teoweed / teozazaa` is credited for external Tensor thermal tweak analysis inspiration only; no code, values, service model or text patching model was reused.
+<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1-rc1_END -->

@@ -1,34 +1,33 @@
 #!/system/bin/sh
-MODDIR=${0%/*}
-GUARDDIR="$MODDIR/guard"
-LOG="$GUARDDIR/bootguard.log"
-mkdir -p "$GUARDDIR"
+MODDIR="${0%/*}"
+LOG="$MODDIR/health.log"
 
-log_line() {
-  echo "$(date -Is 2>/dev/null || date) $*" >> "$LOG"
-}
-
-i=0
-while [ "$i" -lt 240 ]; do
-  if [ "$(getprop sys.boot_completed 2>/dev/null)" = "1" ]; then
-    rm -f "$GUARDDIR/pending_boot" "$GUARDDIR/fail_count"
-    date -Is > "$GUARDDIR/last_boot_ok" 2>/dev/null || date > "$GUARDDIR/last_boot_ok"
-    log_line "BOOT_COMPLETED passive_guard_ok"
-    break
-  fi
-  i=$((i + 1))
-  sleep 1
+until [ "$(getprop sys.boot_completed)" = "1" ]; do
+  sleep 2
 done
-
-if [ "$(getprop sys.boot_completed 2>/dev/null)" != "1" ]; then
-  log_line "BOOT_COMPLETED_TIMEOUT passive_no_self_disable waited=${i}s"
-fi
+sleep 20
 
 {
-  echo "timestamp=$(date -Is 2>/dev/null || date)"
-  echo "device=$(getprop ro.product.device 2>/dev/null)"
-  echo "android=$(getprop ro.build.version.release 2>/dev/null)"
-  echo "fingerprint=$(getprop ro.build.fingerprint 2>/dev/null)"
-  echo "scope=thermal_info_config_throttling.json:all_8_vskin;thermal_info_config.json:VIRTUAL-SKIN-SPEAKER;thermal_info_config_charge.json:VIRTUAL-SKIN-CHARGE-WIRED,VIRTUAL-SKIN-CHARGE-PERSIST"
-  grep -A20 -B5 "VIRTUAL-SKIN-CPU-LIGHT-ODPM" /vendor/etc/thermal_info_config_throttling.json 2>/dev/null | grep -E "Name|PollingDelay" || true
-} > "$GUARDDIR/last_verify.txt"
+  echo "timestamp=$(date +%s 2>/dev/null || echo unknown)"
+  echo "module_dir=$MODDIR"
+  echo "== module =="
+  grep -E "^(id|name|version|versionCode|description|updateJson)=" "$MODDIR/module.prop" 2>/dev/null || true
+  echo "== install-state =="
+  cat "$MODDIR/install-state.txt" 2>/dev/null || echo "install_state=missing"
+  echo "== flags =="
+  [ ! -e "$MODDIR/disable" ] && echo "disable=absent" || echo "disable=present"
+  [ ! -e "$MODDIR/skip_mount" ] && echo "skip_mount=absent" || echo "skip_mount=present"
+  echo "== mounts =="
+  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
+    if grep -F "$MODDIR/system/vendor/etc/$f" /proc/self/mountinfo >/dev/null 2>&1; then
+      echo "mount=present:$f"
+    else
+      echo "mount=absent:$f"
+    fi
+  done
+  echo "== tombstone quick check =="
+  ls -t /data/tombstones/tombstone_* 2>/dev/null | head -5 | while read -r t; do
+    grep -l -i "thermal" "$t" 2>/dev/null || true
+  done
+  echo "health_log_model=read_only_no_runtime_patch"
+} > "$LOG" 2>&1

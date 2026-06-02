@@ -340,3 +340,33 @@ If the device cannot boot normally, use your external bootloop protection layer 
 - Blazer remains beta until first live install, reboot, mount and ThermalHAL verification.
 - Historical builds are kept for audit and rollback context, but should not be preferred for normal installation.
 - Full release history belongs in `CHANGELOG.md`, not in this README.
+
+<!-- UNIVERSAL_FIRST_V141_RC1_START -->
+## Universal-first release candidate
+- Version: `1.4.1-universal.1-rc1` / `1014101`
+- Release model: universal-first manual RC candidate.
+- Stable module ID remains `pixel-10-pro-xl-thermal-fix` for migration safety.
+- Mustang remains the verified profile.
+- Blazer remains beta/pending live verification.
+- No thermal polling values are changed by this support/verification release.
+- No `service.sh` bind mount model and no live runtime text patching are used.
+- Adds install-time `install-state.txt` and read-only post-boot `health.log`.
+
+Credits:
+- `marx161` remains credited for the original thermal polling idea.
+- `teoweed` / `teozazaa` is credited as external Tensor thermal tweak analysis inspiration only. No code, bind-mount model, live runtime text patching, or polling values are reused.
+<!-- UNIVERSAL_FIRST_V141_RC1_END -->
+
+<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1-rc1_START -->
+## Universal-first RC scope
+
+This release candidate changes the release model and support/verification evidence only.
+
+- No polling values are changed by this release candidate.
+- No bind-mount model is used.
+- No live text patching is used.
+- The active Magisk overlay is materialized at install time from the selected device profile.
+- `mustang` remains the verified profile.
+- `blazer` remains beta/pending until a real install, reboot, mount and ThermalHAL report is available.
+- Credits include `marx161`, `teoweed / teozazaa`, RipperHybrid/AshLooper and Lycidias93, with `teoweed / teozazaa` credited for external analysis inspiration only.
+<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1-rc1_END -->

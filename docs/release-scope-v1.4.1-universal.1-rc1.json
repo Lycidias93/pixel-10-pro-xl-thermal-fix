@@ -1,0 +1,17 @@
+{
+  "balanced_profile": false,
+  "bind_mount_model": false,
+  "credits": {
+    "Lycidias93": "Pixel 10-series fork, profile materialization, verification and packaging",
+    "RipperHybrid_AshLooper": "external non-bundled bootloop safety during testing",
+    "marx161": "original thermal polling fix idea and upstream inspiration",
+    "teoweed_teozazaa": "external Tensor thermal tweak analysis inspiration only; no code or values reused"
+  },
+  "live_text_patching": false,
+  "polling_value_change": false,
+  "release_model": "universal-first-rc",
+  "runtime_patch_model": false,
+  "update_json_change": false,
+  "version": "1.4.1-universal.1-rc1",
+  "versionCode": 1014101
+}
