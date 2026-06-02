@@ -352,9 +352,9 @@ If the device cannot boot normally, use your external bootloop protection layer 
 - Full release history belongs in `CHANGELOG.md`, not in this README.
 
 <!-- UNIVERSAL_FIRST_V141_RC1_START -->
-## Universal-first release candidate
+## Universal-first release
 - Version: `1.4.1-universal.1` / `1014101`
-- Release model: universal-first manual release candidate.
+- Release model: universal-first manual release.
 - Stable module ID remains `pixel-10-pro-xl-thermal-fix` for migration safety.
 - Mustang remains the verified profile.
 - Blazer remains beta/pending live verification.
@@ -370,9 +370,9 @@ Credits:
 <!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1_START -->
 ## Universal-first release scope
 
-This release candidate changes the release model and support/verification evidence only.
+This release changes the release model and support/verification evidence only.
 
-- No polling values are changed by this release candidate.
+- No polling values are changed by this release.
 - No bind-mount model is used.
 - No live text patching is used.
 - The active Magisk overlay is materialized at install time from the selected device profile.
@@ -382,12 +382,11 @@ This release candidate changes the release model and support/verification eviden
 <!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1_END -->
 
 <!-- UNIVERSAL_FINAL_STATUS_20260602_START -->
-## Universal final status
+## Universal-first final status
 
-- Version: `1.4.1-universal.1`.
-- No polling-value changes in this release.
-- Mustang verified profile remains the stable verified path.
-- Blazer beta profile remains included for manual tester verification.
-- read-only health logging only; no runtime patching.
-- External inspiration boundary: teoweed / teozazaa analysis only; no code reuse; no value reuse; no service.sh bind-mount model reuse; no live text patching model reuse.
+- Mustang verified.
+- Blazer beta/pending.
+- No polling values changed by this release.
+- External teoweed / teozazaa analysis credit is inspiration only: no code reuse, no value reuse, no service.sh bind-mount model reuse, and no live text patching.
+- Runtime model: install-time profile materialization only; no bind mount and no runtime text patching.
 <!-- UNIVERSAL_FINAL_STATUS_20260602_END -->

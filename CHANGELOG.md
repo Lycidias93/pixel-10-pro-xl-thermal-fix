@@ -162,10 +162,10 @@ Credits:
 <!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1_START -->
 ## 1.4.1-universal.1 - Universal-first release
 
-- Converted the release candidate to a universal-first package identity while keeping the existing module ID stable.
+- Converted the release to a universal-first package identity while keeping the existing module ID stable.
 - Added install-time profile materialization for supported Pixel 10 profiles.
 - Added read-only post-boot health evidence.
-- No polling values are changed by this release candidate.
+- No polling values are changed by this release.
 - No bind-mount model is used.
 - No live text patching is used.
 - Credits: `teoweed / teozazaa` is credited for external Tensor thermal tweak analysis inspiration only; no code, values, service model or text patching model was reused.
@@ -179,3 +179,28 @@ Credits:
 - No update.json change in the candidate build step.
 - Added explicit external inspiration boundary for teoweed / teozazaa: no code reuse, no value reuse, no bind-mount model reuse, no live text patching model reuse.
 - Universal final status markers: No polling-value changes; Mustang verified; Blazer beta; read-only health; no code reuse; no value reuse.
+
+## External inspiration boundary
+
+- External Tensor thermal tweak by teoweed / teozazaa was used for analysis inspiration only.
+- no code reuse
+- no value reuse
+- no service.sh bind-mount model reuse
+- no live text patching model reuse
+
+## Universal final status
+
+- Mustang verified
+- Blazer beta/pending
+- No polling values changed by this release
+- updateJson remains on the stable main channel until release publish.
+
+<!-- UNIVERSAL_FINAL_STATUS_20260602_START -->
+## Universal-first final status
+
+- Mustang verified.
+- Blazer beta/pending.
+- No polling values changed by this release.
+- External teoweed / teozazaa analysis credit is inspiration only: no code reuse, no value reuse, no service.sh bind-mount model reuse, and no live text patching.
+- Runtime model: install-time profile materialization only; no bind mount and no runtime text patching.
+<!-- UNIVERSAL_FINAL_STATUS_20260602_END -->

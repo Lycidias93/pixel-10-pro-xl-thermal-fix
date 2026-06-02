@@ -1,12 +1,12 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.1-universal.1-rc1"
+MODULE_VERSION="1.4.1-universal.1"
 MODULE_VERSION_CODE="1014101"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal-first RC"
+ui_print "  Universal-first release"
 ui_print "----------------------------------------"
 ui_print "Running install-time profile guard"
 
@@ -104,6 +104,6 @@ update_json_channel=stable_main_update_json
 EOF
 
 ui_print "Target guard PASS"
-ui_print "Universal-first RC: mustang verified, blazer beta/pending"
+ui_print "Universal-first release: Mustang verified; Blazer beta/pending"
 ui_print "No polling values changed by this release"
 ui_print "No bind mounts, no runtime text patching"
