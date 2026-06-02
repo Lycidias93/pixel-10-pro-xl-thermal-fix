@@ -452,3 +452,15 @@ Android 17 must use a separate factory evidence dump and separate profile set. D
 - Android 17 is blocked and requires separate factory evidence/profile files.
 - `update.json` remains on stable `v1.4.1-universal.1`.
 <!-- RELEASE_v1.4.2-universal-test.1_SUMMARY_END -->
+
+<!-- RELEASE_v1.4.2-universal-test.1_MUSTANG_PASS_START -->
+## v1.4.2-universal-test.1 Mustang post-reboot PASS
+
+`v1.4.2-universal-test.1` has passed post-reboot verification on Mustang / Pixel 10 Pro XL.
+
+- Release type: pre-release.
+- ZIP SHA-256: `69d2e5d9feb541996424f63a75d3d90dee1951290bd1330ba50b720331f982ae`.
+- Stable update channel unchanged: `v1.4.1-universal.1`.
+- `frankel`, `blazer`, and `rango` remain beta/pending live verification.
+- Android 17 remains blocked pending separate factory evidence/profile files.
+<!-- RELEASE_v1.4.2-universal-test.1_MUSTANG_PASS_END -->

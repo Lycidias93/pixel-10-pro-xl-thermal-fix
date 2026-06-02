@@ -1,4 +1,6 @@
-## v1.4.2-universal-test.1 - 2026-06-02
+## v1.4.2-universal-test.1
+
+- Documented Mustang post-reboot PASS for `v1.4.2-universal-test.1`; stable `update.json` remains unchanged and additional devices remain beta/pending. - 2026-06-02
 
 - Pre-release build for Android 16-only Pixel 10-series profile expansion.
 - Adds `frankel`, `blazer`, and `rango` install-time beta/pending profile support.

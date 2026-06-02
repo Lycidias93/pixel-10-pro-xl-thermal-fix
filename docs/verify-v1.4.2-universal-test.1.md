@@ -46,3 +46,28 @@ module install without active profile materialization
 runtime bind mount
 runtime text patching
 ```
+
+<!-- MUSTANG_POST_REBOOT_PASS_20260602_START -->
+## Mustang post-reboot PASS
+
+Verified after flash and reboot on Mustang / Pixel 10 Pro XL.
+
+```text
+module_version=1.4.2-universal-test.1
+module_version_code=1014201
+device=mustang
+profile=mustang
+profile_state=verified
+build_state=verified_build
+android_guard=android16_pass
+fingerprint_android_guard=fingerprint_android16_pass
+profile_source_android=16
+profile_source_build=CP1A.260505.005
+profile_materialized=yes
+active_overlay_dir=system/vendor/etc
+bind_mount_model=no
+live_runtime_text_patch_model=no
+```
+
+Result: `PASS`.
+<!-- MUSTANG_POST_REBOOT_PASS_20260602_END -->
