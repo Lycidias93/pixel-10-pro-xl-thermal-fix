@@ -59,3 +59,19 @@ Invariant:
    - Symptom: `update.json` points to a tag before ZIP/SHA assets exist.
    - Rule: release asset first, update channel last.
 <!-- PIXEL10_ANDROID16_MINIMAL_POLLING_FAILURES_20260602_END -->
+
+<!-- ANDROID17_PROFILE_REUSE_FAILURE_20260602_START -->
+## Android 17 profile reuse failure pattern
+
+Scope: Pixel 10 thermal profile sets.
+
+Failure pattern:
+- Android 16 factory thermal JSON files are reused on Android 17.
+- The module installs without checking `ro.build.version.release` or fingerprint Android major.
+- Result can be wrong sensor definitions, changed virtual-skin maps, ThermalHAL instability, or ineffective overlay behavior.
+
+Rule:
+- Android 16 profiles must hard-abort on non-Android-16 devices.
+- Android 17 needs a separate factory image dump, separate profile set, and separate live verification.
+- Do not infer Android 17 `VIRTUAL-SKIN` maps from Android 16 profiles.
+<!-- ANDROID17_PROFILE_REUSE_FAILURE_20260602_END -->

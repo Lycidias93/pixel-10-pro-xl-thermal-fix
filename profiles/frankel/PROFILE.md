@@ -4,6 +4,7 @@
 - Source basis: Google factory image thermal JSON evidence.
 - Profile transform: minimal VIRTUAL-SKIN polling delay overlay.
 - Profile state: `beta/pending` until live owner install and post-reboot verify.
+- Android scope: Android 16 only; Android 17 requires a separate factory evidence/profile set.
 - Factory image SHA-256: `7e12c8607a7af176ec7233f4df4609f2f2eae53e0ae818547b9aade07255d1d3`
 - VIRTUAL-SKIN total from evidence: `44`
 - Only allowed `PollingDelay` / `PollingDelayMs` fields are set to `5000`.

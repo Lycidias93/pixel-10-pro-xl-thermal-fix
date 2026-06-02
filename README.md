@@ -426,3 +426,18 @@ Guardrails:
 - Factory evidence is not a live-device verification.
 - New devices remain beta/pending until owner install and post-reboot verification are green.
 <!-- PIXEL10_ANDROID16_MINIMAL_POLLING_20260602_END -->
+
+<!-- PIXEL10_ANDROID16_INSTALL_GUARD_20260602_START -->
+## Android version/profile guard
+
+This module profile set is Android 16 only.
+
+Install-time guard behavior:
+- aborts when `ro.build.version.release` is not Android 16,
+- aborts when the build fingerprint does not identify Android 16,
+- records `profile_source_android=16` and `profile_source_build=CP1A.260505.005` in `install-state.txt`,
+- treats `frankel`, `blazer`, and `rango` as beta/pending live verification,
+- keeps `mustang` as the only stable/live-verified profile.
+
+Android 17 must use a separate factory evidence dump and separate profile set. Do not reuse Android 16 thermal files for Android 17.
+<!-- PIXEL10_ANDROID16_INSTALL_GUARD_20260602_END -->
