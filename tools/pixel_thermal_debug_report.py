@@ -10,7 +10,7 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 THERMAL_FILES = [
     "/vendor/etc/thermal_info_config_throttling.json",
     "/vendor/etc/thermal_info_config.json",
@@ -31,7 +31,7 @@ PRIVATE_PATTERNS = [
     re.compile(r"\b\d{15,17}\b"),
     re.compile(r"@gmail\.com", re.I),
     re.compile(r"@googlemail\.com", re.I),
-    re.compile(r"account", re.I),
+    re.compile(r"\b(account_name|account_email|account_id|accounts\.google\.com)\b", re.I),
     re.compile(r"android_id", re.I),
     re.compile(r"serialno", re.I),
     re.compile(r"password", re.I),
@@ -76,33 +76,103 @@ def choose_out_dir(cli_out_dir):
             continue
     raise SystemExit("No writable output directory found")
 
+
+def fs_status(path):
+    try:
+        exists = path.exists()
+    except PermissionError as exc:
+        return {"exists": None, "readable": False, "error": f"permission_denied: {exc}"}
+    except OSError as exc:
+        return {"exists": None, "readable": False, "error": f"os_error: {exc}"}
+    return {"exists": bool(exists), "readable": True, "error": None}
+
+
+def read_text_safe(path):
+    try:
+        return path.read_text(errors="replace"), None
+    except PermissionError as exc:
+        return "", f"permission_denied: {exc}"
+    except OSError as exc:
+        return "", f"os_error: {exc}"
+
+
+def stat_safe(path):
+    try:
+        return path.stat(), None
+    except PermissionError as exc:
+        return None, f"permission_denied: {exc}"
+    except OSError as exc:
+        return None, f"os_error: {exc}"
+
+
+def copy2_safe(src, dst):
+    try:
+        shutil.copy2(src, dst)
+        return None
+    except PermissionError as exc:
+        return f"permission_denied: {exc}"
+    except OSError as exc:
+        return f"os_error: {exc}"
+
 def module_state():
     mod = Path("/data/adb/modules/pixel-10-pro-xl-thermal-fix")
+    mod_fs = fs_status(mod)
     state = {
         "module_path": str(mod),
-        "installed": mod.exists(),
-        "disable_present": (mod / "disable").exists(),
-        "skip_mount_present": (mod / "skip_mount").exists(),
+        "module_path_readable": mod_fs["readable"],
+        "module_path_error": mod_fs["error"],
+        "installed": bool(mod_fs["exists"]),
+        "disable_present": None,
+        "skip_mount_present": None,
         "module_prop": {},
+        "module_prop_error": None,
         "warning": None,
     }
+    if mod_fs["error"]:
+        state["warning"] = "Module path is not readable from this shell. The report can continue, but module active/disabled state may require running the report through su."
+        return state
+    if not mod_fs["exists"]:
+        return state
+
+    disable_fs = fs_status(mod / "disable")
+    skip_fs = fs_status(mod / "skip_mount")
+    state["disable_present"] = bool(disable_fs["exists"])
+    state["skip_mount_present"] = bool(skip_fs["exists"])
+    if disable_fs["error"] or skip_fs["error"]:
+        state["module_prop_error"] = disable_fs["error"] or skip_fs["error"]
+
     prop = mod / "module.prop"
-    if prop.exists():
-        for line in prop.read_text(errors="replace").splitlines():
-            if "=" in line:
-                k, v = line.split("=", 1)
-                if k in {"id", "version", "versionCode", "description"}:
-                    state["module_prop"][k] = v
-    if state["installed"] and not state["disable_present"] and not state["skip_mount_present"]:
+    prop_fs = fs_status(prop)
+    if prop_fs["exists"]:
+        prop_text, prop_error = read_text_safe(prop)
+        state["module_prop_error"] = prop_error
+        if not prop_error:
+            for line in prop_text.splitlines():
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    if k in {"id", "version", "versionCode", "description", "updateJson"}:
+                        state["module_prop"][k] = v
+    elif prop_fs["error"]:
+        state["module_prop_error"] = prop_fs["error"]
+
+    if state["installed"] and state["disable_present"] is False and state["skip_mount_present"] is False:
         state["warning"] = "The module appears active. /vendor thermal files may be Magisk overlays. For adaptation, disable/remove the module and reboot before creating a stock report."
     return state
 
 def ashlooper_state():
     lines = []
     for p in [Path("/data/adb/modules/AshLooper/settings.prop"), Path("/data/adb/modules/AshLooper/module.prop")]:
-        if not p.exists():
+        p_fs = fs_status(p)
+        if p_fs["error"]:
+            lines.append(f"{p}: unreadable={p_fs['error']}")
             continue
-        for line in p.read_text(errors="replace").splitlines():
+        if not p_fs["exists"]:
+            continue
+        text, error = read_text_safe(p)
+        if error:
+            lines.append(f"{p}: unreadable={error}")
+            continue
+        for line in text.splitlines():
             if re.match(r"^(loops|disable|threshold|boot|whitelist|id|version|versionCode)=", line):
                 lines.append(f"{p}: {line}")
     return lines
@@ -114,21 +184,31 @@ def collect_thermal(workdir):
     rows = []
     for src in THERMAL_FILES:
         p = Path(src)
-        info = {"path": src, "exists": p.exists()}
-        if not p.exists():
+        p_fs = fs_status(p)
+        info = {"path": src, "exists": bool(p_fs["exists"]), "readable": p_fs["readable"], "error": p_fs["error"]}
+        if p_fs["error"] or not p_fs["exists"]:
             infos.append(info)
             continue
         dst = thermal_dir / p.name
-        shutil.copy2(p, dst)
-        st = p.stat()
-        info.update({"bytes": st.st_size, "mtime_epoch": int(st.st_mtime), "sha256": sha256_path(p), "copied_as": str(Path("thermal_files") / dst.name)})
+        copy_error = copy2_safe(p, dst)
+        st, stat_error = stat_safe(p)
+        if copy_error:
+            info["copy_error"] = copy_error
+        if stat_error:
+            info["stat_error"] = stat_error
+        if st is not None:
+            info.update({"bytes": st.st_size, "mtime_epoch": int(st.st_mtime), "sha256": sha256_path(p) if not copy_error else None, "copied_as": str(Path("thermal_files") / dst.name) if not copy_error else None})
         try:
-            data = json.loads(p.read_text(errors="replace"))
-            for idx, sensor in enumerate(data.get("Sensors", [])):
-                if isinstance(sensor, dict) and isinstance(sensor.get("Name"), str) and sensor["Name"].startswith("VIRTUAL-SKIN"):
-                    polling = sensor.get("PollingDelay")
-                    rows.append({"file": src, "sensor_index": idx, "name": sensor["Name"], "polling_delay": polling, "candidate_300000": polling == 300000, "currently_5000": polling == 5000})
-            info["json_parse"] = "pass"
+            file_text, read_error = read_text_safe(p)
+            if read_error:
+                info["json_parse"] = f"fail: {read_error}"
+            else:
+                data = json.loads(file_text)
+                for idx, sensor in enumerate(data.get("Sensors", [])):
+                    if isinstance(sensor, dict) and isinstance(sensor.get("Name"), str) and sensor["Name"].startswith("VIRTUAL-SKIN"):
+                        polling = sensor.get("PollingDelay")
+                        rows.append({"file": src, "sensor_index": idx, "name": sensor["Name"], "polling_delay": polling, "candidate_300000": polling == 300000, "currently_5000": polling == 5000})
+                info["json_parse"] = "pass"
         except Exception as exc:
             info["json_parse"] = f"fail: {exc}"
         infos.append(info)
@@ -137,9 +217,12 @@ def collect_thermal(workdir):
 def sanitizer(paths):
     hits = []
     for path in paths:
-        if not path.exists() or path.suffix.lower() not in {".json", ".csv", ".txt", ".md"}:
+        p_fs = fs_status(path)
+        if p_fs["error"] or not p_fs["exists"] or path.suffix.lower() not in {".json", ".csv", ".txt", ".md"}:
             continue
-        text = path.read_text(errors="replace")
+        text, error = read_text_safe(path)
+        if error:
+            continue
         for pat in PRIVATE_PATTERNS:
             if pat.search(text):
                 hits.append({"file": path.name, "pattern": pat.pattern})

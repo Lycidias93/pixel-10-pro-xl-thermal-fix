@@ -278,6 +278,13 @@ The selected `VIRTUAL-SKIN*` targets should show `PollingDelay=5000`, null/missi
 
 ## Compatibility report for new firmware or other Pixel 10 devices
 
+<!-- DEBUG_REPORT_PERMISSION_DENIED_FIX_20260602_START -->
+### Debug report PermissionError note
+
+If the public debug report script fails with `PermissionError` while checking `/data/adb/modules/...`, download the current script from `main` again. The tool is expected to record restricted module-state access as `permission_denied` and still create the sanitized report. If you specifically need module-state details, run the script via root from Termux.
+<!-- DEBUG_REPORT_PERMISSION_DENIED_FIX_20260602_END -->
+
+
 Use this before requesting support for newer firmware or another Pixel 10-series device.
 
 The command does not patch anything. It creates a sanitized ZIP with selected device identity, build fingerprint, thermal config hashes and the `VIRTUAL-SKIN*` `PollingDelay` map.
@@ -307,6 +314,14 @@ Upload the generated ZIP to the GitHub issue or XDA post.
 Do not request support with only a marketing device name. Device codename, fingerprint and thermal files can change between firmwares.
 
 If this module is installed and active, disable/remove it and reboot before creating an adaptation report. Otherwise `/vendor` may show Magisk overlays instead of stock thermal files.
+
+<!-- DEBUG_REPORT_PERMISSION_FIX_20260602_START -->
+[B]Permission note:[/B] On some Android/userdebug/root setups, a normal Termux shell may not be allowed to stat `/data/adb/modules/...`. The debug report tool now records that as `permission_denied` instead of crashing. If you want module-state details too, run the report through root:
+
+```sh
+su -c '/data/data/com.termux/files/usr/bin/python3 /data/data/com.termux/files/home/pixel_thermal_debug_report.py'
+```
+<!-- DEBUG_REPORT_PERMISSION_FIX_20260602_END -->
 
 ## Support matrix
 

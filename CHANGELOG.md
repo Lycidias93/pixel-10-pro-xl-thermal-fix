@@ -1,3 +1,22 @@
+<!-- DEBUG_REPORT_PERMISSION_DENIED_FIX_20260602_START -->
+## Debug report PermissionError fix - 2026-06-02
+
+- Fixed the public thermal debug report tool so restricted `/data/adb/modules/...` access does not abort report generation.
+- Narrowed the privacy sanitizer account pattern to avoid false positives on the report's own `accounts_collected=false` metadata and README wording.
+- Runtime thermal profiles, release ZIPs, updateJson and stable channel are unchanged.
+
+<!-- DEBUG_REPORT_PERMISSION_DENIED_FIX_20260602_END -->
+
+<!-- DEBUG_REPORT_PERMISSION_FIX_20260602_START -->
+## Debug report tool - permission handling
+
+- Online `tools/pixel_thermal_debug_report.py` now tolerates `PermissionError` on `/data/adb/modules/...`.
+- Module-state collection records `module_path_readable=false` and `module_path_error=permission_denied` instead of aborting.
+- Thermal file, AshLooper and sanitizer reads now use guarded filesystem helpers.
+- No runtime thermal profile, ZIP asset, release channel or `updateJson` change.
+
+<!-- DEBUG_REPORT_PERMISSION_FIX_20260602_END -->
+
 ## v1.3-mustang.15
 
 - Stable Mustang tooling/support release.
