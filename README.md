@@ -405,3 +405,24 @@ This release changes the release model and support/verification evidence only.
 - External teoweed / teozazaa analysis credit is inspiration only: no code reuse, no value reuse, no service.sh bind-mount model reuse, and no live text patching.
 - Runtime model: install-time profile materialization only; no bind mount and no runtime text patching.
 <!-- UNIVERSAL_FINAL_STATUS_20260602_END -->
+
+<!-- PIXEL10_ANDROID16_MINIMAL_POLLING_20260602_START -->
+## Pixel 10 Android 16 minimal polling profiles
+
+Factory-based minimal polling profiles are staged for additional Pixel 10 devices on build `CP1A.260505.005`:
+
+| Device | Codename | Profile state |
+|---|---|---|
+| Pixel 10 | `frankel` | beta/pending |
+| Pixel 10 Pro | `blazer` | beta/pending |
+| Pixel 10 Pro Fold | `rango` | beta/pending |
+| Pixel 10 Pro XL | `mustang` | stable/live verified |
+
+The additional profiles are generated from factory thermal JSON evidence and change only allowed `VIRTUAL-SKIN` polling-delay fields to `5000`.
+
+Guardrails:
+- No CPU cdev, PIDInfo, threshold, frequency, power-rail, or non-polling fields are ported from existing tuned profiles.
+- `blazer` no longer acts as a source template for other devices.
+- Factory evidence is not a live-device verification.
+- New devices remain beta/pending until owner install and post-reboot verification are green.
+<!-- PIXEL10_ANDROID16_MINIMAL_POLLING_20260602_END -->

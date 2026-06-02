@@ -38,26 +38,55 @@
       "VirtualSensor": true,
       "Formula": "WEIGHTED_AVG",
       "Combination": [
-        "north_therm",
-        "flash_therm",
-        "soc_therm",
         "rfpa_therm",
-        "charging_therm",
         "quiet_therm",
+        "charging_therm",
+        "usb_pwr_therm",
+        "flash_therm",
         "disp0_therm",
-        "usb_pwr_therm"
+        "north_therm",
+        "soc_therm"
       ],
       "Coefficient": [
-        0.101,
-        0.097,
-        0.108,
-        0.106,
-        0.108,
-        0.102,
-        0.091,
-        0.092
+        0.011,
+        0.239,
+        0.018,
+        0.431,
+        0.123,
+        0.045,
+        0.103,
+        0.03
       ],
-      "Offset": 4883.0,
+      "Offset": 131.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SPEAKER-SUB-1",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "rfpa_therm",
+        "quiet_therm",
+        "charging_therm",
+        "usb_pwr_therm",
+        "flash_therm",
+        "disp0_therm",
+        "north_therm",
+        "soc_therm"
+      ],
+      "Coefficient": [
+        0.047,
+        0.082,
+        0.041,
+        0.263,
+        0.215,
+        0.248,
+        0.03,
+        0.075
+      ],
+      "Offset": 121.0,
       "Multiplier": 0.001
     },
     {
@@ -67,9 +96,11 @@
       "VirtualSensor": true,
       "Formula": "MAXIMUM",
       "Combination": [
-        "VIRTUAL-SKIN-SPEAKER-SUB-0"
+        "VIRTUAL-SKIN-SPEAKER-SUB-0",
+        "VIRTUAL-SKIN-SPEAKER-SUB-1"
       ],
       "Coefficient": [
+        1.0,
         1.0
       ],
       "Multiplier": 0.001
@@ -255,20 +286,6 @@
       "SendCallback": true,
       "PollingDelay": 5000,
       "PassiveDelay": 7000
-    },
-    {
-      "Name": "VIRTUAL-BTS-WINDOW-PARTIAL",
-      "Type": "UNKNOWN",
-      "VirtualSensor": true,
-      "Formula": "WEIGHTED_AVG",
-      "Combination": [
-        "flash_therm"
-      ],
-      "Coefficient": [
-        0.019
-      ],
-      "Offset": 773,
-      "Multiplier": 0.001
     },
     {
       "Name": "VIRTUAL-USB-UI",

@@ -39,3 +39,23 @@ Invariant:
 - `update.json` switches only after release asset exists.
 - GitHub connector is read-only; public writes run locally via `git`/`gh` on Pixel.
 <!-- UNIVERSAL_RELEASE_AUTOMATION_KNOWN_FAILURES_20260602_END -->
+
+<!-- PIXEL10_ANDROID16_MINIMAL_POLLING_FAILURES_20260602_START -->
+## Pixel 10 Android 16 minimal polling profile failure patterns
+
+1. Existing Blazer profile has non-polling deltas
+   - Symptom: factory comparison shows cdev, PIDInfo, threshold, frequency, or power-rail differences.
+   - Rule: Do not use existing `profiles/blazer` as a source template for other devices.
+
+2. Factory maps are evidence, not live verification
+   - Symptom: `frankel`, `blazer`, or `rango` profiles exist but no owner post-reboot verify is present.
+   - Rule: Keep those profiles beta/pending until install, staging, overlay, semantic sensor, and ThermalHAL tombstone checks pass.
+
+3. Minimal profile generation must only change allowed polling fields
+   - Symptom: generated profile differs from factory JSON outside `PollingDelay`/`PollingDelayMs`.
+   - Rule: Stop the build; do not release.
+
+4. Stable update channel must not move before release assets exist
+   - Symptom: `update.json` points to a tag before ZIP/SHA assets exist.
+   - Rule: release asset first, update channel last.
+<!-- PIXEL10_ANDROID16_MINIMAL_POLLING_FAILURES_20260602_END -->

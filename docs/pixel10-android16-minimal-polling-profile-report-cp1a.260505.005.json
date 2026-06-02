@@ -1,0 +1,53 @@
+{
+  "build": "CP1A.260505.005",
+  "devices": [
+    {
+      "device": "frankel",
+      "label": "Pixel 10",
+      "factory_sha256": "7e12c8607a7af176ec7233f4df4609f2f2eae53e0ae818547b9aade07255d1d3",
+      "virtual_skin_total": "44",
+      "changed_by_file": {
+        "thermal_info_config.json": 1,
+        "thermal_info_config_charge.json": 2,
+        "thermal_info_config_throttling.json": 8
+      },
+      "skipped_by_file": {
+        "thermal_info_config.json": 1,
+        "thermal_info_config_charge.json": 0,
+        "thermal_info_config_throttling.json": 0
+      }
+    },
+    {
+      "device": "blazer",
+      "label": "Pixel 10 Pro",
+      "factory_sha256": "2f7ef8217f03263881cb2362bb09697ff7de833f2ad6136c843b7cb9453d567d",
+      "virtual_skin_total": "43",
+      "changed_by_file": {
+        "thermal_info_config.json": 1,
+        "thermal_info_config_charge.json": 2,
+        "thermal_info_config_throttling.json": 8
+      },
+      "skipped_by_file": {
+        "thermal_info_config.json": 1,
+        "thermal_info_config_charge.json": 0,
+        "thermal_info_config_throttling.json": 0
+      }
+    },
+    {
+      "device": "rango",
+      "label": "Pixel 10 Pro Fold",
+      "factory_sha256": "18bf79d917dfc411a062ada4494c573cb26ca4bcbca7c3f6ea4576e4fc883b37",
+      "virtual_skin_total": "60",
+      "changed_by_file": {
+        "thermal_info_config.json": 0,
+        "thermal_info_config_charge.json": 2,
+        "thermal_info_config_throttling.json": 8
+      },
+      "skipped_by_file": {
+        "thermal_info_config.json": 11,
+        "thermal_info_config_charge.json": 0,
+        "thermal_info_config_throttling.json": 0
+      }
+    }
+  ]
+}

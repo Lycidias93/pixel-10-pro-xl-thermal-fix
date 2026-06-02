@@ -1,11 +1,11 @@
-# Pixel 10 Pro thermal profile (`blazer`)
+# Pixel 10 Pro Fold thermal profile (`rango`)
 
 - Source build: `CP1A.260505.005`
 - Source basis: Google factory image thermal JSON evidence.
 - Profile transform: minimal VIRTUAL-SKIN polling delay overlay.
 - Profile state: `beta/pending` until live owner install and post-reboot verify.
-- Factory image SHA-256: `2f7ef8217f03263881cb2362bb09697ff7de833f2ad6136c843b7cb9453d567d`
-- VIRTUAL-SKIN total from evidence: `43`
+- Factory image SHA-256: `18bf79d917dfc411a062ada4494c573cb26ca4bcbca7c3f6ea4576e4fc883b37`
+- VIRTUAL-SKIN total from evidence: `60`
 - Only allowed `PollingDelay` / `PollingDelayMs` fields are set to `5000`.
 - No CPU cdev, PIDInfo, threshold, frequency, power-rail, or non-polling fields are changed.
 - Do not infer runtime safety from another Pixel 10 device.
@@ -14,12 +14,12 @@
 
 ### `thermal_info_config.json`
 
-- `VIRTUAL-SKIN-SPEAKER` at `Sensors[10].PollingDelay`: `300000` -> `5000`
+- No allowed polling candidate found.
 
 ### `thermal_info_config_charge.json`
 
-- `VIRTUAL-SKIN-CHARGE-WIRED` at `Sensors[20].PollingDelay`: `300000` -> `5000`
-- `VIRTUAL-SKIN-CHARGE-PERSIST` at `Sensors[21].PollingDelay`: `300000` -> `5000`
+- `VIRTUAL-SKIN-CHARGE-WIRED` at `Sensors[26].PollingDelay`: `300000` -> `5000`
+- `VIRTUAL-SKIN-CHARGE-PERSIST` at `Sensors[30].PollingDelay`: `300000` -> `5000`
 
 ### `thermal_info_config_throttling.json`
 
@@ -38,7 +38,17 @@ These remained at factory values because they are outside the minimal allowlist.
 
 ### `thermal_info_config.json`
 
-- `VIRTUAL-SKIN-CPU-LIGHT-ODPM` at `Sensors[14].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN` at `Sensors[16].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-HINT` at `Sensors[17].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-CPU-LIGHT-ODPM` at `Sensors[18].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-CPU-MID` at `Sensors[19].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-CPU-ODPM` at `Sensors[20].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-CPU-HIGH` at `Sensors[21].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-SOC` at `Sensors[22].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-INNER-DISPLAY` at `Sensors[23].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-OUTER-DISPLAY` at `Sensors[25].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-TOP-SPEAKER` at `Sensors[34].PollingDelay` remains `300000`
+- `VIRTUAL-SKIN-BOTTOM-SPEAKER` at `Sensors[35].PollingDelay` remains `300000`
 
 ### `thermal_info_config_charge.json`
 

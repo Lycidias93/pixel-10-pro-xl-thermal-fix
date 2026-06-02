@@ -1,80 +1,495 @@
 {
+  "Include": [
+    "thermal_info_config_throttling.json",
+    "thermal_info_config_charge.json",
+    "thermal_info_config_stats.json",
+    "thermal_info_config_vt.json"
+  ],
   "Sensors": [
     {
-      "Name": "battery",
-      "Type": "BATTERY",
-      "HotThreshold": [
-        "NAN",
-        "NAN",
-        "NAN",
-        "NAN",
-        "NAN",
-        "NAN",
-        "60.0"
+      "Name": "VIRTUAL-SKIN-OPEN-SUB-0",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "charging_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "soc_therm"
+      ],
+      "Coefficient": [
+        0.26,
+        0.118,
+        0.016,
+        0.076,
+        0.265,
+        0.09,
+        0.096,
+        0.07,
+        0.009
+      ],
+      "Offset": 155.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-OPEN-SUB-1",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "charging_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "soc_therm"
+      ],
+      "Coefficient": [
+        0.115,
+        0.245,
+        0.068,
+        0.047,
+        0.061,
+        0.069,
+        0.12,
+        0.27,
+        0.004
+      ],
+      "Offset": 213.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-OPEN-SUB-2",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "charging_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "soc_therm"
+      ],
+      "Coefficient": [
+        0.055,
+        0.269,
+        0.125,
+        0.252,
+        0.102,
+        0.007,
+        0.031,
+        0.155,
+        0.003
+      ],
+      "Offset": 9.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-OPEN-SUB-3",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "charging_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "soc_therm"
+      ],
+      "Coefficient": [
+        0.002,
+        0.014,
+        0.011,
+        0.326,
+        0.26,
+        0.094,
+        0.031,
+        0.166,
+        0.095
+      ],
+      "Offset": 353.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-OPEN-SUB-4",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "charging_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "soc_therm"
+      ],
+      "Coefficient": [
+        0.02,
+        0.052,
+        0.141,
+        0.051,
+        0.088,
+        0.321,
+        0.166,
+        0.061,
+        0.1
+      ],
+      "Offset": 216.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-OPEN",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "Version": "25.07.18",
+      "VirtualSensor": true,
+      "Formula": "MAXIMUM",
+      "Combination": [
+        "VIRTUAL-SKIN-OPEN-SUB-0",
+        "VIRTUAL-SKIN-OPEN-SUB-1",
+        "VIRTUAL-SKIN-OPEN-SUB-2",
+        "VIRTUAL-SKIN-OPEN-SUB-3",
+        "VIRTUAL-SKIN-OPEN-SUB-4"
+      ],
+      "Coefficient": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "Multiplier": 0.001,
+      "OffsetThresholds": [
+        49000,
+        50000
+      ],
+      "OffsetValues": [
+        500,
+        1000
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CLOSE-SUB-0",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "charging_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "usb_pwr_therm"
+      ],
+      "Coefficient": [
+        0.041,
+        0.195,
+        0.008,
+        0.013,
+        0.026,
+        0.033,
+        0.246,
+        0.163,
+        0.275
+      ],
+      "Offset": 351.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CLOSE-SUB-1",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "charging_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "usb_pwr_therm"
+      ],
+      "Coefficient": [
+        0.003,
+        0.237,
+        0.082,
+        0.032,
+        0.037,
+        0.106,
+        0.123,
+        0.146,
+        0.234
+      ],
+      "Offset": 17.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CLOSE-SUB-2",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "charging_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "usb_pwr_therm"
+      ],
+      "Coefficient": [
+        0.035,
+        0.006,
+        0.091,
+        0.004,
+        0.19,
+        0.043,
+        0.549,
+        0.028,
+        0.064
+      ],
+      "Offset": 38.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CLOSE-SUB-3",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "charging_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "usb_pwr_therm"
+      ],
+      "Coefficient": [
+        0.074,
+        0.03,
+        0.086,
+        0.002,
+        0.016,
+        0.19,
+        0.213,
+        0.217,
+        0.173
+      ],
+      "Offset": 56.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CLOSE-SUB-4",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "charging_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "usb_pwr_therm"
+      ],
+      "Coefficient": [
+        0.012,
+        0.087,
+        0.002,
+        0.037,
+        0.172,
+        0.299,
+        0.26,
+        0.004,
+        0.127
+      ],
+      "Offset": 180.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CLOSE",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "Version": "25.07.18",
+      "VirtualSensor": true,
+      "Formula": "MAXIMUM",
+      "Combination": [
+        "VIRTUAL-SKIN-CLOSE-SUB-0",
+        "VIRTUAL-SKIN-CLOSE-SUB-1",
+        "VIRTUAL-SKIN-CLOSE-SUB-2",
+        "VIRTUAL-SKIN-CLOSE-SUB-3",
+        "VIRTUAL-SKIN-CLOSE-SUB-4"
+      ],
+      "Coefficient": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
       ],
       "Multiplier": 0.001
     },
     {
-      "Name": "LITTLE",
-      "Type": "CPU",
-      "Multiplier": 0.001
-    },
-    {
-      "Name": "MID",
-      "Type": "CPU",
-      "Multiplier": 0.001
-    },
-    {
-      "Name": "BIG_MID",
-      "Type": "CPU",
-      "Multiplier": 0.001
-    },
-    {
-      "Name": "BIG",
-      "Type": "CPU",
-      "Multiplier": 0.001
-    },
-    {
-      "Name": "GPU",
-      "Type": "GPU",
-      "Multiplier": 0.001
-    },
-    {
-      "Name": "TPU",
-      "Type": "NPU",
-      "Multiplier": 0.001
-    },
-    {
-      "Name": "BG-TASKS-THROTTLING-EXP-PROPERTY",
+      "Name": "VIRTUAL-SKIN-LEGACY",
       "Type": "UNKNOWN",
-      "TempPathType": "DEVICE_PROPERTY",
-      "TempPath": "vendor.thermal.bgtasks_experiment_is_running"
+      "Version": "25.07.18",
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "VIRTUAL-SKIN-OPEN",
+        "VIRTUAL-SKIN-CLOSE"
+      ],
+      "Coefficient": [
+        "OPEN_WEIGHT",
+        "CLOSE_WEIGHT"
+      ],
+      "CoefficientType": [
+        "SENSOR",
+        "SENSOR"
+      ],
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-MODEL",
+      "Type": "UNKNOWN",
+      "Version": "25.07.17",
+      "VirtualSensor": true,
+      "ModelPath": "vt_estimation_model.tflite",
+      "Formula": "USE_ML_MODEL",
+      "Combination": [
+        "charging_therm",
+        "inner_disp_therm",
+        "outer_disp_therm",
+        "flash_therm",
+        "north_therm",
+        "quiet_therm",
+        "rfpa_therm",
+        "soc_therm",
+        "usb_pwr_therm"
+      ],
+      "Multiplier": 0.001,
+      "PreviousSampleCount": 3,
+      "OffsetThresholds": [
+        39000,
+        40000
+      ],
+      "OffsetValues": [
+        250,
+        500
+      ],
+      "BackupSensor": "VIRTUAL-SKIN-LEGACY",
+      "TimeResolution": 7000
+    },
+    {
+      "Name": "VIRTUAL-SKIN-MODEL-UPPER-CLAMPED",
+      "Type": "UNKNOWN",
+      "VirtualSensor": true,
+      "Hidden": true,
+      "Formula": "MINIMUM",
+      "Combination": [
+        "56500",
+        "VIRTUAL-SKIN-MODEL"
+      ],
+      "CombinationType": [
+        "CONSTANT",
+        "SENSOR"
+      ],
+      "Coefficient": [
+        1.0,
+        1.0
+      ],
+      "Multiplier": 1
+    },
+    {
+      "Name": "VIRTUAL-SKIN-LEGACY-SHUTDOWN",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "COUNT_THRESHOLD",
+      "Combination": [
+        "VIRTUAL-SKIN-LEGACY"
+      ],
+      "Coefficient": [
+        56500
+      ],
+      "Multiplier": 1.0
     },
     {
       "Name": "VIRTUAL-SKIN",
       "Type": "SKIN",
-      "Version": "0.1",
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
-        "VIRTUAL-SKIN-EQ"
+        "VIRTUAL-SKIN-MODEL-UPDATED",
+        "VIRTUAL-SKIN-LEGACY"
       ],
       "Coefficient": [
-        1.0
+        1.0,
+        "VIRTUAL-SKIN-LEGACY-SHUTDOWN"
+      ],
+      "CoefficientType": [
+        "CONSTANT",
+        "SENSOR"
       ],
       "HotThreshold": [
         "NAN",
-        39,
-        43,
-        45,
+        39.0,
+        43.0,
+        45.0,
         46.5,
-        52,
-        55.0
+        53.0,
+        56.5
       ],
       "HotHysteresis": [
         0.0,
@@ -87,7 +502,7 @@
       ],
       "Multiplier": 0.001,
       "SendCallback": true,
-      "PollingDelay": 5000,
+      "PollingDelay": 300000,
       "PassiveDelay": 7000,
       "BindedCdevInfo": [
         {
@@ -110,9 +525,14 @@
       "Hidden": true,
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
@@ -127,8 +547,8 @@
         43.0,
         45.0,
         46.5,
-        52.0,
-        55.0
+        53.0,
+        56.5
       ],
       "HotHysteresis": [
         0.0,
@@ -141,7 +561,7 @@
       ],
       "Multiplier": 0.001,
       "SendPowerHint": true,
-      "PollingDelay": 5000,
+      "PollingDelay": 300000,
       "PassiveDelay": 7000
     },
     {
@@ -150,9 +570,14 @@
       "Hidden": true,
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
@@ -180,7 +605,7 @@
         0.0
       ],
       "Multiplier": 0.001,
-      "PollingDelay": 5000,
+      "PollingDelay": 300000,
       "PassiveDelay": 7000,
       "PIDInfo": {
         "K_Po": [
@@ -281,7 +706,7 @@
           "MaxThrottleStep": 1,
           "BindedPowerRail": "S4M_VDD_CPU",
           "CdevCeilingFrequency": [
-            2246000,
+            2438400,
             1632000,
             1632000,
             1632000,
@@ -353,7 +778,7 @@
           "MaxThrottleStep": 1,
           "BindedPowerRail": "S2M_VDD_CPU2",
           "CdevCeilingFrequency": [
-            3782000,
+            4012000,
             2073000,
             2073000,
             2073000,
@@ -401,9 +826,14 @@
       "Hidden": true,
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
@@ -431,7 +861,7 @@
         0.0
       ],
       "Multiplier": 0.001,
-      "PollingDelay": 5000,
+      "PollingDelay": 300000,
       "PassiveDelay": 7000,
       "PIDInfo": {
         "K_Po": [
@@ -532,13 +962,13 @@
           "MaxReleaseStep": 2,
           "MaxThrottleStep": 2,
           "CdevCeilingFrequency": [
-            2246000,
-            1190000,
-            1190000,
-            1190000,
-            1190000,
-            1190000,
-            1190000
+            2438400,
+            1190400,
+            1190400,
+            1190400,
+            1190400,
+            1190400,
+            1190400
           ]
         },
         {
@@ -579,12 +1009,12 @@
           "MaxThrottleStep": 2,
           "CdevCeilingFrequency": [
             3052000,
-            1075200,
-            1075200,
-            1075200,
-            1075200,
-            1075200,
-            1075200
+            1267200,
+            1267200,
+            1267200,
+            1267200,
+            1267200,
+            1267200
           ]
         },
         {
@@ -601,7 +1031,7 @@
           "MaxReleaseStep": 2,
           "MaxThrottleStep": 2,
           "CdevCeilingFrequency": [
-            3782000,
+            4012000,
             1152000,
             1152000,
             1152000,
@@ -670,9 +1100,14 @@
       "Hidden": true,
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
@@ -700,7 +1135,7 @@
         0.0
       ],
       "Multiplier": 0.001,
-      "PollingDelay": 5000,
+      "PollingDelay": 300000,
       "PassiveDelay": 7000,
       "PIDInfo": {
         "K_Po": [
@@ -874,7 +1309,7 @@
           "MaxThrottleStep": 2,
           "BindedPowerRail": "S2M_VDD_CPU2",
           "CdevCeilingFrequency": [
-            3782000,
+            4012000,
             883000,
             883000,
             883000,
@@ -951,9 +1386,14 @@
       "Hidden": true,
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
@@ -981,7 +1421,7 @@
         0.0
       ],
       "Multiplier": 0.001,
-      "PollingDelay": 5000,
+      "PollingDelay": 300000,
       "PassiveDelay": 7000,
       "PIDInfo": {
         "K_Po": [
@@ -1081,13 +1521,13 @@
           "MaxReleaseStep": 2,
           "MaxThrottleStep": 2,
           "CdevCeilingFrequency": [
-            2246000,
-            729000,
-            729000,
-            729000,
-            729000,
-            729000,
-            729000
+            2438400,
+            729600,
+            729600,
+            729600,
+            729600,
+            729600,
+            729600
           ]
         },
         {
@@ -1150,13 +1590,13 @@
           "MaxReleaseStep": 2,
           "MaxThrottleStep": 2,
           "CdevCeilingFrequency": [
-            3782000,
-            883000,
-            883000,
-            883000,
-            883000,
-            883000,
-            883000
+            4012000,
+            883200,
+            883200,
+            883200,
+            883200,
+            883200,
+            883200
           ]
         }
       ],
@@ -1219,9 +1659,14 @@
       "Hidden": true,
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
@@ -1249,8 +1694,9 @@
         1.9
       ],
       "Multiplier": 0.001,
-      "PollingDelay": 5000,
+      "PollingDelay": 300000,
       "PassiveDelay": 7000,
+      "ThermalSampleCount": 5,
       "PIDInfo": {
         "K_Po": [
           "NAN",
@@ -1332,7 +1778,8 @@
           8,
           "NAN",
           "NAN"
-        ]
+        ],
+        "I_Trend": 0.75
       },
       "BindedCdevInfo": [
         {
@@ -1350,22 +1797,22 @@
           "MaxThrottleStep": 1,
           "BindedPowerRail": "S4M_VDD_CPU",
           "CdevCeilingFrequency": [
-            2246000,
+            2438400,
             1632000,
             1632000,
-            729000,
-            729000,
-            729000,
-            268000
+            729600,
+            729600,
+            729600,
+            268800
           ],
           "LimitInfoFrequency": [
-            2246000,
-            2246000,
-            2246000,
-            2246000,
-            2246000,
-            2246000,
-            268000
+            2438400,
+            2438400,
+            2438400,
+            2438400,
+            2438400,
+            2438400,
+            268800
           ]
         },
         {
@@ -1449,21 +1896,21 @@
           "MaxThrottleStep": 1,
           "BindedPowerRail": "S2M_VDD_CPU2",
           "CdevCeilingFrequency": [
-            3782000,
-            2073000,
-            2073000,
-            1420000,
-            883000,
-            883000,
+            4012000,
+            2073600,
+            2073600,
+            1420800,
+            883200,
+            883200,
             384000
           ],
           "LimitInfoFrequency": [
-            3782000,
-            3782000,
-            3782000,
-            3782000,
-            3782000,
-            3782000,
+            4012000,
+            4012000,
+            4012000,
+            4012000,
+            4012000,
+            4012000,
             384000
           ]
         },
@@ -1536,121 +1983,398 @@
       ]
     },
     {
-      "Name": "CONCURRENT_USE_POWER",
-      "Type": "UNKNOWN",
-      "Hidden": true,
-      "VirtualSensor": true,
-      "Formula": "COUNT_THRESHOLD",
-      "Combination": [
-        "S8S_VDD_GMC",
-        "VIRTUAL_CPU_POWER",
-        "S7M_VDD_TPU",
-        "S2S_VDD_GPU"
-      ],
-      "CombinationType": [
-        "ODPM",
-        "ODPM",
-        "ODPM",
-        "ODPM"
-      ],
-      "Coefficient": [
-        450.0,
-        700.0,
-        400.0,
-        100.0
-      ],
-      "Multiplier": 1
-    },
-    {
-      "Name": "EXTREME_POWER_VSKIN",
-      "Type": "UNKNOWN",
-      "Hidden": true,
-      "VirtualSensor": true,
-      "Formula": "COUNT_THRESHOLD",
-      "Combination": [
-        "VIRTUAL-SKIN",
-        "PARTIAL_SYSTEM_POWER",
-        "PARTIAL_SYSTEM_POWER"
-      ],
-      "CombinationType": [
-        "SENSOR",
-        "ODPM",
-        "ODPM"
-      ],
-      "Coefficient": [
-        46000,
-        3000,
-        4000
-      ],
-      "CountThresholdHysteresis": [
-        1000.0,
-        0.0,
-        0.0
-      ],
-      "Multiplier": 1
-    },
-    {
-      "Name": "EXTREME_CONDITION",
-      "Type": "UNKNOWN",
-      "Hidden": true,
-      "VirtualSensor": true,
-      "Formula": "COUNT_THRESHOLD",
-      "Combination": [
-        "EXTREME_POWER_VSKIN",
-        "CONCURRENT_USE_POWER"
-      ],
-      "Coefficient": [
-        2,
-        4
-      ],
-      "CountThresholdHysteresis": [
-        1.9,
-        0.0
-      ],
-      "Multiplier": 1
-    },
-    {
-      "Name": "EXTREME_THROTTLE",
-      "Type": "UNKNOWN",
-      "Hidden": true,
-      "VirtualSensor": true,
-      "Formula": "COUNT_THRESHOLD",
-      "Combination": [
-        "EXTREME_CONDITION"
-      ],
-      "Coefficient": [
-        2.0
-      ],
-      "CountThresholdHysteresis": [
-        1.9
-      ],
-      "Multiplier": 1
-    },
-    {
-      "Name": "VIRTUAL-SKIN-SOC-EXTREME",
-      "Type": "UNKNOWN",
-      "Hidden": true,
+      "Name": "VIRTUAL-SKIN-INNER-DISPLAY",
+      "Type": "DISPLAY",
+      "Version": "24.11.13",
       "VirtualSensor": true,
       "TriggerSensor": [
-        "VIRTUAL-SKIN"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "MAXIMUM",
       "Combination": [
-        "VIRTUAL-SKIN"
+        "VIRTUAL-SKIN-OPEN"
       ],
       "Coefficient": [
-        "EXTREME_THROTTLE"
+        1.0
+      ],
+      "HotThreshold": [
+        "NAN",
+        39.0,
+        43.0,
+        45.0,
+        46.5,
+        53.0,
+        56.5
+      ],
+      "HotHysteresis": [
+        0.0,
+        1.9,
+        1.9,
+        1.9,
+        1.4,
+        1.9,
+        1.9
+      ],
+      "Multiplier": 0.001,
+      "SendCallback": true,
+      "PollingDelay": 300000,
+      "PassiveDelay": 7000
+    },
+    {
+      "Name": "VIRTUAL-SKIN-OUTER-DISPLAY-LEGACY",
+      "Type": "UNKNOWN",
+      "Version": "25.08.11",
+      "VirtualSensor": true,
+      "TriggerSensor": [
+        "outer_disp_therm"
+      ],
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "charging_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "usb_pwr_therm"
+      ],
+      "Coefficient": [
+        0.071,
+        0.013,
+        0.23,
+        0.098,
+        0.023,
+        0.069,
+        0.337,
+        0.009,
+        0.23
+      ],
+      "Offset": 95.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-OUTER-DISPLAY",
+      "Type": "DISPLAY",
+      "Version": "25.08.11",
+      "VirtualSensor": true,
+      "TriggerSensor": [
+        "outer_disp_therm"
+      ],
+      "ModelPath": "vt_estimation_model_display.tflite",
+      "Formula": "USE_ML_MODEL",
+      "Combination": [
+        "charging_therm",
+        "inner_disp_therm",
+        "outer_disp_therm",
+        "flash_therm",
+        "north_therm",
+        "quiet_therm",
+        "rfpa_therm",
+        "soc_therm",
+        "usb_pwr_therm"
+      ],
+      "Multiplier": 0.001,
+      "PreviousSampleCount": 3,
+      "BackupSensor": "VIRTUAL-SKIN-OUTER-DISPLAY-LEGACY",
+      "TimeResolution": 7000,
+      "HotThreshold": [
+        "NAN",
+        39.0,
+        43.0,
+        45.0,
+        46.5,
+        53.0,
+        56.5
+      ],
+      "HotHysteresis": [
+        0.0,
+        1.9,
+        1.9,
+        1.9,
+        1.4,
+        1.9,
+        1.9
+      ],
+      "SendCallback": true,
+      "PollingDelay": 300000,
+      "PassiveDelay": 7000
+    },
+    {
+      "Name": "maxfg_base",
+      "Type": "UNKNOWN",
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "maxfg_secondary",
+      "Type": "UNKNOWN",
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "LEFT-INNER-DISPLAY",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "inner_disp_therm",
+        "outer_disp_therm",
+        "maxfg_secondary",
+        "usb_pwr_therm"
+      ],
+      "Coefficient": [
+        0.094,
+        0.621,
+        0.097,
+        0.112
+      ],
+      "Offset": 1948,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "RIGHT-INNER-DISPLAY",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "inner_disp_therm",
+        "maxfg_base",
+        "usb_pwr_therm",
+        "soc_therm"
+      ],
+      "Coefficient": [
+        0.51,
+        0.04,
+        0.032,
+        0.327
+      ],
+      "Offset": 2100,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "INNER-DISPLAY-DIFF",
+      "Type": "UNKNOWN",
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "RIGHT-INNER-DISPLAY",
+        "LEFT-INNER-DISPLAY"
+      ],
+      "Coefficient": [
+        1.0,
+        -1.0
+      ],
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SPEAKER-OPEN",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "Version": "24.10.29",
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "charging_therm"
+      ],
+      "Coefficient": [
+        0.372,
+        0.205,
+        0.052,
+        0.305,
+        0.101,
+        0.113,
+        0.064,
+        0.115,
+        0.087
+      ],
+      "Offset": -10967.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SPEAKER-CLOSE",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "Version": "24.10.29",
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm",
+        "charging_therm"
+      ],
+      "Coefficient": [
+        0.059,
+        0.1,
+        0.119,
+        0.394,
+        0.093,
+        0.028,
+        0.146,
+        0.052,
+        0.209
+      ],
+      "Offset": -3839.0,
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SPEAKER-LEGACY",
+      "Type": "UNKNOWN",
+      "Hidden": true,
+      "Version": "24.10.29",
+      "VirtualSensor": true,
+      "Formula": "WEIGHTED_AVG",
+      "Combination": [
+        "VIRTUAL-SKIN-SPEAKER-OPEN",
+        "VIRTUAL-SKIN-SPEAKER-CLOSE"
+      ],
+      "Coefficient": [
+        "OPEN_WEIGHT",
+        "CLOSE_WEIGHT"
       ],
       "CoefficientType": [
+        "SENSOR",
         "SENSOR"
+      ],
+      "Multiplier": 0.001
+    },
+    {
+      "Name": "VIRTUAL-SKIN-TOP-SPEAKER",
+      "Type": "UNKNOWN",
+      "Version": "25.03.21",
+      "VirtualSensor": true,
+      "TriggerSensor": [
+        "soc_therm"
+      ],
+      "ModelPath": "vt_estimation_model_top_spk.tflite",
+      "Formula": "USE_ML_MODEL",
+      "Combination": [
+        "charging_therm",
+        "inner_disp_therm",
+        "outer_disp_therm",
+        "flash_therm",
+        "north_therm",
+        "quiet_therm",
+        "rfpa_therm",
+        "soc_therm",
+        "usb_pwr_therm"
+      ],
+      "Multiplier": 0.001,
+      "PreviousSampleCount": 3,
+      "BackupSensor": "VIRTUAL-SKIN-SPEAKER-LEGACY",
+      "TimeResolution": 7000,
+      "HotThreshold": [
+        "NAN",
+        37.0,
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN"
+      ],
+      "HotHysteresis": [
+        0.0,
+        1.9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SendCallback": true,
+      "PollingDelay": 300000,
+      "PassiveDelay": 7000
+    },
+    {
+      "Name": "VIRTUAL-SKIN-BOTTOM-SPEAKER",
+      "Type": "UNKNOWN",
+      "Version": "25.03.21",
+      "VirtualSensor": true,
+      "TriggerSensor": [
+        "soc_therm"
+      ],
+      "ModelPath": "vt_estimation_model_bottom_spk.tflite",
+      "Formula": "USE_ML_MODEL",
+      "Combination": [
+        "charging_therm",
+        "inner_disp_therm",
+        "outer_disp_therm",
+        "flash_therm",
+        "north_therm",
+        "quiet_therm",
+        "rfpa_therm",
+        "soc_therm",
+        "usb_pwr_therm"
+      ],
+      "Multiplier": 0.001,
+      "PreviousSampleCount": 3,
+      "BackupSensor": "VIRTUAL-SKIN-SPEAKER-LEGACY",
+      "TimeResolution": 7000,
+      "HotThreshold": [
+        "NAN",
+        37.0,
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN"
+      ],
+      "HotHysteresis": [
+        0.0,
+        1.9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SendCallback": true,
+      "PollingDelay": 300000,
+      "PassiveDelay": 7000
+    },
+    {
+      "Name": "VIRTUAL-USB-UI",
+      "Type": "USB_PORT",
+      "VirtualSensor": true,
+      "Formula": "COUNT_THRESHOLD",
+      "TriggerSensor": "usb_pwr_therm",
+      "Combination": [
+        "usb_pwr_therm",
+        "USB-MINUS-CHARGING"
+      ],
+      "Coefficient": [
+        46000.0,
+        13000.0
       ],
       "HotThreshold": [
         "NAN",
         "NAN",
         "NAN",
-        45.0,
-        46.0,
-        "NAN",
+        "NaN",
+        "NaN",
+        2.0,
         "NAN"
       ],
       "HotHysteresis": [
@@ -1658,286 +2382,57 @@
         0.0,
         0.0,
         0.0,
-        0.9,
         0.0,
+        0.9,
+        0.0
+      ],
+      "SendCallback": true,
+      "PollingDelay": 300000,
+      "PassiveDelay": 7000
+    },
+    {
+      "Name": "cellular-emergency",
+      "Type": "POWER_AMPLIFIER",
+      "VirtualSensor": true,
+      "TriggerSensor": [
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
+      ],
+      "Formula": "MAXIMUM",
+      "Combination": [
+        "VIRTUAL-SKIN"
+      ],
+      "Coefficient": [
+        1.0
+      ],
+      "HotThreshold": [
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN",
+        55.0,
+        "NAN"
+      ],
+      "HotHysteresis": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.9,
         0.0
       ],
       "Multiplier": 0.001,
-      "PollingDelay": 5000,
-      "PassiveDelay": 7000,
-      "PIDInfo": {
-        "K_Po": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          300,
-          "NAN",
-          "NAN"
-        ],
-        "K_Pu": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          300,
-          "NAN",
-          "NAN"
-        ],
-        "K_I": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          5,
-          "NAN",
-          "NAN"
-        ],
-        "K_D": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          0,
-          "NAN",
-          "NAN"
-        ],
-        "I_Max": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          1200,
-          "NAN",
-          "NAN"
-        ],
-        "S_Power": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          600,
-          "NAN",
-          "NAN"
-        ],
-        "MinAllocPower": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          600,
-          "NAN",
-          "NAN"
-        ],
-        "MaxAllocPower": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          1800,
-          "NAN",
-          "NAN"
-        ],
-        "I_Cutoff": [
-          "NAN",
-          "NAN",
-          "NAN",
-          "NAN",
-          2,
-          "NAN",
-          "NAN"
-        ]
-      },
-      "BindedCdevInfo": [
-        {
-          "CdevRequest": "cpufreq-cpu0",
-          "CdevWeightForPID": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "MaxReleaseStep": 1,
-          "MaxThrottleStep": 1,
-          "BindedPowerRail": "S4M_VDD_CPU",
-          "CdevCeilingFrequency": [
-            2246000,
-            1632000,
-            1632000,
-            729000,
-            268000,
-            268000,
-            268000
-          ]
-        },
-        {
-          "CdevRequest": "cpufreq-cpu2",
-          "CdevWeightForPID": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "MaxReleaseStep": 1,
-          "MaxThrottleStep": 1,
-          "BindedPowerRail": "S3M_VDD_CPU1",
-          "CdevCeilingFrequency": [
-            3052000,
-            1785600,
-            1785600,
-            729600,
-            307200,
-            307200,
-            307200
-          ]
-        },
-        {
-          "CdevRequest": "cpufreq-cpu5",
-          "CdevWeightForPID": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "MaxReleaseStep": 1,
-          "MaxThrottleStep": 1,
-          "BindedPowerRail": "S2M_VDD_CPU2",
-          "CdevCeilingFrequency": [
-            3052000,
-            1785600,
-            1785600,
-            729600,
-            307200,
-            307200,
-            307200
-          ]
-        },
-        {
-          "CdevRequest": "cpufreq-cpu7",
-          "CdevWeightForPID": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "MaxReleaseStep": 1,
-          "MaxThrottleStep": 1,
-          "BindedPowerRail": "S2M_VDD_CPU2",
-          "CdevCeilingFrequency": [
-            3782000,
-            2073000,
-            2073000,
-            883000,
-            384000,
-            384000,
-            384000
-          ]
-        },
-        {
-          "CdevRequest": "gpu",
-          "CdevWeightForPID": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "MaxReleaseStep": 1,
-          "MaxThrottleStep": 1,
-          "BindedPowerRail": "S2S_VDD_GPU",
-          "CdevCeilingFrequency": [
-            1094000000,
-            435000000,
-            435000000,
-            198000000,
-            198000000,
-            198000000,
-            198000000
-          ]
-        },
-        {
-          "CdevRequest": "tpu",
-          "CdevWeightForPID": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "MaxReleaseStep": 1,
-          "MaxThrottleStep": 1,
-          "BindedPowerRail": "S7M_VDD_TPU",
-          "CdevCeiling": [
-            0,
-            15,
-            15,
-            15,
-            15,
-            15,
-            15
-          ]
-        }
-      ]
-    },
-    {
-      "Name": "IS_CHARGING",
-      "Type": "UNKNOWN",
-      "Hidden": true,
-      "VirtualSensor": true,
-      "Formula": "COUNT_THRESHOLD",
-      "Combination": [
-        "thb_hda"
-      ],
-      "Coefficient": [
-        1
-      ],
-      "Multiplier": 1
-    },
-    {
-      "Name": "BG_TASKS_THROTTLING_COUNT",
-      "Type": "UNKNOWN",
-      "Hidden": true,
-      "VirtualSensor": true,
-      "Formula": "COUNT_THRESHOLD",
-      "Combination": [
-        "IS_CHARGING",
-        "BG-TASKS-THROTTLING-EXP-PROPERTY"
-      ],
-      "Coefficient": [
-        1,
-        1
-      ],
-      "Multiplier": 1
-    },
-    {
-      "Name": "IS_BG_TASKS_THROTTLING_ACTIVE",
-      "Type": "UNKNOWN",
-      "Hidden": true,
-      "VirtualSensor": true,
-      "Formula": "COUNT_THRESHOLD",
-      "Combination": [
-        "BG_TASKS_THROTTLING_COUNT"
-      ],
-      "Coefficient": [
-        2
-      ],
-      "Multiplier": 1
+      "SendCallback": true,
+      "PollingDelay": 300000,
+      "PassiveDelay": 7000
     },
     {
       "Name": "BG-TASKS-THROTTLING-HINT",
@@ -1945,9 +2440,14 @@
       "Hidden": true,
       "VirtualSensor": true,
       "TriggerSensor": [
-        "north_therm",
-        "charging_therm",
-        "disp0_therm"
+        "soc_therm",
+        "rfpa_therm",
+        "quiet_therm",
+        "usb_pwr_therm",
+        "inner_disp_therm",
+        "flash_therm",
+        "outer_disp_therm",
+        "north_therm"
       ],
       "Formula": "WEIGHTED_AVG",
       "Combination": [
@@ -1983,127 +2483,8 @@
       "PassiveDelay": 7000
     }
   ],
-  "CoolingDevices": [
-    {
-      "Name": "cpufreq-cpu0",
-      "Type": "CPU",
-      "PowerCap": true,
-      "Multiplier": 0.001,
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies"
-    },
-    {
-      "Name": "cpufreq-cpu2",
-      "Type": "CPU",
-      "PowerCap": true,
-      "Multiplier": 0.001,
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy2/scaling_available_frequencies"
-    },
-    {
-      "Name": "cpufreq-cpu5",
-      "Type": "CPU",
-      "PowerCap": true,
-      "Multiplier": 0.001,
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy5/scaling_available_frequencies"
-    },
-    {
-      "Name": "cpufreq-cpu7",
-      "Type": "CPU",
-      "PowerCap": true,
-      "Multiplier": 0.001,
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy7/scaling_available_frequencies"
-    },
-    {
-      "Name": "thermal-uclamp-0",
-      "Type": "CPU",
-      "WritePath": "/dev/thermal/cdev-by-name/thermal-uclamp-0/cur_state",
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies"
-    },
-    {
-      "Name": "thermal-uclamp-2",
-      "Type": "CPU",
-      "WritePath": "/dev/thermal/cdev-by-name/thermal-uclamp-2/cur_state",
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy2/scaling_available_frequencies"
-    },
-    {
-      "Name": "thermal-uclamp-5",
-      "Type": "CPU",
-      "WritePath": "/dev/thermal/cdev-by-name/thermal-uclamp-5/cur_state",
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy5/scaling_available_frequencies"
-    },
-    {
-      "Name": "thermal-uclamp-7",
-      "Type": "CPU",
-      "WritePath": "/dev/thermal/cdev-by-name/thermal-uclamp-7/cur_state",
-      "ScalingAvailableFrequenciesPath": "/sys/devices/system/cpu/cpufreq/policy7/scaling_available_frequencies"
-    },
-    {
-      "Name": "gpu",
-      "Type": "GPU",
-      "PowerCap": true,
-      "Multiplier": 0.001,
-      "ScalingAvailableFrequenciesPath": "/sys/devices/platform/34f00000.gpu0/devfreq/34f00000.gpu0/available_frequencies"
-    },
-    {
-      "Name": "tpu",
-      "Type": "NPU",
-      "PowerCap": true,
-      "Multiplier": 0.001
-    },
-    {
-      "Name": "aurora",
-      "Type": "NPU",
-      "PowerCap": true,
-      "Multiplier": 0.001
-    }
-  ],
+  "CoolingDevices": [],
   "PowerRails": [
-    {
-      "Name": "S4M_VDD_CPU",
-      "PowerSampleDelay": 7000,
-      "PowerSampleCount": 1
-    },
-    {
-      "Name": "S3M_VDD_CPU1",
-      "PowerSampleDelay": 7000,
-      "PowerSampleCount": 1
-    },
-    {
-      "Name": "S2M_VDD_CPU2",
-      "PowerSampleDelay": 7000,
-      "PowerSampleCount": 1
-    },
-    {
-      "Name": "S2S_VDD_GPU",
-      "PowerSampleDelay": 7000,
-      "PowerSampleCount": 1
-    },
-    {
-      "Name": "S7M_VDD_TPU",
-      "PowerSampleDelay": 7000,
-      "PowerSampleCount": 1
-    },
-    {
-      "Name": "S8S_VDD_GMC",
-      "PowerSampleDelay": 7000,
-      "PowerSampleCount": 1
-    },
-    {
-      "Name": "VIRTUAL_CPU_POWER",
-      "VirtualRails": true,
-      "Formula": "WEIGHTED_AVG",
-      "Combination": [
-        "S2M_VDD_CPU2",
-        "S3M_VDD_CPU1",
-        "S4M_VDD_CPU"
-      ],
-      "Coefficient": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "PowerSampleDelay": 7000,
-      "PowerSampleCount": 1
-    },
     {
       "Name": "PARTIAL_SYSTEM_POWER",
       "VirtualRails": true,
@@ -2115,7 +2496,6 @@
         "S4M_VDD_CPU",
         "S7M_VDD_TPU",
         "S8M_LLDO2",
-        "S9M_VDD_TPU_M",
         "S11M_VDD_CPU_M",
         "S12M_VDD_CPU1_M",
         "VSYS_PWR_WLAN_BT",
@@ -2125,11 +2505,10 @@
         "S8S_VDD_GMC",
         "VSYS_PWR_RFFE",
         "VSYS_PWR_MODEM",
-        "VSYS_PWR_DISP_G1",
-        "VSYS_PWR_DISP_G2"
+        "VSYS_PWR_DISP_INNER",
+        "VSYS_PWR_DISP_OUTER"
       ],
       "Coefficient": [
-        1.0,
         1.0,
         1.0,
         1.0,
@@ -2151,10 +2530,5 @@
       "PowerSampleDelay": 7000,
       "PowerSampleCount": 5
     }
-  ],
-  "LogInfo": {
-    "ExcludedPowerRailsLog": [
-      "VSYS_PWR_VBATT"
-    ]
-  }
+  ]
 }

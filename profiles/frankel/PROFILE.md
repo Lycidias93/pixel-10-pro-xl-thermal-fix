@@ -1,11 +1,11 @@
-# Pixel 10 Pro thermal profile (`blazer`)
+# Pixel 10 thermal profile (`frankel`)
 
 - Source build: `CP1A.260505.005`
 - Source basis: Google factory image thermal JSON evidence.
 - Profile transform: minimal VIRTUAL-SKIN polling delay overlay.
 - Profile state: `beta/pending` until live owner install and post-reboot verify.
-- Factory image SHA-256: `2f7ef8217f03263881cb2362bb09697ff7de833f2ad6136c843b7cb9453d567d`
-- VIRTUAL-SKIN total from evidence: `43`
+- Factory image SHA-256: `7e12c8607a7af176ec7233f4df4609f2f2eae53e0ae818547b9aade07255d1d3`
+- VIRTUAL-SKIN total from evidence: `44`
 - Only allowed `PollingDelay` / `PollingDelayMs` fields are set to `5000`.
 - No CPU cdev, PIDInfo, threshold, frequency, power-rail, or non-polling fields are changed.
 - Do not infer runtime safety from another Pixel 10 device.
@@ -14,7 +14,7 @@
 
 ### `thermal_info_config.json`
 
-- `VIRTUAL-SKIN-SPEAKER` at `Sensors[10].PollingDelay`: `300000` -> `5000`
+- `VIRTUAL-SKIN-SPEAKER` at `Sensors[11].PollingDelay`: `300000` -> `5000`
 
 ### `thermal_info_config_charge.json`
 

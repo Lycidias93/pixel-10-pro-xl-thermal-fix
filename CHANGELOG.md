@@ -1,3 +1,7 @@
+## Unreleased
+
+- Added factory-based minimal polling source profiles for Pixel 10 Android 16 `CP1A.260505.005`: `frankel`, `blazer`, and `rango` now use factory thermal JSON plus only allowed VIRTUAL-SKIN polling-delay changes to `5000`. No release ZIP, module.prop bump, or update.json change in this step.
+
 <!-- DEBUG_REPORT_PERMISSION_DENIED_FIX_20260602_START -->
 ## Debug report PermissionError fix - 2026-06-02
 
