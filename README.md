@@ -441,3 +441,14 @@ Install-time guard behavior:
 
 Android 17 must use a separate factory evidence dump and separate profile set. Do not reuse Android 16 thermal files for Android 17.
 <!-- PIXEL10_ANDROID16_INSTALL_GUARD_20260602_END -->
+
+<!-- RELEASE_v1.4.2-universal-test.1_SUMMARY_START -->
+## v1.4.2-universal-test.1 pre-release
+
+`v1.4.2-universal-test.1` is an Android 16-only universal test release.
+
+- `mustang`: verified/stable profile path.
+- `frankel`, `blazer`, `rango`: beta/pending live verification.
+- Android 17 is blocked and requires separate factory evidence/profile files.
+- `update.json` remains on stable `v1.4.1-universal.1`.
+<!-- RELEASE_v1.4.2-universal-test.1_SUMMARY_END -->

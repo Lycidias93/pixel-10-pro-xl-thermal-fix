@@ -1,3 +1,11 @@
+## v1.4.2-universal-test.1 - 2026-06-02
+
+- Pre-release build for Android 16-only Pixel 10-series profile expansion.
+- Adds `frankel`, `blazer`, and `rango` install-time beta/pending profile support.
+- Keeps `mustang` as verified/stable.
+- Blocks Android 17 pending separate factory evidence/profile files.
+- Keeps `update.json` stable channel unchanged.
+
 ## Unreleased
 
 - Strengthened install-time Android guard: Android 16 profiles now abort on non-Android-16 devices and document that Android 17 requires separate factory evidence/profile files.

@@ -1,0 +1,40 @@
+{
+  "android17_rule": "Android 17 requires separate factory evidence and profile files",
+  "android17_supported": false,
+  "bind_mount_model": false,
+  "guard_markers": [
+    "Android 16 profile guard PASS",
+    "Android 17 requires separate factory evidence/profile set",
+    "profile_source_android=16",
+    "profile_source_build=CP1A.260505.005"
+  ],
+  "live_text_patching": false,
+  "polling_value_changes_in_this_release": "source profiles contain minimal polling-delay changes; runtime does not patch text",
+  "profile_source_android": "16",
+  "profile_source_build": "CP1A.260505.005",
+  "profiles": {
+    "blazer": {
+      "source": "Android 16 factory minimal polling profile",
+      "state": "beta/pending"
+    },
+    "frankel": {
+      "source": "Android 16 factory minimal polling profile",
+      "state": "beta/pending"
+    },
+    "mustang": {
+      "source": "stable live-verified profile",
+      "state": "verified"
+    },
+    "rango": {
+      "source": "Android 16 factory minimal polling profile",
+      "state": "beta/pending"
+    }
+  },
+  "release_model": "universal-test",
+  "release_type": "pre-release",
+  "runtime_patch_model": false,
+  "update_json_change": false,
+  "update_json_channel": "stable main update.json remains on 1.4.1-universal.1",
+  "version": "1.4.2-universal-test.1",
+  "versionCode": 1014201
+}

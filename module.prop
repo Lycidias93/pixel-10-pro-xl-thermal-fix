@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.1-universal.1
-versionCode=1014101
+version=1.4.2-universal-test.1
+versionCode=1014201
 author=Lycidias93, based on marx161
-description=Universal Pixel 10-series thermal polling overlay. Mustang verified; Blazer beta/pending. No polling values changed by this release; adds install-state and read-only health logging.
+description=Android 16-only Pixel 10-series thermal polling overlay. Mustang verified; Frankel/Blazer/Rango beta/pending. Android 17 blocked pending separate factory evidence.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
