@@ -47,6 +47,16 @@ This fork avoids blind patching. It changes only proven `PollingDelay=300000` `V
 In daily use, the intended difference is more responsive thermal skin-sensor polling. Selected `VIRTUAL-SKIN*` sensors are checked every `5000ms` instead of every `300000ms`, so Android can notice relevant skin/thermal changes sooner during charging, navigation, camera use, gaming, hotspot use or other sustained loads. This is not an overclock, benchmark unlock, cooling bypass or guaranteed FPS tweak. The stock thermal policy remains in charge.
 
 <!-- README_CREDITS_UNIVERSAL_20260601_START -->
+<!-- EXTERNAL_INSPIRATION_BOUNDARY_20260602_START -->
+## External inspiration boundary
+
+- teoweed / teozazaa: external Tensor thermal tweak reviewed for release-hardening and support-scope ideas only.
+- no code reuse from the external ZIP or thread.
+- no value reuse from the external ZIP or thread.
+- no service.sh bind-mount model reuse.
+- no live text patching model reuse.
+<!-- EXTERNAL_INSPIRATION_BOUNDARY_20260602_END -->
+
 ## Credits
 
 - Original thermal polling fix idea and upstream inspiration: `marx161`. The module metadata intentionally keeps the upstream credit as `based on marx161`.
@@ -343,8 +353,8 @@ If the device cannot boot normally, use your external bootloop protection layer 
 
 <!-- UNIVERSAL_FIRST_V141_RC1_START -->
 ## Universal-first release candidate
-- Version: `1.4.1-universal.1-rc1` / `1014101`
-- Release model: universal-first manual RC candidate.
+- Version: `1.4.1-universal.1` / `1014101`
+- Release model: universal-first manual release candidate.
 - Stable module ID remains `pixel-10-pro-xl-thermal-fix` for migration safety.
 - Mustang remains the verified profile.
 - Blazer remains beta/pending live verification.
@@ -357,8 +367,8 @@ Credits:
 - `teoweed` / `teozazaa` is credited as external Tensor thermal tweak analysis inspiration only. No code, bind-mount model, live runtime text patching, or polling values are reused.
 <!-- UNIVERSAL_FIRST_V141_RC1_END -->
 
-<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1-rc1_START -->
-## Universal-first RC scope
+<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1_START -->
+## Universal-first release scope
 
 This release candidate changes the release model and support/verification evidence only.
 
@@ -369,4 +379,15 @@ This release candidate changes the release model and support/verification eviden
 - `mustang` remains the verified profile.
 - `blazer` remains beta/pending until a real install, reboot, mount and ThermalHAL report is available.
 - Credits include `marx161`, `teoweed / teozazaa`, RipperHybrid/AshLooper and Lycidias93, with `teoweed / teozazaa` credited for external analysis inspiration only.
-<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1-rc1_END -->
+<!-- UNIVERSAL_FIRST_RC_SCOPE_1.4.1-universal.1_END -->
+
+<!-- UNIVERSAL_FINAL_STATUS_20260602_START -->
+## Universal final status
+
+- Version: `1.4.1-universal.1`.
+- No polling-value changes in this release.
+- Mustang verified profile remains the stable verified path.
+- Blazer beta profile remains included for manual tester verification.
+- read-only health logging only; no runtime patching.
+- External inspiration boundary: teoweed / teozazaa analysis only; no code reuse; no value reuse; no service.sh bind-mount model reuse; no live text patching model reuse.
+<!-- UNIVERSAL_FINAL_STATUS_20260602_END -->

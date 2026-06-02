@@ -1,0 +1,44 @@
+{
+  "balanced_profile": false,
+  "bind_mount_model": false,
+  "credits": {
+    "Lycidias93": "Pixel 10-series fork, controlled Mustang verification, universal-first release packaging",
+    "RipperHybrid/AshLooper": "external bootloop safety recommendation during testing; not bundled",
+    "marx161": "original thermal polling fix idea and upstream inspiration",
+    "teoweed/teozazaa": "external Tensor thermal tweak analysis inspiration only; no code, values, live patching, or bind-mount model reused"
+  },
+  "live_text_patching": false,
+  "module_id_stable": true,
+  "polling_value_changes_in_this_release": false,
+  "profiles": {
+    "blazer": {
+      "source": "previous universal test profile",
+      "state": "beta/pending"
+    },
+    "mustang": {
+      "source": "current verified universal scope",
+      "state": "verified"
+    }
+  },
+  "release_model": "universal-first",
+  "runtime_patch_model": false,
+  "update_json_changed_in_candidate": false,
+  "version": "1.4.1-universal.1",
+  "versionCode": 1014101,
+  "external_inspiration_boundary": {
+    "source": "teoweed / teozazaa",
+    "use": "release-hardening and support-scope ideas only",
+    "no_code_reuse": true,
+    "no_value_reuse": true,
+    "no_bind_mount_model_reuse": true,
+    "no_live_text_patching_model_reuse": true
+  },
+  "universal_final_status_markers": [
+    "No polling-value changes",
+    "Mustang verified",
+    "Blazer beta",
+    "read-only health",
+    "no code reuse",
+    "no value reuse"
+  ]
+}
