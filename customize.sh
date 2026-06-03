@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.3-universal-test.1"
-MODULE_VERSION_CODE="1014301"
+MODULE_VERSION="1.4.3-universal.1"
+MODULE_VERSION_CODE="1014304"
 A16_PROFILE_SOURCE_ANDROID="16"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_PROFILE_SOURCE_ANDROID="17"
@@ -12,7 +12,7 @@ A17_EXPECTED_FINGERPRINT="google/mustang_beta/mustang:CinnamonBun/CP31.260508.00
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal test profile guard"
+ui_print "  Universal stable profile guard"
 ui_print "----------------------------------------"
 ui_print "Running install-time profile guard"
 
@@ -72,7 +72,7 @@ case "$android" in
     android_guard="android17_pass"
     case "$device" in
       mustang) profile="mustang-android17-cp31"; profile_state="tester_verified_android17_cp31" ;;
-      *) abort "! Android 17 is currently supported only for Pixel 10 Pro XL / mustang in this test build. device=$device" ;;
+      *) abort "! Android 17 is currently supported only for Pixel 10 Pro XL / mustang in this stable build. device=$device" ;;
     esac
     case "$fingerprint" in
       "$A17_EXPECTED_FINGERPRINT") fingerprint_android_guard="exact_android17_mustang_cp31_pass"; build_state="android17_mustang_cp31_15421345_tester_verified" ;;
@@ -88,7 +88,7 @@ case "$android" in
     source_report_sha256="d16d0d985efdf2c9c4c2152b7a9a4c172d00cf647ca2a08b7610d610380ec599"
     ;;
   *)
-    abort "! Unsupported Android version: $android. This test build supports Android 16 profiles and Android 17 Mustang CP31 only."
+    abort "! Unsupported Android version: $android. This stable build supports Android 16 profiles and Android 17 Mustang CP31 only."
     ;;
 esac
 
@@ -150,7 +150,7 @@ expected_thermal_files=3
 polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
-update_json_channel=stable_main_update_json_unchanged
+update_json_channel=stable_update_json_points_to_1.4.3-universal.1
 debug_collector=manual_only
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
@@ -158,7 +158,7 @@ EOF
 
 ui_print "Target guard PASS"
 case "$android" in
-  17|17.*) ui_print "Android 17 Mustang CP31 tester-verified profile selected" ;;
+  17|17.*) ui_print "Android 17 Mustang CP31 verified profile selected" ;;
   *) ui_print "Android 16 profile selected" ;;
 esac
 ui_print "Manual debug collector: su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"

@@ -1,3 +1,11 @@
+## 1.4.3-universal.1 - Stable universal release
+
+- Promoted the Android 16 universal + Android 17 Mustang CP31 profile line to stable.
+- Updated `update.json` to `1.4.3-universal.1` / versionCode `1014304`.
+- Kept Android 17 strictly guarded to `mustang` / `CP31.260508.005` / `15421345`.
+- Added scaffold-only Android 17 pending profile docs for `frankel`, `blazer` and `rango`; these are not enabled.
+- Kept debug collection manual-only via `tools/collect-debug.sh`.
+
 ## v1.4.2-universal-test.1
 
 - Documented Mustang post-reboot PASS for `v1.4.2-universal-test.1`; stable `update.json` remains unchanged and additional devices remain beta/pending. - 2026-06-02

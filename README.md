@@ -482,3 +482,20 @@ Android 17 must use a separate factory evidence dump and separate profile set. D
 - `frankel`, `blazer`, and `rango` remain beta/pending live verification.
 - Android 17 remains blocked pending separate factory evidence/profile files.
 <!-- RELEASE_v1.4.2-universal-test.1_MUSTANG_PASS_END -->
+
+<!-- README_RELEASE_143_UNIVERSAL_STABLE_20260603_START -->
+## Stable release 1.4.3-universal.1
+
+`1.4.3-universal.1` promotes the tested universal line to the stable update channel.
+
+- Android 16 Pixel 10-series profile behavior remains unchanged.
+- Android 17 is enabled only for Pixel 10 Pro XL / `mustang` on `CP31.260508.005` / `15421345`.
+- Android 17 `frankel`, `blazer` and `rango` are prepared as scaffold-only pending profiles and remain blocked until device-specific evidence exists.
+- Debug collection remains manual-only:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+```
+
+The module should still not be added to the AshLooper / AshReXcue whitelist while testing.
+<!-- README_RELEASE_143_UNIVERSAL_STABLE_20260603_END -->

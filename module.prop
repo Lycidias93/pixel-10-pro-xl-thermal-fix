@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.3-universal-test.1
-versionCode=1014301
+version=1.4.3-universal.1
+versionCode=1014304
 author=Lycidias93, based on marx161
-description=Universal test: Android 16 Pixel 10 profiles plus Android 17 Mustang CP31.260508.005 / 15421345 tester-verified profile. Manual debug collector included; stable update channel unchanged.
+description=Stable universal release: Android 16 Pixel 10 profiles plus Android 17 Mustang CP31.260508.005 / 15421345 verified profile. Manual debug collector included; missing Android 17 device profiles are scaffolded but blocked until evidence exists.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
