@@ -20,3 +20,23 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 - No automatic post-reboot debug collection.
 - Stable `update.json` points to this release.
 - Keep AshLooper / AshReXcue available while testing and do not whitelist this module there.
+
+<!-- RELEASE_143_UNIVERSAL1_TESTER_CREDITS_20260603_START -->
+## Tester credit and compatibility evidence
+
+- Android 17 Mustang verification credit: `Jiggs`.
+- Verified device/build: Pixel 10 Pro XL / `mustang` / Android 17 / `CP31.260508.005` / incremental `15421345`.
+- Evidence: install, reboot, active overlay verification, all expected `VIRTUAL-SKIN` `PollingDelay=5000` targets, running Thermal service, and no fresh ThermalHAL tombstone.
+
+## Online stock debug report for unsupported devices
+
+For unsupported Pixel 10 devices or new firmware, collect stock evidence before flashing:
+
+```sh
+pkg install -y python curl
+curl -fsSLo pixel_thermal_debug_report.py https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_debug_report.py
+python3 pixel_thermal_debug_report.py
+```
+
+Do not force-install the module outside the guard. Future vNext work may add a pre-abort debug ZIP path for unsupported install attempts.
+<!-- RELEASE_143_UNIVERSAL1_TESTER_CREDITS_20260603_END -->

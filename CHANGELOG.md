@@ -1,3 +1,9 @@
+## Unreleased
+
+- Added named Android 17 Mustang tester credit for `Jiggs` in README/release documentation.
+- Documented the online stock debug report path for unsupported Pixel 10 devices and newer firmware before installing the module.
+- Documented vNext guard plan: unsupported installs may generate a pre-abort stock debug ZIP, but must still abort without enabling profiles or materializing overlays.
+
 ## 1.4.3-universal.1 - Stable universal release
 
 - Promoted the Android 16 universal + Android 17 Mustang CP31 profile line to stable.

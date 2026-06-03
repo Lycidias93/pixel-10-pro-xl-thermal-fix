@@ -1,22 +1,24 @@
 # Pixel 10 Thermal Polling Fix
 
-<!-- RELEASE_1_4_3_universal_test_1_START -->
-## 1.4.3-universal-test.1
+<!-- README_CURRENT_STABLE_143_UNIVERSAL1_20260603_START -->
+## Current stable release: `v1.4.3-universal.1`
 
-Public universal prerelease.
+`1.4.3-universal.1` is the current stable universal release.
 
-- Android 16 universal profile behavior remains unchanged.
-- Android 17 support is limited to Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / incremental `15421345`.
-- Android 17 Mustang has two post-reboot PASS reports from the tester-supplied build.
-- The debug collector is manual-only and does not run automatically after reboot.
-- After reboot, collect evidence with:
+- Android 16 Pixel 10-series profile behavior remains unchanged.
+- Android 17 support is enabled only for Pixel 10 Pro XL / `mustang` on `CP31.260508.005` / incremental `15421345`.
+- Android 17 Mustang verification credit: `Jiggs` provided the live install, reboot and manual debug ZIP evidence that promoted the A17 Mustang profile to stable.
+- Android 17 `frankel`, `blazer` and `rango` are prepared as scaffold-only pending profiles and remain blocked until device-specific evidence exists.
+- Debug collection is manual-only for installed modules and does not run automatically after reboot.
+
+Manual collector after flash + reboot:
 
 ```sh
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
 
-Stable `update.json` remains unchanged.
-<!-- RELEASE_1_4_3_universal_test_1_END -->
+For devices or firmware that are not yet supported by the install guard, do **not** force-install the module. Use the online stock debug report from `main` first.
+<!-- README_CURRENT_STABLE_143_UNIVERSAL1_20260603_END -->
 
 Project: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix>
 Releases: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases>
@@ -30,10 +32,10 @@ The **stable verified path** is still Pixel 10 Pro XL (`mustang`) on Android 16.
 
 | Channel | Release | Device scope | Verification state | Install path |
 |---|---:|---|---|---|
-| Stable | `v1.3-mustang.15` | Pixel 10 Pro XL / `mustang` / Android 16 / `CP1A.260505.005` / `15081906` | Install + post-reboot verified | Normal stable release / `main/update.json` |
-| Universal test | `v1.4.0-universal-test.2` | `mustang` stable profile + `blazer` beta profile | Mustang post-reboot verified; Blazer not live-verified by this fork | Manual GitHub prerelease ZIP only |
+| Stable | `v1.4.3-universal.1` | Pixel 10-series Android 16 profiles; Android 17 only for Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345` | Mustang Android 16 verified; Mustang Android 17 verified by `Jiggs`; other Android 17 devices blocked | Normal stable release / `main/update.json` |
+| Pending evidence | none | Android 17 `frankel`, `blazer`, `rango`; newer firmware fingerprints | Scaffold-only documentation, no enabled profile | Submit stock debug report first |
 
-`v1.4.0-universal-test.1` is superseded. It packaged profiles but did not materialize the selected profile into active `system/vendor/etc/...` overlays during install. Use `v1.4.0-universal-test.2` or newer for universal testing.
+Older universal test releases are superseded by `v1.4.3-universal.1` for normal installation.
 
 ## Permanent module identity
 
@@ -79,8 +81,9 @@ In daily use, the intended difference is more responsive thermal skin-sensor pol
 
 - Original thermal polling fix idea and upstream inspiration: `marx161`. The module metadata intentionally keeps the upstream credit as `based on marx161`.
 - Pixel 10-series fork, Mustang controlled bisect, profile materialization fix, runtime verification and public release packaging: [Lycidias93](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix).
+- Android 17 Mustang live verification: `Jiggs` provided the Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345` install, reboot and debug ZIP evidence used to promote the A17 Mustang profile.
 - External bootloop safety during testing: [AshLooper](https://github.com/RipperHybrid/AshLooper) by RipperHybrid. AshLooper is not bundled and not required by the ZIP itself, but it is strongly recommended while testing ports, universal prereleases or new firmware.
-- Future Pixel 10 Pro / `blazer` testers should be credited only after a real install, reboot, mount and ThermalHAL verification report is available.
+- Future Pixel 10 Android 17 `frankel`, `blazer` and `rango` testers should be credited only after real device-specific stock evidence and post-reboot verification are available.
 
 AshLooper should stay outside the module and this module should not be added to the AshLooper whitelist, so AshLooper can still protect against a bad boot.
 <!-- README_CREDITS_UNIVERSAL_20260601_END -->
@@ -94,36 +97,51 @@ Device: Pixel 10 Pro XL
 Codename: mustang
 Android: 16
 Verified build: CP1A.260505.005 / 15081906
-Stable release: v1.3-mustang.15
-Universal test release: v1.4.0-universal-test.2
-Universal test state: Mustang post-reboot verified
+Release: v1.4.3-universal.1
+State: stable / live verified
 ```
 
-### Beta test
+```text
+Device: Pixel 10 Pro XL
+Codename: mustang
+Android: 17
+Verified build: CP31.260508.005 / 15421345
+Release: v1.4.3-universal.1
+State: stable / live verified by Jiggs
+```
+
+### Android 16 beta / pending live verification
 
 ```text
-Device: Pixel 10 Pro
-Codename: blazer
-Release: v1.4.0-universal-test.2
-State: beta/test profile
-Fork-side live boot verification: no
-ThermalHAL post-reboot verification: pending first Blazer tester
+Pixel 10         / frankel / Android 16 / CP1A.260505.005 / beta-pending
+Pixel 10 Pro     / blazer  / Android 16 / CP1A.260505.005 / beta-pending
+Pixel 10 Pro Fold/ rango   / Android 16 / CP1A.260505.005 / beta-pending
+```
+
+### Android 17 prepared but blocked
+
+```text
+frankel / blazer / rango Android 17 profiles are scaffold-only pending entries.
+They are not enabled by the installer until device-specific stock thermal evidence exists.
 ```
 
 ### Unsupported
 
-Unknown devices or unsupported Android versions should abort during install. Do not flash this module on unrelated devices.
+Unknown devices, unsupported Android versions or unsupported Android 17 fingerprints abort during install. Do not force-install this module on unrelated devices or new firmware.
 
-## How the universal test ZIP works
+## How the universal ZIP works
 
-The universal test ZIP is **multi-profile**, not a shared thermal overlay.
+The universal ZIP is **multi-profile**, not a shared thermal overlay.
 
-At install time, the selector checks the device identity and materializes only the matching profile:
+At install time, the selector checks Android version, device codename, build identity and fingerprint. It materializes only the matching profile into the active Magisk overlay path:
 
 ```text
-ro.product.device=mustang -> profiles/mustang -> system/vendor/etc
-ro.product.device=blazer  -> profiles/blazer  -> system/vendor/etc
-anything else             -> abort
+Android 16 mustang -> profiles/mustang -> system/vendor/etc
+Android 16 frankel -> profiles/frankel -> system/vendor/etc, beta-pending
+Android 16 blazer  -> profiles/blazer  -> system/vendor/etc, beta-pending
+Android 16 rango   -> profiles/rango   -> system/vendor/etc, beta-pending
+Android 17 mustang CP31.260508.005 / 15421345 -> profiles/mustang-android17-cp31 -> system/vendor/etc
+Other Android 17 devices/builds -> abort
 ```
 
 A healthy install must contain both:
@@ -154,7 +172,7 @@ Expected effect: more responsive thermal awareness and smoother thermal decision
 
 ## Verified Mustang runtime scope
 
-`v1.3-mustang.15` and `v1.4.0-universal-test.2` use the same verified Mustang runtime scope.
+`v1.4.3-universal.1` and `v1.4.3-universal.1` use the same verified Mustang runtime scope.
 
 ### `thermal_info_config_throttling.json`
 
@@ -210,18 +228,18 @@ These entries are likely derived/model/formula sensors or helper sensors. Changi
 
 - The installer is device scoped.
 - Mustang stable scope was built through controlled bisecting.
-- Mustang `v1.4.0-universal-test.2` has passed install, pre-reboot staging and post-reboot verification.
+- Mustang `v1.4.3-universal.1` has passed install, pre-reboot staging and post-reboot verification.
 - Blazer remains beta until a real Pixel 10 Pro tester reports install, reboot, mounts and ThermalHAL state.
 - AshLooper is recommended as an external bootloop protection layer during testing.
 - This module should not be added to the AshLooper whitelist.
 - `disable` and `skip_mount` must remain absent for normal operation.
 
-Expected healthy Mustang state for `v1.4.0-universal-test.2`:
+Expected healthy Mustang state for `v1.4.3-universal.1`:
 
 ```text
 id=pixel-10-pro-xl-thermal-fix
-version=1.4.0-universal-test.2
-versionCode=1014002
+version=1.4.3-universal.1
+versionCode=1014304
 disable=absent
 skip_mount=absent
 AshLooper loops=0
@@ -230,24 +248,56 @@ fresh_thermalhal_tombstone=absent
 
 ## Install
 
-### Stable Mustang install
+### Stable install
 
 Download the latest stable ZIP from GitHub Releases and install it in Magisk:
 
 ```text
-v1.3-mustang.15
+v1.4.3-universal.1
+pixel-10-thermal-polling-fix-v1.4.3-universal.1.zip
 ```
 
-### Universal test install
-
-Download the latest universal prerelease ZIP from GitHub Releases and install it manually in Magisk:
+Release page:
 
 ```text
-v1.4.0-universal-test.2
-pixel-10-thermal-polling-fix-v1.4.0-universal-test.2.zip
+https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.3-universal.1
 ```
 
-This prerelease is not pushed through `main/update.json`.
+### Manual debug collector after installing this module
+
+After flashing and rebooting, collect runtime evidence with:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+```
+
+Output:
+
+```text
+/sdcard/Download/pixel_thermal_debug_*.zip
+```
+
+### Online stock debug report before installing this module
+
+For unsupported Pixel 10 devices, new Android 17 firmware, or any device outside the install guard, collect a stock compatibility report before flashing. This does not install or patch anything.
+
+```sh
+pkg install -y python curl
+curl -fsSLo pixel_thermal_debug_report.py https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_debug_report.py
+python3 pixel_thermal_debug_report.py
+```
+
+Default output:
+
+```text
+/storage/emulated/0/Download/pixel_thermal_debug_<device>_<incremental>_<timestamp>.zip
+```
+
+Do not use the installed-module collector path on devices where the module is not installed. Use the online stock debug report instead.
+
+### vNext install-abort debug plan
+
+A future vNext may generate a stock debug ZIP automatically before aborting an unsupported install. The guard must still abort and must not materialize overlays for unsupported Android/device/firmware combinations.
 
 ## Pre-reboot staging check
 
@@ -272,8 +322,8 @@ If active `system/vendor/etc` files are missing, do not reboot into that staging
 After rebooting, check:
 
 ```text
-version=1.4.0-universal-test.2
-versionCode=1014002
+version=1.4.3-universal.1
+versionCode=1014304
 disable=absent
 skip_mount=absent
 ```
@@ -346,17 +396,19 @@ su -c '/data/data/com.termux/files/usr/bin/python3 /data/data/com.termux/files/h
 ```text
 Stable verified:
 - Pixel 10 Pro XL / mustang / Android 16 / CP1A.260505.005 / 15081906
+- Pixel 10 Pro XL / mustang / Android 17 / CP31.260508.005 / 15421345 / verified by Jiggs
 
-Universal test:
-- Pixel 10 Pro XL / mustang / Android 16 / CP1A.260505.005 / 15081906 / post-reboot verified
-- Pixel 10 Pro / blazer / Android 16 / beta profile / live verification pending
+Beta / pending live verification:
+- Pixel 10 / frankel / Android 16 / CP1A.260505.005
+- Pixel 10 Pro / blazer / Android 16 / CP1A.260505.005
+- Pixel 10 Pro Fold / rango / Android 16 / CP1A.260505.005
 
-Needs compatibility report first:
+Prepared but blocked:
+- Android 17 frankel / blazer / rango scaffold-only pending profiles
+
+Needs stock compatibility report first:
 - newer mustang firmware
-- newer blazer firmware
-- Pixel 10
-- Pixel 10 Pro Fold
-- Pixel 10a
+- Android 17 frankel / blazer / rango
 - any other Pixel 10-series codename/fingerprint
 ```
 
@@ -376,11 +428,11 @@ If the device cannot boot normally, use your external bootloop protection layer 
 
 ## Release policy
 
-- `v1.3-mustang.15` is the current stable release.
-- `v1.4.0-universal-test.2` is the current universal prerelease test release.
-- `v1.4.0-universal-test.1` is superseded and should not be used.
-- Universal test builds are manual prereleases and are not pushed via stable `main/update.json`.
-- Blazer remains beta until first live install, reboot, mount and ThermalHAL verification.
+- `v1.4.3-universal.1` is the current stable release.
+- Stable `main/update.json` points to `v1.4.3-universal.1`.
+- Android 17 is enabled only for Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345`.
+- Android 17 `frankel`, `blazer` and `rango` remain scaffold-only pending until stock evidence and live verification exist.
+- Unsupported installs should abort. A future vNext may create a pre-abort stock debug ZIP, but must not enable a profile or materialize overlays.
 - Historical builds are kept for audit and rollback context, but should not be preferred for normal installation.
 - Full release history belongs in `CHANGELOG.md`, not in this README.
 
