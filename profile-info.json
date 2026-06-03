@@ -1,0 +1,131 @@
+{
+  "module_id": "pixel-10-pro-xl-thermal-fix",
+  "version": "1.4.3-universal-test.1",
+  "versionCode": "1014301",
+  "release_type": "public universal prerelease",
+  "android16": "existing universal profile set unchanged",
+  "android17_mustang": {
+    "device": "mustang",
+    "android": "17",
+    "build": "CP31.260508.005",
+    "incremental": "15421345",
+    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys",
+    "verification": "tester post-reboot PASS twice on test.2/test.3",
+    "profile": "mustang-android17-cp31"
+  },
+  "collector": {
+    "mode": "manual_only",
+    "command": "su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh",
+    "output": "/sdcard/Download/pixel_thermal_debug_*.zip"
+  },
+  "a17_source_profile_info": {
+    "module_id": "pixel-10-pro-xl-thermal-fix",
+    "version": "1.4.3-android17-mustang-test.3",
+    "versionCode": "1014303",
+    "release_type": "telegram tester prerelease with fixed auto collector",
+    "device": "mustang",
+    "android": "17",
+    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys",
+    "incremental": "15421345",
+    "source_report_sha256": "d16d0d985efdf2c9c4c2152b7a9a4c172d00cf647ca2a08b7610d610380ec599",
+    "stock_hashes": {
+      "thermal_info_config_throttling.json": "3f2989b45a484a3f669b97019790fe533aa7e4b954e8d7a29146cbf6542423de",
+      "thermal_info_config.json": "9976306c6421447426f17464a12a3d058eee6e4c936e6a1db7dceb9280c0286d",
+      "thermal_info_config_charge.json": "2d5d10a5ab2eae1443ea6200569c316cbf0109c407a16672386c0e0095bf8532"
+    },
+    "patched_hashes": {
+      "thermal_info_config_throttling.json": "19dff552a1f71c6487ad0deb6e211cf46a80629fe68b1b684b0de52d509405fc",
+      "thermal_info_config.json": "1117ddcabb3d459d70c8231372ba4472232a5741cd6a5f2b8fd9b13e253c51d7",
+      "thermal_info_config_charge.json": "187191f6ec82158023b55191837bd678c7ecd8a4e40533565ea6f73322df494f"
+    },
+    "changes": [
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-OVER-35C-TRIGGER",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-HINT",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-CPU-LIGHT-ODPM",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-CPU-MID",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-CPU-ODPM",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-CPU-HIGH",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-SOC",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_throttling.json",
+        "sensor": "VIRTUAL-SKIN-SOC-EXTREME",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config.json",
+        "sensor": "VIRTUAL-SKIN-SPEAKER",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_charge.json",
+        "sensor": "VIRTUAL-SKIN-CHARGE-WIRED",
+        "from": 300000,
+        "to": 5000
+      },
+      {
+        "file": "thermal_info_config_charge.json",
+        "sensor": "VIRTUAL-SKIN-CHARGE-PERSIST",
+        "from": 300000,
+        "to": 5000
+      }
+    ],
+    "guardrails": {
+      "update_json_changed": false,
+      "bind_mount_model": false,
+      "runtime_text_patching": false,
+      "post_reboot_verification_required": true
+    },
+    "collector": {
+      "auto_debug_zip_collector": true,
+      "auto_debug_zip_target": "/sdcard/Download/pixel_thermal_a17_auto_debug_*.zip",
+      "fixes_since_test2": [
+        "profile-info version/versionCode aligned with module.prop",
+        "active/module polling summary quote bug fixed",
+        "mount summary changed to hash-based overlay equivalence plus raw mountinfo"
+      ]
+    }
+  }
+}

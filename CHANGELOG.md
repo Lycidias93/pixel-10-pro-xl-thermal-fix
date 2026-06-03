@@ -239,3 +239,12 @@ Credits:
 - External teoweed / teozazaa analysis credit is inspiration only: no code reuse, no value reuse, no service.sh bind-mount model reuse, and no live text patching.
 - Runtime model: install-time profile materialization only; no bind mount and no runtime text patching.
 <!-- UNIVERSAL_FINAL_STATUS_20260602_END -->
+
+<!-- CHANGELOG_1_4_3_universal_test_1_START -->
+## 1.4.3-universal-test.1 - Android 17 Mustang public universal prerelease
+
+- Added Android 17 Mustang CP31.260508.005 / 15421345 profile to the universal test line.
+- Kept Android 16 universal profile behavior unchanged.
+- Added manual-only debug collector at `tools/collect-debug.sh`.
+- Did not change stable `update.json`.
+<!-- CHANGELOG_1_4_3_universal_test_1_END -->

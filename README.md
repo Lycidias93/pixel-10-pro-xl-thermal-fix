@@ -1,5 +1,23 @@
 # Pixel 10 Thermal Polling Fix
 
+<!-- RELEASE_1_4_3_universal_test_1_START -->
+## 1.4.3-universal-test.1
+
+Public universal prerelease.
+
+- Android 16 universal profile behavior remains unchanged.
+- Android 17 support is limited to Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / incremental `15421345`.
+- Android 17 Mustang has two post-reboot PASS reports from the tester-supplied build.
+- The debug collector is manual-only and does not run automatically after reboot.
+- After reboot, collect evidence with:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+```
+
+Stable `update.json` remains unchanged.
+<!-- RELEASE_1_4_3_universal_test_1_END -->
+
 Project: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix>
 Releases: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases>
 Issues / compatibility requests: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues>
