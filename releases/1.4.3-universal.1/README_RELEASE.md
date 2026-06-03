@@ -40,3 +40,21 @@ python3 pixel_thermal_debug_report.py
 
 Do not force-install the module outside the guard. Future vNext work may add a pre-abort debug ZIP path for unsupported install attempts.
 <!-- RELEASE_143_UNIVERSAL1_TESTER_CREDITS_20260603_END -->
+
+### Toggle/debug report for disabled module state
+
+If Magisk keeps this module disabled, collect a read-only report before removing or reinstalling:
+
+```sh
+cd /sdcard/Download
+curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_toggle_debug.sh
+su -c 'sh /sdcard/Download/pixel_thermal_toggle_debug.sh'
+```
+
+Output:
+
+```text
+/sdcard/Download/pixel_thermal_toggle_debug_*.txt
+```
+
+This does not change module state; it only collects diagnostic evidence.

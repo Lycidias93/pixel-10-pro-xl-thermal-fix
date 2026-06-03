@@ -551,3 +551,23 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 
 The module should still not be added to the AshLooper / AshReXcue whitelist while testing.
 <!-- README_RELEASE_143_UNIVERSAL_STABLE_20260603_END -->
+
+<!-- TOGGLE_DEBUG_SCRIPT_20260603_START -->
+## Toggle/debug report for disabled module state
+
+If Magisk keeps showing this module as disabled, collect a read-only toggle/debug report before removing or reinstalling:
+
+```sh
+cd /sdcard/Download
+curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_toggle_debug.sh
+su -c 'sh /sdcard/Download/pixel_thermal_toggle_debug.sh'
+```
+
+Output:
+
+```text
+/sdcard/Download/pixel_thermal_toggle_debug_*.txt
+```
+
+This script does not enable, disable, remove, mount or patch anything. It records module flags, Magisk module directories, AshLooper/AshReXcue status, thermal mountinfo and recent Magisk logs so a stuck `disable`/`skip_mount` state can be diagnosed.
+<!-- TOGGLE_DEBUG_SCRIPT_20260603_END -->

@@ -12,6 +12,12 @@
 - Added scaffold-only Android 17 pending profile docs for `frankel`, `blazer` and `rango`; these are not enabled.
 - Kept debug collection manual-only via `tools/collect-debug.sh`.
 
+## Toggle debug helper - 2026-06-03
+
+- Added public read-only `tools/pixel_thermal_toggle_debug.sh` for cases where Magisk keeps the module disabled.
+- The helper records module flags, Magisk staging directories, AshLooper/AshReXcue status, thermal mountinfo and Magisk logs.
+- No runtime thermal profile, release ZIP, module.prop or updateJson change.
+
 ## v1.4.2-universal-test.1
 
 - Documented Mustang post-reboot PASS for `v1.4.2-universal-test.1`; stable `update.json` remains unchanged and additional devices remain beta/pending. - 2026-06-02
