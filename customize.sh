@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.3-universal.1"
-MODULE_VERSION_CODE="1014304"
+MODULE_VERSION="1.4.3-universal.2"
+MODULE_VERSION_CODE="1014305"
 A16_PROFILE_SOURCE_ANDROID="16"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_PROFILE_SOURCE_ANDROID="17"
@@ -150,7 +150,7 @@ expected_thermal_files=3
 polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
-update_json_channel=stable_update_json_points_to_1.4.3-universal.1
+update_json_channel=stable_update_json_points_to_1.4.3-universal.2
 debug_collector=manual_only
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip

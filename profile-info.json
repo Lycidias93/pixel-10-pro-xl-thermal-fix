@@ -1,8 +1,8 @@
 {
   "module_id": "pixel-10-pro-xl-thermal-fix",
-  "version": "1.4.3-universal.1",
-  "versionCode": "1014304",
-  "release_type": "stable universal release",
+  "version": "1.4.3-universal.2",
+  "versionCode": "1014305",
+  "release_type": "stable universal hotfix",
   "android16": "existing universal profile set unchanged",
   "android17_mustang": {
     "device": "mustang",
@@ -187,5 +187,12 @@
     "unsupported_install_pre_abort_debug_zip": "planned_not_enabled",
     "guard_requirement": "abort_without_profile_enablement_or_overlay_materialization",
     "stock_debug_online_script": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_debug_report.py"
+  },
+  "hotfix_1_4_3_universal_2": {
+    "reason": "post-fs-data boot guard in 1.4.3-universal.1 still disabled non-mustang Android 16 beta profiles after install",
+    "profile_changes": false,
+    "update_json_changed": true,
+    "android16_universal_boot_guard": "mustang, frankel, blazer and rango are allowed when fingerprint identifies Android 16",
+    "android17_guard": "mustang CP31.260508.005 / 15421345 only"
   }
 }

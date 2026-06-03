@@ -1,5 +1,19 @@
 # Pixel 10 Thermal Polling Fix
 
+<!-- RELEASE_143_UNIVERSAL_2_BOOTGUARD_HOTFIX_START -->
+## Stable hotfix 1.4.3-universal.2
+
+`1.4.3-universal.2` fixes the boot-time guard from `1.4.3-universal.1`: Android 16 universal profiles for `frankel`, `blazer`, and `rango` are no longer disabled after install by `post-fs-data.sh`.
+
+Thermal profile files are unchanged. Android 17 remains enabled only for Pixel 10 Pro XL / `mustang` on `CP31.260508.005` / `15421345`.
+
+After updating, reboot and run:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+```
+<!-- RELEASE_143_UNIVERSAL_2_BOOTGUARD_HOTFIX_END -->
+
 <!-- README_CURRENT_STABLE_143_UNIVERSAL1_20260603_START -->
 ## Current stable release: `v1.4.3-universal.1`
 

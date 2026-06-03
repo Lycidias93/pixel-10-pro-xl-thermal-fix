@@ -1,3 +1,10 @@
+## 1.4.3-universal.2 - Universal boot guard hotfix
+
+- Fixed `post-fs-data.sh` boot guard so Android 16 `frankel`, `blazer`, and `rango` universal profiles are not disabled after install.
+- Keeps thermal profile files unchanged from `1.4.3-universal.1`.
+- Keeps Android 17 support restricted to `mustang` / `CP31.260508.005` / `15421345`.
+- Updated stable `update.json` to `1.4.3-universal.2` / versionCode `1014305`.
+
 ## Unreleased
 
 - Added named Android 17 Mustang tester credit for `Jiggs` in README/release documentation.
