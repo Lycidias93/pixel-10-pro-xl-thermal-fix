@@ -1,3 +1,28 @@
+
+## Latest prerelease: 1.4.4-universal-test.2
+
+`1.4.4-universal-test.2` is a prerelease/test ZIP. It carries forward the SELinux overlay-read hotfix from `1.4.3-universal.3` and adds improved debug evidence collection.
+
+Stable update channel remains `1.4.3-universal.3`.
+
+**Already verified / PASS evidence exists**
+- Pixel 10 Pro XL / mustang / Android 16 / CP1A.260505.005
+- Pixel 10 Pro / blazer / Android 16 / CP1A.260505.005
+- Pixel 10 Pro XL / mustang / Android 17 / CP31.260508.005 / 15421345
+
+**Enabled but still needs post-reboot debug ZIP**
+- Pixel 10 / frankel / Android 16
+- Pixel 10 Pro Fold / rango / Android 16
+- Pixel 10 / frankel / Android 17 / CP21.260330.011
+- Pixel 10 Pro / blazer / Android 17 / CP21.260330.011
+- Pixel 10 Pro XL / mustang / Android 17 / CP21.260330.011
+- Pixel 10 Pro Fold / rango / Android 17 / CP21.260330.011
+
+**Recent verification credits**
+- Jiggs — Android 17 Mustang CP31 verification.
+- Harish — Android 16 Blazer runtime and bootguard hotfix verification.
+- maicol07 — Android 16 Mustang SELinux overlay-read crash-loop logcat and `1.4.3-universal.3` hotfix verification.
+
 ## v1.4.3-universal.3 hotfix note
 
 `1.4.3-universal.3` adds a read-only SELinux policy rule for Pixel ThermalHAL on setups where Magisk-mounted thermal config overlays are exposed as `system_file`. This fixes a reported ThermalHAL crash loop after install. No thermal profile values changed versus `v1.4.3-universal.2`.

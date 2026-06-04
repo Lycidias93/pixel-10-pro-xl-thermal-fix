@@ -1,3 +1,12 @@
+## 1.4.4-universal-test.2 - prerelease test
+
+- Add prerelease `1.4.4-universal-test.2`.
+- Carry forward `1.4.3-universal.3` SELinux overlay-read hotfix.
+- Keep stable `update.json` on `1.4.3-universal.3`.
+- Enable guarded Android 17 CP21 test profiles for frankel, blazer, mustang and rango.
+- Improve manual debug ZIP evidence: SELinux contexts, AVC denial summary, sepolicy copy, time context, and old-vs-fresh ThermalHAL tombstone marker.
+- Credits: Jiggs, Harish, maicol07.
+
 ## 1.4.3-universal.3 - stable SELinux overlay-read hotfix
 
 - Fixed ThermalHAL crash loop on setups where Magisk-mounted `/vendor/etc/thermal_info_config*.json` appears as `system_file`.
