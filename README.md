@@ -1,3 +1,7 @@
+## v1.4.3-universal.3 hotfix note
+
+`1.4.3-universal.3` adds a read-only SELinux policy rule for Pixel ThermalHAL on setups where Magisk-mounted thermal config overlays are exposed as `system_file`. This fixes a reported ThermalHAL crash loop after install. No thermal profile values changed versus `v1.4.3-universal.2`.
+
 # Pixel 10 Thermal Polling Fix
 
 <!-- RELEASE_143_UNIVERSAL_2_BOOTGUARD_HOTFIX_START -->
@@ -594,9 +598,9 @@ Factory-derived Android 17 CP21 thermal evidence has been imported for `frankel`
 This is not a support enablement. Android 17 non-Mustang devices remain blocked until patched profile review and post-reboot live verification are complete.
 <!-- A17_CP21_PENDING_EVIDENCE_20260604_END -->
 
-## v1.4.4-universal-test.1 prerelease note
+## 1.4.3-universal.3 prerelease note
 
-`v1.4.4-universal-test.1` is a universal prerelease test ZIP. It enables guarded Android 17 CP21 profiles for Pixel 10 series devices from imported factory evidence, while the stable `update.json` channel remains on `v1.4.3-universal.2`.
+`1.4.3-universal.3` is a universal prerelease test ZIP. It enables guarded Android 17 CP21 profiles for Pixel 10 series devices from imported factory evidence, while the stable `update.json` channel remains on `1.4.3-universal.3`.
 
 PASS / verified scopes:
 

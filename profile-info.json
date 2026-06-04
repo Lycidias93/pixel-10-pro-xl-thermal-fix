@@ -283,5 +283,8 @@
       "Jiggs",
       "Harish"
     ]
-  }
+  },
+  "module_version": "1.4.3-universal.3",
+  "module_version_code": 1014306,
+  "selinux_overlay_read_policy": "hal_thermal_default system_file read-only"
 }

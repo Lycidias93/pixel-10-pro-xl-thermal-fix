@@ -1,0 +1,8 @@
+# Pixel 10 Thermal Polling Fix
+# Read-only SELinux compatibility for Magisk-mounted thermal config overlays.
+#
+# Some devices expose the Magisk overlay source for /vendor/etc/thermal_info_config*.json
+# as object_r:system_file:s0. Pixel ThermalHAL then aborts on read denial.
+# Keep this narrow: ThermalHAL gets read-only file access, no write/execute.
+allow hal_thermal_default system_file dir { getattr open read search };
+allow hal_thermal_default system_file file { getattr open read map };

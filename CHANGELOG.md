@@ -1,3 +1,10 @@
+## 1.4.3-universal.3 - stable SELinux overlay-read hotfix
+
+- Fixed ThermalHAL crash loop on setups where Magisk-mounted `/vendor/etc/thermal_info_config*.json` appears as `system_file`.
+- Added read-only `sepolicy.rule` for `hal_thermal_default` to read/open/getattr/map Magisk overlay config files.
+- No thermal profile values changed versus `v1.4.3-universal.2`.
+- Stable updateJson now points to `1.4.3-universal.3`.
+
 ## 1.4.3-universal.2 - Universal boot guard hotfix
 
 
