@@ -585,3 +585,11 @@ Output:
 
 This script does not enable, disable, remove, mount or patch anything. It records module flags, Magisk module directories, AshLooper/AshReXcue status, thermal mountinfo and recent Magisk logs so a stuck `disable`/`skip_mount` state can be diagnosed.
 <!-- TOGGLE_DEBUG_SCRIPT_20260603_END -->
+
+<!-- A17_CP21_PENDING_EVIDENCE_20260604_START -->
+### Android 17 CP21 pending factory evidence
+
+Factory-derived Android 17 CP21 thermal evidence has been imported for `frankel`, `blazer`, `mustang` and `rango` under `profiles/android17-pending/`.
+
+This is not a support enablement. Android 17 non-Mustang devices remain blocked until patched profile review and post-reboot live verification are complete.
+<!-- A17_CP21_PENDING_EVIDENCE_20260604_END -->

@@ -275,3 +275,10 @@ Credits:
 - Added manual-only debug collector at `tools/collect-debug.sh`.
 - Did not change stable `update.json`.
 <!-- CHANGELOG_1_4_3_universal_test_1_END -->
+
+## Android 17 CP21 pending factory evidence - 2026-06-04
+
+- Imported factory-derived Android 17 CP21 thermal evidence for `frankel`, `blazer`, `mustang` and `rango`.
+- Added stock thermal files plus virtual-skin maps under `profiles/android17-pending/`.
+- No active profile, release ZIP, `module.prop`, `update.json`, `customize.sh` or `post-fs-data.sh` change.
+- Android 17 non-Mustang support remains blocked pending real-device post-reboot verification.

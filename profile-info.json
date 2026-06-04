@@ -194,5 +194,71 @@
     "update_json_changed": true,
     "android16_universal_boot_guard": "mustang, frankel, blazer and rango are allowed when fingerprint identifies Android 16",
     "android17_guard": "mustang CP31.260508.005 / 15421345 only"
+  },
+  "android17_cp21_pending_factory_evidence": {
+    "build": "CP21.260330.011",
+    "state": "pending_evidence_only_not_enabled",
+    "source": "official Android 17 Beta factory images extracted locally with pixel10 factory virtual skin dump v4",
+    "devices": {
+      "frankel": {
+        "device": "Pixel 10",
+        "codename": "frankel",
+        "evidence_path": "profiles/android17-pending/frankel/CP21.260330.011/",
+        "virtual_skin_total": 29,
+        "stock_thermal_files": [
+          "thermal_info_config.json",
+          "thermal_info_config_charge.json",
+          "thermal_info_config_throttling.json"
+        ],
+        "enabled": false,
+        "runtime_verified": false
+      },
+      "blazer": {
+        "device": "Pixel 10 Pro",
+        "codename": "blazer",
+        "evidence_path": "profiles/android17-pending/blazer/CP21.260330.011/",
+        "virtual_skin_total": 28,
+        "stock_thermal_files": [
+          "thermal_info_config.json",
+          "thermal_info_config_charge.json",
+          "thermal_info_config_throttling.json"
+        ],
+        "enabled": false,
+        "runtime_verified": false
+      },
+      "mustang": {
+        "device": "Pixel 10 Pro XL",
+        "codename": "mustang",
+        "evidence_path": "profiles/android17-pending/mustang/CP21.260330.011/",
+        "virtual_skin_total": 26,
+        "stock_thermal_files": [
+          "thermal_info_config.json",
+          "thermal_info_config_charge.json",
+          "thermal_info_config_throttling.json"
+        ],
+        "enabled": false,
+        "runtime_verified": false
+      },
+      "rango": {
+        "device": "Pixel 10 Pro Fold",
+        "codename": "rango",
+        "evidence_path": "profiles/android17-pending/rango/CP21.260330.011/",
+        "virtual_skin_total": 48,
+        "stock_thermal_files": [
+          "thermal_info_config.json",
+          "thermal_info_config_charge.json",
+          "thermal_info_config_throttling.json"
+        ],
+        "enabled": false,
+        "runtime_verified": false
+      }
+    },
+    "guardrails": {
+      "android17_non_mustang_enabled": false,
+      "active_profiles_changed": false,
+      "update_json_changed": false,
+      "release_zip_changed": false,
+      "post_reboot_verification_required_before_enablement": true
+    }
   }
 }
