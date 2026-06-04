@@ -593,3 +593,28 @@ Factory-derived Android 17 CP21 thermal evidence has been imported for `frankel`
 
 This is not a support enablement. Android 17 non-Mustang devices remain blocked until patched profile review and post-reboot live verification are complete.
 <!-- A17_CP21_PENDING_EVIDENCE_20260604_END -->
+
+## v1.4.4-universal-test.1 prerelease note
+
+`v1.4.4-universal-test.1` is a universal prerelease test ZIP. It enables guarded Android 17 CP21 profiles for Pixel 10 series devices from imported factory evidence, while the stable `update.json` channel remains on `v1.4.3-universal.2`.
+
+PASS / verified scopes:
+
+- Pixel 10 Pro XL / `mustang` / Android 16 / `CP1A.260505.005`
+- Pixel 10 Pro / `blazer` / Android 16 / `CP1A.260505.005`
+- Pixel 10 Pro XL / `mustang` / Android 17 / `CP31.260508.005` / `15421345`
+
+Enabled but not runtime PASS yet:
+
+- Pixel 10 / `frankel` / Android 17 / `CP21.260330.011`
+- Pixel 10 Pro / `blazer` / Android 17 / `CP21.260330.011`
+- Pixel 10 Pro XL / `mustang` / Android 17 / `CP21.260330.011`
+- Pixel 10 Pro Fold / `rango` / Android 17 / `CP21.260330.011`
+
+After flashing this prerelease, reboot and run:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+```
+
+Upload `/sdcard/Download/pixel_thermal_debug_*.zip` for PASS evaluation.

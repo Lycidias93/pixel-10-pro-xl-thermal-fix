@@ -1,5 +1,41 @@
 ## 1.4.3-universal.2 - Universal boot guard hotfix
 
+
+## 1.4.4-universal-test.1
+
+Prerelease universal Android 17 CP21 test build.
+
+### Added
+
+- Guarded Android 17 CP21 runtime test profiles for Frankel, Blazer, Mustang and Rango.
+- Runtime profiles generated from imported CP21 factory evidence.
+- Install-state `verification_state` markers for PASS versus pending scopes.
+- Documentation that stable `update.json` remains on v1.4.3-universal.2.
+
+### Changed
+
+- Android 17 CP21 guarded test install path is enabled in the universal prerelease ZIP.
+- Android 17 Mustang CP31 verified path remains unchanged.
+- Android 16 universal path remains unchanged.
+
+### Verification state
+
+PASS:
+
+- Mustang Android 16 CP1A.260505.005
+- Blazer Android 16 CP1A.260505.005
+- Mustang Android 17 CP31.260508.005 / 15421345
+
+Pending runtime verification:
+
+- Frankel Android 16
+- Rango Android 16
+- Frankel Android 17 CP21.260330.011
+- Blazer Android 17 CP21.260330.011
+- Mustang Android 17 CP21.260330.011
+- Rango Android 17 CP21.260330.011
+
+
 - Fixed `post-fs-data.sh` boot guard so Android 16 `frankel`, `blazer`, and `rango` universal profiles are not disabled after install.
 - Keeps thermal profile files unchanged from `1.4.3-universal.1`.
 - Keeps Android 17 support restricted to `mustang` / `CP31.260508.005` / `15421345`.

@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.3-universal.2
-versionCode=1014305
+version=1.4.4-universal-test.1
+versionCode=1014401
 author=Lycidias93, based on marx161
-description=Stable hotfix release: Android 16 Pixel 10 universal boot guard fixed, Android 17 Mustang CP31.260508.005 / 15421345 remains verified. Manual debug collector included; missing Android 17 device profiles remain blocked until evidence exists.
+description=Universal prerelease test: Android 16 Pixel 10 profiles plus Android 17 Mustang CP31 verified and Android 17 CP21 guarded test profiles for Pixel 10 series. PASS states are documented; CP21 non-Mustang needs tester debug ZIP verification.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

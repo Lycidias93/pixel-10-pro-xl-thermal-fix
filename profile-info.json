@@ -260,5 +260,28 @@
       "release_zip_changed": false,
       "post_reboot_verification_required_before_enablement": true
     }
+  },
+  "latest_prerelease": {
+    "version": "1.4.4-universal-test.1",
+    "versionCode": 1014401,
+    "state": "universal_android17_cp21_test",
+    "stable_update_json": "remains_on_v1.4.3-universal.2",
+    "passed": [
+      "Pixel 10 Pro XL / mustang / Android 16 / CP1A.260505.005",
+      "Pixel 10 Pro / blazer / Android 16 / CP1A.260505.005",
+      "Pixel 10 Pro XL / mustang / Android 17 / CP31.260508.005 / 15421345"
+    ],
+    "pending": [
+      "Pixel 10 / frankel / Android 16",
+      "Pixel 10 Pro Fold / rango / Android 16",
+      "Pixel 10 / frankel / Android 17 CP21.260330.011",
+      "Pixel 10 Pro / blazer / Android 17 CP21.260330.011",
+      "Pixel 10 Pro XL / mustang / Android 17 CP21.260330.011",
+      "Pixel 10 Pro Fold / rango / Android 17 CP21.260330.011"
+    ],
+    "credits": [
+      "Jiggs",
+      "Harish"
+    ]
   }
 }
