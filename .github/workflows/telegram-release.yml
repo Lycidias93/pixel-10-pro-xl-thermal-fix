@@ -1,0 +1,61 @@
+name: Telegram release announcement
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  telegram:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Telegram release post
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REPO: ${{ github.repository }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
+          BODY: ${{ github.event.release.body }}
+        run: |
+          set -euo pipefail
+
+          python3 <<'PY' > /tmp/telegram-message.html
+          import html
+          import os
+
+          repo = os.environ["REPO"]
+          tag = os.environ["TAG_NAME"]
+          name = os.environ.get("RELEASE_NAME") or tag
+          url = os.environ["RELEASE_URL"]
+          prerelease = os.environ.get("IS_PRERELEASE") == "true"
+          body = (os.environ.get("BODY") or "").strip()
+
+          kind = "Pre-release" if prerelease else "Release"
+
+          if len(body) > 2500:
+              body = body[:2500].rstrip() + "\n…"
+
+          msg = [
+              f"<b>{html.escape(repo)}</b>",
+              f"<b>{html.escape(kind)}:</b> {html.escape(name)}",
+              f"<b>Tag:</b> <code>{html.escape(tag)}</code>",
+          ]
+
+          if body:
+              msg.append(html.escape(body))
+
+          msg.append(f'<a href="{html.escape(url)}">GitHub Release öffnen</a>')
+          print("\n\n".join(msg))
+          PY
+
+          curl -fsS --retry 3 -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "parse_mode=HTML" \
+            --data-urlencode "text@/tmp/telegram-message.html"
