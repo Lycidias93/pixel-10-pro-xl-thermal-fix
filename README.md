@@ -1,9 +1,8 @@
+## Current stable release: 1.4.4-universal.1
 
-## Latest prerelease: 1.4.4-universal-test.2
+`1.4.4-universal.1` promotes the verified `1.4.4-universal-test.2` path to the stable update channel. It carries forward the SELinux overlay-read hotfix from `1.4.3-universal.3` and the improved debug evidence collection.
 
-`1.4.4-universal-test.2` is a prerelease/test ZIP. It carries forward the SELinux overlay-read hotfix from `1.4.3-universal.3` and adds improved debug evidence collection.
-
-Stable update channel remains `1.4.3-universal.3`.
+Stable update channel now points to `1.4.4-universal.1`.
 
 **Already verified / PASS evidence exists**
 - Pixel 10 Pro XL / mustang / Android 16 / CP1A.260505.005
@@ -75,7 +74,7 @@ The **stable verified path** is still Pixel 10 Pro XL (`mustang`) on Android 16.
 
 | Channel | Release | Device scope | Verification state | Install path |
 |---|---:|---|---|---|
-| Stable | `v1.4.3-universal.1` | Pixel 10-series Android 16 profiles; Android 17 only for Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345` | Mustang Android 16 verified; Mustang Android 17 verified by `Jiggs`; other Android 17 devices blocked | Normal stable release / `main/update.json` |
+| Stable | `v1.4.4-universal.1` | Pixel 10-series Android 16 profiles; Android 17 only for Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345` | Mustang Android 16 verified; Mustang Android 17 verified by `Jiggs`; other Android 17 devices blocked | Normal stable release / `main/update.json` |
 | Pending evidence | none | Android 17 `frankel`, `blazer`, `rango`; newer firmware fingerprints | Scaffold-only documentation, no enabled profile | Submit stock debug report first |
 
 Older universal test releases are superseded by `v1.4.3-universal.1` for normal installation.
@@ -97,8 +96,8 @@ updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-
 This means:
 
 - existing Mustang installs can update without a module-ID migration;
-- the stable update channel does not silently push universal test builds;
-- universal prereleases must be installed manually from GitHub Releases;
+- the stable update channel only points to promoted stable releases;
+- universal prereleases remain manual-only until promoted;
 - future public naming/description may change, but the module ID and safe update channel should stay fixed.
 
 ## Why this fork exists

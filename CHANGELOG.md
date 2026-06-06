@@ -1,5 +1,14 @@
 ## 1.4.4-universal-test.2 - prerelease test
 
+## 1.4.4-universal.1 - stable channel promotion
+
+- Promoted `1.4.4-universal-test.2` to stable update channel as `1.4.4-universal.1`.
+- Stable `update.json` now points to `1.4.4-universal.1` / versionCode `1014403`.
+- Carries forward the SELinux overlay-read hotfix and improved debug evidence collection.
+- Keeps CP21 profiles guarded and still requiring post-reboot tester debug ZIPs before PASS status.
+- Credits: Jiggs, Harish, maicol07.
+
+
 - Add prerelease `1.4.4-universal-test.2`.
 - Carry forward `1.4.3-universal.3` SELinux overlay-read hotfix.
 - Keep stable `update.json` on `1.4.3-universal.3`.

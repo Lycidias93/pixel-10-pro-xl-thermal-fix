@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.4-universal-test.2"
-MODULE_VERSION_CODE="1014402"
+MODULE_VERSION="1.4.4-universal.1"
+MODULE_VERSION_CODE="1014403"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -11,10 +11,10 @@ A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease test guard"
+ui_print "  Universal stable guard"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Stable updateJson is not promoted by this prerelease"
+ui_print "Stable updateJson points to this release"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
@@ -119,13 +119,13 @@ polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_remains_1.4.3-universal.3
+update_json_channel=stable_update_json_points_to_1.4.4-universal.1
 debug_collector=manual_only_v2
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF
 
 ui_print "Target guard PASS"
-case "$android" in 17|17.*) ui_print "Android 17 guarded test/verified profile selected" ;; *) ui_print "Android 16 profile selected" ;; esac
+case "$android" in 17|17.*) ui_print "Android 17 guarded profile selected" ;; *) ui_print "Android 16 profile selected" ;; esac
 ui_print "Manual debug collector: su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"
 ui_print "No automatic debug collection, no bind mounts, no runtime text patching"

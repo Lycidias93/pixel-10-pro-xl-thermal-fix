@@ -20,12 +20,12 @@ case "$android" in
       mustang)
         case "$fingerprint" in
           google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys) case "$incremental" in 15421345) passive_arm "android17_mustang_cp31_15421345"; exit 0 ;; *) disable_wrong_target "unsupported_android17_cp31_incremental_$incremental"; exit 0 ;; esac ;;
-          *":CinnamonBun/CP21.260330.011/"*|*":17/CP21.260330.011/"*) passive_arm "android17_mustang_cp21_test"; exit 0 ;;
+          *":CinnamonBun/CP21.260330.011/"*|*":17/CP21.260330.011/"*) passive_arm "android17_mustang_cp21_guarded_pending"; exit 0 ;;
           *) disable_wrong_target "unsupported_android17_mustang_fingerprint"; exit 0 ;;
         esac ;;
       frankel|blazer|rango)
         case "$build_id" in CP21.260330.011) ;; *) disable_wrong_target "unsupported_android17_cp21_build_$build_id"; exit 0 ;; esac
-        case "$fingerprint" in *":CinnamonBun/CP21.260330.011/"*|*":17/CP21.260330.011/"*) passive_arm "android17_${device}_cp21_test"; exit 0 ;; *) disable_wrong_target "unsupported_android17_cp21_fingerprint"; exit 0 ;; esac ;;
+        case "$fingerprint" in *":CinnamonBun/CP21.260330.011/"*|*":17/CP21.260330.011/"*) passive_arm "android17_${device}_cp21_guarded_pending"; exit 0 ;; *) disable_wrong_target "unsupported_android17_cp21_fingerprint"; exit 0 ;; esac ;;
       *) disable_wrong_target "unsupported_android17_device_$device"; exit 0 ;;
     esac ;;
   *) disable_wrong_target "unsupported_android_$android"; exit 0 ;;
