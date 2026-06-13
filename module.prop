@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.4-universal.1
-versionCode=1014403
+version=1.4.5-universal-test.1
+versionCode=1014501
 author=Lycidias93, based on marx161
-description=Stable: Android 16 Pixel 10 universal path plus Android 17 Mustang CP31 verified and CP21 guarded profiles. Includes SELinux overlay-read hotfix and improved debug evidence.
+description=Prerelease test: pTune conflict auto-disable guard. Keeps 1.4.4 stable thermal profiles, SELinux overlay-read hotfix and improved debug evidence.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

@@ -6,11 +6,30 @@ mkdir -p "$GUARDDIR"
 log_line() { echo "$(date -Is 2>/dev/null || date) $*" >> "$LOG"; }
 disable_wrong_target() { reason="$1"; log_line "DISABLE wrong_target reason=$reason"; echo "$reason" > "$GUARDDIR/disabled_reason"; touch "$MODDIR/disable" "$MODDIR/skip_mount"; sync; }
 passive_arm() { scope="$1"; rm -f "$MODDIR/disable" "$MODDIR/skip_mount" "$MODDIR/remove" 2>/dev/null || true; log_line "PASSIVE_ARM device=$device android=$android build=$build_id incremental=$incremental scope=$scope universal_guard=true selinux_policy=thermal_hal_system_file_read_only"; }
+
+ptune_active_path() {
+  for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
+    [ -f "$d/module.prop" ] || continue
+    grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
+    [ -e "$d/remove" ] && continue
+    [ -e "$d/disable" ] && continue
+    echo "$d"
+    return 0
+  done
+  return 1
+}
 device="$(getprop ro.product.device 2>/dev/null)"
 android="$(getprop ro.build.version.release 2>/dev/null)"
 build_id="$(getprop ro.build.id 2>/dev/null)"
 fingerprint="$(getprop ro.build.fingerprint 2>/dev/null)"
 incremental="$(getprop ro.build.version.incremental 2>/dev/null)"
+
+ptune_conflict="$(ptune_active_path 2>/dev/null || true)"
+if [ -n "$ptune_conflict" ]; then
+  echo "$ptune_conflict" > "$GUARDDIR/conflict_ptune_path"
+  disable_wrong_target "conflict_ptune_active"
+  exit 0
+fi
 case "$android" in
   16|16.*)
     case "$fingerprint" in *":16/"*) ;; *) disable_wrong_target "android16_fingerprint_mismatch"; exit 0 ;; esac

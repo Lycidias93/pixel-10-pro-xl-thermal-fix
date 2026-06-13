@@ -1,3 +1,10 @@
+## 1.4.5-universal-test.1 - prerelease pTune conflict guard
+
+- Add pTune conflict auto-disable guard for active or staged `id=ptune` modules.
+- Set `disable` and `skip_mount` with `disabled_reason=conflict_ptune_active` instead of competing for the same Pixel ThermalHAL overlay files.
+- Add pTune/conflict status files to the manual debug ZIP.
+- No thermal profile, polling value, `sepolicy.rule`, release ZIP stable channel or `update.json` promotion change.
+
 ## Unreleased - pTune compatibility boundary
 
 - Documented that pTune may integrate similar Pixel 10 thermal-polling changes but should not be installed alongside this module.

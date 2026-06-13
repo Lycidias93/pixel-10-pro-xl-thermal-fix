@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.4-universal.1"
-MODULE_VERSION_CODE="1014403"
+MODULE_VERSION="1.4.5-universal-test.1"
+MODULE_VERSION_CODE="1014501"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -11,10 +11,10 @@ A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal stable guard"
+ui_print "  Universal prerelease conflict guard"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Stable updateJson points to this release"
+ui_print "Stable updateJson remains on 1.4.4-universal.1"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
@@ -30,6 +30,58 @@ ui_print "android=$android"
 ui_print "android_sdk=$android_sdk"
 ui_print "build_id=$build_id"
 ui_print "incremental=$incremental"
+
+
+ptune_active_path() {
+  for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
+    [ -f "$d/module.prop" ] || continue
+    grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
+    [ -e "$d/remove" ] && continue
+    [ -e "$d/disable" ] && continue
+    echo "$d"
+    return 0
+  done
+  return 1
+}
+
+PTUNE_CONFLICT_PATH="$(ptune_active_path 2>/dev/null || true)"
+if [ -n "$PTUNE_CONFLICT_PATH" ]; then
+  ui_print "! pTune active/staged module detected: $PTUNE_CONFLICT_PATH"
+  ui_print "! Disabling this module to avoid competing ThermalHAL overlays"
+  mkdir -p "$MODPATH/guard"
+  touch "$MODPATH/disable" "$MODPATH/skip_mount"
+  echo "conflict_ptune_active" > "$MODPATH/guard/disabled_reason"
+  echo "$PTUNE_CONFLICT_PATH" > "$MODPATH/guard/conflict_ptune_path"
+  [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
+  cat > "$MODPATH/install-state.txt" <<EOF
+module_id=$MODULE_ID
+module_version=$MODULE_VERSION
+module_version_code=$MODULE_VERSION_CODE
+device=$device
+profile=disabled_by_ptune_conflict
+profile_state=disabled_conflict_ptune_active
+build_state=not_materialized_due_ptune_conflict
+android=$android
+android_sdk=$android_sdk
+build_id=$build_id
+incremental=$incremental
+android_guard=not_evaluated_due_ptune_conflict
+fingerprint_android_guard=not_evaluated_due_ptune_conflict
+incremental_guard=not_applicable
+profile_materialized=no
+active_overlay_dir=none
+expected_thermal_files=0
+conflict_guard=ptune_active
+conflict_ptune_path=$PTUNE_CONFLICT_PATH
+bind_mount_model=no
+live_runtime_text_patch_model=no
+selinux_overlay_read_policy=installed_but_module_disabled
+update_json_channel=stable_update_json_remains_1.4.4-universal.1
+debug_collector=manual_only_v3_ptune_conflict
+EOF
+  ui_print "Module installed disabled: conflict_ptune_active"
+  exit 0
+fi
 
 case "$android" in
   16|16.*)
@@ -119,8 +171,8 @@ polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_points_to_1.4.4-universal.1
-debug_collector=manual_only_v2
+update_json_channel=stable_update_json_remains_1.4.4-universal.1
+debug_collector=manual_only_v3_ptune_conflict
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF

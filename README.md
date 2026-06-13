@@ -1,3 +1,24 @@
+## Latest prerelease: 1.4.5-universal-test.1
+
+`1.4.5-universal-test.1` is a safety prerelease for pTune conflict handling. It does not change thermal profile values. It adds a guard so this module self-disables when the pTune module (`id=ptune`) is active or staged, avoiding competing Pixel ThermalHAL overlays.
+
+Stable update channel remains `1.4.4-universal.1`.
+
+After testing with and without pTune, upload the debug ZIP:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+```
+
+Expected conflict behavior when pTune is active:
+
+```text
+disable=present
+skip_mount=present
+disabled_reason=conflict_ptune_active
+profile_materialized=no
+```
+
 ## Current stable release: 1.4.4-universal.1
 
 `1.4.4-universal.1` promotes the verified `1.4.4-universal-test.2` path to the stable update channel. It carries forward the SELinux overlay-read hotfix from `1.4.3-universal.3` and the improved debug evidence collection.
