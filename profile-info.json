@@ -1,8 +1,8 @@
 {
   "module_id": "pixel-10-pro-xl-thermal-fix",
-  "version": "1.4.5-universal-test.1",
-  "versionCode": "1014501",
-  "release_type": "prerelease conflict guard test",
+  "version": "1.4.5-universal-test.2",
+  "versionCode": "1014502",
+  "release_type": "prerelease soft conflict guard test",
   "android16": "existing universal profile set unchanged",
   "android17_mustang": {
     "device": "mustang",
@@ -15,7 +15,7 @@
     "verification_credit": "Jiggs"
   },
   "collector": {
-    "mode": "manual_only_v3_ptune_conflict",
+    "mode": "manual_only_v4_ptune_soft_conflict",
     "command": "su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh",
     "output": "/sdcard/Download/pixel_thermal_debug_*.zip"
   },
@@ -331,8 +331,15 @@
       "/data/adb/modules/ptune",
       "/data/adb/modules_update/ptune"
     ],
-    "action": "self_disable_with_disable_and_skip_mount_when_ptune_is_active_or_staged",
+    "boot_time_paths": [
+      "/data/adb/modules/ptune",
+      "/data/adb/modules_update/ptune"
+    ],
+    "action": "soft_disable_with_skip_mount_only_when_ptune_is_active_or_staged",
     "reason_marker": "conflict_ptune_active",
+    "guard_mode": "soft_skip_mount_only",
+    "keeps_module_scripts_runnable": true,
+    "requires_next_boot_after_ptune_removed_to_restore_overlay": true,
     "runtime_profile_changes": false,
     "thermal_profile_changes": false,
     "polling_value_changes": false

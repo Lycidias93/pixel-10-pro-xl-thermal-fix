@@ -5,6 +5,7 @@ LOG="$GUARDDIR/bootguard.log"
 mkdir -p "$GUARDDIR"
 log_line() { echo "$(date -Is 2>/dev/null || date) $*" >> "$LOG"; }
 disable_wrong_target() { reason="$1"; log_line "DISABLE wrong_target reason=$reason"; echo "$reason" > "$GUARDDIR/disabled_reason"; touch "$MODDIR/disable" "$MODDIR/skip_mount"; sync; }
+soft_conflict_ptune() { path="$1"; log_line "SOFT_CONFLICT pTune path=$path action=skip_mount_only"; echo "conflict_ptune_active" > "$GUARDDIR/disabled_reason"; echo "$path" > "$GUARDDIR/conflict_ptune_path"; echo "soft_skip_mount_only" > "$GUARDDIR/conflict_guard_mode"; rm -f "$MODDIR/disable" "$MODDIR/remove" 2>/dev/null || true; touch "$MODDIR/skip_mount"; sync; }
 passive_arm() { scope="$1"; rm -f "$MODDIR/disable" "$MODDIR/skip_mount" "$MODDIR/remove" 2>/dev/null || true; log_line "PASSIVE_ARM device=$device android=$android build=$build_id incremental=$incremental scope=$scope universal_guard=true selinux_policy=thermal_hal_system_file_read_only"; }
 
 ptune_active_path() {
@@ -26,8 +27,7 @@ incremental="$(getprop ro.build.version.incremental 2>/dev/null)"
 
 ptune_conflict="$(ptune_active_path 2>/dev/null || true)"
 if [ -n "$ptune_conflict" ]; then
-  echo "$ptune_conflict" > "$GUARDDIR/conflict_ptune_path"
-  disable_wrong_target "conflict_ptune_active"
+  soft_conflict_ptune "$ptune_conflict"
   exit 0
 fi
 case "$android" in

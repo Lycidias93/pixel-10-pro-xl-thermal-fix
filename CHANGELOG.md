@@ -1,3 +1,10 @@
+## 1.4.5-universal-test.2 - prerelease pTune soft conflict boot guard
+
+- Change pTune conflict handling from hard `disable` to soft `skip_mount` only, so `post-fs-data.sh` can keep checking on every boot.
+- Keep `disable` absent during pTune conflict; keep `skip_mount` present and write `disabled_reason=conflict_ptune_active` plus `conflict_guard_mode=soft_skip_mount_only`.
+- If pTune is removed later, boot guard clears `skip_mount`; the overlay becomes active on the following boot.
+- No thermal profile, polling value, `sepolicy.rule`, release ZIP stable channel or `update.json` promotion change.
+
 ## 1.4.5-universal-test.1 - prerelease pTune conflict guard
 
 - Add pTune conflict auto-disable guard for active or staged `id=ptune` modules.
