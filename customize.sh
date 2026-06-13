@@ -1,17 +1,20 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.5-universal-test.2"
-MODULE_VERSION_CODE="1014502"
+MODULE_VERSION="1.4.6-universal-test.1"
+MODULE_VERSION_CODE="1014601"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
 A17_CP31_EXPECTED_FINGERPRINT="google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys"
+A17_CP31_QPR1B4_PROFILE_SOURCE_BUILD="CP31.260522.006"
+A17_CP31_QPR1B4_PROFILE_SOURCE_INCREMENTAL="15591510"
+A17_CP31_QPR1B4_EXPECTED_FINGERPRINT="google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys"
 A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease soft conflict guard"
+ui_print "  Universal prerelease QPR1 guarded test"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Stable updateJson remains on 1.4.4-universal.1"
@@ -110,6 +113,9 @@ case "$android" in
           "$A17_CP31_EXPECTED_FINGERPRINT")
             profile="mustang-android17-cp31"; profile_state="tester_verified_android17_cp31"; build_state="android17_mustang_cp31_15421345_tester_verified"; fingerprint_android_guard="exact_android17_mustang_cp31_pass"; profile_source_build="$A17_CP31_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_CP31_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="d16d0d985efdf2c9c4c2152b7a9a4c172d00cf647ca2a08b7610d610380ec599"
             case "$incremental" in "$A17_CP31_PROFILE_SOURCE_INCREMENTAL") incremental_guard="incremental_pass" ;; *) abort "! Android 17 CP31 incremental mismatch: $incremental" ;; esac ;;
+          "$A17_CP31_QPR1B4_EXPECTED_FINGERPRINT")
+            profile="mustang-android17-cp31"; profile_state="android17_cp31_qpr1_beta4_test_pending_live_verification"; build_state="android17_mustang_cp31_15591510_stock_matched_pending_runtime"; fingerprint_android_guard="exact_android17_mustang_cp31_CP31_260522_006_pass"; profile_source_build="$A17_CP31_QPR1B4_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_CP31_QPR1B4_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="stock_debug_cp31_260522006_thermal_hashes_match_known_cp31"
+            case "$incremental" in "$A17_CP31_QPR1B4_PROFILE_SOURCE_INCREMENTAL") incremental_guard="incremental_pass" ;; *) abort "! Android 17 CP31 QPR1 Beta 4 incremental mismatch: $incremental" ;; esac ;;
           *":CinnamonBun/$A17_CP21_PROFILE_SOURCE_BUILD/"*|*":17/$A17_CP21_PROFILE_SOURCE_BUILD/"*)
             profile="mustang-android17-cp21"; profile_state="android17_cp21_test_pending_live_verification"; build_state="android17_cp21_mustang_factory_profile_pending_runtime"; fingerprint_android_guard="android17_cp21_build_pass"; profile_source_build="$A17_CP21_PROFILE_SOURCE_BUILD"; profile_source_incremental="$incremental"; incremental_guard="cp21_incremental_recorded_$incremental" ;;
           *) abort "! Unsupported Android 17 Mustang fingerprint/build: $fingerprint" ;;

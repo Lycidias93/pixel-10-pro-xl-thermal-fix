@@ -1,26 +1,22 @@
-## Latest prerelease: 1.4.5-universal-test.2
+## Latest prerelease: 1.4.6-universal-test.1
 
-`1.4.5-universal-test.2` is a safety prerelease for pTune conflict handling. It does not change thermal profile values. It uses a soft conflict guard: when pTune (`id=ptune`) is active or staged, this module keeps itself scriptable but sets `skip_mount` so the Pixel ThermalHAL overlay is not mounted in parallel.
+`1.4.6-universal-test.1` is a guarded prerelease for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / incremental `15591510`.
+
+It reuses the already verified CP31 patched thermal profile because the tester supplied stock `CP31.260522.006` ThermalHAL configs match the known CP31 stock structure. It is still guarded to the exact fingerprint and still requires install + reboot + module debug ZIP before PASS status.
 
 Stable update channel remains `1.4.4-universal.1`.
 
-After testing with and without pTune, upload the debug ZIP:
+Expected tester fingerprint:
+
+```text
+google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys
+```
+
+After installing and rebooting, upload the module debug ZIP:
 
 ```sh
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
-
-Expected conflict behavior when pTune is active:
-
-```text
-disable=absent
-skip_mount=present
-disabled_reason=conflict_ptune_active
-conflict_guard_mode=soft_skip_mount_only
-profile_materialized=no
-```
-
-If pTune is removed later, this module clears `skip_mount` during boot guard and should own the overlay on the following boot.
 
 <!-- STOCK_DEBUG_ONLINE_QPR1_CP31_20260613_START -->
 ## Online stock thermal debug report

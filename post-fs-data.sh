@@ -39,6 +39,7 @@ case "$android" in
       mustang)
         case "$fingerprint" in
           google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys) case "$incremental" in 15421345) passive_arm "android17_mustang_cp31_15421345"; exit 0 ;; *) disable_wrong_target "unsupported_android17_cp31_incremental_$incremental"; exit 0 ;; esac ;;
+          google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys) case "$incremental" in 15591510) passive_arm "android17_mustang_cp31_15591510_qpr1_beta4_guarded_test"; exit 0 ;; *) disable_wrong_target "unsupported_android17_cp31_qpr1_beta4_incremental_$incremental"; exit 0 ;; esac ;;
           *":CinnamonBun/CP21.260330.011/"*|*":17/CP21.260330.011/"*) passive_arm "android17_mustang_cp21_guarded_pending"; exit 0 ;;
           *) disable_wrong_target "unsupported_android17_mustang_fingerprint"; exit 0 ;;
         esac ;;

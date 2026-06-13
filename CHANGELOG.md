@@ -1,3 +1,10 @@
+## 1.4.6-universal-test.1 - prerelease guarded QPR1 Beta 4 CP31 test
+
+- Add exact-fingerprint guarded support for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / `15591510`.
+- Reuse the existing `mustang-android17-cp31` patched profile because supplied stock `CP31.260522.006` ThermalHAL configs match the known CP31 stock structure.
+- Keep pTune soft conflict guard from `1.4.5-universal-test.2`.
+- No thermal profile value, polling value, `sepolicy.rule`, stable release channel or `update.json` promotion change.
+
 ## Unreleased - online stock thermal debug helper
 
 - Add `tools/pixel10-stock-thermal-debug-online.sh` for read-only stock ThermalHAL evidence collection on unsupported or newer firmware.
