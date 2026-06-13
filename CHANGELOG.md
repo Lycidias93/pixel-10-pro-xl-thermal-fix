@@ -1,3 +1,10 @@
+## Unreleased - pTune compatibility boundary
+
+- Documented that pTune may integrate similar Pixel 10 thermal-polling changes but should not be installed alongside this module.
+- Clarified that this module remains the minimal standalone verified reference path for the Pixel ThermalHAL polling change.
+- Added verification requirements for pTune or other bundled integrations before treating them as a replacement.
+- No runtime thermal profile, release ZIP, module.prop or updateJson change.
+
 ## 1.4.4-universal-test.2 - prerelease test
 
 ## 1.4.4-universal.1 - stable channel promotion

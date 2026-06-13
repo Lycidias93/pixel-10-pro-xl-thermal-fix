@@ -22,6 +22,37 @@ Stable update channel now points to `1.4.4-universal.1`.
 - Harish — Android 16 Blazer runtime and bootguard hotfix verification.
 - maicol07 — Android 16 Mustang SELinux overlay-read crash-loop logcat and `1.4.3-universal.3` hotfix verification.
 
+<!-- PTUNE_COMPATIBILITY_BOUNDARY_20260613_START -->
+## pTune / bundled-tuning compatibility
+
+`pTune v2.0.0-alpha13.5` may contain similar Pixel 10 (`laguna`) thermal-polling changes, but it is a broader tuning module. Do **not** run this module at the same time as pTune or any other module that overlays Pixel ThermalHAL config files such as:
+
+```text
+/vendor/etc/thermal_info_config*.json
+```
+
+If pTune is installed, treat pTune as the owner of the thermal overlay and verify pTune with its own post-reboot evidence. Mount order between two thermal-overlay modules is not a supportable state.
+
+This module remains the minimal standalone reference path:
+
+- focused on the verified Pixel ThermalHAL polling files only;
+- includes device/build guards and the SELinux overlay-read hotfix;
+- does not ship pTune assets, pTune code, `powerhint.json`, `powervr.ini`, PowerHAL/Scheduler tuning or a background daemon;
+- keeps the stable update channel on promoted stable releases only;
+- requires debug-ZIP evidence before new devices/builds are called PASS.
+
+For pTune or other bundled integrations, a compatible integration should prove after reboot:
+
+```text
+correct device/build guard
+active /vendor thermal hashes match the intended overlay
+ThermalHAL is running
+no fresh ThermalHAL tombstone
+no thermal AVC denial
+target VIRTUAL-SKIN polling entries are at 5000
+```
+<!-- PTUNE_COMPATIBILITY_BOUNDARY_20260613_END -->
+
 ## v1.4.3-universal.3 hotfix note
 
 `1.4.3-universal.3` adds a read-only SELinux policy rule for Pixel ThermalHAL on setups where Magisk-mounted thermal config overlays are exposed as `system_file`. This fixes a reported ThermalHAL crash loop after install. No thermal profile values changed versus `v1.4.3-universal.2`.
