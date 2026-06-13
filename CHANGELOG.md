@@ -1,3 +1,9 @@
+## Unreleased - online stock thermal debug helper
+
+- Add `tools/pixel10-stock-thermal-debug-online.sh` for read-only stock ThermalHAL evidence collection on unsupported or newer firmware.
+- Document the online helper command for Android 17 QPR/QPR1 beta requests such as `CP31.260522.006`.
+- No module runtime, thermal profile, polling value, release ZIP, stable channel or `update.json` change.
+
 ## 1.4.5-universal-test.2 - prerelease pTune soft conflict boot guard
 
 - Change pTune conflict handling from hard `disable` to soft `skip_mount` only, so `post-fs-data.sh` can keep checking on every boot.

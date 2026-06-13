@@ -22,6 +22,29 @@ profile_materialized=no
 
 If pTune is removed later, this module clears `skip_mount` during boot guard and should own the overlay on the following boot.
 
+<!-- STOCK_DEBUG_ONLINE_QPR1_CP31_20260613_START -->
+## Online stock thermal debug report
+
+For unsupported or newer firmware, collect stock ThermalHAL evidence **before** installing the module. This is required for Android 17 QPR/QPR1 beta builds such as `CP31.260522.006`.
+
+Run on the tester device:
+
+```sh
+su -c 'cd /data/local/tmp && rm -f pixel10-stock-thermal-debug-online.sh && (curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel10-stock-thermal-debug-online.sh || wget -O pixel10-stock-thermal-debug-online.sh https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel10-stock-thermal-debug-online.sh) && chmod 0755 pixel10-stock-thermal-debug-online.sh && sh ./pixel10-stock-thermal-debug-online.sh'
+```
+
+The helper is read-only. It does not install or modify this module. It copies stock `/vendor/etc/thermal_info_config*.json`, build props, SHA256s and a `VIRTUAL-SKIN` / `PollingDelay` summary into an archive under `/sdcard/Download`.
+
+Upload both generated files:
+
+```text
+/sdcard/Download/pixel10_stock_thermal_debug_*.zip
+/sdcard/Download/pixel10_stock_thermal_debug_*.zip.sha256
+```
+
+If the device has no `zip` command, the helper creates `.tar.gz` and `.tar.gz.sha256` instead. Upload both files.
+<!-- STOCK_DEBUG_ONLINE_QPR1_CP31_20260613_END -->
+
 # Pixel 10 Thermal Polling Fix
 
 <!-- RELEASE_143_UNIVERSAL_2_BOOTGUARD_HOTFIX_START -->
