@@ -1,3 +1,12 @@
+## 1.4.7-universal-test.2 - prerelease pTune config guard tools
+
+- Add `config.env` support with `ALLOW_THERMAL_WITH_PTUNE=1` plus required `RISK_ACK_PTUNE_THERMAL_COLLISION=I_UNDERSTAND_BOOTLOOP_RISK` for dangerous override tests.
+- Keep safe default: pTune installed means this module remains enabled but `skip_mount` is kept.
+- Add immediate `health.log` start marker and service-side config guard/watch evidence.
+- Add `tools/compat-check.sh` and `tools/collect-ptune-evidence.sh`.
+- Include config/compat/pTune known-bad evidence in the manual debug ZIP.
+- Keep stable `update.json` unchanged on `1.4.4-universal.1`.
+
 ## 1.4.7-universal-test.1 - prerelease strict pTune installed-presence guard
 
 - Treat a non-removed `id=ptune` module as a conflict even when pTune is disabled.

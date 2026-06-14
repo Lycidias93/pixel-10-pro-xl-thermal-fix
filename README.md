@@ -1,22 +1,25 @@
-## Latest prerelease: 1.4.7-universal-test.1
+## Latest prerelease: 1.4.7-universal-test.2
 
-`1.4.6-universal-test.2` is a guarded prerelease for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / incremental `15591510`.
+`1.4.7-universal-test.2` adds the pTune config guard test layer on top of `1.4.7-universal-test.1`.
 
-It reuses the already verified CP31 patched thermal profile because the tester supplied stock `CP31.260522.006` ThermalHAL configs match the known CP31 stock structure. It is still guarded to the exact fingerprint and still requires install + reboot + module debug ZIP before PASS status.
+Safe default remains: if pTune is installed, this module stays enabled but keeps `skip_mount` so it does not mount ThermalHAL overlays beside pTune.
 
-Stable update channel remains `1.4.4-universal.1`.
-
-Expected tester fingerprint:
-
-```text
-google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys
-```
-
-After installing and rebooting, upload the module debug ZIP:
+New test-only override config:
 
 ```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+/data/adb/pixel-10-pro-xl-thermal-fix/config.env
+ALLOW_THERMAL_WITH_PTUNE=1
+RISK_ACK_PTUNE_THERMAL_COLLISION=I_UNDERSTAND_BOOTLOOP_RISK
 ```
+
+New tools:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/compat-check.sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-ptune-evidence.sh
+```
+
+Stable update channel remains `1.4.4-universal.1`.
 
 <!-- STOCK_DEBUG_ONLINE_QPR1_CP31_20260613_START -->
 ### Prerelease 1.4.7-universal-test.1

@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.7-universal-test.1"
-MODULE_VERSION_CODE="1014701"
+MODULE_VERSION="1.4.7-universal-test.2"
+MODULE_VERSION_CODE="1014702"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -14,7 +14,7 @@ A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease strict pTune guard test"
+ui_print "  Universal prerelease pTune config guard test"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Stable updateJson remains on 1.4.4-universal.1"
@@ -35,10 +35,31 @@ ui_print "build_id=$build_id"
 ui_print "incremental=$incremental"
 
 
+CONFIG_DIR="/data/adb/$MODULE_ID"
+CONFIG_FILE="$CONFIG_DIR/config.env"
+config_get() {
+  key="$1"
+  [ -r "$CONFIG_FILE" ] || return 0
+  grep -E "^${key}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${key}=//" | tr -d '\r'
+}
+PTUNE_GUARD_MODE="$(config_get PTUNE_GUARD_MODE)"
+[ -n "$PTUNE_GUARD_MODE" ] || PTUNE_GUARD_MODE="strict"
+case "$PTUNE_GUARD_MODE" in strict|active_only|off) ;; *) ui_print "! Invalid PTUNE_GUARD_MODE=$PTUNE_GUARD_MODE, using strict"; PTUNE_GUARD_MODE="strict" ;; esac
+ALLOW_THERMAL_WITH_PTUNE="$(config_get ALLOW_THERMAL_WITH_PTUNE)"
+RISK_ACK_PTUNE_THERMAL_COLLISION="$(config_get RISK_ACK_PTUNE_THERMAL_COLLISION)"
+PTUNE_OVERRIDE_ALLOWED=0
+PTUNE_OVERRIDE_NAME="none"
+PTUNE_RISK_ACK_STATE="not_present"
+if [ "$ALLOW_THERMAL_WITH_PTUNE" = "1" ] && [ "$RISK_ACK_PTUNE_THERMAL_COLLISION" = "I_UNDERSTAND_BOOTLOOP_RISK" ]; then
+  PTUNE_OVERRIDE_ALLOWED=1
+  PTUNE_OVERRIDE_NAME="allow_thermal_with_ptune"
+  PTUNE_RISK_ACK_STATE="explicit_user_override"
+fi
+if [ "$PTUNE_GUARD_MODE" = "off" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
+  ui_print "! PTUNE_GUARD_MODE=off ignored without risk ack; using strict"
+  PTUNE_GUARD_MODE="strict"
+fi
 ptune_installed_path() {
-  # Strict presence guard: a non-removed id=ptune module is a conflict even
-  # when pTune is currently disabled. Magisk consumes skip_mount before module
-  # scripts run, so this module must stay skip_mounted whenever pTune is present.
   for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
     [ -f "$d/module.prop" ] || continue
     grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
@@ -48,59 +69,105 @@ ptune_installed_path() {
   done
   return 1
 }
-
-PTUNE_CONFLICT_PATH="$(ptune_installed_path 2>/dev/null || true)"
-if [ -n "$PTUNE_CONFLICT_PATH" ]; then
-  ui_print "! pTune installed module detected: $PTUNE_CONFLICT_PATH"
-  ui_print "! Strict pTune presence guard: keeping this module scriptable but skip_mounted"
+ptune_active_path() {
+  for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
+    [ -f "$d/module.prop" ] || continue
+    grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
+    [ -e "$d/remove" ] && continue
+    [ -e "$d/disable" ] && continue
+    echo "$d"
+    return 0
+  done
+  return 1
+}
+ptune_known_bad_state() {
+  d="$1"
+  vc="$(grep -E '^versionCode=' "$d/module.prop" 2>/dev/null | sed 's/^versionCode=//')"
+  [ "$vc" = "200" ] && echo "yes_versionCode_200_thermalhal_bootloop_on_mustang_cp1a_260505_005" || echo "no"
+}
+PTUNE_INSTALLED_PATH="$(ptune_installed_path 2>/dev/null || true)"
+PTUNE_ACTIVE_PATH="$(ptune_active_path 2>/dev/null || true)"
+PTUNE_KNOWN_BAD="no"
+[ -n "$PTUNE_INSTALLED_PATH" ] && PTUNE_KNOWN_BAD="$(ptune_known_bad_state "$PTUNE_INSTALLED_PATH")"
+PTUNE_CONFLICT_PATH=""
+PTUNE_CONFLICT_REASON="conflict_ptune_installed"
+PTUNE_CONFLICT_MODE="strict_presence_skip_mount"
+case "$PTUNE_GUARD_MODE" in
+  strict) PTUNE_CONFLICT_PATH="$PTUNE_INSTALLED_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_installed"; PTUNE_CONFLICT_MODE="strict_presence_skip_mount" ;;
+  active_only) PTUNE_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_active"; PTUNE_CONFLICT_MODE="active_only_skip_mount" ;;
+  off) PTUNE_CONFLICT_PATH=""; PTUNE_CONFLICT_REASON="guard_off"; PTUNE_CONFLICT_MODE="guard_off" ;;
+esac
+if [ -n "$PTUNE_CONFLICT_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
+  ui_print "! pTune conflict detected: $PTUNE_CONFLICT_PATH"
+  ui_print "! pTune guard mode: $PTUNE_GUARD_MODE -> $PTUNE_CONFLICT_MODE"
+  [ "$PTUNE_KNOWN_BAD" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
+  ui_print "! Keeping this module scriptable but skip_mounted"
   mkdir -p "$MODPATH/guard"
   rm -f "$MODPATH/disable" "$MODPATH/remove"
   touch "$MODPATH/skip_mount"
-  echo "conflict_ptune_installed" > "$MODPATH/guard/disabled_reason"
+  echo "$PTUNE_CONFLICT_REASON" > "$MODPATH/guard/disabled_reason"
   echo "$PTUNE_CONFLICT_PATH" > "$MODPATH/guard/conflict_ptune_path"
-  echo "strict_presence_skip_mount" > "$MODPATH/guard/conflict_guard_mode"
+  echo "$PTUNE_CONFLICT_MODE" > "$MODPATH/guard/conflict_guard_mode"
+  rm -f "$MODPATH/guard/guard_override" "$MODPATH/guard/guard_override_source" "$MODPATH/guard/risk_ack" 2>/dev/null || true
   ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
   if [ -d "$ACTIVE_MODPATH" ]; then
     mkdir -p "$ACTIVE_MODPATH/guard"
     rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/remove"
     touch "$ACTIVE_MODPATH/skip_mount"
-    echo "conflict_ptune_installed" > "$ACTIVE_MODPATH/guard/disabled_reason"
+    echo "$PTUNE_CONFLICT_REASON" > "$ACTIVE_MODPATH/guard/disabled_reason"
     echo "$PTUNE_CONFLICT_PATH" > "$ACTIVE_MODPATH/guard/conflict_ptune_path"
-    echo "strict_presence_skip_mount" > "$ACTIVE_MODPATH/guard/conflict_guard_mode"
+    echo "$PTUNE_CONFLICT_MODE" > "$ACTIVE_MODPATH/guard/conflict_guard_mode"
+    rm -f "$ACTIVE_MODPATH/guard/guard_override" "$ACTIVE_MODPATH/guard/guard_override_source" "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
   fi
   [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
   [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
+  [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
+  [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
+  [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
+  [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
   cat > "$MODPATH/install-state.txt" <<EOF
 module_id=$MODULE_ID
 module_version=$MODULE_VERSION
 module_version_code=$MODULE_VERSION_CODE
 device=$device
-profile=skip_mount_by_ptune_installed_presence
-profile_state=strict_presence_conflict_ptune_installed
-build_state=not_materialized_due_ptune_installed
+profile=skip_mount_by_ptune_guard
+profile_state=${PTUNE_CONFLICT_REASON}
+build_state=not_materialized_due_ptune_guard
 android=$android
 android_sdk=$android_sdk
 build_id=$build_id
 incremental=$incremental
-android_guard=not_evaluated_due_ptune_installed
-fingerprint_android_guard=not_evaluated_due_ptune_installed
+android_guard=not_evaluated_due_ptune_guard
+fingerprint_android_guard=not_evaluated_due_ptune_guard
 incremental_guard=not_applicable
 profile_materialized=no
 active_overlay_dir=none
 expected_thermal_files=0
-conflict_guard=ptune_installed
-conflict_guard_mode=strict_presence_skip_mount
+config_file=$CONFIG_FILE
+config_ptune_guard_mode=$PTUNE_GUARD_MODE
+config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}
+config_override_allowed=$PTUNE_OVERRIDE_ALLOWED
+risk_ack=$PTUNE_RISK_ACK_STATE
+conflict_guard=ptune_present
+conflict_guard_mode=$PTUNE_CONFLICT_MODE
 conflict_ptune_path=$PTUNE_CONFLICT_PATH
+known_bad_ptune=$PTUNE_KNOWN_BAD
 bind_mount_model=no
 live_runtime_text_patch_model=no
-selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_presence
+selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v6_ptune_strict_presence_guard
+debug_collector=manual_only_v7_config_guard_and_ptune_evidence
+compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
+ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
 EOF
-  ui_print "Module installed with skip_mount only: conflict_ptune_installed"
+  ui_print "Module installed with skip_mount only: $PTUNE_CONFLICT_REASON"
   exit 0
 fi
-
+if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
+  ui_print "! OVERRIDE: Thermal overlay allowed while pTune is installed"
+  ui_print "! Risk ack accepted: I_UNDERSTAND_BOOTLOOP_RISK"
+  [ "$PTUNE_KNOWN_BAD" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
+fi
 case "$android" in
   16|16.*)
     android_guard="android16_pass"
@@ -164,10 +231,17 @@ rm -f "$MODPATH/disable" "$MODPATH/skip_mount" "$MODPATH/remove"
 ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
 if [ -d "$ACTIVE_MODPATH" ]; then
   rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/skip_mount" "$ACTIVE_MODPATH/remove"
-  rm -f "$ACTIVE_MODPATH/guard/disabled_reason" "$ACTIVE_MODPATH/guard/conflict_guard_mode" "$ACTIVE_MODPATH/guard/conflict_ptune_path" 2>/dev/null || true
+  rm -f "$ACTIVE_MODPATH/guard/disabled_reason" "$ACTIVE_MODPATH/guard/conflict_guard_mode" "$ACTIVE_MODPATH/guard/conflict_ptune_path" "$ACTIVE_MODPATH/guard/guard_override" "$ACTIVE_MODPATH/guard/guard_override_source" "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
 fi
 mkdir -p "$MODPATH/guard"
-rm -f "$MODPATH/guard/pending_boot" "$MODPATH/guard/fail_count" "$MODPATH/guard/disabled_reason" "$MODPATH/guard/conflict_guard_mode" "$MODPATH/guard/conflict_ptune_path"
+rm -f "$MODPATH/guard/pending_boot" "$MODPATH/guard/fail_count" "$MODPATH/guard/disabled_reason" "$MODPATH/guard/conflict_guard_mode" "$MODPATH/guard/conflict_ptune_path" "$MODPATH/guard/guard_override" "$MODPATH/guard/guard_override_source" "$MODPATH/guard/risk_ack"
+if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
+  echo "allow_thermal_with_ptune" > "$MODPATH/guard/guard_override"
+  echo "$CONFIG_FILE" > "$MODPATH/guard/guard_override_source"
+  echo "explicit_user_override" > "$MODPATH/guard/risk_ack"
+  echo "$PTUNE_INSTALLED_PATH" > "$MODPATH/guard/conflict_ptune_path"
+  echo "override_allow_mount_with_ptune" > "$MODPATH/guard/conflict_guard_mode"
+fi
 [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
 [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
 
@@ -190,6 +264,15 @@ profile_source_android=$profile_source_android
 profile_source_build=$profile_source_build
 profile_source_incremental=$profile_source_incremental
 source_report_sha256=$source_report_sha256
+config_file=$CONFIG_FILE
+config_ptune_guard_mode=$PTUNE_GUARD_MODE
+config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}
+config_override_allowed=$PTUNE_OVERRIDE_ALLOWED
+risk_ack=$PTUNE_RISK_ACK_STATE
+conflict_guard=${PTUNE_INSTALLED_PATH:+ptune_installed}
+conflict_guard_mode=${PTUNE_INSTALLED_PATH:+${PTUNE_OVERRIDE_ALLOWED:+override_allow_mount_with_ptune}}
+guard_override=$PTUNE_OVERRIDE_NAME
+known_bad_ptune=$PTUNE_KNOWN_BAD
 profile_materialized=yes
 active_overlay_dir=system/vendor/etc
 expected_thermal_files=3
@@ -198,7 +281,7 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v6_ptune_strict_presence_guard
+debug_collector=manual_only_v7_config_guard_and_ptune_evidence
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF

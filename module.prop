@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.7-universal-test.1
-versionCode=1014701
+version=1.4.7-universal-test.2
+versionCode=1014702
 author=Lycidias93, based on marx161
-description=Prerelease test: strict pTune installed-presence guard. If id=ptune is installed, this module stays scriptable but skip_mounts before pTune can compete. Stable updateJson unchanged.
+description=Prerelease test: pTune config guard with explicit override/risk-ack, immediate health marker, compat-check and pTune evidence collector. Stable updateJson unchanged.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
