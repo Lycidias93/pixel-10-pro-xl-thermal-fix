@@ -1,3 +1,11 @@
+## 1.4.7-universal-test.3
+
+- Added always-materialized pTune override helper: `tools/enable-ptune-override.sh`.
+- Added safe rollback helper: `tools/disable-ptune-override.sh`.
+- Hardened `compat-check.sh` with `MODULE_OVERLAY_READY` and `ACTIVE_VENDOR_MATCH`.
+- Hardened `post-fs-data.sh`: override config without overlay files is blocked back to skip_mount for the next boot.
+- Kept default strict pTune guard and stable updateJson unchanged.
+
 ## 1.4.7-universal-test.2 - prerelease pTune config guard tools
 
 - Add `config.env` support with `ALLOW_THERMAL_WITH_PTUNE=1` plus required `RISK_ACK_PTUNE_THERMAL_COLLISION=I_UNDERSTAND_BOOTLOOP_RISK` for dangerous override tests.
@@ -83,7 +91,7 @@
 
 ## 1.4.3-universal.3 - stable SELinux overlay-read hotfix
 
-- Fixed ThermalHAL crash loop on setups where Magisk-mounted `/vendor/etc/thermal_info_config*.json` appears as `system_file`.
+- Fixed ThermalHAL crash loop on setups where Magisk_mounted `/vendor/etc/thermal_info_config*.json` appears as `system_file`.
 - Added read-only `sepolicy.rule` for `hal_thermal_default` to read/open/getattr/map Magisk overlay config files.
 - No thermal profile values changed versus `v1.4.3-universal.2`.
 - Stable updateJson now points to `1.4.3-universal.3`.

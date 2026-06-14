@@ -52,6 +52,13 @@ ptune_active_path() {
   return 1
 }
 
+overlay_ready_for_override() {
+  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
+    [ -s "$MODDIR/system/vendor/etc/$f" ] || return 1
+  done
+  return 0
+}
+
 write_override_guard() {
   path="$1"
   echo "allow_thermal_with_ptune" > "$GUARDDIR/guard_override"
@@ -87,8 +94,13 @@ passive_arm() {
   scope="$1"
   rm -f "$MODDIR/disable" "$MODDIR/remove" 2>/dev/null || true
   if [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ] && [ -n "$PTUNE_INSTALLED" ]; then
-    write_override_guard "$PTUNE_INSTALLED"
-    log_line "OVERRIDE pTune path=$PTUNE_INSTALLED action=allow_mount_with_ptune scope=$scope risk_ack=explicit_user_override"
+    if overlay_ready_for_override; then
+      write_override_guard "$PTUNE_INSTALLED"
+      log_line "OVERRIDE pTune path=$PTUNE_INSTALLED action=allow_mount_with_ptune scope=$scope risk_ack=explicit_user_override overlay_ready=yes"
+    else
+      soft_conflict_ptune "$PTUNE_INSTALLED" "strict_presence_skip_mount" "override_overlay_missing_next_boot_protected"
+      log_line "OVERRIDE_BLOCKED overlay_ready=no action=skip_mount_next_boot helper=enable-ptune-override.sh"
+    fi
   else
     rm -f "$MODDIR/skip_mount" 2>/dev/null || true
     rm -f "$GUARDDIR/disabled_reason" "$GUARDDIR/conflict_guard_mode" "$GUARDDIR/conflict_ptune_path" "$GUARDDIR/guard_override" "$GUARDDIR/guard_override_source" "$GUARDDIR/risk_ack" 2>/dev/null || true

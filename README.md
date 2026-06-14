@@ -719,3 +719,28 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
 
 Upload `/sdcard/Download/pixel_thermal_debug_*.zip` for PASS evaluation.
+
+
+## 1.4.7-universal-test.3 - override materializer test
+
+Prerelease `1.4.7-universal-test.3` keeps the safe default from `v1.4.7-test.2`: when pTune is installed, this module remains scriptable but uses `skip_mount` unless the user explicitly enables the high risk override.
+
+New in this test:
+- `tools/enable-ptune-override.sh` writes the risk_ack config, materializes the selected thermal profile into `system/vendor/etc`, clears `skip_mount`, and verifies the staged/active module path.
+- `tools/disable-ptune-override.sh` returns to the strict safe default and restores `skip_mount` when pTune is installed.
+- `tools/compat-check.sh` now reports `MODULE_OVERLAY_READY` and `ACTIVE_VENDOR_MATCH`, so an override without materialized overlay files is no longer considered healthy.
+- `post-fs-data.sh` keeps the next boot protected if override config is set but overlay files are missing.
+
+High risk override command:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh
+```
+
+Return to safe default:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-ptune-override.sh
+```
+
+The stable update channel is unchanged and remains on `1.4.4-universal.1`.

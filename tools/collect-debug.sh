@@ -61,7 +61,7 @@ make_archive() {
     ( cd "$parent" && toybox zip -qr "$ZIP" "$base" ) >/dev/null 2>&1 && echo "zip_engine=toybox" > "$COLLECT/zip-engine.txt" && return 0
   fi
   if [ -x /data/adb/magisk/busybox ] && /data/adb/magisk/busybox 2>/dev/null | tr ' ' '\n' | grep -qx zip; then
-    ( cd "$parent" && /data/adb/magisk/busybox zip -qr "$ZIP" "$base" ) >/dev/null 2>&1 && echo "zip_engine=magisk-busybox" > "$COLLECT/zip-engine.txt" && return 0
+    ( cd "$parent" && /data/adb/magisk/busybox zip -qr "$ZIP" "$base" ) >/dev/null 2>&1 && echo "zip_engine=magisk_busybox" > "$COLLECT/zip-engine.txt" && return 0
   fi
   return 1
 }
@@ -75,6 +75,7 @@ EOF
 
 collect_file props.txt sh -c 'getprop ro.product.model; getprop ro.product.device; getprop ro.build.version.release; getprop ro.build.version.sdk; getprop ro.build.id; getprop ro.build.version.incremental; getprop ro.build.fingerprint; getprop ro.boot.verifiedbootstate; getprop ro.boot.vbmeta.device_state'
 collect_file module_flags.txt sh -c '[ ! -e "$0/disable" ] && echo disable=absent || echo disable=present; [ ! -e "$0/skip_mount" ] && echo skip_mount=absent || echo skip_mount=present; [ ! -e "$0/remove" ] && echo remove=absent || echo remove=present' "$MODDIR"
+collect_file override_config.txt sh -c 'echo "== config =="; cat /data/adb/pixel-10-pro-xl-thermal-fix/config.env 2>/dev/null || true; echo; echo "== override helpers =="; ls -l "$0"/tools/enable-ptune-override.sh "$0"/tools/disable-ptune-override.sh "$0"/tools/compat-check.sh 2>/dev/null || true; echo; [ -x "$0/tools/compat-check.sh" ] && sh "$0/tools/compat-check.sh" || true' "$MODDIR"
 collect_file ptune_status.txt sh -c 'for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do echo "== $d =="; if [ -e "$d" ]; then echo present=yes; [ -f "$d/module.prop" ] && grep -E "^(id|name|version|versionCode|description)=" "$d/module.prop" || true; [ -e "$d/disable" ] && echo disable=present || echo disable=absent; [ -e "$d/remove" ] && echo remove=present || echo remove=absent; [ -e "$d/skip_mount" ] && echo skip_mount=present || echo skip_mount=absent; else echo present=no; fi; done'
 collect_file config_env.txt sh -c 'cat /data/adb/pixel-10-pro-xl-thermal-fix/config.env 2>/dev/null || echo config_missing_default_strict'
 collect_file compat_check.txt sh -c 'if [ -x "$0/tools/compat-check.sh" ]; then "$0/tools/compat-check.sh"; else echo compat_check_missing; fi' "$MODDIR"

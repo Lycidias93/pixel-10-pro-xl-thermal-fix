@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.7-universal-test.2"
-MODULE_VERSION_CODE="1014702"
+MODULE_VERSION="1.4.7-universal-test.3"
+MODULE_VERSION_CODE="1014703"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -14,7 +14,7 @@ A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease pTune config guard test"
+ui_print "  Universal prerelease pTune override materializer test"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Stable updateJson remains on 1.4.4-universal.1"
@@ -56,7 +56,7 @@ if [ "$ALLOW_THERMAL_WITH_PTUNE" = "1" ] && [ "$RISK_ACK_PTUNE_THERMAL_COLLISION
   PTUNE_RISK_ACK_STATE="explicit_user_override"
 fi
 if [ "$PTUNE_GUARD_MODE" = "off" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
-  ui_print "! PTUNE_GUARD_MODE=off ignored without risk ack; using strict"
+  ui_print "! PTUNE_GUARD_MODE=off ignored without risk_ack; using strict"
   PTUNE_GUARD_MODE="strict"
 fi
 ptune_installed_path() {
@@ -121,10 +121,18 @@ if [ -n "$PTUNE_CONFLICT_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
   fi
   [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
   [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
+[ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
+[ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
+[ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
+[ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
   [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
   [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
+  [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
+  [ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
   [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
   [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
+  [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
+  [ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
   cat > "$MODPATH/install-state.txt" <<EOF
 module_id=$MODULE_ID
 module_version=$MODULE_VERSION
@@ -156,7 +164,7 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v7_config_guard_and_ptune_evidence
+debug_collector=manual_only_v8_override_materializer_and_ptune_evidence
 compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
 ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
 EOF
@@ -165,7 +173,7 @@ EOF
 fi
 if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
   ui_print "! OVERRIDE: Thermal overlay allowed while pTune is installed"
-  ui_print "! Risk ack accepted: I_UNDERSTAND_BOOTLOOP_RISK"
+  ui_print "! Risk_ack accepted: I_UNDERSTAND_BOOTLOOP_RISK"
   [ "$PTUNE_KNOWN_BAD" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
 fi
 case "$android" in
@@ -244,6 +252,10 @@ if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
 fi
 [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
 [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
+[ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
+[ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
+[ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
+[ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
 
 cat > "$MODPATH/install-state.txt" <<EOF
 module_id=$MODULE_ID
@@ -270,7 +282,7 @@ config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}
 config_override_allowed=$PTUNE_OVERRIDE_ALLOWED
 risk_ack=$PTUNE_RISK_ACK_STATE
 conflict_guard=${PTUNE_INSTALLED_PATH:+ptune_installed}
-conflict_guard_mode=${PTUNE_INSTALLED_PATH:+${PTUNE_OVERRIDE_ALLOWED:+override_allow_mount_with_ptune}}
+conflict_guard_mode=${PTUNE_INSTALLED_PATH:+override_allow_mount_with_ptune}
 guard_override=$PTUNE_OVERRIDE_NAME
 known_bad_ptune=$PTUNE_KNOWN_BAD
 profile_materialized=yes
@@ -281,8 +293,10 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v7_config_guard_and_ptune_evidence
+debug_collector=manual_only_v8_override_materializer_and_ptune_evidence
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh
+override_disable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-ptune-override.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF
 
