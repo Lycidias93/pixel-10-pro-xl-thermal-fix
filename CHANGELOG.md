@@ -1,5 +1,13 @@
 ## 1.4.6-universal-test.1 - prerelease guarded QPR1 Beta 4 CP31 test
 
+## 1.4.6-universal-test.2 - prerelease
+
+- Add stale-disable cleanup for pTune soft-conflict installs: active and staging module `disable` flags are removed while preserving `skip_mount`.
+- Clear stale pTune conflict guard files when pTune is absent so the no-pTune overlay path can be verified cleanly.
+- Keep guarded Android 17 QPR1 Beta 4 `CP31.260522.006 / 15591510` support from `1.4.6-universal-test.1`.
+- Keep stable `update.json` on `1.4.4-universal.1`.
+
+
 - Add exact-fingerprint guarded support for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / `15591510`.
 - Reuse the existing `mustang-android17-cp31` patched profile because supplied stock `CP31.260522.006` ThermalHAL configs match the known CP31 stock structure.
 - Keep pTune soft conflict guard from `1.4.5-universal-test.2`.

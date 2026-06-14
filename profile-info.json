@@ -1,124 +1,80 @@
 {
-  "module_id": "pixel-10-pro-xl-thermal-fix",
-  "version": "1.4.6-universal-test.1",
-  "versionCode": "1014601",
-  "release_type": "prerelease soft conflict guard test",
-  "android16": "existing universal profile set unchanged",
-  "android17_mustang": {
-    "device": "mustang",
-    "android": "17",
-    "build": "CP31.260508.005",
-    "incremental": "15421345",
-    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys",
-    "verification": "tester post-reboot PASS twice on test.2/test.3",
-    "profile": "mustang-android17-cp31",
-    "verification_credit": "Jiggs"
-  },
-  "collector": {
-    "mode": "manual_only_v4_ptune_soft_conflict",
-    "command": "su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh",
-    "output": "/sdcard/Download/pixel_thermal_debug_*.zip"
-  },
   "a17_source_profile_info": {
-    "module_id": "pixel-10-pro-xl-thermal-fix",
-    "version": "1.4.3-android17-mustang-test.3",
-    "versionCode": "1014303",
-    "release_type": "telegram tester prerelease with fixed auto collector",
-    "device": "mustang",
     "android": "17",
-    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys",
-    "incremental": "15421345",
-    "source_report_sha256": "d16d0d985efdf2c9c4c2152b7a9a4c172d00cf647ca2a08b7610d610380ec599",
-    "stock_hashes": {
-      "thermal_info_config_throttling.json": "3f2989b45a484a3f669b97019790fe533aa7e4b954e8d7a29146cbf6542423de",
-      "thermal_info_config.json": "9976306c6421447426f17464a12a3d058eee6e4c936e6a1db7dceb9280c0286d",
-      "thermal_info_config_charge.json": "2d5d10a5ab2eae1443ea6200569c316cbf0109c407a16672386c0e0095bf8532"
-    },
-    "patched_hashes": {
-      "thermal_info_config_throttling.json": "19dff552a1f71c6487ad0deb6e211cf46a80629fe68b1b684b0de52d509405fc",
-      "thermal_info_config.json": "1117ddcabb3d459d70c8231372ba4472232a5741cd6a5f2b8fd9b13e253c51d7",
-      "thermal_info_config_charge.json": "187191f6ec82158023b55191837bd678c7ecd8a4e40533565ea6f73322df494f"
-    },
     "changes": [
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-OVER-35C-TRIGGER",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-HINT",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-CPU-LIGHT-ODPM",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-CPU-MID",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-CPU-ODPM",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-CPU-HIGH",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-SOC",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_throttling.json",
-        "sensor": "VIRTUAL-SKIN-SOC-EXTREME",
         "from": 300000,
+        "sensor": "VIRTUAL-SKIN-SOC-EXTREME",
         "to": 5000
       },
       {
         "file": "thermal_info_config.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-SPEAKER",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_charge.json",
+        "from": 300000,
         "sensor": "VIRTUAL-SKIN-CHARGE-WIRED",
-        "from": 300000,
         "to": 5000
       },
       {
         "file": "thermal_info_config_charge.json",
-        "sensor": "VIRTUAL-SKIN-CHARGE-PERSIST",
         "from": 300000,
+        "sensor": "VIRTUAL-SKIN-CHARGE-PERSIST",
         "to": 5000
       }
     ],
-    "guardrails": {
-      "update_json_changed": false,
-      "bind_mount_model": false,
-      "runtime_text_patching": false,
-      "post_reboot_verification_required": true
-    },
     "collector": {
       "auto_debug_zip_collector": true,
       "auto_debug_zip_target": "/sdcard/Download/pixel_thermal_a17_auto_debug_*.zip",
@@ -128,144 +84,194 @@
         "mount summary changed to hash-based overlay equivalence plus raw mountinfo"
       ]
     },
-    "note": "source test profile kept as historical evidence"
-  },
-  "stable_update_json": {
-    "changed": true,
-    "version": "1.4.4-universal.1",
-    "versionCode": "1014403",
-    "tag": "v1.4.4-universal.1",
-    "asset": "pixel-10-thermal-polling-fix-v1.4.4-universal.1.zip"
-  },
-  "android17_pending_profiles": {
-    "frankel": {
-      "device": "Pixel 10",
-      "state": "scaffold_only_not_enabled",
-      "guard": "customize.sh aborts Android 17 non-mustang until stock thermal evidence and post-reboot verification exist",
-      "required_evidence": [
-        "stock /vendor/etc thermal_info_config*.json from exact Android 17 build",
-        "build fingerprint, build id, incremental and security patch",
-        "patched profile diff limited to VIRTUAL-SKIN PollingDelay targets",
-        "post-reboot module overlay hash match",
-        "thermal service running",
-        "no fresh ThermalHAL tombstone"
-      ]
+    "device": "mustang",
+    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys",
+    "guardrails": {
+      "bind_mount_model": false,
+      "post_reboot_verification_required": true,
+      "runtime_text_patching": false,
+      "update_json_changed": false
     },
-    "blazer": {
-      "device": "Pixel 10 Pro",
-      "state": "scaffold_only_not_enabled",
-      "guard": "customize.sh aborts Android 17 non-mustang until stock thermal evidence and post-reboot verification exist",
-      "required_evidence": [
-        "stock /vendor/etc thermal_info_config*.json from exact Android 17 build",
-        "build fingerprint, build id, incremental and security patch",
-        "patched profile diff limited to VIRTUAL-SKIN PollingDelay targets",
-        "post-reboot module overlay hash match",
-        "thermal service running",
-        "no fresh ThermalHAL tombstone"
-      ]
+    "incremental": "15421345",
+    "module_id": "pixel-10-pro-xl-thermal-fix",
+    "note": "source test profile kept as historical evidence",
+    "patched_hashes": {
+      "thermal_info_config.json": "1117ddcabb3d459d70c8231372ba4472232a5741cd6a5f2b8fd9b13e253c51d7",
+      "thermal_info_config_charge.json": "187191f6ec82158023b55191837bd678c7ecd8a4e40533565ea6f73322df494f",
+      "thermal_info_config_throttling.json": "19dff552a1f71c6487ad0deb6e211cf46a80629fe68b1b684b0de52d509405fc"
     },
-    "rango": {
-      "device": "Pixel 10 Pro Fold",
-      "state": "scaffold_only_not_enabled",
-      "guard": "customize.sh aborts Android 17 non-mustang until stock thermal evidence and post-reboot verification exist",
-      "required_evidence": [
-        "stock /vendor/etc thermal_info_config*.json from exact Android 17 build",
-        "build fingerprint, build id, incremental and security patch",
-        "patched profile diff limited to VIRTUAL-SKIN PollingDelay targets",
-        "post-reboot module overlay hash match",
-        "thermal service running",
-        "no fresh ThermalHAL tombstone"
-      ]
-    }
+    "release_type": "telegram tester prerelease with fixed auto collector",
+    "source_report_sha256": "d16d0d985efdf2c9c4c2152b7a9a4c172d00cf647ca2a08b7610d610380ec599",
+    "stock_hashes": {
+      "thermal_info_config.json": "9976306c6421447426f17464a12a3d058eee6e4c936e6a1db7dceb9280c0286d",
+      "thermal_info_config_charge.json": "2d5d10a5ab2eae1443ea6200569c316cbf0109c407a16672386c0e0095bf8532",
+      "thermal_info_config_throttling.json": "3f2989b45a484a3f669b97019790fe533aa7e4b954e8d7a29146cbf6542423de"
+    },
+    "version": "1.4.3-android17-mustang-test.3",
+    "versionCode": "1014303"
   },
-  "android17_pending": {
-    "frankel": "scaffold_only_pending_stock_evidence_and_live_verification",
-    "blazer": "scaffold_only_pending_stock_evidence_and_live_verification",
-    "rango": "scaffold_only_pending_stock_evidence_and_live_verification"
-  },
-  "vnext_plan": {
-    "unsupported_install_pre_abort_debug_zip": "planned_not_enabled",
-    "guard_requirement": "abort_without_profile_enablement_or_overlay_materialization",
-    "stock_debug_online_script": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_debug_report.py"
-  },
-  "hotfix_1_4_3_universal_2": {
-    "reason": "post-fs-data boot guard in 1.4.3-universal.1 still disabled non-mustang Android 16 beta profiles after install",
-    "profile_changes": false,
-    "update_json_changed": true,
-    "android16_universal_boot_guard": "mustang, frankel, blazer and rango are allowed when fingerprint identifies Android 16",
-    "android17_guard": "mustang CP31.260508.005 / 15421345 only"
-  },
+  "android16": "existing universal profile set unchanged",
   "android17_cp21_pending_factory_evidence": {
     "build": "CP21.260330.011",
-    "state": "pending_evidence_only_not_enabled",
-    "source": "official Android 17 Beta factory images extracted locally with pixel10 factory virtual skin dump v4",
     "devices": {
-      "frankel": {
-        "device": "Pixel 10",
-        "codename": "frankel",
-        "evidence_path": "profiles/android17-pending/frankel/CP21.260330.011/",
-        "virtual_skin_total": 29,
-        "stock_thermal_files": [
-          "thermal_info_config.json",
-          "thermal_info_config_charge.json",
-          "thermal_info_config_throttling.json"
-        ],
-        "enabled": false,
-        "runtime_verified": false
-      },
       "blazer": {
-        "device": "Pixel 10 Pro",
         "codename": "blazer",
+        "device": "Pixel 10 Pro",
+        "enabled": false,
         "evidence_path": "profiles/android17-pending/blazer/CP21.260330.011/",
-        "virtual_skin_total": 28,
+        "runtime_verified": false,
         "stock_thermal_files": [
           "thermal_info_config.json",
           "thermal_info_config_charge.json",
           "thermal_info_config_throttling.json"
         ],
+        "virtual_skin_total": 28
+      },
+      "frankel": {
+        "codename": "frankel",
+        "device": "Pixel 10",
         "enabled": false,
-        "runtime_verified": false
+        "evidence_path": "profiles/android17-pending/frankel/CP21.260330.011/",
+        "runtime_verified": false,
+        "stock_thermal_files": [
+          "thermal_info_config.json",
+          "thermal_info_config_charge.json",
+          "thermal_info_config_throttling.json"
+        ],
+        "virtual_skin_total": 29
       },
       "mustang": {
-        "device": "Pixel 10 Pro XL",
         "codename": "mustang",
+        "device": "Pixel 10 Pro XL",
+        "enabled": false,
         "evidence_path": "profiles/android17-pending/mustang/CP21.260330.011/",
-        "virtual_skin_total": 26,
+        "runtime_verified": false,
         "stock_thermal_files": [
           "thermal_info_config.json",
           "thermal_info_config_charge.json",
           "thermal_info_config_throttling.json"
         ],
-        "enabled": false,
-        "runtime_verified": false
+        "virtual_skin_total": 26
       },
       "rango": {
-        "device": "Pixel 10 Pro Fold",
         "codename": "rango",
+        "device": "Pixel 10 Pro Fold",
+        "enabled": false,
         "evidence_path": "profiles/android17-pending/rango/CP21.260330.011/",
-        "virtual_skin_total": 48,
+        "runtime_verified": false,
         "stock_thermal_files": [
           "thermal_info_config.json",
           "thermal_info_config_charge.json",
           "thermal_info_config_throttling.json"
         ],
-        "enabled": false,
-        "runtime_verified": false
+        "virtual_skin_total": 48
       }
     },
     "guardrails": {
-      "android17_non_mustang_enabled": false,
       "active_profiles_changed": false,
-      "update_json_changed": false,
+      "android17_non_mustang_enabled": false,
+      "post_reboot_verification_required_before_enablement": true,
       "release_zip_changed": false,
-      "post_reboot_verification_required_before_enablement": true
+      "update_json_changed": false
+    },
+    "source": "official Android 17 Beta factory images extracted locally with pixel10 factory virtual skin dump v4",
+    "state": "pending_evidence_only_not_enabled"
+  },
+  "android17_mustang": {
+    "android": "17",
+    "build": "CP31.260508.005",
+    "device": "mustang",
+    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260508.005/15421345:user/release-keys",
+    "incremental": "15421345",
+    "profile": "mustang-android17-cp31",
+    "verification": "tester post-reboot PASS twice on test.2/test.3",
+    "verification_credit": "Jiggs"
+  },
+  "android17_pending": {
+    "blazer": "scaffold_only_pending_stock_evidence_and_live_verification",
+    "frankel": "scaffold_only_pending_stock_evidence_and_live_verification",
+    "rango": "scaffold_only_pending_stock_evidence_and_live_verification"
+  },
+  "android17_pending_profiles": {
+    "blazer": {
+      "device": "Pixel 10 Pro",
+      "guard": "customize.sh aborts Android 17 non-mustang until stock thermal evidence and post-reboot verification exist",
+      "required_evidence": [
+        "stock /vendor/etc thermal_info_config*.json from exact Android 17 build",
+        "build fingerprint, build id, incremental and security patch",
+        "patched profile diff limited to VIRTUAL-SKIN PollingDelay targets",
+        "post-reboot module overlay hash match",
+        "thermal service running",
+        "no fresh ThermalHAL tombstone"
+      ],
+      "state": "scaffold_only_not_enabled"
+    },
+    "frankel": {
+      "device": "Pixel 10",
+      "guard": "customize.sh aborts Android 17 non-mustang until stock thermal evidence and post-reboot verification exist",
+      "required_evidence": [
+        "stock /vendor/etc thermal_info_config*.json from exact Android 17 build",
+        "build fingerprint, build id, incremental and security patch",
+        "patched profile diff limited to VIRTUAL-SKIN PollingDelay targets",
+        "post-reboot module overlay hash match",
+        "thermal service running",
+        "no fresh ThermalHAL tombstone"
+      ],
+      "state": "scaffold_only_not_enabled"
+    },
+    "rango": {
+      "device": "Pixel 10 Pro Fold",
+      "guard": "customize.sh aborts Android 17 non-mustang until stock thermal evidence and post-reboot verification exist",
+      "required_evidence": [
+        "stock /vendor/etc thermal_info_config*.json from exact Android 17 build",
+        "build fingerprint, build id, incremental and security patch",
+        "patched profile diff limited to VIRTUAL-SKIN PollingDelay targets",
+        "post-reboot module overlay hash match",
+        "thermal service running",
+        "no fresh ThermalHAL tombstone"
+      ],
+      "state": "scaffold_only_not_enabled"
     }
   },
+  "android17_qpr1_beta4_cp31_260522006": {
+    "build_id": "CP31.260522.006",
+    "device": "mustang",
+    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys",
+    "incremental": "15591510",
+    "polling_value_changes": false,
+    "profile_reused": "mustang-android17-cp31",
+    "requires_post_reboot_debug_zip": true,
+    "state": "enabled_as_guarded_prerelease_test_pending_runtime_verification",
+    "stock_evidence": "tester stock thermal archive supplied before module install",
+    "stock_hashes": {
+      "thermal_info_config.json": "9976306c6421447426f17464a12a3d058eee6e4c936e6a1db7dceb9280c0286d",
+      "thermal_info_config_charge.json": "2d5d10a5ab2eae1443ea6200569c316cbf0109c407a16672386c0e0095bf8532",
+      "thermal_info_config_throttling.json": "3f2989b45a484a3f669b97019790fe533aa7e4b954e8d7a29146cbf6542423de"
+    },
+    "thermal_profile_changes": false
+  },
+  "collector": {
+    "command": "su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh",
+    "mode": "manual_only_v4_ptune_soft_conflict",
+    "output": "/sdcard/Download/pixel_thermal_debug_*.zip"
+  },
+  "credits": {
+    "Harish": "Android 16 Blazer runtime and bootguard hotfix verification",
+    "Jiggs": "Android 17 Mustang CP31 verification",
+    "maicol07": "Android 16 Mustang SELinux overlay-read crash-loop logcat and v1.4.3-universal.3 hotfix verification"
+  },
+  "hotfix_1_4_3_universal_2": {
+    "android16_universal_boot_guard": "mustang, frankel, blazer and rango are allowed when fingerprint identifies Android 16",
+    "android17_guard": "mustang CP31.260508.005 / 15421345 only",
+    "profile_changes": false,
+    "reason": "post-fs-data boot guard in 1.4.3-universal.1 still disabled non-mustang Android 16 beta profiles after install",
+    "update_json_changed": true
+  },
   "latest_prerelease": {
-    "version": "1.4.4-universal-test.1",
-    "versionCode": 1014401,
-    "state": "universal_android17_cp21_test",
-    "stable_update_json": "remains_on_v1.4.3-universal.2",
+    "credits": [
+      "Jiggs",
+      "Harish"
+    ],
     "passed": [
       "Pixel 10 Pro XL / mustang / Android 16 / CP1A.260505.005",
       "Pixel 10 Pro / blazer / Android 16 / CP1A.260505.005",
@@ -279,17 +285,52 @@
       "Pixel 10 Pro XL / mustang / Android 17 CP21.260330.011",
       "Pixel 10 Pro Fold / rango / Android 17 CP21.260330.011"
     ],
-    "credits": [
-      "Jiggs",
-      "Harish"
-    ]
+    "stable_update_json": "remains_on_v1.4.3-universal.2",
+    "state": "universal_android17_cp21_test",
+    "version": "1.4.4-universal-test.1",
+    "versionCode": 1014401
   },
+  "module_id": "pixel-10-pro-xl-thermal-fix",
   "module_version": "1.4.3-universal.3",
   "module_version_code": 1014306,
+  "ptune_conflict_guard": {
+    "action": "soft_disable_with_skip_mount_only_when_ptune_is_active_or_staged",
+    "boot_time_paths": [
+      "/data/adb/modules/ptune",
+      "/data/adb/modules_update/ptune"
+    ],
+    "guard_mode": "soft_skip_mount_only",
+    "install_time_paths": [
+      "/data/adb/modules/ptune",
+      "/data/adb/modules_update/ptune"
+    ],
+    "keeps_module_scripts_runnable": true,
+    "module_id": "ptune",
+    "polling_value_changes": false,
+    "reason_marker": "conflict_ptune_active",
+    "requires_next_boot_after_ptune_removed_to_restore_overlay": true,
+    "runtime_profile_changes": false,
+    "state": "enabled_in_test_build",
+    "thermal_profile_changes": false
+  },
+  "release": "1.4.6-universal-test.2",
+  "release_type": "prerelease soft conflict guard test",
   "selinux_overlay_read_policy": "hal_thermal_default system_file read-only",
+  "stable_update_json": {
+    "asset": "pixel-10-thermal-polling-fix-v1.4.4-universal.1.zip",
+    "changed": true,
+    "tag": "v1.4.4-universal.1",
+    "version": "1.4.4-universal.1",
+    "versionCode": "1014403"
+  },
+  "test2_scope": "pTune stale disable cleanup and no-pTune active flag rearm",
   "v144_universal_test2": {
     "base": "v1.4.4-universal-test.1 plus v1.4.3-universal.3 SELinux hotfix",
-    "selinux_overlay_read_hotfix": true,
+    "credits": {
+      "Harish": "Android 16 Blazer runtime and bootguard hotfix verification",
+      "Jiggs": "Android 17 Mustang CP31 verification",
+      "maicol07": "Android 16 Mustang SELinux overlay-read crash-loop logcat and v1.4.3-universal.3 hotfix verification"
+    },
     "debug_collector_v2": [
       "time_context",
       "selinux_contexts",
@@ -303,62 +344,23 @@
       "rango"
     ],
     "enabled_android17": {
-      "verified": [
-        "mustang CP31.260508.005 / 15421345"
-      ],
       "test_pending": [
         "frankel CP21.260330.011",
         "blazer CP21.260330.011",
         "mustang CP21.260330.011",
         "rango CP21.260330.011"
+      ],
+      "verified": [
+        "mustang CP31.260508.005 / 15421345"
       ]
     },
-    "credits": {
-      "Jiggs": "Android 17 Mustang CP31 verification",
-      "Harish": "Android 16 Blazer runtime and bootguard hotfix verification",
-      "maicol07": "Android 16 Mustang SELinux overlay-read crash-loop logcat and v1.4.3-universal.3 hotfix verification"
-    }
+    "selinux_overlay_read_hotfix": true
   },
-  "credits": {
-    "Jiggs": "Android 17 Mustang CP31 verification",
-    "Harish": "Android 16 Blazer runtime and bootguard hotfix verification",
-    "maicol07": "Android 16 Mustang SELinux overlay-read crash-loop logcat and v1.4.3-universal.3 hotfix verification"
-  },
-  "ptune_conflict_guard": {
-    "state": "enabled_in_test_build",
-    "module_id": "ptune",
-    "install_time_paths": [
-      "/data/adb/modules/ptune",
-      "/data/adb/modules_update/ptune"
-    ],
-    "boot_time_paths": [
-      "/data/adb/modules/ptune",
-      "/data/adb/modules_update/ptune"
-    ],
-    "action": "soft_disable_with_skip_mount_only_when_ptune_is_active_or_staged",
-    "reason_marker": "conflict_ptune_active",
-    "guard_mode": "soft_skip_mount_only",
-    "keeps_module_scripts_runnable": true,
-    "requires_next_boot_after_ptune_removed_to_restore_overlay": true,
-    "runtime_profile_changes": false,
-    "thermal_profile_changes": false,
-    "polling_value_changes": false
-  },
-  "android17_qpr1_beta4_cp31_260522006": {
-    "state": "enabled_as_guarded_prerelease_test_pending_runtime_verification",
-    "device": "mustang",
-    "build_id": "CP31.260522.006",
-    "incremental": "15591510",
-    "fingerprint": "google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys",
-    "profile_reused": "mustang-android17-cp31",
-    "stock_evidence": "tester stock thermal archive supplied before module install",
-    "stock_hashes": {
-      "thermal_info_config.json": "9976306c6421447426f17464a12a3d058eee6e4c936e6a1db7dceb9280c0286d",
-      "thermal_info_config_charge.json": "2d5d10a5ab2eae1443ea6200569c316cbf0109c407a16672386c0e0095bf8532",
-      "thermal_info_config_throttling.json": "3f2989b45a484a3f669b97019790fe533aa7e4b954e8d7a29146cbf6542423de"
-    },
-    "thermal_profile_changes": false,
-    "polling_value_changes": false,
-    "requires_post_reboot_debug_zip": true
+  "version": "1.4.6-universal-test.2",
+  "versionCode": 1014602,
+  "vnext_plan": {
+    "guard_requirement": "abort_without_profile_enablement_or_overlay_materialization",
+    "stock_debug_online_script": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_debug_report.py",
+    "unsupported_install_pre_abort_debug_zip": "planned_not_enabled"
   }
 }

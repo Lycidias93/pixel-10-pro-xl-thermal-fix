@@ -1,6 +1,6 @@
-## Latest prerelease: 1.4.6-universal-test.1
+## Latest prerelease: 1.4.6-universal-test.2
 
-`1.4.6-universal-test.1` is a guarded prerelease for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / incremental `15591510`.
+`1.4.6-universal-test.2` is a guarded prerelease for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / incremental `15591510`.
 
 It reuses the already verified CP31 patched thermal profile because the tester supplied stock `CP31.260522.006` ThermalHAL configs match the known CP31 stock structure. It is still guarded to the exact fingerprint and still requires install + reboot + module debug ZIP before PASS status.
 
@@ -19,6 +19,20 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
 
 <!-- STOCK_DEBUG_ONLINE_QPR1_CP31_20260613_START -->
+### Prerelease 1.4.6-universal-test.2
+
+This prerelease keeps the QPR1 Beta 4 `CP31.260522.006 / 15591510` exact guard from `1.4.6-universal-test.1` and adds a pTune soft-guard cleanup fix:
+
+- when pTune is active/staged, stale `disable` flags are removed from both the install staging module and the active runtime module;
+- `skip_mount` remains present so this module does not mount ThermalHAL overlays while pTune is active;
+- when pTune is absent, stale `disable`/`skip_mount`/`remove` and pTune conflict guard files are cleared so the normal overlay path can be tested cleanly after reboot;
+- stable `update.json` remains on `1.4.4-universal.1`.
+
+Required verification paths:
+
+- pTune active: `thermal_disable=absent`, `thermal_skip_mount=present`, `SOFT_CONFLICT pTune ... action=skip_mount_only` after reboot.
+- pTune absent: `thermal_disable=absent`, `thermal_skip_mount=absent`, profile materialized, post-reboot debug ZIP confirms active ThermalHAL overlay or reports the remaining mount boundary clearly.
+
 ## Online stock thermal debug report
 
 For unsupported or newer firmware, collect stock ThermalHAL evidence **before** installing the module. This is required for Android 17 QPR/QPR1 beta builds such as `CP31.260522.006`.

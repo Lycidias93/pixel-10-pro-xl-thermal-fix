@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.6-universal-test.1"
-MODULE_VERSION_CODE="1014601"
+MODULE_VERSION="1.4.6-universal-test.2"
+MODULE_VERSION_CODE="1014602"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -57,6 +57,15 @@ if [ -n "$PTUNE_CONFLICT_PATH" ]; then
   echo "conflict_ptune_active" > "$MODPATH/guard/disabled_reason"
   echo "$PTUNE_CONFLICT_PATH" > "$MODPATH/guard/conflict_ptune_path"
   echo "soft_skip_mount_only" > "$MODPATH/guard/conflict_guard_mode"
+  ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
+  if [ -d "$ACTIVE_MODPATH" ]; then
+    mkdir -p "$ACTIVE_MODPATH/guard"
+    rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/remove"
+    touch "$ACTIVE_MODPATH/skip_mount"
+    echo "conflict_ptune_active" > "$ACTIVE_MODPATH/guard/disabled_reason"
+    echo "$PTUNE_CONFLICT_PATH" > "$ACTIVE_MODPATH/guard/conflict_ptune_path"
+    echo "soft_skip_mount_only" > "$ACTIVE_MODPATH/guard/conflict_guard_mode"
+  fi
   [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
   [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
   cat > "$MODPATH/install-state.txt" <<EOF
@@ -84,7 +93,7 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v4_ptune_soft_conflict
+debug_collector=manual_only_v5_ptune_soft_conflict_stale_disable_cleanup
 EOF
   ui_print "Module installed with skip_mount only: conflict_ptune_active"
   exit 0
@@ -150,8 +159,13 @@ chmod 0644 "$active_dir"/*.json 2>/dev/null || true
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || abort "! Failed to materialize active file: $f"; done
 
 rm -f "$MODPATH/disable" "$MODPATH/skip_mount" "$MODPATH/remove"
+ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
+if [ -d "$ACTIVE_MODPATH" ]; then
+  rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/skip_mount" "$ACTIVE_MODPATH/remove"
+  rm -f "$ACTIVE_MODPATH/guard/disabled_reason" "$ACTIVE_MODPATH/guard/conflict_guard_mode" "$ACTIVE_MODPATH/guard/conflict_ptune_path" 2>/dev/null || true
+fi
 mkdir -p "$MODPATH/guard"
-rm -f "$MODPATH/guard/pending_boot" "$MODPATH/guard/fail_count" "$MODPATH/guard/disabled_reason"
+rm -f "$MODPATH/guard/pending_boot" "$MODPATH/guard/fail_count" "$MODPATH/guard/disabled_reason" "$MODPATH/guard/conflict_guard_mode" "$MODPATH/guard/conflict_ptune_path"
 [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
 [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
 
@@ -182,7 +196,7 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v4_ptune_soft_conflict
+debug_collector=manual_only_v5_ptune_soft_conflict_stale_disable_cleanup
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF

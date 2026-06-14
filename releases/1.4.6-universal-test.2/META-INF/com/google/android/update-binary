@@ -1,0 +1,9 @@
+#!/sbin/sh
+OUTFD=$2
+ZIPFILE=$3
+ui_print() { echo -e "ui_print $1\nui_print" > /proc/self/fd/$OUTFD; }
+BOOTMODE=true
+ASH_STANDALONE=1
+export OUTFD ZIPFILE BOOTMODE ASH_STANDALONE
+unzip -o "$ZIPFILE" customize.sh -d /tmp >/dev/null 2>&1
+sh /tmp/customize.sh
