@@ -1,3 +1,10 @@
+## 1.4.7-universal-test.1 - prerelease strict pTune installed-presence guard
+
+- Treat a non-removed `id=ptune` module as a conflict even when pTune is disabled.
+- Keep this module enabled but `skip_mount`ed with `disabled_reason=conflict_ptune_installed` and `conflict_guard_mode=strict_presence_skip_mount` while pTune is installed.
+- Add a lightweight service watcher that preserves `skip_mount` for the next boot if pTune is installed after this module was already active.
+- Keep stable `update.json` on `1.4.4-universal.1`.
+
 ## Unreleased - stock debug helper ADB fallback
 
 - Document an ADB-push workflow for stock Android shells without `curl`/`wget` and `su` variants without `-c` support.

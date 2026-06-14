@@ -1,4 +1,4 @@
-## Latest prerelease: 1.4.6-universal-test.2
+## Latest prerelease: 1.4.7-universal-test.1
 
 `1.4.6-universal-test.2` is a guarded prerelease for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / incremental `15591510`.
 
@@ -19,6 +19,18 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
 
 <!-- STOCK_DEBUG_ONLINE_QPR1_CP31_20260613_START -->
+### Prerelease 1.4.7-universal-test.1
+
+This prerelease changes pTune handling to a strict installed-presence guard:
+
+- if a non-removed `id=ptune` module exists in `/data/adb/modules/ptune` or `/data/adb/modules_update/ptune`, this module keeps `skip_mount` present;
+- disabled pTune still counts as a conflict because `skip_mount` must exist before the next Magisk mount pass;
+- `remove=present` pTune is ignored so a pending uninstall does not keep this module parked;
+- the module remains scriptable and writes `disabled_reason=conflict_ptune_installed` plus `conflict_guard_mode=strict_presence_skip_mount`;
+- stable `update.json` remains on `1.4.4-universal.1`.
+
+This means Thermal solo testing now requires pTune to be removed, not merely disabled. The stricter behavior avoids accidental same-boot ThermalHAL overlay competition when pTune is re-enabled later.
+
 ### Prerelease 1.4.6-universal-test.2
 
 This prerelease keeps the QPR1 Beta 4 `CP31.260522.006 / 15591510` exact guard from `1.4.6-universal-test.1` and adds a pTune soft-guard cleanup fix:

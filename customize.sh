@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.6-universal-test.2"
-MODULE_VERSION_CODE="1014602"
+MODULE_VERSION="1.4.7-universal-test.1"
+MODULE_VERSION_CODE="1014701"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -14,7 +14,7 @@ A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease QPR1 guarded test"
+ui_print "  Universal prerelease strict pTune guard test"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Stable updateJson remains on 1.4.4-universal.1"
@@ -35,36 +35,38 @@ ui_print "build_id=$build_id"
 ui_print "incremental=$incremental"
 
 
-ptune_active_path() {
+ptune_installed_path() {
+  # Strict presence guard: a non-removed id=ptune module is a conflict even
+  # when pTune is currently disabled. Magisk consumes skip_mount before module
+  # scripts run, so this module must stay skip_mounted whenever pTune is present.
   for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
     [ -f "$d/module.prop" ] || continue
     grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
     [ -e "$d/remove" ] && continue
-    [ -e "$d/disable" ] && continue
     echo "$d"
     return 0
   done
   return 1
 }
 
-PTUNE_CONFLICT_PATH="$(ptune_active_path 2>/dev/null || true)"
+PTUNE_CONFLICT_PATH="$(ptune_installed_path 2>/dev/null || true)"
 if [ -n "$PTUNE_CONFLICT_PATH" ]; then
-  ui_print "! pTune active/staged module detected: $PTUNE_CONFLICT_PATH"
-  ui_print "! Soft-disabling ThermalHAL overlay while keeping this module scriptable for boot checks"
+  ui_print "! pTune installed module detected: $PTUNE_CONFLICT_PATH"
+  ui_print "! Strict pTune presence guard: keeping this module scriptable but skip_mounted"
   mkdir -p "$MODPATH/guard"
   rm -f "$MODPATH/disable" "$MODPATH/remove"
   touch "$MODPATH/skip_mount"
-  echo "conflict_ptune_active" > "$MODPATH/guard/disabled_reason"
+  echo "conflict_ptune_installed" > "$MODPATH/guard/disabled_reason"
   echo "$PTUNE_CONFLICT_PATH" > "$MODPATH/guard/conflict_ptune_path"
-  echo "soft_skip_mount_only" > "$MODPATH/guard/conflict_guard_mode"
+  echo "strict_presence_skip_mount" > "$MODPATH/guard/conflict_guard_mode"
   ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
   if [ -d "$ACTIVE_MODPATH" ]; then
     mkdir -p "$ACTIVE_MODPATH/guard"
     rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/remove"
     touch "$ACTIVE_MODPATH/skip_mount"
-    echo "conflict_ptune_active" > "$ACTIVE_MODPATH/guard/disabled_reason"
+    echo "conflict_ptune_installed" > "$ACTIVE_MODPATH/guard/disabled_reason"
     echo "$PTUNE_CONFLICT_PATH" > "$ACTIVE_MODPATH/guard/conflict_ptune_path"
-    echo "soft_skip_mount_only" > "$ACTIVE_MODPATH/guard/conflict_guard_mode"
+    echo "strict_presence_skip_mount" > "$ACTIVE_MODPATH/guard/conflict_guard_mode"
   fi
   [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
   [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
@@ -73,29 +75,29 @@ module_id=$MODULE_ID
 module_version=$MODULE_VERSION
 module_version_code=$MODULE_VERSION_CODE
 device=$device
-profile=soft_disabled_by_ptune_conflict
-profile_state=soft_disabled_conflict_ptune_active
-build_state=not_materialized_due_ptune_conflict
+profile=skip_mount_by_ptune_installed_presence
+profile_state=strict_presence_conflict_ptune_installed
+build_state=not_materialized_due_ptune_installed
 android=$android
 android_sdk=$android_sdk
 build_id=$build_id
 incremental=$incremental
-android_guard=not_evaluated_due_ptune_conflict
-fingerprint_android_guard=not_evaluated_due_ptune_conflict
+android_guard=not_evaluated_due_ptune_installed
+fingerprint_android_guard=not_evaluated_due_ptune_installed
 incremental_guard=not_applicable
 profile_materialized=no
 active_overlay_dir=none
 expected_thermal_files=0
-conflict_guard=ptune_active
-conflict_guard_mode=soft_skip_mount_only
+conflict_guard=ptune_installed
+conflict_guard_mode=strict_presence_skip_mount
 conflict_ptune_path=$PTUNE_CONFLICT_PATH
 bind_mount_model=no
 live_runtime_text_patch_model=no
-selinux_overlay_read_policy=installed_but_overlay_skipped
+selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_presence
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v5_ptune_soft_conflict_stale_disable_cleanup
+debug_collector=manual_only_v6_ptune_strict_presence_guard
 EOF
-  ui_print "Module installed with skip_mount only: conflict_ptune_active"
+  ui_print "Module installed with skip_mount only: conflict_ptune_installed"
   exit 0
 fi
 
@@ -196,7 +198,7 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v5_ptune_soft_conflict_stale_disable_cleanup
+debug_collector=manual_only_v6_ptune_strict_presence_guard
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF

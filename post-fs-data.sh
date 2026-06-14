@@ -5,15 +5,17 @@ LOG="$GUARDDIR/bootguard.log"
 mkdir -p "$GUARDDIR"
 log_line() { echo "$(date -Is 2>/dev/null || date) $*" >> "$LOG"; }
 disable_wrong_target() { reason="$1"; log_line "DISABLE wrong_target reason=$reason"; echo "$reason" > "$GUARDDIR/disabled_reason"; touch "$MODDIR/disable" "$MODDIR/skip_mount"; sync; }
-soft_conflict_ptune() { path="$1"; log_line "SOFT_CONFLICT pTune path=$path action=skip_mount_only"; echo "conflict_ptune_active" > "$GUARDDIR/disabled_reason"; echo "$path" > "$GUARDDIR/conflict_ptune_path"; echo "soft_skip_mount_only" > "$GUARDDIR/conflict_guard_mode"; rm -f "$MODDIR/disable" "$MODDIR/remove" 2>/dev/null || true; touch "$MODDIR/skip_mount"; sync; }
+soft_conflict_ptune() { path="$1"; log_line "SOFT_CONFLICT pTune installed path=$path action=strict_presence_skip_mount"; echo "conflict_ptune_installed" > "$GUARDDIR/disabled_reason"; echo "$path" > "$GUARDDIR/conflict_ptune_path"; echo "strict_presence_skip_mount" > "$GUARDDIR/conflict_guard_mode"; rm -f "$MODDIR/disable" "$MODDIR/remove" 2>/dev/null || true; touch "$MODDIR/skip_mount"; sync; }
 passive_arm() { scope="$1"; rm -f "$MODDIR/disable" "$MODDIR/skip_mount" "$MODDIR/remove" 2>/dev/null || true; rm -f "$GUARDDIR/disabled_reason" "$GUARDDIR/conflict_guard_mode" "$GUARDDIR/conflict_ptune_path" 2>/dev/null || true; log_line "PASSIVE_ARM device=$device android=$android build=$build_id incremental=$incremental scope=$scope universal_guard=true selinux_policy=thermal_hal_system_file_read_only stale_flags_cleared=true"; }
 
-ptune_active_path() {
+ptune_installed_path() {
+  # Strict presence guard: a non-removed id=ptune module is a conflict even
+  # when pTune is currently disabled. Magisk consumes skip_mount before module
+  # scripts run, so this module must stay skip_mounted whenever pTune is present.
   for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
     [ -f "$d/module.prop" ] || continue
     grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
     [ -e "$d/remove" ] && continue
-    [ -e "$d/disable" ] && continue
     echo "$d"
     return 0
   done
@@ -25,7 +27,7 @@ build_id="$(getprop ro.build.id 2>/dev/null)"
 fingerprint="$(getprop ro.build.fingerprint 2>/dev/null)"
 incremental="$(getprop ro.build.version.incremental 2>/dev/null)"
 
-ptune_conflict="$(ptune_active_path 2>/dev/null || true)"
+ptune_conflict="$(ptune_installed_path 2>/dev/null || true)"
 if [ -n "$ptune_conflict" ]; then
   soft_conflict_ptune "$ptune_conflict"
   exit 0
