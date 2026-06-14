@@ -76,12 +76,27 @@ capture_shell magisk_state.txt 'magisk -v 2>/dev/null || true; magisk -V 2>/dev/
 } > "$WORK/thermal_sha256s.txt" 2>&1
 
 {
-  echo "== VIRTUAL-SKIN / PollingDelay summary =="
+  echo "== stock thermal polling summary =="
+  echo "device=$DEVICE"
+  echo "build_id=$BUILD_ID"
+  echo "incremental=$INCREMENTAL"
+  echo
   for f in "$WORK"/vendor_etc/*.json; do
     [ -f "$f" ] || continue
+    base="$(basename "$f")"
+    echo "-- $base --"
+    set -- $(sha_file "$f")
+    echo "sha256=${1:-unknown}"
+    echo "size_bytes=$(wc -c < "$f" 2>/dev/null || echo unknown)"
+    vs_count="$(grep -c 'VIRTUAL-SKIN' "$f" 2>/dev/null || true)"
+    pd_count="$(grep -c 'PollingDelay' "$f" 2>/dev/null || true)"
+    echo "virtual_skin_matches=${vs_count:-0}"
+    echo "polling_delay_matches=${pd_count:-0}"
+    echo "polling_delay_values:"
+    sed -n 's/.*"PollingDelay"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*//p' "$f" 2>/dev/null | sort | uniq -c | sed 's/^/  /' || true
+    echo "virtual_skin_context:"
+    grep -n -B 3 -A 8 'VIRTUAL-SKIN' "$f" 2>/dev/null | head -240 || true
     echo
-    echo "-- $(basename "$f") --"
-    grep -n 'VIRTUAL-SKIN\|PollingDelay\|"Name"' "$f" 2>/dev/null || true
   done
 } > "$WORK/thermal_polling_summary.txt" 2>&1
 
@@ -92,6 +107,11 @@ capture_shell magisk_state.txt 'magisk -v 2>/dev/null || true; magisk -V 2>/dev/
   echo "== archive guidance =="
   echo "Upload the archive and the matching .sha256 file from $OUT_DIR."
   echo "Do not install the module until this stock evidence has been reviewed."
+  echo
+  echo "== adb pull examples =="
+  echo "adb pull $OUT_DIR/${NAME}.zip ."
+  echo "adb pull $OUT_DIR/${NAME}.zip.sha256 ."
+  echo "If this run produced .tar.gz instead of .zip, pull the .tar.gz and .tar.gz.sha256 files."
 } > "$WORK/README_STOCK_DEBUG.txt"
 
 ARCHIVE=""
@@ -110,4 +130,6 @@ sha_file "$ARCHIVE" > "$ARCHIVE.sha256" 2>/dev/null || true
 
 echo "STOCK_THERMAL_DEBUG_ARCHIVE=$ARCHIVE"
 echo "STOCK_THERMAL_DEBUG_SHA256=$ARCHIVE.sha256"
+echo "ADB_PULL_ARCHIVE=adb pull $ARCHIVE ."
+echo "ADB_PULL_SHA256=adb pull $ARCHIVE.sha256 ."
 echo "RESULT: PIXEL10_STOCK_THERMAL_DEBUG_ONLINE_DONE"

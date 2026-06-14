@@ -1,3 +1,10 @@
+## Unreleased - stock debug helper ADB fallback
+
+- Document an ADB-push workflow for stock Android shells without `curl`/`wget` and `su` variants without `-c` support.
+- Improve `tools/pixel10-stock-thermal-debug-online.sh` summary output with per-file SHA256, sizes, `VIRTUAL-SKIN` counts, `PollingDelay` counts/values and bounded context.
+- Print `adb pull` hints for the generated archive and checksum at the end of helper runs.
+- No module runtime, thermal profile, polling value, release ZIP, stable channel or `update.json` change.
+
 ## 1.4.6-universal-test.1 - prerelease guarded QPR1 Beta 4 CP31 test
 
 ## 1.4.6-universal-test.2 - prerelease

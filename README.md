@@ -37,22 +37,51 @@ Required verification paths:
 
 For unsupported or newer firmware, collect stock ThermalHAL evidence **before** installing the module. This is required for Android 17 QPR/QPR1 beta builds such as `CP31.260522.006`.
 
-Run on the tester device:
+### Preferred path: ADB push from a computer
 
-```sh
-su -c 'cd /data/local/tmp && rm -f pixel10-stock-thermal-debug-online.sh && (curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel10-stock-thermal-debug-online.sh || wget -O pixel10-stock-thermal-debug-online.sh https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel10-stock-thermal-debug-online.sh) && chmod 0755 pixel10-stock-thermal-debug-online.sh && sh ./pixel10-stock-thermal-debug-online.sh'
-```
+Use this when the phone's stock shell has no `curl`/`wget`, or when its `su` does not support `su -c`.
 
-The helper is read-only. It does not install or modify this module. It copies stock `/vendor/etc/thermal_info_config*.json`, build props, SHA256s and a `VIRTUAL-SKIN` / `PollingDelay` summary into an archive under `/sdcard/Download`.
-
-Upload both generated files:
+1. Download this file on the computer/browser and save it as `pixel10-stock-thermal-debug-online.sh`:
 
 ```text
-/sdcard/Download/pixel10_stock_thermal_debug_*.zip
-/sdcard/Download/pixel10_stock_thermal_debug_*.zip.sha256
+https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel10-stock-thermal-debug-online.sh
 ```
 
-If the device has no `zip` command, the helper creates `.tar.gz` and `.tar.gz.sha256` instead. Upload both files.
+2. Push and run it:
+
+```sh
+adb push pixel10-stock-thermal-debug-online.sh /data/local/tmp/
+adb shell
+su
+cd /data/local/tmp
+chmod 0755 pixel10-stock-thermal-debug-online.sh
+sh ./pixel10-stock-thermal-debug-online.sh
+exit
+exit
+```
+
+3. Pull the generated archive and checksum:
+
+```sh
+adb pull /sdcard/Download/pixel10_stock_thermal_debug_*.zip .
+adb pull /sdcard/Download/pixel10_stock_thermal_debug_*.zip.sha256 .
+```
+
+If the helper reports `.tar.gz` instead of `.zip`, pull the `.tar.gz` and `.tar.gz.sha256` files instead.
+
+### Optional path: download directly on the phone
+
+Use only if the shell has `curl` or `wget` and root supports this syntax:
+
+```sh
+su 0 sh -c 'cd /data/local/tmp && rm -f pixel10-stock-thermal-debug-online.sh && (curl -fsSLo pixel10-stock-thermal-debug-online.sh https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel10-stock-thermal-debug-online.sh || wget -O pixel10-stock-thermal-debug-online.sh https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel10-stock-thermal-debug-online.sh) && chmod 0755 pixel10-stock-thermal-debug-online.sh && sh ./pixel10-stock-thermal-debug-online.sh'
+```
+
+If `su 0 sh -c` fails, open a root shell with `su` first and run the commands manually.
+
+The helper is read-only. It does not install or modify this module. It copies stock `/vendor/etc/thermal_info_config*.json`, build props, SHA256s and a robust `VIRTUAL-SKIN` / `PollingDelay` summary into an archive under `/sdcard/Download`.
+
+Upload both generated files: the archive and its matching `.sha256` file.
 <!-- STOCK_DEBUG_ONLINE_QPR1_CP31_20260613_END -->
 
 # Pixel 10 Thermal Polling Fix
