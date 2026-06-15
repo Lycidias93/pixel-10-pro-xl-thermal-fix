@@ -108,6 +108,7 @@ for f in thermal_info_config_throttling.json thermal_info_config.json thermal_in
   p="$(find "$MODDIR/profiles" -path "*/system/vendor/etc/$f" -type f 2>/dev/null | head -n 1)"
   [ -n "$p" ] && copy_if_readable "$p" "$COLLECT/profile/$f"
 done
+collect_file guard_first_state_machine.txt sh -c 'echo boot_id=$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || echo unknown); echo; echo == modules_update ==; ls -la /data/adb/modules_update/pixel-10-pro-xl-thermal-fix /data/adb/modules_update/ptune 2>/dev/null || true; echo; echo == proc_mounts ==; grep -E "pixel-10-pro-xl-thermal-fix|/vendor/etc/thermal_info_config" /proc/mounts 2>/dev/null || true'
 collect_file sha256sums.txt sh -c 'cd "$0" && find . -type f -print | sort | while read f; do sha256sum "$f" 2>/dev/null || true; done' "$COLLECT"
 
 make_archive || true

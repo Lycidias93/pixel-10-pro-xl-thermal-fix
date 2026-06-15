@@ -1,3 +1,12 @@
+
+## 1.4.8-universal-test.1 guard_first vNext
+
+- User disable/remove/skip_mount markers are authoritative.
+- Disabled pTune is inactive.
+- Added stock-export guard, quarantine helper, and vendor overlay backend diagnostics.
+- Service health is read-only and does not mutate markers.
+- Stable updateJson unchanged.
+
 ## Latest prerelease: 1.4.7-universal-test.2
 
 `1.4.7-universal-test.2` adds the pTune config guard test layer on top of `1.4.7-universal-test.1`.

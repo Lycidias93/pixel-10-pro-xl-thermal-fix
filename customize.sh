@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.7-universal-test.3"
-MODULE_VERSION_CODE="1014703"
+MODULE_VERSION="1.4.8-universal-test.1"
+MODULE_VERSION_CODE="1014801"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -14,7 +14,7 @@ A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease pTune override materializer test"
+ui_print "  Universal prerelease guard_first stock/backend test"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Stable updateJson remains on 1.4.4-universal.1"
@@ -90,10 +90,10 @@ PTUNE_ACTIVE_PATH="$(ptune_active_path 2>/dev/null || true)"
 PTUNE_KNOWN_BAD="no"
 [ -n "$PTUNE_INSTALLED_PATH" ] && PTUNE_KNOWN_BAD="$(ptune_known_bad_state "$PTUNE_INSTALLED_PATH")"
 PTUNE_CONFLICT_PATH=""
-PTUNE_CONFLICT_REASON="conflict_ptune_installed"
-PTUNE_CONFLICT_MODE="strict_presence_skip_mount"
+PTUNE_CONFLICT_REASON="conflict_ptune_active_or_staged"
+PTUNE_CONFLICT_MODE="strict_active_skip_mount"
 case "$PTUNE_GUARD_MODE" in
-  strict) PTUNE_CONFLICT_PATH="$PTUNE_INSTALLED_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_installed"; PTUNE_CONFLICT_MODE="strict_presence_skip_mount" ;;
+  strict) PTUNE_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_active_or_staged"; PTUNE_CONFLICT_MODE="strict_active_skip_mount" ;;
   active_only) PTUNE_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_active"; PTUNE_CONFLICT_MODE="active_only_skip_mount" ;;
   off) PTUNE_CONFLICT_PATH=""; PTUNE_CONFLICT_REASON="guard_off"; PTUNE_CONFLICT_MODE="guard_off" ;;
 esac
@@ -286,6 +286,7 @@ conflict_guard_mode=${PTUNE_INSTALLED_PATH:+override_allow_mount_with_ptune}
 guard_override=$PTUNE_OVERRIDE_NAME
 known_bad_ptune=$PTUNE_KNOWN_BAD
 profile_materialized=yes
+overlay_materializer=customize_guard_first
 active_overlay_dir=system/vendor/etc
 expected_thermal_files=3
 polling_values_changed_by_this_release=source_profile_only

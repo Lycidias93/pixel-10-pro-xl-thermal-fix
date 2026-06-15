@@ -1,3 +1,12 @@
+
+## 1.4.8-universal-test.1 guard_first vNext
+
+- User disable/remove/skip_mount markers are authoritative.
+- Disabled pTune is inactive.
+- Added stock-export guard, quarantine helper, and vendor overlay backend diagnostics.
+- Service health is read-only and does not mutate markers.
+- Stable updateJson unchanged.
+
 ## 1.4.7-universal-test.3
 
 - Added always-materialized pTune override helper: `tools/enable-ptune-override.sh`.

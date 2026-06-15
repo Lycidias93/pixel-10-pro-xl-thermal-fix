@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.7-universal-test.3
-versionCode=1014703
+version=1.4.8-universal-test.1
+versionCode=1014801
 author=Lycidias93, based on marx161
-description=Pixel 10 Thermal Polling Fix v1.4.7-test.3 with always-materialized pTune override helpers, strict default guard, config risk_ack, and enhanced compat diagnostics.
+description=Pixel 10 Thermal Polling Fix v1.4.8-test.1 guard_first state machine, authoritative disable, stock export guard, and vendor overlay backend diagnostics.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
