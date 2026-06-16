@@ -425,3 +425,10 @@ Credits:
 - Added stock thermal files plus virtual-skin maps under `profiles/android17-pending/`.
 - No active profile, release ZIP, `module.prop`, `update.json`, `customize.sh` or `post-fs-data.sh` change.
 - Android 17 non-Mustang support remains blocked pending real-device post-reboot verification.
+
+## 1.4.8-universal-test.2
+
+- Improved KernelSU-Next/mountify backend detection in `compat-check.sh`.
+- Added `ROOT_IMPL`, `META_BACKEND_PRESENT`, `META_BACKEND_KIND`, and backend-specific vendor overlay warnings.
+- Added backend probe capture to `collect-debug.sh`.
+- No thermal value changes; stable update JSON unchanged.

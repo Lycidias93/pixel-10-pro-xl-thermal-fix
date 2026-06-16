@@ -753,3 +753,12 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-ptune-override
 ```
 
 The stable update channel is unchanged and remains on `1.4.4-universal.1`.
+
+## 1.4.8-universal-test.2
+
+Follow-up diagnostic prerelease for KernelSU-Next and mountify backend reporting.
+
+- Adds `META_BACKEND_PRESENT`, `META_BACKEND_KIND`, `ROOT_IMPL`, and backend-specific warning output.
+- Keeps `ACTIVE_VENDOR_MATCH` as the runtime source of truth.
+- Clarifies cases where a backend is present but the vendor thermal files are still stock at runtime.
+- Stable update channel remains on `1.4.4-universal.1`.

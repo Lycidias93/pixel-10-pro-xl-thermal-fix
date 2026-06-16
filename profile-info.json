@@ -408,5 +408,10 @@
     "guard_requirement": "abort_without_profile_enablement_or_overlay_materialization",
     "stock_debug_online_script": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_debug_report.py",
     "unsupported_install_pre_abort_debug_zip": "planned_not_enabled"
+  },
+  "v148_test2_meta_backend_diagnostics": {
+    "version": "1.4.8-universal-test.2",
+    "versionCode": "1014802",
+    "changes": ["detect KernelSU-Next mountify backend separately from active vendor match", "keep ACTIVE_VENDOR_MATCH as runtime source of truth"]
   }
 }
