@@ -1,4 +1,8 @@
 
+## Unreleased - vNext credits
+
+- Credit `pogo-airsupport` for KernelSU-Next / MetaModule-mountify compatibility verification of `v1.4.8-universal-test.3` with `ACTIVE_VENDOR_MATCH=yes`.
+
 ## 1.4.8-universal-test.1 guard_first vNext
 
 - User disable/remove/skip_mount markers are authoritative.

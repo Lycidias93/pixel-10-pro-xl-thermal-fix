@@ -207,6 +207,7 @@ In daily use, the intended difference is more responsive thermal skin-sensor pol
 - Pixel 10-series fork, Mustang controlled bisect, profile materialization fix, runtime verification and public release packaging: [Lycidias93](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix).
 - Android 17 Mustang live verification: `Jiggs` provided the Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345` install, reboot and debug ZIP evidence used to promote the A17 Mustang profile.
 - External bootloop safety during testing: [AshLooper](https://github.com/RipperHybrid/AshLooper) by RipperHybrid. AshLooper is not bundled and not required by the ZIP itself, but it is strongly recommended while testing ports, universal prereleases or new firmware.
+- KernelSU-Next / MetaModule-mountify compatibility verification for `v1.4.8-universal-test.3`: `pogo-airsupport` provided live XDA/Termux evidence that `ACTIVE_VENDOR_MATCH=yes` on KernelSU-Next + mountify after the compat diagnostic fix.
 - Future Pixel 10 Android 17 `frankel`, `blazer` and `rango` testers should be credited only after real device-specific stock evidence and post-reboot verification are available.
 
 AshLooper should stay outside the module and this module should not be added to the AshLooper whitelist, so AshLooper can still protect against a bad boot.
