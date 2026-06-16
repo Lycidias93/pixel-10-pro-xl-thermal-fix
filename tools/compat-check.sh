@@ -5,14 +5,14 @@ CFG="/data/adb/$ID/config.env"
 
 getcfg(){ [ -r "$CFG" ] && grep -E "^$1=" "$CFG" 2>/dev/null | tail -n1 | sed "s/^$1=//" | tr -d '\r'; }
 flag(){ [ -e "$1" ] && echo present || echo absent; }
-hash(){ sha256sum "$1" 2>/dev/null | cut -d" " -f1; }
+sha_file(){ sha256sum "$1" 2>/dev/null | awk '{print $1}'; }
 
 ready=yes
 match=yes
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
   [ -s "$M/system/vendor/etc/$f" ] || ready=no
-  a="$(hash "/vendor/etc/$f")"
-  o="$(hash "$M/system/vendor/etc/$f")"
+  a="$(sha_file "/vendor/etc/$f")"
+  o="$(sha_file "$M/system/vendor/etc/$f")"
   [ -n "$a" ] && [ "$a" = "$o" ] || match=no
 done
 

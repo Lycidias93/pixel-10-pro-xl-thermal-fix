@@ -762,3 +762,12 @@ Follow-up diagnostic prerelease for KernelSU-Next and mountify backend reporting
 - Keeps `ACTIVE_VENDOR_MATCH` as the runtime source of truth.
 - Clarifies cases where a backend is present but the vendor thermal files are still stock at runtime.
 - Stable update channel remains on `1.4.4-universal.1`.
+
+## 1.4.8-universal-test.3
+
+Follow-up diagnostic prerelease for active vendor hash-match reporting.
+
+- Fixes compat-check SHA comparison by avoiding the shell built-in `hash` name.
+- Keeps `ACTIVE_VENDOR_MATCH` as the runtime source of truth.
+- Clarifies cases where a backend is present but the vendor thermal files are still stock at runtime.
+- Stable update channel remains on `1.4.4-universal.1`.

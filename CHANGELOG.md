@@ -432,3 +432,10 @@ Credits:
 - Added `ROOT_IMPL`, `META_BACKEND_PRESENT`, `META_BACKEND_KIND`, and backend-specific vendor overlay warnings.
 - Added backend probe capture to `collect-debug.sh`.
 - No thermal value changes; stable update JSON unchanged.
+
+## 1.4.8-universal-test.3
+
+- Fixed `compat-check.sh` active vendor SHA comparison false negatives.
+- Renamed the internal hash helper to avoid collision with the shell `hash` built-in.
+- Added backend probe capture to `collect-debug.sh`.
+- No thermal value changes; stable update JSON unchanged.

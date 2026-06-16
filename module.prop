@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.8-universal-test.2
-versionCode=1014802
+version=1.4.8-universal-test.3
+versionCode=1014803
 author=Lycidias93, based on marx161
-description=Pixel 10 Thermal Polling Fix v1.4.8-test.2 with KernelSU-Next mountify backend diagnostics and guard-first checks.
+description=Pixel 10 Thermal Polling Fix v1.4.8-test.3 compat hash fix for active vendor match diagnostics.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

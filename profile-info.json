@@ -413,5 +413,10 @@
     "version": "1.4.8-universal-test.2",
     "versionCode": "1014802",
     "changes": ["detect KernelSU-Next mountify backend separately from active vendor match", "keep ACTIVE_VENDOR_MATCH as runtime source of truth"]
+  },
+  "v148_test3_compat_hash_fix": {
+    "version": "1.4.8-universal-test.3",
+    "versionCode": "1014803",
+    "changes": ["fix active vendor sha comparison false negatives", "keep ACTIVE_VENDOR_MATCH as runtime source of truth"]
   }
 }
