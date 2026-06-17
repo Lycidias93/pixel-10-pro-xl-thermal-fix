@@ -1,4 +1,11 @@
 
+## 1.4.9-universal-test.1 - Android 17 stable CP2A guarded factory import
+
+- Import guarded Android 17 stable `CP2A.260605.012` / `15430684` factory thermal profiles for `mustang`, `blazer`, `frankel` and `rango`.
+- Profile state is factory-evidence imported and pending live post-reboot runtime verification.
+- Stable `update.json` remains on `1.4.4-universal.1`.
+
+
 ## Unreleased - vNext credits
 
 - Credit `pogo-airsupport` for KernelSU-Next / MetaModule-mountify compatibility verification of `v1.4.8-universal-test.3` with `ACTIVE_VENDOR_MATCH=yes`.

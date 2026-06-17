@@ -412,11 +412,130 @@
   "v148_test2_meta_backend_diagnostics": {
     "version": "1.4.8-universal-test.2",
     "versionCode": "1014802",
-    "changes": ["detect KernelSU-Next mountify backend separately from active vendor match", "keep ACTIVE_VENDOR_MATCH as runtime source of truth"]
+    "changes": [
+      "detect KernelSU-Next mountify backend separately from active vendor match",
+      "keep ACTIVE_VENDOR_MATCH as runtime source of truth"
+    ]
   },
   "v148_test3_compat_hash_fix": {
     "version": "1.4.8-universal-test.3",
     "versionCode": "1014803",
-    "changes": ["fix active vendor sha comparison false negatives", "keep ACTIVE_VENDOR_MATCH as runtime source of truth"]
+    "changes": [
+      "fix active vendor sha comparison false negatives",
+      "keep ACTIVE_VENDOR_MATCH as runtime source of truth"
+    ]
+  },
+  "v149_test1_android17_stable_cp2a_factory_import": {
+    "version": "1.4.9-universal-test.1",
+    "versionCode": "1014901",
+    "build_id": "CP2A.260605.012",
+    "incremental": "15430684",
+    "devices": [
+      "mustang",
+      "blazer",
+      "frankel",
+      "rango"
+    ],
+    "profile_suffix": "android17-stable-cp2a-260605012",
+    "source_zip_sha256": "6e05d4488a9b40564c9553c4a9d0123b294c48f740d97f25a6017a3ac78f275e",
+    "state": "factory_evidence_imported_pending_live_runtime_verify",
+    "changes": [
+      "add guarded Android 17 stable CP2A.260605.012 profiles",
+      "keep stable updateJson unchanged"
+    ],
+    "files": {
+      "mustang": {
+        "profile": "mustang-android17-stable-cp2a-260605012",
+        "files": {
+          "thermal_info_config_throttling.json": {
+            "stock_sha256": "8660dbc231f6b821c989e18dd73b942de636ae4e2edc9734cf560eb0d05a02ec",
+            "patched_sha256": "51e9799ecc8990bd9ef725fa2f76db076daa52387640a41548141e33932d9177",
+            "virtual_skin_pollingdelay_300000_to_5000": 8,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/mustang/cp2a.260605.012/payload/vendor/etc/thermal_info_config_throttling.json"
+          },
+          "thermal_info_config.json": {
+            "stock_sha256": "9976306c6421447426f17464a12a3d058eee6e4c936e6a1db7dceb9280c0286d",
+            "patched_sha256": "1117ddcabb3d459d70c8231372ba4472232a5741cd6a5f2b8fd9b13e253c51d7",
+            "virtual_skin_pollingdelay_300000_to_5000": 1,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/mustang/cp2a.260605.012/payload/vendor/etc/thermal_info_config.json"
+          },
+          "thermal_info_config_charge.json": {
+            "stock_sha256": "2d5d10a5ab2eae1443ea6200569c316cbf0109c407a16672386c0e0095bf8532",
+            "patched_sha256": "187191f6ec82158023b55191837bd678c7ecd8a4e40533565ea6f73322df494f",
+            "virtual_skin_pollingdelay_300000_to_5000": 2,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/mustang/cp2a.260605.012/payload/vendor/etc/thermal_info_config_charge.json"
+          }
+        }
+      },
+      "blazer": {
+        "profile": "blazer-android17-stable-cp2a-260605012",
+        "files": {
+          "thermal_info_config_throttling.json": {
+            "stock_sha256": "8660dbc231f6b821c989e18dd73b942de636ae4e2edc9734cf560eb0d05a02ec",
+            "patched_sha256": "51e9799ecc8990bd9ef725fa2f76db076daa52387640a41548141e33932d9177",
+            "virtual_skin_pollingdelay_300000_to_5000": 8,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/blazer/cp2a.260605.012/payload/vendor/etc/thermal_info_config_throttling.json"
+          },
+          "thermal_info_config.json": {
+            "stock_sha256": "925e79a306793dddaeb4de7a01b0a8c3ad243d8da372e967b3f5936aadeb4290",
+            "patched_sha256": "3c6accc553777507ef18e7f524e0bb67a8fabc44112a4f6d3638401086a3ec4f",
+            "virtual_skin_pollingdelay_300000_to_5000": 2,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/blazer/cp2a.260605.012/payload/vendor/etc/thermal_info_config.json"
+          },
+          "thermal_info_config_charge.json": {
+            "stock_sha256": "2b8458a4e31971b487ba87d2947f31a5d28316f62ef71ee8ba7c0f8ab21c7b0c",
+            "patched_sha256": "705de2ba0c3f71be87fb5e0cf188441789e7002fd4b67c2df4caa0d11bf01965",
+            "virtual_skin_pollingdelay_300000_to_5000": 2,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/blazer/cp2a.260605.012/payload/vendor/etc/thermal_info_config_charge.json"
+          }
+        }
+      },
+      "frankel": {
+        "profile": "frankel-android17-stable-cp2a-260605012",
+        "files": {
+          "thermal_info_config_throttling.json": {
+            "stock_sha256": "8660dbc231f6b821c989e18dd73b942de636ae4e2edc9734cf560eb0d05a02ec",
+            "patched_sha256": "51e9799ecc8990bd9ef725fa2f76db076daa52387640a41548141e33932d9177",
+            "virtual_skin_pollingdelay_300000_to_5000": 8,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/frankel/cp2a.260605.012/payload/vendor/etc/thermal_info_config_throttling.json"
+          },
+          "thermal_info_config.json": {
+            "stock_sha256": "ca3c05ece86d4979612da8363f5315dd58d0e5d4b4afb2b10565eecaa9fd8ef2",
+            "patched_sha256": "7daf93985643e55a744d16a0480d6d519adc87e6ee1a1de3bb5373130d03092e",
+            "virtual_skin_pollingdelay_300000_to_5000": 2,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/frankel/cp2a.260605.012/payload/vendor/etc/thermal_info_config.json"
+          },
+          "thermal_info_config_charge.json": {
+            "stock_sha256": "1df84afdb951647df5a7433a507bfc2e08ebc9e753ac14efb117783fc1d904b2",
+            "patched_sha256": "00c6a60a6ba97332f8db926b7bfb8ec844c9a276326a2c2e49c6d193de70cd6b",
+            "virtual_skin_pollingdelay_300000_to_5000": 2,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/frankel/cp2a.260605.012/payload/vendor/etc/thermal_info_config_charge.json"
+          }
+        }
+      },
+      "rango": {
+        "profile": "rango-android17-stable-cp2a-260605012",
+        "files": {
+          "thermal_info_config_throttling.json": {
+            "stock_sha256": "8660dbc231f6b821c989e18dd73b942de636ae4e2edc9734cf560eb0d05a02ec",
+            "patched_sha256": "51e9799ecc8990bd9ef725fa2f76db076daa52387640a41548141e33932d9177",
+            "virtual_skin_pollingdelay_300000_to_5000": 8,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/rango/cp2a.260605.012/payload/vendor/etc/thermal_info_config_throttling.json"
+          },
+          "thermal_info_config.json": {
+            "stock_sha256": "2ffde3bcf7007cd5b7b5c2330bc2ce27776d275398eecaf8745081b01983e5f1",
+            "patched_sha256": "a8c4b897bb9c936b856c94ab3ac9f07c9d60f9a07d26a238f213d0390e87da0e",
+            "virtual_skin_pollingdelay_300000_to_5000": 11,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/rango/cp2a.260605.012/payload/vendor/etc/thermal_info_config.json"
+          },
+          "thermal_info_config_charge.json": {
+            "stock_sha256": "2b40f6b414a288cf21bd2d833f6b78d73e9a5145d26527999ca36f59c264725c",
+            "patched_sha256": "1cd592ced7ff3d784dbb843d7e6499e83a3d680ddc2f507309180515604b944e",
+            "virtual_skin_pollingdelay_300000_to_5000": 2,
+            "source_member": "a17_pixel10_thermal_ptune_magisk_stable_v3/rango/cp2a.260605.012/payload/vendor/etc/thermal_info_config_charge.json"
+          }
+        }
+      }
+    }
   }
 }

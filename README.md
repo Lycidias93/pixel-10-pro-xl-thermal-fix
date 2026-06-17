@@ -1,4 +1,11 @@
 
+## Latest prerelease: `1.4.9-universal-test.1`
+
+`1.4.9-universal-test.1` adds guarded Android 17 stable `CP2A.260605.012` / `15430684` factory thermal profiles for `mustang`, `blazer`, `frankel` and `rango`.
+
+The profiles are factory-evidence imports and must be verified with a live post-reboot `compat-check.sh` plus `collect-debug.sh` before any stable promotion. Stable `update.json` remains on `1.4.4-universal.1`.
+
+
 ## 1.4.8-universal-test.1 guard_first vNext
 
 - User disable/remove/skip_mount markers are authoritative.

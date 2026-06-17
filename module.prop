@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.8-universal-test.3
-versionCode=1014803
+version=1.4.9-universal-test.1
+versionCode=1014901
 author=Lycidias93, based on marx161
-description=Pixel 10 Thermal Polling Fix v1.4.8-test.3 compat hash fix for active vendor match diagnostics.
+description=Pixel 10 Thermal Polling Fix 1.4.9-universal-test.1 guarded Android 17 stable CP2A.260605.012 factory profile import; runtime verification pending.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

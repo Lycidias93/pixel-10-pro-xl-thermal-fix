@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.8-universal-test.3"
-MODULE_VERSION_CODE="1014803"
+MODULE_VERSION="1.4.9-universal-test.1"
+MODULE_VERSION_CODE="1014901"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -11,6 +11,9 @@ A17_CP31_QPR1B4_PROFILE_SOURCE_BUILD="CP31.260522.006"
 A17_CP31_QPR1B4_PROFILE_SOURCE_INCREMENTAL="15591510"
 A17_CP31_QPR1B4_EXPECTED_FINGERPRINT="google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys"
 A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
+A17_STABLE_CP2A_PROFILE_SOURCE_BUILD="CP2A.260605.012"
+A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL="15430684"
+A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3_factory_extract"
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
@@ -196,6 +199,9 @@ case "$android" in
     case "$device" in
       mustang)
         case "$fingerprint" in
+          "google/mustang/mustang:17/$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD/$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL:user/release-keys")
+            profile="mustang-android17-stable-cp2a-260605012"; profile_state="android17_stable_cp2a_test_pending_live_verification"; build_state="android17_mustang_cp2a_15430684_factory_profile_pending_runtime"; fingerprint_android_guard="exact_android17_mustang_stable_cp2a_pass"; profile_source_build="$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="$A17_STABLE_CP2A_SOURCE_REPORT_SHA256"
+            case "$incremental" in "$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL") incremental_guard="incremental_pass" ;; *) abort "! Android 17 stable CP2A Mustang incremental mismatch: $incremental" ;; esac ;;
           "$A17_CP31_EXPECTED_FINGERPRINT")
             profile="mustang-android17-cp31"; profile_state="tester_verified_android17_cp31"; build_state="android17_mustang_cp31_15421345_tester_verified"; fingerprint_android_guard="exact_android17_mustang_cp31_pass"; profile_source_build="$A17_CP31_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_CP31_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="d16d0d985efdf2c9c4c2152b7a9a4c172d00cf647ca2a08b7610d610380ec599"
             case "$incremental" in "$A17_CP31_PROFILE_SOURCE_INCREMENTAL") incremental_guard="incremental_pass" ;; *) abort "! Android 17 CP31 incremental mismatch: $incremental" ;; esac ;;
@@ -207,13 +213,18 @@ case "$android" in
           *) abort "! Unsupported Android 17 Mustang fingerprint/build: $fingerprint" ;;
         esac ;;
       frankel|blazer|rango)
-        case "$build_id" in "$A17_CP21_PROFILE_SOURCE_BUILD") ;; *) abort "! Android 17 non-Mustang test requires build_id=$A17_CP21_PROFILE_SOURCE_BUILD but got $build_id" ;; esac
-        case "$fingerprint" in *":CinnamonBun/$A17_CP21_PROFILE_SOURCE_BUILD/"*|*":17/$A17_CP21_PROFILE_SOURCE_BUILD/"*) ;; *) abort "! Android 17 non-Mustang test requires CP21 fingerprint: $fingerprint" ;; esac
-        profile="${device}-android17-cp21"; profile_state="android17_cp21_test_pending_live_verification"; build_state="android17_cp21_${device}_factory_profile_pending_runtime"; fingerprint_android_guard="android17_cp21_build_pass"; profile_source_build="$A17_CP21_PROFILE_SOURCE_BUILD"; profile_source_incremental="$incremental"; incremental_guard="cp21_incremental_recorded_$incremental" ;;
+        if [ "$build_id" = "$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD" ] && [ "$incremental" = "$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL" ]; then
+          case "$fingerprint" in google/${device}/${device}:17/$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD/$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL:user/release-keys) ;; *) abort "! Android 17 stable CP2A ${device} fingerprint mismatch: $fingerprint" ;; esac
+          profile="${device}-android17-stable-cp2a-260605012"; profile_state="android17_stable_cp2a_test_pending_live_verification"; build_state="android17_${device}_cp2a_15430684_factory_profile_pending_runtime"; fingerprint_android_guard="exact_android17_${device}_stable_cp2a_pass"; profile_source_build="$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="$A17_STABLE_CP2A_SOURCE_REPORT_SHA256"; incremental_guard="incremental_pass"
+        else
+          case "$build_id" in "$A17_CP21_PROFILE_SOURCE_BUILD") ;; *) abort "! Android 17 non-Mustang test requires build_id=$A17_CP21_PROFILE_SOURCE_BUILD or $A17_STABLE_CP2A_PROFILE_SOURCE_BUILD but got $build_id" ;; esac
+          case "$fingerprint" in *":CinnamonBun/$A17_CP21_PROFILE_SOURCE_BUILD/"*|*":17/$A17_CP21_PROFILE_SOURCE_BUILD/"*) ;; *) abort "! Android 17 non-Mustang test requires CP21 fingerprint: $fingerprint" ;; esac
+          profile="${device}-android17-cp21"; profile_state="android17_cp21_test_pending_live_verification"; build_state="android17_cp21_${device}_factory_profile_pending_runtime"; fingerprint_android_guard="android17_cp21_build_pass"; profile_source_build="$A17_CP21_PROFILE_SOURCE_BUILD"; profile_source_incremental="$incremental"; incremental_guard="cp21_incremental_recorded_$incremental"
+        fi ;;
       *) abort "! Unsupported Pixel 10 Android 17 device codename: $device" ;;
     esac
     ;;
-  *) abort "! Unsupported Android version: $android. This test build supports Android 16 and guarded Android 17 CP31/CP21 profiles." ;;
+  *) abort "! Unsupported Android version: $android. This test build supports Android 16 and guarded Android 17 CP31/CP21/Stable CP2A profiles." ;;
 esac
 
 profile_dir="$MODPATH/profiles/$profile/system/vendor/etc"
