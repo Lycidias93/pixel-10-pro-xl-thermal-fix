@@ -1,3 +1,9 @@
+## Unreleased - public README refresh after 1.4.9 test.1
+
+- Rewrote README for the current public XDA/GitHub state after `v1.4.9-universal-test.1`.
+- Documented Android 17 stable `CP2A.260605.012 / 15430684` support scope and live-verified `blazer` status.
+- Documented pTune latest-alpha override compatibility, KernelSU-Next/mountify validation, current stable/prerelease links and verification commands.
+- No runtime, profile, package, release ZIP or `update.json` change.
 
 ## 1.4.9-universal-test.1 - Android 17 stable CP2A guarded factory import
 
