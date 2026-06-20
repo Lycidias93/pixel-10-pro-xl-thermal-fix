@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.9-universal-test.1"
-MODULE_VERSION_CODE="1014901"
+MODULE_VERSION="1.4.9-universal-test.2"
+MODULE_VERSION_CODE="1014902"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -17,7 +17,7 @@ A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease guard_first stock/backend test"
+ui_print "  Universal prerelease guarded auto-profile-switch test"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Stable updateJson remains on 1.4.4-universal.1"
@@ -124,6 +124,7 @@ if [ -n "$PTUNE_CONFLICT_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
   fi
   [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
   [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
+[ -s "$MODPATH/tools/auto-profile-switch.sh" ] && chmod 0755 "$MODPATH/tools/auto-profile-switch.sh" || true
 [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
 [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
 [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
@@ -167,7 +168,7 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v8_override_materializer_and_ptune_evidence
+debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
 compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
 ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
 EOF
@@ -305,7 +306,7 @@ bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
 update_json_channel=stable_update_json_remains_1.4.4-universal.1
-debug_collector=manual_only_v8_override_materializer_and_ptune_evidence
+debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh
 override_disable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-ptune-override.sh

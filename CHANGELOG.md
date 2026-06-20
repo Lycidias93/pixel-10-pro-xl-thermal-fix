@@ -1,3 +1,11 @@
+## 1.4.9-universal-test.2 - guarded auto-profile-switch after compatible OTA/build changes
+
+- Add boot-time guarded auto-profile-switch helper for compatible Pixel 10 Android build changes.
+- The helper reselects the current device/build/fingerprint profile and rematerializes the active module overlay when the installed profile is stale after OTA.
+- Unknown or incompatible Android/build/fingerprint changes set `skip_mount` and write `PROFILE_STALE_AFTER_OTA=yes` / `REINSTALL_REQUIRED=yes` instead of applying a blind profile.
+- pTune guard remains authoritative: active/staged pTune still blocks unless explicit risk-ack override is configured.
+- Stable `update.json` remains on `1.4.4-universal.1`.
+
 ## Unreleased - public README refresh after 1.4.9 test.1
 
 - Rewrote README for the current public XDA/GitHub state after `v1.4.9-universal-test.1`.

@@ -1,3 +1,22 @@
+<!-- README_AUTO_PROFILE_SWITCH_149_UNIVERSAL_TEST2_START -->
+## Guarded auto-profile-switch after compatible Android OTA/build change
+
+Prerelease `1.4.9-universal-test.2` adds a boot-time guarded auto-profile-switch path. If the device, Android version, build ID, fingerprint and incremental match a bundled compatible profile, the module can rematerialize the active ThermalHAL profile after an OTA/build-family change without a manual reinstall.
+
+Safety boundary:
+
+- Unknown or incompatible builds are not auto-switched; the module writes `PROFILE_STALE_AFTER_OTA=yes`, `REINSTALL_REQUIRED=yes` and sets `skip_mount`.
+- Active/staged pTune still blocks unless the explicit `ALLOW_THERMAL_WITH_PTUNE=1` plus `RISK_ACK_PTUNE_THERMAL_COLLISION=I_UNDERSTAND_BOOTLOOP_RISK` override is configured.
+- Stable `update.json` remains on `v1.4.4-universal.1` until the auto-switch path has live post-reboot verification.
+
+Verify after OTA/reboot:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/compat-check.sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
+```
+<!-- README_AUTO_PROFILE_SWITCH_149_UNIVERSAL_TEST2_END -->
+
 # Pixel 10 Thermal Polling Fix
 
 Magisk thermal polling overlay for Pixel 10-series devices.

@@ -90,6 +90,15 @@ if [ "$meta_backend" = no ] && [ "$root_impl" = kernelsu_next ]; then
   meta_backend_kind=kernelsu_next_integrated_probe_missing
 fi
 
+auto_state="none"
+selected_profile="unknown"
+reinstall_required="no"
+profile_stale_after_ota="no"
+[ -r "$M/guard/auto_profile_switch_state" ] && auto_state="$(cat "$M/guard/auto_profile_switch_state" 2>/dev/null | head -n1)"
+[ -r "$M/guard/selected_profile" ] && selected_profile="$(cat "$M/guard/selected_profile" 2>/dev/null | head -n1)"
+[ -r "$M/guard/reinstall_required" ] && reinstall_required="$(cat "$M/guard/reinstall_required" 2>/dev/null | sed 's/^REINSTALL_REQUIRED=//' | head -n1)"
+[ -r "$M/guard/profile_stale_after_ota" ] && profile_stale_after_ota="$(cat "$M/guard/profile_stale_after_ota" 2>/dev/null | sed 's/^PROFILE_STALE_AFTER_OTA=//' | head -n1)"
+
 warn=no
 if [ "$ready" = yes ] && [ "$ts" = absent ] && [ "$match" = no ]; then
   if [ "$meta_backend" = yes ]; then
@@ -126,6 +135,10 @@ THERMAL_DISABLE=$td
 THERMAL_SKIP_MOUNT=$ts
 THERMAL_REMOVE=$tr
 THERMAL_EXPECTED=$exp
+AUTO_PROFILE_SWITCH_STATE=$auto_state
+AUTO_SELECTED_PROFILE=$selected_profile
+PROFILE_STALE_AFTER_OTA=$profile_stale_after_ota
+REINSTALL_REQUIRED=$reinstall_required
 MODULE_OVERLAY_READY=$ready
 ACTIVE_VENDOR_MATCH=$match
 ROOT_IMPL=$root_impl
