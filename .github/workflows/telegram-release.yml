@@ -12,50 +12,221 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send Telegram release post
+      - name: Send compact Telegram release post
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           REPO: ${{ github.repository }}
+          RELEASE_ID: ${{ github.event.release.id }}
           RELEASE_NAME: ${{ github.event.release.name }}
           TAG_NAME: ${{ github.event.release.tag_name }}
           RELEASE_URL: ${{ github.event.release.html_url }}
           IS_PRERELEASE: ${{ github.event.release.prerelease }}
-          BODY: ${{ github.event.release.body }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+          PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: |
           set -euo pipefail
 
           python3 <<'PY' > /tmp/telegram-message.html
+          import datetime as dt
           import html
+          import json
           import os
+          import re
+          import textwrap
+          import urllib.error
+          import urllib.parse
+          import urllib.request
 
+          api = "https://api.github.com"
+          token = os.environ.get("GITHUB_TOKEN", "")
           repo = os.environ["REPO"]
           tag = os.environ["TAG_NAME"]
-          name = os.environ.get("RELEASE_NAME") or tag
+          release_id = os.environ.get("RELEASE_ID", "")
+          name = (os.environ.get("RELEASE_NAME") or tag).strip()
           url = os.environ["RELEASE_URL"]
           prerelease = os.environ.get("IS_PRERELEASE") == "true"
-          body = (os.environ.get("BODY") or "").strip()
+          body = (os.environ.get("RELEASE_BODY") or "").strip()
+          published_at = os.environ.get("PUBLISHED_AT", "")
+
+          headers = {
+              "Accept": "application/vnd.github+json",
+              "User-Agent": "telegram-release-announcement",
+              "X-GitHub-Api-Version": "2022-11-28",
+          }
+          if token:
+              headers["Authorization"] = f"Bearer {token}"
+
+          def parse_time(value):
+              if not value:
+                  return None
+              try:
+                  return dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+              except ValueError:
+                  return None
+
+          def gh_json(path):
+              req = urllib.request.Request(api + path, headers=headers)
+              with urllib.request.urlopen(req, timeout=20) as resp:
+                  return json.load(resp)
+
+          def compact_line(text, limit=135):
+              text = re.sub(r"\s+", " ", text).strip()
+              text = re.sub(r"^[-*+]\s+", "", text)
+              text = re.sub(r"^\d+[.)]\s+", "", text)
+              text = re.sub(r"`([^`]+)`", r"\1", text)
+              text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
+              text = text.strip(" -*\t")
+              if len(text) > limit:
+                  text = text[: limit - 1].rstrip() + "…"
+              return text
+
+          def split_body_sections(markdown):
+              sections = []
+              current_title = "summary"
+              current_lines = []
+              for raw in markdown.splitlines():
+                  line = raw.rstrip()
+                  heading = re.match(r"^#{1,6}\s+(.+?)\s*$", line)
+                  if heading:
+                      sections.append((current_title, current_lines))
+                      current_title = heading.group(1).strip().lower()
+                      current_lines = []
+                  else:
+                      current_lines.append(line)
+              sections.append((current_title, current_lines))
+              return sections
+
+          allowed_sections = {
+              "added", "add", "features", "feature", "new",
+              "changed", "change", "improved", "improvements", "updated", "update",
+              "fixed", "fix", "fixes", "bug fixes", "bugfixes",
+              "removed", "remove", "security", "changelog", "changes",
+          }
+          denied_section_words = {
+              "install", "installation", "download", "downloads", "expected", "output",
+              "verify", "verification", "paths", "files", "assets", "checksums",
+              "sha", "sha256", "notes", "usage", "how to", "test", "tests",
+          }
+
+          def body_summary(markdown):
+              for raw in markdown.splitlines():
+                  line = raw.strip()
+                  if not line or line.startswith("#") or line.startswith(('-', '*', '+')):
+                      continue
+                  if re.match(r"^\d+[.)]\s+", line):
+                      continue
+                  if line.lower().startswith(("after reboot", "expected output", "downloads", "install")):
+                      continue
+                  return compact_line(line, 180)
+              return ""
+
+          def body_changelog(markdown, max_items=7):
+              out = []
+              sections = split_body_sections(markdown)
+              for title, lines in sections:
+                  t = re.sub(r"[^a-z0-9 ]+", " ", title.lower()).strip()
+                  if any(word in t for word in denied_section_words):
+                      continue
+                  allowed = t in allowed_sections or any(word in t.split() for word in allowed_sections)
+                  if not allowed and title != "summary":
+                      continue
+                  for raw in lines:
+                      line = raw.strip()
+                      if not re.match(r"^[-*+]\s+", line):
+                          continue
+                      item = compact_line(line)
+                      if item and item.lower() not in {x.lower() for x in out}:
+                          out.append(item)
+                      if len(out) >= max_items:
+                          return out
+              return out
+
+          def previous_public_release():
+              try:
+                  releases = gh_json(f"/repos/{repo}/releases?per_page=100")
+              except Exception:
+                  return None
+              current_time = parse_time(published_at)
+              candidates = []
+              for rel in releases:
+                  if str(rel.get("id", "")) == str(release_id):
+                      continue
+                  if rel.get("tag_name") == tag:
+                      continue
+                  if rel.get("draft") or rel.get("prerelease"):
+                      continue
+                  rel_time = parse_time(rel.get("published_at") or rel.get("created_at") or "")
+                  if current_time and rel_time and rel_time >= current_time:
+                      continue
+                  candidates.append((rel_time or dt.datetime.min.replace(tzinfo=dt.timezone.utc), rel))
+              if not candidates:
+                  return None
+              candidates.sort(key=lambda item: item[0], reverse=True)
+              return candidates[0][1]
+
+          def compare_changelog(prev_tag, max_items=7):
+              if not prev_tag:
+                  return []
+              base = urllib.parse.quote(prev_tag, safe="")
+              head = urllib.parse.quote(tag, safe="")
+              try:
+                  data = gh_json(f"/repos/{repo}/compare/{base}...{head}")
+              except Exception:
+                  return []
+              out = []
+              for commit in data.get("commits", []):
+                  message = commit.get("commit", {}).get("message", "").splitlines()[0]
+                  item = compact_line(message)
+                  lower = item.lower()
+                  if not item:
+                      continue
+                  if lower.startswith("merge pull request") or lower.startswith("merge branch"):
+                      continue
+                  if "telegram release announcement" in lower or "telegram release announcements" in lower:
+                      continue
+                  if item.lower() not in {x.lower() for x in out}:
+                      out.append(item)
+                  if len(out) >= max_items:
+                      break
+              return out
+
+          prev = previous_public_release()
+          prev_tag = prev.get("tag_name") if prev else ""
+
+          summary = body_summary(body)
+          changes = body_changelog(body)
+          if not changes:
+              changes = compare_changelog(prev_tag)
+          if not changes:
+              changes = ["Details im GitHub Release."]
 
           kind = "Pre-release" if prerelease else "Release"
+          repo_label = repo
+          title_line = f"{kind} <code>{html.escape(tag)}</code> · {html.escape(name)}"
+          since = f"seit <code>{html.escape(prev_tag)}</code>" if prev_tag else "seit letztem Public Release"
 
-          if len(body) > 2500:
-              body = body[:2500].rstrip() + "\n…"
-
-          msg = [
-              f"<b>{html.escape(repo)}</b>",
-              f"<b>{html.escape(kind)}:</b> {html.escape(name)}",
-              f"<b>Tag:</b> <code>{html.escape(tag)}</code>",
+          parts = [
+              f"<b>{html.escape(repo_label)}</b>",
+              title_line,
           ]
+          if summary:
+              parts.append(html.escape(summary))
 
-          if body:
-              msg.append(html.escape(body))
+          bullet_lines = "\n".join(f"• {html.escape(item)}" for item in changes[:7])
+          parts.append(f"<b>Changelog {since}:</b>\n{bullet_lines}")
+          parts.append(f'<a href="{html.escape(url)}">GitHub Release öffnen</a>')
 
-          msg.append(f'<a href="{html.escape(url)}">GitHub Release öffnen</a>')
-          print("\n\n".join(msg))
+          message = "\n\n".join(parts)
+          if len(message) > 3500:
+              message = message[:3400].rstrip() + "\n\n…\n\n" + f'<a href="{html.escape(url)}">GitHub Release öffnen</a>'
+          print(message)
           PY
 
           curl -fsS --retry 3 -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
             -d "parse_mode=HTML" \
+            -d "disable_web_page_preview=true" \
             --data-urlencode "text@/tmp/telegram-message.html"
