@@ -1,3 +1,30 @@
+<!-- README_V149_TEST2_RUNTIME_PROOF_20260621_START -->
+## Runtime proof: 1.4.9-universal-test.2 auto-profile-switch
+
+Status: **runtime verified on mustang / Android 17 Stable CP2A**.
+
+Evidence:
+- Release candidate: `v1.4.9-universal-test.2` / `versionCode=1014902`.
+- Source main after auto-switch PR: `459c201`.
+- Local release ZIP SHA256: `4418dfb2412597cd90f7bceaf6008929674e242563de5f49de6145938f2b1810`.
+- Debug proof ZIP: `pixel_thermal_debug_20260621_124205.zip`.
+- Debug proof SHA256: `de5713b1a42e79f83b0ac439ce20a78bfbd55c2b68fff23f4f16156505c4b898`.
+- Device/build: `mustang`, Android `17`, build `CP2A.260605.012`, incremental `15430684`.
+- Selected profile: `mustang-android17-stable-cp2a-260605012`.
+- Auto-switch runtime state: `AUTO_SWITCH_PASS reason=current_profile_valid`.
+- Compat: `PROFILE_STALE_AFTER_OTA=no`, `REINSTALL_REQUIRED=no`, `MODULE_OVERLAY_READY=yes`, `ACTIVE_VENDOR_MATCH=yes`, `VENDOR_OVERLAY_BACKEND_WARN=no`, `SAFE_TO_REBOOT=yes`.
+- Mount proof: active `/vendor/etc/thermal_info_config*.json` hashes match the module overlay.
+- ThermalHAL proof: `logcat_thermal_tail.txt` contains live `pixel-thermal` sensor/model output; `thermal_tombstone_index.txt` is empty.
+- pTune boundary: pTune is installed but disabled at runtime; override config remains explicit and documented.
+
+Interpretation:
+- The auto-switch hook is active and confirms the currently materialized profile as valid.
+- This is a current-profile-valid proof, not a captured stale-profile drift remediation event.
+- Unknown/incompatible builds still fail safe with `skip_mount`, `PROFILE_STALE_AFTER_OTA=yes` and `REINSTALL_REQUIRED=yes`.
+
+Stable `update.json` remains on `v1.4.4-universal.1`.
+<!-- README_V149_TEST2_RUNTIME_PROOF_20260621_END -->
+
 <!-- README_AUTO_PROFILE_SWITCH_149_UNIVERSAL_TEST2_START -->
 ## Guarded auto-profile-switch after compatible Android OTA/build change
 

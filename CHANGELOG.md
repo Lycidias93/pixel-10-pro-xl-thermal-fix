@@ -1,3 +1,12 @@
+## 1.4.9-universal-test.2 - runtime proof for guarded auto-profile-switch
+
+- Verified `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684` after reboot.
+- Auto-switch result: `AUTO_SWITCH_PASS reason=current_profile_valid`.
+- Compat result: `PROFILE_STALE_AFTER_OTA=no`, `REINSTALL_REQUIRED=no`, `MODULE_OVERLAY_READY=yes`, `ACTIVE_VENDOR_MATCH=yes`, `VENDOR_OVERLAY_BACKEND_WARN=no`, `SAFE_TO_REBOOT=yes`.
+- Debug proof: `pixel_thermal_debug_20260621_124205.zip` / SHA256 `de5713b1a42e79f83b0ac439ce20a78bfbd55c2b68fff23f4f16156505c4b898`.
+- ThermalHAL proof: live `pixel-thermal` output present and `thermal_tombstone_index.txt` empty.
+- Stable `update.json` intentionally unchanged on `v1.4.4-universal.1`.
+
 ## 1.4.9-universal-test.2 - guarded auto-profile-switch after compatible OTA/build changes
 
 - Add boot-time guarded auto-profile-switch helper for compatible Pixel 10 Android build changes.
