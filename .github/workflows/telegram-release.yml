@@ -237,11 +237,11 @@ jobs:
           if not changes:
               changes = compare_changelog(prev_tag)
           if not changes:
-              changes = ["Details im GitHub Release."]
+              changes = ["See GitHub Release for details."]
 
           kind = "Pre-release" if prerelease else "Release"
           display_title = name if name and name != tag else f"{kind} {tag}"
-          since = f"seit {prev_tag}" if prev_tag else "seit letztem Public Release"
+          since = f"since {prev_tag}" if prev_tag else "since the previous public release"
 
           parts = [
               f"<b>{html.escape(repo)}</b>",
