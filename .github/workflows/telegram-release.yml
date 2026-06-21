@@ -34,8 +34,6 @@ jobs:
           import json
           import os
           import re
-          import textwrap
-          import urllib.error
           import urllib.parse
           import urllib.request
 
@@ -71,12 +69,17 @@ jobs:
               with urllib.request.urlopen(req, timeout=20) as resp:
                   return json.load(resp)
 
-          def compact_line(text, limit=135):
+          def clean_markdown(text):
+              text = re.sub(r"`([^`]+)`", r"\1", text)
+              text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+              text = re.sub(r"[*_~]", "", text)
               text = re.sub(r"\s+", " ", text).strip()
+              return text
+
+          def compact_line(text, limit=150):
+              text = clean_markdown(text)
               text = re.sub(r"^[-*+]\s+", "", text)
               text = re.sub(r"^\d+[.)]\s+", "", text)
-              text = re.sub(r"`([^`]+)`", r"\1", text)
-              text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
               text = text.strip(" -*\t")
               if len(text) > limit:
                   text = text[: limit - 1].rstrip() + "…"
@@ -86,8 +89,14 @@ jobs:
               sections = []
               current_title = "summary"
               current_lines = []
+              in_code = False
               for raw in markdown.splitlines():
                   line = raw.rstrip()
+                  if line.strip().startswith("```"):
+                      in_code = not in_code
+                      continue
+                  if in_code:
+                      continue
                   heading = re.match(r"^#{1,6}\s+(.+?)\s*$", line)
                   if heading:
                       sections.append((current_title, current_lines))
@@ -102,13 +111,17 @@ jobs:
               "added", "add", "features", "feature", "new",
               "changed", "change", "improved", "improvements", "updated", "update",
               "fixed", "fix", "fixes", "bug fixes", "bugfixes",
-              "removed", "remove", "security", "changelog", "changes",
+              "removed", "remove", "security", "changelog", "changes", "summary",
           }
           denied_section_words = {
               "install", "installation", "download", "downloads", "expected", "output",
               "verify", "verification", "paths", "files", "assets", "checksums",
               "sha", "sha256", "notes", "usage", "how to", "test", "tests",
           }
+          denied_line_words = re.compile(
+              r"(install|download|sha256|checksum|expected|output|usage|command|path|artifact|asset|log|verify|run|tail|result:|</?details|summary)",
+              re.I,
+          )
 
           def body_summary(markdown):
               for raw in markdown.splitlines():
@@ -117,13 +130,33 @@ jobs:
                       continue
                   if re.match(r"^\d+[.)]\s+", line):
                       continue
-                  if line.lower().startswith(("after reboot", "expected output", "downloads", "install")):
+                  if denied_line_words.search(line):
                       continue
                   return compact_line(line, 180)
               return ""
 
-          def body_changelog(markdown, max_items=7):
+          def sentence_items(text):
+              text = text.strip()
+              if not text or text.startswith("#") or denied_line_words.search(text):
+                  return []
+              if text.startswith(("- ", "* ", "+ ")) or re.match(r"^\d+[.)]\s+", text):
+                  item = compact_line(text)
+                  return [item] if item else []
+
+              text = clean_markdown(text)
+              parts = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", text)
+              if len(parts) == 1:
+                  parts = re.split(r"\s*;\s*", text)
               out = []
+              for part in parts:
+                  item = compact_line(part)
+                  if item and len(item) >= 8:
+                      out.append(item)
+              return out
+
+          def body_changelog(markdown, summary="", max_items=7):
+              out = []
+              seen = set()
               sections = split_body_sections(markdown)
               for title, lines in sections:
                   t = re.sub(r"[^a-z0-9 ]+", " ", title.lower()).strip()
@@ -133,14 +166,15 @@ jobs:
                   if not allowed and title != "summary":
                       continue
                   for raw in lines:
-                      line = raw.strip()
-                      if not re.match(r"^[-*+]\s+", line):
-                          continue
-                      item = compact_line(line)
-                      if item and item.lower() not in {x.lower() for x in out}:
-                          out.append(item)
-                      if len(out) >= max_items:
-                          return out
+                      for item in sentence_items(raw):
+                          if summary and item.lower() == summary.lower():
+                              continue
+                          key = item.lower()
+                          if key and key not in seen:
+                              seen.add(key)
+                              out.append(item)
+                          if len(out) >= max_items:
+                              return out
               return out
 
           def previous_public_release():
@@ -176,17 +210,19 @@ jobs:
               except Exception:
                   return []
               out = []
+              seen = set()
               for commit in data.get("commits", []):
                   message = commit.get("commit", {}).get("message", "").splitlines()[0]
                   item = compact_line(message)
                   lower = item.lower()
                   if not item:
                       continue
-                  if lower.startswith("merge pull request") or lower.startswith("merge branch"):
+                  if lower.startswith(("merge pull request", "merge branch", "release ")):
                       continue
                   if "telegram release announcement" in lower or "telegram release announcements" in lower:
                       continue
-                  if item.lower() not in {x.lower() for x in out}:
+                  if lower not in seen:
+                      seen.add(lower)
                       out.append(item)
                   if len(out) >= max_items:
                       break
@@ -196,19 +232,18 @@ jobs:
           prev_tag = prev.get("tag_name") if prev else ""
 
           summary = body_summary(body)
-          changes = body_changelog(body)
+          changes = body_changelog(body, summary=summary)
           if not changes:
               changes = compare_changelog(prev_tag)
           if not changes:
               changes = ["Details im GitHub Release."]
 
           kind = "Pre-release" if prerelease else "Release"
-          repo_label = repo
           title_line = f"{kind} <code>{html.escape(tag)}</code> · {html.escape(name)}"
           since = f"seit <code>{html.escape(prev_tag)}</code>" if prev_tag else "seit letztem Public Release"
 
           parts = [
-              f"<b>{html.escape(repo_label)}</b>",
+              f"<b>{html.escape(repo)}</b>",
               title_line,
           ]
           if summary:
@@ -229,4 +264,5 @@ jobs:
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
             -d "parse_mode=HTML" \
             -d "disable_web_page_preview=true" \
+            -d "link_preview_options={\"is_disabled\":true}" \
             --data-urlencode "text@/tmp/telegram-message.html"
