@@ -252,11 +252,11 @@ jobs:
 
           bullet_lines = "\n".join(f"• {html.escape(item)}" for item in changes[:7])
           parts.append(f"<b>Changelog {html.escape(since)}</b>\n{bullet_lines}")
-          parts.append(f'<a href="{html.escape(url)}">GitHub Release öffnen</a>')
+          parts.append(f'<a href="{html.escape(url)}">Open GitHub Release</a>')
 
           message = "\n\n".join(parts)
           if len(message) > 3500:
-              message = message[:3400].rstrip() + "\n\n…\n\n" + f'<a href="{html.escape(url)}">GitHub Release öffnen</a>'
+              message = message[:3400].rstrip() + "\n\n…\n\n" + f'<a href="{html.escape(url)}">Open GitHub Release</a>'
           print(message)
           PY
 
