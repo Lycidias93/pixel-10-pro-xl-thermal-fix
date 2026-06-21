@@ -1,3 +1,19 @@
+<!-- README_V149_TEST2_HOTFIX_RELEASE_20260621_START -->
+## Hotfix prerelease: 1.4.9-universal-test.2
+
+Status: **published hotfix prerelease** for guarded auto-profile-switch.
+
+- Release tag: `v1.4.9-universal-test.2`.
+- VersionCode: `1014902`.
+- Release ZIP SHA256: `4418dfb2412597cd90f7bceaf6008929674e242563de5f49de6145938f2b1810`.
+- Runtime proof: `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684`.
+- Auto-switch result: `AUTO_SWITCH_PASS reason=current_profile_valid`.
+- Compat result: `PROFILE_STALE_AFTER_OTA=no`, `REINSTALL_REQUIRED=no`, `MODULE_OVERLAY_READY=yes`, `ACTIVE_VENDOR_MATCH=yes`, `VENDOR_OVERLAY_BACKEND_WARN=no`, `SAFE_TO_REBOOT=yes`.
+- Stable `update.json` remains on `v1.4.4-universal.1`.
+
+Boundary: current-profile-valid is proven; a captured stale-profile remediation event is still a separate future test.
+<!-- README_V149_TEST2_HOTFIX_RELEASE_20260621_END -->
+
 <!-- README_V149_TEST2_RUNTIME_PROOF_20260621_START -->
 ## Runtime proof: 1.4.9-universal-test.2 auto-profile-switch
 
@@ -49,14 +65,14 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 Magisk thermal polling overlay for Pixel 10-series devices.
 
 - **Stable channel:** `v1.4.4-universal.1` · **VersionCode:** `1014403`
-- **Latest prerelease/test:** `v1.4.9-universal-test.1` · **VersionCode:** `1014901`
+- **Latest prerelease/test:** `v1.4.9-universal-test.2` · **VersionCode:** `1014902`
 - **Android:** Android 16 Pixel 10-series + guarded Android 17 profiles
 - **Root:** Magisk primary; KernelSU-Next / mountify community-tested
 - **Module ID:** `pixel-10-pro-xl-thermal-fix`
 
 ## Download
 
-- Latest prerelease: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.9-universal-test.1>
+- Latest prerelease: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.9-universal-test.2>
 - Current stable release: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.4-universal.1>
 - All releases: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases>
 - Issues / compatibility requests: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues>
@@ -72,13 +88,14 @@ The stable update channel intentionally stays on `v1.4.4-universal.1` until a pr
 ## Current status
 
 - **Stable release:** `v1.4.4-universal.1`
-- **Latest prerelease:** `v1.4.9-universal-test.1`
+- **Latest prerelease:** `v1.4.9-universal-test.2`
 - **Install type:** Magisk ZIP
 - **Android 16 verified:** Pixel 10 Pro XL / `mustang`
 - **Android 16 verified:** Pixel 10 Pro / `blazer`
 - **Android 17 CP31 verified:** Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345`
 - **Android 17 stable verified:** Pixel 10 Pro / `blazer` / `CP2A.260605.012` / `15430684`
-- **Android 17 stable included, pending live verify:** `mustang`, `frankel`, `rango`
+- **Android 17 stable verified:** Pixel 10 Pro XL / `mustang` / `CP2A.260605.012` / `15430684` / Auto-Switch PASS
+- **Android 17 stable included, pending live verify:** `frankel`, `rango`
 - **pTune compatibility:** pTune latest alpha + Thermal Fix override verified on Magisk / `mustang`
 - **KernelSU-Next / mountify:** community-tested with `ACTIVE_VENDOR_MATCH=yes`
 
@@ -124,7 +141,7 @@ Pixel 10 Pro XL / mustang / Android 16                         PASS         veri
 Pixel 10 Pro / blazer / Android 16                             PASS         tested by Harish
 Pixel 10 Pro XL / mustang / Android 17 CP31 / 15421345         PASS         tested by Jiggs
 Pixel 10 Pro / blazer / Android 17 stable CP2A / 15430684      PASS         tested by Harish
-Pixel 10 Pro XL / mustang / Android 17 stable CP2A / 15430684  pending      profile included, needs live verify
+Pixel 10 Pro XL / mustang / Android 17 stable CP2A / 15430684  PASS         local Auto-Switch/runtime proof
 Pixel 10 / frankel / Android 17 stable CP2A / 15430684         pending      profile included, needs live verify
 Pixel 10 Pro Fold / rango / Android 17 stable CP2A / 15430684  pending      profile included, needs live verify
 Pixel 10 / frankel / Android 16                                beta         needs tester feedback
