@@ -1,3 +1,11 @@
+## 1.4.9-universal.1 - stable final
+
+- Promote guarded auto-profile-switch to the stable channel after local stable-gate dry-run PASS.
+- Dry-run coverage: A16 installed state to A17 stable rematerializes, current A17 profile remains valid, unknown A17 build blocks safely.
+- Runtime proof remains `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684` with `AUTO_SWITCH_PASS reason=current_profile_valid`.
+- Stable update channel now points to `1.4.9-universal.1` / `versionCode=1014903`.
+- `frankel` and `rango` Android 17 stable profiles remain included but pending live post-reboot verification.
+
 ## 1.4.9-universal-test.2 - runtime proof for guarded auto-profile-switch
 
 - Verified `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684` after reboot.
