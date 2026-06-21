@@ -56,6 +56,22 @@ jobs:
           if token:
               headers["Authorization"] = f"Bearer {token}"
 
+          denied_section_words = {
+              "install", "installation", "download", "downloads", "expected", "output",
+              "verify", "verification", "paths", "files", "assets", "checksums",
+              "sha", "sha256", "notes", "usage", "how to", "test", "tests",
+          }
+          allowed_sections = {
+              "added", "add", "features", "feature", "new",
+              "changed", "change", "improved", "improvements", "updated", "update",
+              "fixed", "fix", "fixes", "bug fixes", "bugfixes",
+              "removed", "remove", "security", "changelog", "changes", "summary",
+          }
+          denied_line_words = re.compile(
+              r"(install|download|sha256|checksum|expected|output|usage|command|path|artifact|asset|log|verify|run|tail|result:|```|</?details|summary)",
+              re.I,
+          )
+
           def parse_time(value):
               if not value:
                   return None
@@ -76,7 +92,7 @@ jobs:
               text = re.sub(r"\s+", " ", text).strip()
               return text
 
-          def compact_line(text, limit=150):
+          def compact_line(text, limit=170):
               text = clean_markdown(text)
               text = re.sub(r"^[-*+]\s+", "", text)
               text = re.sub(r"^\d+[.)]\s+", "", text)
@@ -107,32 +123,17 @@ jobs:
               sections.append((current_title, current_lines))
               return sections
 
-          allowed_sections = {
-              "added", "add", "features", "feature", "new",
-              "changed", "change", "improved", "improvements", "updated", "update",
-              "fixed", "fix", "fixes", "bug fixes", "bugfixes",
-              "removed", "remove", "security", "changelog", "changes", "summary",
-          }
-          denied_section_words = {
-              "install", "installation", "download", "downloads", "expected", "output",
-              "verify", "verification", "paths", "files", "assets", "checksums",
-              "sha", "sha256", "notes", "usage", "how to", "test", "tests",
-          }
-          denied_line_words = re.compile(
-              r"(install|download|sha256|checksum|expected|output|usage|command|path|artifact|asset|log|verify|run|tail|result:|</?details|summary)",
-              re.I,
-          )
-
           def body_summary(markdown):
-              for raw in markdown.splitlines():
-                  line = raw.strip()
-                  if not line or line.startswith("#") or line.startswith(('-', '*', '+')):
-                      continue
-                  if re.match(r"^\d+[.)]\s+", line):
-                      continue
-                  if denied_line_words.search(line):
-                      continue
-                  return compact_line(line, 180)
+              for _title, lines in split_body_sections(markdown):
+                  for raw in lines:
+                      line = raw.strip()
+                      if not line or line.startswith("#") or line.startswith(("-", "*", "+")):
+                          continue
+                      if re.match(r"^\d+[.)]\s+", line):
+                          continue
+                      if denied_line_words.search(line):
+                          continue
+                      return compact_line(line, 180)
               return ""
 
           def sentence_items(text):
@@ -145,20 +146,21 @@ jobs:
 
               text = clean_markdown(text)
               parts = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", text)
-              if len(parts) == 1:
+              if len(parts) == 1 and ";" in text:
                   parts = re.split(r"\s*;\s*", text)
+              if len(parts) == 1 and ", " in text and len(text) > 140:
+                  parts = re.split(r",\s+(?=No |Adds |Fixes |Corrects |Prevents |Updates |Improves |Keeps )", text)
               out = []
               for part in parts:
                   item = compact_line(part)
-                  if item and len(item) >= 8:
+                  if item and len(item) >= 8 and not denied_line_words.search(item):
                       out.append(item)
               return out
 
           def body_changelog(markdown, summary="", max_items=7):
               out = []
               seen = set()
-              sections = split_body_sections(markdown)
-              for title, lines in sections:
+              for title, lines in split_body_sections(markdown):
                   t = re.sub(r"[^a-z0-9 ]+", " ", title.lower()).strip()
                   if any(word in t for word in denied_section_words):
                       continue
@@ -230,7 +232,6 @@ jobs:
 
           prev = previous_public_release()
           prev_tag = prev.get("tag_name") if prev else ""
-
           summary = body_summary(body)
           changes = body_changelog(body, summary=summary)
           if not changes:
@@ -239,18 +240,18 @@ jobs:
               changes = ["Details im GitHub Release."]
 
           kind = "Pre-release" if prerelease else "Release"
-          title_line = f"{kind} <code>{html.escape(tag)}</code> · {html.escape(name)}"
-          since = f"seit <code>{html.escape(prev_tag)}</code>" if prev_tag else "seit letztem Public Release"
+          display_title = name if name and name != tag else f"{kind} {tag}"
+          since = f"seit {prev_tag}" if prev_tag else "seit letztem Public Release"
 
           parts = [
               f"<b>{html.escape(repo)}</b>",
-              title_line,
+              f"<b>{html.escape(display_title)}</b>",
           ]
-          if summary:
-              parts.append(html.escape(summary))
+          if name and name != tag:
+              parts.append(f"Release: {html.escape(tag)}")
 
           bullet_lines = "\n".join(f"• {html.escape(item)}" for item in changes[:7])
-          parts.append(f"<b>Changelog {since}:</b>\n{bullet_lines}")
+          parts.append(f"<b>Changelog {html.escape(since)}</b>\n{bullet_lines}")
           parts.append(f'<a href="{html.escape(url)}">GitHub Release öffnen</a>')
 
           message = "\n\n".join(parts)
@@ -263,6 +264,4 @@ jobs:
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
             -d "parse_mode=HTML" \
-            -d "disable_web_page_preview=true" \
-            -d "link_preview_options={\"is_disabled\":true}" \
             --data-urlencode "text@/tmp/telegram-message.html"
