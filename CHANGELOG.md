@@ -1,3 +1,13 @@
+
+<!-- V149_STABLE_METADATA_HOTFIX_START -->
+## 1.4.9-universal.2 stable metadata hotfix
+
+- Promotes installer-internal metadata from `1.4.9-universal-test.2` / `1014902` to `1.4.9-universal.2` / `1014904`.
+- Fixes stale install text that still said prerelease and old stable update channel.
+- Marks `mustang` Android 17 Stable CP2A runtime proof as verified in installer state.
+- Thermal profile files and auto-switch logic are unchanged from the validated 1.4.9 stable line.
+<!-- V149_STABLE_METADATA_HOTFIX_END -->
+
 ## 1.4.9-universal.1 - stable final
 
 - Promote guarded auto-profile-switch to the stable channel after local stable-gate dry-run PASS.

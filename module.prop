@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.9-universal.1
-versionCode=1014903
+version=1.4.9-universal.2
+versionCode=1014904
 author=Lycidias93, based on marx161
-description=Pixel 10 Thermal Polling Fix 1.4.9-universal.1 stable with guarded auto-profile-switch for compatible Android build changes.
+description=Pixel 10 Thermal Polling Fix 1.4.9-universal.2 stable metadata hotfix for guarded auto-profile-switch.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

@@ -1,13 +1,19 @@
+<!-- README_V149_STABLE_METADATA_HOTFIX_START -->
+## Stable metadata hotfix: `1.4.9-universal.2`
+
+`1.4.9-universal.2` corrects installer-internal metadata and installer text after the `1.4.9` stable promotion. Runtime thermal profiles and guarded auto-switch behavior stay unchanged from the validated stable line.
+<!-- README_V149_STABLE_METADATA_HOTFIX_END -->
+
 <!-- README_V149_UNIVERSAL1_STABLE_FINAL_20260621_START -->
-## Stable release: 1.4.9-universal.1
+## Stable release: 1.4.9-universal.2
 
 Status: **stable final** for guarded auto-profile-switch.
 
-- Release tag: `v1.4.9-universal.1`.
-- VersionCode: `1014903`.
+- Release tag: `v1.4.9-universal.2`.
+- VersionCode: `1014904`.
 - Runtime proof: `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684`.
 - Stable-gate dry-run: A16-to-A17 rematerialization PASS, current-profile-valid PASS, unknown-build block PASS.
-- Stable update channel now points to `1.4.9-universal.1`.
+- Stable update channel now points to `1.4.9-universal.2`.
 - `frankel` and `rango` Android 17 stable profiles remain pending live verification.
 <!-- README_V149_UNIVERSAL1_STABLE_FINAL_20260621_END -->
 
@@ -22,7 +28,7 @@ Status: **published hotfix prerelease** for guarded auto-profile-switch.
 - Runtime proof: `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684`.
 - Auto-switch result: `AUTO_SWITCH_PASS reason=current_profile_valid`.
 - Compat result: `PROFILE_STALE_AFTER_OTA=no`, `REINSTALL_REQUIRED=no`, `MODULE_OVERLAY_READY=yes`, `ACTIVE_VENDOR_MATCH=yes`, `VENDOR_OVERLAY_BACKEND_WARN=no`, `SAFE_TO_REBOOT=yes`.
-- Stable `update.json` now points to `1.4.9-universal.1`.
+- Stable `update.json` now points to `1.4.9-universal.2`.
 
 Boundary: current-profile-valid is proven; a captured stale-profile remediation event is still a separate future test.
 <!-- README_V149_TEST2_HOTFIX_RELEASE_20260621_END -->
@@ -51,7 +57,7 @@ Interpretation:
 - This is a current-profile-valid proof, not a captured stale-profile drift remediation event.
 - Unknown/incompatible builds still fail safe with `skip_mount`, `PROFILE_STALE_AFTER_OTA=yes` and `REINSTALL_REQUIRED=yes`.
 
-Stable `update.json` now points to `1.4.9-universal.1`.
+Stable `update.json` now points to `1.4.9-universal.2`.
 <!-- README_V149_TEST2_RUNTIME_PROOF_20260621_END -->
 
 <!-- README_AUTO_PROFILE_SWITCH_149_UNIVERSAL_TEST2_START -->
@@ -77,7 +83,7 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 
 Magisk thermal polling overlay for Pixel 10-series devices.
 
-- **Stable channel:** `v1.4.9-universal.1` · **VersionCode:** `1014903`
+- **Stable channel:** `v1.4.9-universal.2` · **VersionCode:** `1014904`
 - **Latest prerelease/test:** none newer than current stable
 - **Android:** Android 16 Pixel 10-series + guarded Android 17 profiles
 - **Root:** Magisk primary; KernelSU-Next / mountify community-tested
@@ -85,7 +91,7 @@ Magisk thermal polling overlay for Pixel 10-series devices.
 
 ## Download
 
-- Current stable release: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.9-universal.1>
+- Current stable release: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.9-universal.2>
 - Previous stable release: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.4-universal.1>
 - All releases: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases>
 - Issues / compatibility requests: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues>
@@ -96,11 +102,11 @@ Stable update channel:
 https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
 ```
 
-The stable update channel now points to `1.4.9-universal.1`.
+The stable update channel now points to `1.4.9-universal.2`.
 
 ## Current status
 
-- **Stable release:** `v1.4.9-universal.1`
+- **Stable release:** `v1.4.9-universal.2`
 - **Latest prerelease:** none newer than current stable
 - **Install type:** Magisk ZIP
 - **Android 16 verified:** Pixel 10 Pro XL / `mustang`
@@ -128,7 +134,7 @@ The stable update channel now points to `1.4.9-universal.1`.
   - `thermalhal_running=yes`
   - `fresh_thermal_tombstone=no`
 - `mustang`, `frankel` and `rango` Android 17 stable profiles are included but still need post-reboot live verification.
-- Stable update channel now points to `1.4.9-universal.1`.
+- Stable update channel now points to `1.4.9-universal.2`.
 
 ## What it does
 
@@ -348,7 +354,7 @@ Pending:
 
 Notes:
 
-- Stable updateJson now points to `1.4.9-universal.1`.
+- Stable updateJson now points to `1.4.9-universal.2`.
 
 ### `v1.4.8-universal-test.3`
 

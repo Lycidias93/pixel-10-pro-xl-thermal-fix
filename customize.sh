@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.9-universal-test.2"
-MODULE_VERSION_CODE="1014902"
+MODULE_VERSION="1.4.9-universal.2"
+MODULE_VERSION_CODE="1014904"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -17,10 +17,10 @@ A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal prerelease guarded auto-profile-switch test"
+ui_print "  Universal stable guarded auto-profile-switch hotfix"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Stable updateJson remains on 1.4.4-universal.1"
+ui_print "Stable updateJson channel: 1.4.9-universal.2"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
@@ -167,7 +167,7 @@ known_bad_ptune=$PTUNE_KNOWN_BAD
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
-update_json_channel=stable_update_json_remains_1.4.4-universal.1
+update_json_channel=stable_update_json_1.4.9-universal.2
 debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
 compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
 ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
@@ -201,7 +201,7 @@ case "$android" in
       mustang)
         case "$fingerprint" in
           "google/mustang/mustang:17/$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD/$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL:user/release-keys")
-            profile="mustang-android17-stable-cp2a-260605012"; profile_state="android17_stable_cp2a_test_pending_live_verification"; build_state="android17_mustang_cp2a_15430684_factory_profile_pending_runtime"; fingerprint_android_guard="exact_android17_mustang_stable_cp2a_pass"; profile_source_build="$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="$A17_STABLE_CP2A_SOURCE_REPORT_SHA256"
+            profile="mustang-android17-stable-cp2a-260605012"; profile_state="android17_stable_cp2a_mustang_runtime_verified"; build_state="android17_mustang_cp2a_15430684_runtime_verified"; fingerprint_android_guard="exact_android17_mustang_stable_cp2a_pass"; profile_source_build="$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="$A17_STABLE_CP2A_SOURCE_REPORT_SHA256"
             case "$incremental" in "$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL") incremental_guard="incremental_pass" ;; *) abort "! Android 17 stable CP2A Mustang incremental mismatch: $incremental" ;; esac ;;
           "$A17_CP31_EXPECTED_FINGERPRINT")
             profile="mustang-android17-cp31"; profile_state="tester_verified_android17_cp31"; build_state="android17_mustang_cp31_15421345_tester_verified"; fingerprint_android_guard="exact_android17_mustang_cp31_pass"; profile_source_build="$A17_CP31_PROFILE_SOURCE_BUILD"; profile_source_incremental="$A17_CP31_PROFILE_SOURCE_INCREMENTAL"; source_report_sha256="d16d0d985efdf2c9c4c2152b7a9a4c172d00cf647ca2a08b7610d610380ec599"
@@ -225,7 +225,7 @@ case "$android" in
       *) abort "! Unsupported Pixel 10 Android 17 device codename: $device" ;;
     esac
     ;;
-  *) abort "! Unsupported Android version: $android. This test build supports Android 16 and guarded Android 17 CP31/CP21/Stable CP2A profiles." ;;
+  *) abort "! Unsupported Android version: $android. This stable build supports Android 16 and guarded Android 17 CP31/CP21/Stable CP2A profiles." ;;
 esac
 
 profile_dir="$MODPATH/profiles/$profile/system/vendor/etc"
@@ -305,7 +305,7 @@ polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_remains_1.4.4-universal.1
+update_json_channel=stable_update_json_1.4.9-universal.2
 debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh
