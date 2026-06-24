@@ -1,3 +1,13 @@
+
+
+## 1.4.12-universal-test.1
+
+- Add optional ZRAM 100p test path, disabled by default.
+- Add `/vendor/etc/fstab.zram.100p` overlay for Tensor ZRAM 100p testing.
+- Add enable/disable/debug helper tools for ZRAM testing.
+- Add service hook that applies ZRAM 100p only when explicitly enabled in config.
+- Extend debug collector with ZRAM/fstab/mmd/proc-swaps evidence.
+- Stable update channel remains `1.4.11-universal.1`; this is a manual test prerelease.
 ## 1.4.11-universal-test.1 - 2026-06-24
 
 

@@ -485,3 +485,28 @@ Root modules can change system behavior. Use at your own risk, keep a working ro
 - On installer failure, the bundled debug collector is attempted with `MODDIR=$MODPATH`; collector stdout is also saved in Download.
 - The exact Magisk app UI log is still outside module control, but the autosave captures the relevant installer state, selected profile, device/build, root/mount backend, pTune guard state and recent thermal logcat.
 - Stable update channel remains `v1.4.10-universal.3`; this is a manual prerelease test.
+
+
+### Optional ZRAM 100p test path (1.4.12-universal-test.1)
+
+This test release adds an optional, disabled-by-default ZRAM 100p path inspired by pTune's Tensor ZRAM setup. It is not part of the thermal overlay default path.
+
+Enable manually:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh
+```
+
+Disable config:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-zram-100p.sh
+```
+
+Debug:
+
+```sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/zram-debug.sh
+```
+
+The test overlays `/vendor/etc/fstab.zram.100p` with `zramsize=100%,zram_backingdev_size=2G` and applies the ZRAM props used by the experimental PowerPulse/pTune path. Reboot is recommended after enable/disable.

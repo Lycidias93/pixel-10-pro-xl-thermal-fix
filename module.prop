@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.11-universal.1
-versionCode=1015102
+version=1.4.12-universal-test.1
+versionCode=1015201
 author=Lycidias93, based on marx161
-description=Pixel 10 thermal polling overlay; stable install debug autosave
+description=Pixel 10 thermal polling overlay; optional ZRAM 100p test path
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
