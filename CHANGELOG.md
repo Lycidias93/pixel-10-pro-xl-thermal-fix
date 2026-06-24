@@ -1,3 +1,10 @@
+## 1.4.10-universal.2 - 2026-06-24
+
+- Stable profile packaging hotfix.
+- Rebuilds the release ZIP with profile directories included at the expected top-level paths.
+- Fixes install failure: missing `thermal_info_config_throttling.json` after selecting an Android 17 profile.
+- Keeps Android-major guard relaxation from 1.4.10-universal.1.
+
 <!-- V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_START -->
 ## 1.4.10-universal.1 - stable Android-major guard hotfix
 

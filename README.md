@@ -447,3 +447,10 @@ Credits:
 Disclaimer:
 
 Root modules can change system behavior. Use at your own risk, keep a working rollback path, and do not flash modules you do not understand.
+## 1.4.10-universal.2 stable profile packaging hotfix
+
+- Fixes the 1.4.10-universal.1 release ZIP packaging issue where selected profile directories were missing from the install archive.
+- Keeps the Android-major guard stable behavior from 1.4.10: Android 16/17 plus Pixel 10 codename guard.
+- Build ID, fingerprint and incremental remain log/warn only, not hard blockers.
+- pTune conflict guard remains active.
+- Stable update channel points to 1.4.10-universal.2.
