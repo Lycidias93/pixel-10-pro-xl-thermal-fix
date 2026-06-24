@@ -1,3 +1,29 @@
+## 1.4.12-universal-test.4 prerelease: optional ZRAM 100p test4
+
+This prerelease replaces the bad `v1.4.12-universal-test.1`, `test.2`, and `test.3` ZRAM test builds.
+
+Changes:
+- Preserves `fstab.zram.100p` during install profile materialization.
+- Ships a ZRAM fstab template at `tools/fstab.zram.100p`.
+- Materializes `/system/vendor/etc/fstab.zram.100p` after the selected thermal profile is copied.
+- Service path applies optional ZRAM after Magisk mount and uses `stop mmd` then `start mmd`.
+- ZRAM stays disabled by default unless enabled manually.
+
+Enable:
+```sh
+su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh
+```
+
+Debug:
+```sh
+su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/zram-debug.sh
+```
+
+Rollback:
+```sh
+su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-zram-100p.sh
+```
+
 <!-- V1411_STABLE_START -->
 ## 1.4.11-universal.1
 

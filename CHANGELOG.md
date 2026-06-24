@@ -1,3 +1,10 @@
+## 1.4.12-universal-test.4
+- Fixes optional ZRAM 100p fstab preservation after Harish/Joshua feedback.
+- Preserves `fstab.zram.100p` through thermal profile materialization.
+- Keeps fstab template outside `system/vendor/etc` so customize.sh cannot delete the source.
+- Updates installer/autosave metadata to `1.4.12-universal-test.4` / `1015204`.
+- Keeps stable update channel on `v1.4.11-universal.1`.
+
 
 
 ## 1.4.12-universal-test.2

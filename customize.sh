@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.12-universal-test.2"
-MODULE_VERSION_CODE="1015202"
+MODULE_VERSION="1.4.12-universal-test.4"
+MODULE_VERSION_CODE="1015204"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -408,6 +408,24 @@ ui_print "Materializing selected profile into active Magisk overlay path"
 rm -rf "$active_dir"; mkdir -p "$active_dir"
 cp -fp "$profile_dir"/*.json "$active_dir"/
 chmod 0644 "$active_dir"/*.json 2>/dev/null || true
+
+# BEGIN PIXEL_THERMAL_ZRAM_FSTAB_PRESERVE_V1412_TEST4
+zram_fstab_src=""
+for zram_fstab_candidate in "$MODPATH/tools/fstab.zram.100p" "$MODPATH/system/vendor/etc/fstab.zram.100p"; do
+  if [ -s "$zram_fstab_candidate" ]; then
+    zram_fstab_src="$zram_fstab_candidate"
+    break
+  fi
+done
+if [ -n "$zram_fstab_src" ]; then
+  cp -fp "$zram_fstab_src" "$active_dir/fstab.zram.100p" || thermal_abort "! Failed to materialize active ZRAM fstab"
+  chmod 0644 "$active_dir/fstab.zram.100p" 2>/dev/null || true
+  ui_print "zram_fstab_materialized=yes"
+else
+  ui_print "! zram_fstab_materialized=no template_missing"
+fi
+# END PIXEL_THERMAL_ZRAM_FSTAB_PRESERVE_V1412_TEST4
+
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || thermal_abort "! Failed to materialize active file: $f"; done
 
 rm -f "$MODPATH/disable" "$MODPATH/skip_mount" "$MODPATH/remove"
@@ -463,6 +481,11 @@ known_bad_ptune=$PTUNE_KNOWN_BAD
 profile_materialized=yes
 overlay_materializer=customize_guard_first
 active_overlay_dir=system/vendor/etc
+
+zram_fstab_template=tools/fstab.zram.100p
+zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
+zram_feature=optional_disabled_by_default_v1412_test4
+
 expected_thermal_files=3
 polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
