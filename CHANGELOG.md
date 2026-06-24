@@ -1,3 +1,15 @@
+<!-- V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_START -->
+## 1.4.10-universal.1 - stable Android-major guard hotfix
+
+- Promotes v1.4.10 Android-major guard behavior to stable.
+- Build ID / fingerprint / incremental are diagnostic, not hard blockers.
+- Android-major and Pixel 10 codename guards remain active.
+- Unknown devices remain blocked.
+- pTune conflict guard remains active.
+- Root / mount backend detection remains log-only.
+- Stable update channel now points to `1.4.10-universal.1` / `1015002`.
+<!-- V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_END -->
+
 <!-- V1410_MAJOR_GUARD_TEST_START -->
 ## v1.4.10-universal-test.1 experimental test
 

@@ -1,3 +1,13 @@
+<!-- README_V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_START -->
+## 1.4.10-universal.1 stable
+
+Current stable: `1.4.10-universal.1` / `versionCode=1015002`.
+
+This stable hotfix keeps Android-major and Pixel 10 codename guards, while treating build ID, fingerprint and incremental as diagnostic fields instead of hard blockers. It is intended to reduce false blocking for QPR / unsupported-build reports while preserving safer device and Android-major boundaries.
+
+Stable channel: `1.4.10-universal.1`.
+<!-- README_V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_END -->
+
 <!-- V1410_MAJOR_GUARD_TEST_START -->
 ## v1.4.10-universal-test.1 experimental test
 

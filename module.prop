@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.10-universal-test.1
-versionCode=1015001
+version=1.4.10-universal.1
+versionCode=1015002
 author=Lycidias93, based on marx161
-description=Experimental Android-major-only test guard for A17 QPR builds
+description=Stable Android-major guard hotfix for A17 QPR builds
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
