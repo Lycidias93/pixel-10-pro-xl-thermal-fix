@@ -1,3 +1,12 @@
+## 1.4.11-universal-test.1 - 2026-06-24
+
+- Test prerelease: automatic install-debug autosave.
+- Saves install-fail snapshots to Download as `pixel_thermal_install_*.txt`.
+- Attempts bundled debug collector automatically on installer failure using the current update module path.
+- Records device/build, selected profile, root/mount backend, pTune guard state and recent thermal logcat.
+- Stable update channel remains `v1.4.10-universal.3`.
+
+
 ## 1.4.10-universal.3 - 2026-06-24
 
 - Stable profile path hotfix.

@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.10-universal.3"
-MODULE_VERSION_CODE="1015004"
+MODULE_VERSION="1.4.11-universal-test.1"
+MODULE_VERSION_CODE="1015101"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -17,10 +17,10 @@ A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal stable Android-major guard profile path hotfix"
+ui_print "  Universal test auto install debug autosave"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Stable updateJson channel: 1.4.10-universal.3"
+ui_print "Prerelease test; stable updateJson remains 1.4.10-universal.3"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
@@ -45,6 +45,113 @@ if find /data/adb /debug_ramdisk /sbin -maxdepth 5 \( -iname '*hybrid*mount*' -o
   mount_backend_hint="overlay_backend_present"
 fi
 root_backend_guard_mode="log_only_no_block"
+
+# BEGIN PIXEL_THERMAL_INSTALL_DEBUG_AUTOSAVE_V1411
+thermal_sanitize_name() {
+  echo "${1:-unknown}" | tr -c 'A-Za-z0-9._-' '_'
+}
+thermal_choose_download_dir() {
+  for d in /sdcard/Download /storage/emulated/0/Download; do
+    if [ -d "$d" ] && [ -w "$d" ]; then echo "$d"; return 0; fi
+  done
+  echo /storage/emulated/0/Download
+}
+THERMAL_INSTALL_DEBUG_TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"
+THERMAL_INSTALL_DEBUG_DIR="$(thermal_choose_download_dir)"
+THERMAL_INSTALL_DEBUG_BASE="pixel_thermal_install_$(thermal_sanitize_name "$MODULE_VERSION")_$(thermal_sanitize_name "$device")_$(thermal_sanitize_name "$build_id")_$(thermal_sanitize_name "$incremental")_$THERMAL_INSTALL_DEBUG_TS"
+THERMAL_INSTALL_DEBUG_LOG="$THERMAL_INSTALL_DEBUG_DIR/${THERMAL_INSTALL_DEBUG_BASE}.txt"
+THERMAL_INSTALL_DEBUG_COLLECT_STDOUT="$THERMAL_INSTALL_DEBUG_DIR/${THERMAL_INSTALL_DEBUG_BASE}_collect_debug_stdout.txt"
+
+thermal_save_install_debug() {
+  result="${1:-unknown}"
+  reason="${2:-none}"
+  mkdir -p "$THERMAL_INSTALL_DEBUG_DIR" 2>/dev/null || true
+  {
+    echo "debug_type=pixel_thermal_install_autosave"
+    echo "result=$result"
+    echo "reason=$reason"
+    echo "time=$(date -Is 2>/dev/null || date 2>/dev/null || true)"
+    echo "module_id=$MODULE_ID"
+    echo "module_version=$MODULE_VERSION"
+    echo "module_version_code=$MODULE_VERSION_CODE"
+    echo "modpath=$MODPATH"
+    echo
+    echo "== device =="
+    echo "model=$model"
+    echo "device=$device"
+    echo "android=$android"
+    echo "android_sdk=$android_sdk"
+    echo "build_id=$build_id"
+    echo "incremental=$incremental"
+    echo "fingerprint=$fingerprint"
+    echo
+    echo "== root / backend =="
+    echo "root_impl=${root_impl:-unknown}"
+    echo "mount_backend_hint=${mount_backend_hint:-unknown}"
+    echo "root_backend_guard_mode=${root_backend_guard_mode:-unknown}"
+    echo
+    echo "== selected profile =="
+    echo "profile=${profile:-unset}"
+    echo "profile_state=${profile_state:-unset}"
+    echo "build_state=${build_state:-unset}"
+    echo "android_guard=${android_guard:-unset}"
+    echo "fingerprint_android_guard=${fingerprint_android_guard:-unset}"
+    echo "incremental_guard=${incremental_guard:-unset}"
+    echo "profile_source_build=${profile_source_build:-unset}"
+    echo "profile_source_incremental=${profile_source_incremental:-unset}"
+    echo "profile_dir=${profile_dir:-unset}"
+    echo "active_dir=${active_dir:-unset}"
+    echo
+    echo "== pTune guard =="
+    echo "PTUNE_GUARD_MODE=${PTUNE_GUARD_MODE:-unset}"
+    echo "PTUNE_INSTALLED_PATH=${PTUNE_INSTALLED_PATH:-unset}"
+    echo "PTUNE_ACTIVE_PATH=${PTUNE_ACTIVE_PATH:-unset}"
+    echo "PTUNE_CONFLICT_PATH=${PTUNE_CONFLICT_PATH:-unset}"
+    echo "PTUNE_CONFLICT_MODE=${PTUNE_CONFLICT_MODE:-unset}"
+    echo "PTUNE_OVERRIDE_ALLOWED=${PTUNE_OVERRIDE_ALLOWED:-unset}"
+    echo "PTUNE_KNOWN_BAD=${PTUNE_KNOWN_BAD:-unset}"
+    echo
+    echo "== relevant files =="
+    ls -la "$MODPATH" 2>/dev/null || true
+    echo
+    echo "== guard dir =="
+    ls -la "$MODPATH/guard" 2>/dev/null || true
+    echo
+    echo "== profile dir =="
+    [ -n "${profile_dir:-}" ] && ls -la "$profile_dir" 2>/dev/null || true
+    echo
+    echo "== active overlay dir =="
+    [ -n "${active_dir:-}" ] && ls -la "$active_dir" 2>/dev/null || true
+    echo
+    echo "== install-state =="
+    cat "$MODPATH/install-state.txt" 2>/dev/null || true
+    echo
+    echo "== su / magisk =="
+    su -v 2>/dev/null || true
+    su -V 2>/dev/null || true
+    magisk -v 2>/dev/null || true
+    magisk -V 2>/dev/null || true
+    echo
+    echo "== recent thermal logcat =="
+    logcat -d -t 300 2>/dev/null | grep -i -E "thermal|ThermalHAL|android.hardware.thermal|pixel-10-pro-xl-thermal-fix|Magisk|KernelSU|SukiSU|APatch" || true
+  } > "$THERMAL_INSTALL_DEBUG_LOG" 2>&1 || true
+  ui_print "Install debug autosave: $THERMAL_INSTALL_DEBUG_LOG"
+}
+
+thermal_collect_debug_on_fail() {
+  [ -s "$MODPATH/tools/collect-debug.sh" ] || return 0
+  MODDIR="$MODPATH" sh "$MODPATH/tools/collect-debug.sh" > "$THERMAL_INSTALL_DEBUG_COLLECT_STDOUT" 2>&1 || true
+  ui_print "Install-fail collect-debug stdout: $THERMAL_INSTALL_DEBUG_COLLECT_STDOUT"
+}
+
+thermal_abort() {
+  reason="$*"
+  thermal_save_install_debug "fail" "$reason"
+  thermal_collect_debug_on_fail
+  abort "$reason"
+}
+# END PIXEL_THERMAL_INSTALL_DEBUG_AUTOSAVE_V1411
+
 
 
 ui_print "model=$model"
@@ -187,11 +294,12 @@ known_bad_ptune=$PTUNE_KNOWN_BAD
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
-update_json_channel=stable_update_json_1.4.10-universal.3
-debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
+update_json_channel=stable_update_json_1.4.10-universal.3_test_manual_install_only
+debug_collector=manual_or_auto_on_install_fail_v1411
 compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
 ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
 EOF
+  thermal_save_install_debug "skip_mount" "$PTUNE_CONFLICT_REASON"
   ui_print "Module installed with skip_mount only: $PTUNE_CONFLICT_REASON"
   exit 0
 fi
@@ -203,7 +311,7 @@ fi
 case "$android" in
   16|16.*)
     android_guard="android16_pass"
-    case "$fingerprint" in *":16/"*) fingerprint_android_guard="fingerprint_android16_pass" ;; *) abort "! Fingerprint does not identify Android 16 build: $fingerprint" ;; esac
+    case "$fingerprint" in *":16/"*) fingerprint_android_guard="fingerprint_android16_pass" ;; *) thermal_abort "! Fingerprint does not identify Android 16 build: $fingerprint" ;; esac
     profile_source_android="16"; profile_source_build="$A16_PROFILE_SOURCE_BUILD"; profile_source_incremental="not_applicable"; source_report_sha256="factory_android16_profile_set"
     case "$build_id" in "$A16_PROFILE_SOURCE_BUILD") build_family="android16_cp1a_260505_005" ;; *) build_family="android16_unverified_build"; ui_print "! Android 16 build differs from source build: $build_id" ;; esac
     case "$device" in
@@ -211,7 +319,7 @@ case "$android" in
       blazer) profile="blazer"; profile_state="verified_android16_blazer"; build_state="${build_family}_blazer_runtime_verified"; ui_print "Blazer Android 16 has runtime PASS evidence" ;;
       frankel) profile="frankel"; profile_state="beta_pending_live_verification"; build_state="${build_family}_frankel_beta"; ui_print "! Frankel Android 16 pending live verification" ;;
       rango) profile="rango"; profile_state="beta_pending_live_verification"; build_state="${build_family}_rango_beta"; ui_print "! Rango Android 16 pending live verification" ;;
-      *) abort "! Unsupported Pixel 10 Android 16 device codename: $device" ;;
+      *) thermal_abort "! Unsupported Pixel 10 Android 16 device codename: $device" ;;
     esac
     ;;
   17|17.*)
@@ -267,12 +375,12 @@ case "$android" in
             ;;
         esac
         ;;
-      *) abort "! Unsupported Pixel 10 Android 17 device codename: $device" ;;
+      *) thermal_abort "! Unsupported Pixel 10 Android 17 device codename: $device" ;;
     esac
     ui_print "! Android 17 build guard relaxed for test build: build=$build_id incremental=$incremental"
     ui_print "! Selected profile by Android major + codename only: $profile"
     ;;
-  *) abort "! Unsupported Android version: $android. This stable build supports Android 16 and guarded Android 17 CP31/CP21/Stable CP2A profiles." ;;
+  *) thermal_abort "! Unsupported Android version: $android. This stable build supports Android 16 and guarded Android 17 CP31/CP21/Stable CP2A profiles." ;;
 esac
 
 profile_dir="$MODPATH/profiles/$profile/system/vendor/etc"
@@ -285,9 +393,9 @@ if [ ! -s "$profile_dir/thermal_info_config_throttling.json" ]; then
 fi
 active_dir="$MODPATH/system/vendor/etc"
 ui_print "profile_dir=$profile_dir"
-for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$profile_dir/$f" ] || abort "! Missing profile file: $profile_dir/$f"; done
-[ -r /vendor/etc/thermal_info_config_throttling.json ] || abort "! Stock thermal throttling config not readable"
-grep -q "VIRTUAL-SKIN" /vendor/etc/thermal_info_config_throttling.json || abort "! Expected stock thermal marker missing"
+for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$profile_dir/$f" ] || thermal_abort "! Missing profile file: $profile_dir/$f"; done
+[ -r /vendor/etc/thermal_info_config_throttling.json ] || thermal_abort "! Stock thermal throttling config not readable"
+grep -q "VIRTUAL-SKIN" /vendor/etc/thermal_info_config_throttling.json || thermal_abort "! Expected stock thermal marker missing"
 
 ui_print "selected_profile=$profile"
 ui_print "profile_state=$profile_state"
@@ -300,7 +408,7 @@ ui_print "Materializing selected profile into active Magisk overlay path"
 rm -rf "$active_dir"; mkdir -p "$active_dir"
 cp -fp "$profile_dir"/*.json "$active_dir"/
 chmod 0644 "$active_dir"/*.json 2>/dev/null || true
-for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || abort "! Failed to materialize active file: $f"; done
+for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || thermal_abort "! Failed to materialize active file: $f"; done
 
 rm -f "$MODPATH/disable" "$MODPATH/skip_mount" "$MODPATH/remove"
 ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
@@ -360,15 +468,16 @@ polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_1.4.10-universal.3
-debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
+update_json_channel=stable_update_json_1.4.10-universal.3_test_manual_install_only
+debug_collector=manual_or_auto_on_install_fail_v1411
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh
 override_disable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-ptune-override.sh
 debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF
 
+thermal_save_install_debug "success" "install_completed"
 ui_print "Target guard PASS"
 case "$android" in 17|17.*) ui_print "Android 17 guarded profile selected" ;; *) ui_print "Android 16 profile selected" ;; esac
 ui_print "Manual debug collector: su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"
-ui_print "No automatic debug collection, no bind mounts, no runtime text patching"
+ui_print "Automatic install-fail debug autosave enabled; no bind mounts, no runtime text patching"

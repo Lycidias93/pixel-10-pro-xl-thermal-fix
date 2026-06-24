@@ -462,3 +462,12 @@ Root modules can change system behavior. Use at your own risk, keep a working ro
 - Build ID, fingerprint and incremental remain log/warn only, not hard blockers.
 - Android 16/17 and Pixel 10 codename guards remain active.
 - Stable update channel points to 1.4.10-universal.3.
+
+
+## 1.4.11-universal-test.1 install-debug autosave test
+
+- Adds automatic install-debug autosave to `/sdcard/Download` or `/storage/emulated/0/Download`.
+- On installer failure, a `pixel_thermal_install_*.txt` snapshot is written automatically.
+- On installer failure, the bundled debug collector is attempted with `MODDIR=$MODPATH`; collector stdout is also saved in Download.
+- The exact Magisk app UI log is still outside module control, but the autosave captures the relevant installer state, selected profile, device/build, root/mount backend, pTune guard state and recent thermal logcat.
+- Stable update channel remains `v1.4.10-universal.3`; this is a manual prerelease test.
