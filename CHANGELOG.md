@@ -565,3 +565,9 @@ Credits:
 - Fix helper execution compatibility by chmodding tools during install and documenting `su -c sh ...` entrypoints.
 - Keep optional ZRAM 100p disabled by default.
 - Stable update channel remains `1.4.11-universal.1`.
+
+## 1.4.12-universal-test.3
+
+- Hotfix optional ZRAM 100p service path: service now applies after boot/mount settle and before exit.
+- Switch mmd handling to stop/start restart model with fallbacks.
+- Replaces `v1.4.12-universal-test.2` for ZRAM testing; stable channel remains `v1.4.11-universal.1`.

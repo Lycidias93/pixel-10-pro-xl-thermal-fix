@@ -80,8 +80,23 @@ prop_set persist.vendor.boot.zram.size "100p"
 
 restart_requested="${ZRAM_RESTART_MMD:-1}"
 if [ "$restart_requested" = "1" ]; then
-  setprop ctl.restart mmd 2>/dev/null || true
-  sleep 2
+  {
+    echo
+    echo "== mmd restart =="
+    echo "restart_model=stop_then_start"
+    if command -v stop >/dev/null 2>&1; then
+      stop mmd 2>/dev/null || setprop ctl.stop mmd 2>/dev/null || true
+    else
+      setprop ctl.stop mmd 2>/dev/null || true
+    fi
+    sleep 1
+    if command -v start >/dev/null 2>&1; then
+      start mmd 2>/dev/null || setprop ctl.start mmd 2>/dev/null || true
+    else
+      setprop ctl.start mmd 2>/dev/null || true
+    fi
+    sleep 3
+  } >> "$LOG" 2>&1
 fi
 
 {

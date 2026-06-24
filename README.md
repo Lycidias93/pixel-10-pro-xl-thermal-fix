@@ -529,3 +529,10 @@ su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/zram-debug.sh
 
 Stable update channel remains `1.4.11-universal.1` until this prerelease is verified.
 <!-- V1412_TEST2_EXEC_METADATA_FIX_END -->
+
+### 1.4.12-universal-test.3 service mmd restart hotfix
+
+- Fixes `service.sh` ordering for optional ZRAM 100p so the boot-time apply path runs after boot/mount settle and before `exit 0`.
+- ZRAM apply now uses `stop mmd` then `start mmd` with property fallbacks instead of only `ctl.restart mmd`.
+- Keep stable channel on `v1.4.11-universal.1`; this remains a manual prerelease test feature.
+- Shell-compatible commands remain preferred: `su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh`.
