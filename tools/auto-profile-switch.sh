@@ -45,50 +45,32 @@ case "$ANDROID" in
   16|16.*)
     case "$DEVICE" in mustang|blazer|frankel|rango) ;; *) GUARD="unsupported_android16_device_$DEVICE" ;; esac
     if [ -z "$GUARD" ]; then
-      if [ "$BUILD_ID" != "$A16_BUILD" ]; then
-        GUARD="unsupported_android16_build_$BUILD_ID"
-      else
-        PROFILE="$DEVICE"
-        PROFILE_STATE="auto_android16_${DEVICE}_cp1a"
-        BUILD_STATE="android16_${DEVICE}_cp1a_260505005_auto_switch"
-        SOURCE_BUILD="$A16_BUILD"
-        SOURCE_INC="not_applicable"
-      fi
+      PROFILE="$DEVICE"
+      PROFILE_STATE="auto_android16_${DEVICE}_major_guard"
+      BUILD_STATE="android16_${DEVICE}_${BUILD_ID}_${INCREMENTAL}_major_guard_auto_switch"
+      SOURCE_BUILD="$A16_BUILD"
+      SOURCE_INC="not_applicable"
     fi
   ;;
   17|17.*)
     case "$DEVICE" in
       mustang)
-        case "$FINGERPRINT" in
-          google/mustang/mustang:17/$A17_STABLE_BUILD/$A17_STABLE_INC:user/release-keys)
-            PROFILE="mustang-android17-stable-cp2a-260605012"; PROFILE_STATE="auto_android17_stable_cp2a_mustang"; BUILD_STATE="android17_mustang_cp2a_15430684_auto_switch"; SOURCE_BUILD="$A17_STABLE_BUILD"; SOURCE_INC="$A17_STABLE_INC" ;;
-          "$A17_CP31_FP")
-            [ "$INCREMENTAL" = "$A17_CP31_INC" ] || GUARD="android17_cp31_incremental_mismatch_$INCREMENTAL"
-            PROFILE="mustang-android17-cp31"; PROFILE_STATE="auto_android17_cp31_mustang"; BUILD_STATE="android17_mustang_cp31_15421345_auto_switch"; SOURCE_BUILD="$A17_CP31_BUILD"; SOURCE_INC="$A17_CP31_INC" ;;
-          "$A17_CP31_QPR1B4_FP")
-            [ "$INCREMENTAL" = "$A17_CP31_QPR1B4_INC" ] || GUARD="android17_cp31_qpr1b4_incremental_mismatch_$INCREMENTAL"
-            PROFILE="mustang-android17-cp31"; PROFILE_STATE="auto_android17_cp31_qpr1b4_mustang"; BUILD_STATE="android17_mustang_cp31_15591510_auto_switch"; SOURCE_BUILD="$A17_CP31_QPR1B4_BUILD"; SOURCE_INC="$A17_CP31_QPR1B4_INC" ;;
-          *:CinnamonBun/$A17_CP21_BUILD/*|*:17/$A17_CP21_BUILD/*)
-            PROFILE="mustang-android17-cp21"; PROFILE_STATE="auto_android17_cp21_mustang"; BUILD_STATE="android17_mustang_cp21_auto_switch"; SOURCE_BUILD="$A17_CP21_BUILD"; SOURCE_INC="$INCREMENTAL" ;;
-          *) GUARD="unsupported_android17_mustang_fingerprint" ;;
-        esac
-      ;;
+        case "$BUILD_ID" in
+          CP31.*) PROFILE="mustang-android17-cp31"; PROFILE_STATE="auto_android17_cp31_mustang_major_guard"; BUILD_STATE="android17_mustang_${BUILD_ID}_${INCREMENTAL}_major_guard_auto_switch_using_cp31_profile"; SOURCE_BUILD="$A17_CP31_BUILD"; SOURCE_INC="$A17_CP31_INC" ;;
+          CP21.*) PROFILE="mustang-android17-cp21"; PROFILE_STATE="auto_android17_cp21_mustang_major_guard"; BUILD_STATE="android17_mustang_${BUILD_ID}_${INCREMENTAL}_major_guard_auto_switch_using_cp21_profile"; SOURCE_BUILD="$A17_CP21_BUILD"; SOURCE_INC="$INCREMENTAL" ;;
+          *) PROFILE="mustang-android17-stable-cp2a-260605012"; PROFILE_STATE="auto_android17_stable_mustang_major_guard"; BUILD_STATE="android17_mustang_${BUILD_ID}_${INCREMENTAL}_major_guard_auto_switch_using_cp2a_profile"; SOURCE_BUILD="$A17_STABLE_BUILD"; SOURCE_INC="$A17_STABLE_INC" ;;
+        esac ;;
       frankel|blazer|rango)
-        if [ "$BUILD_ID" = "$A17_STABLE_BUILD" ] && [ "$INCREMENTAL" = "$A17_STABLE_INC" ]; then
-          case "$FINGERPRINT" in google/${DEVICE}/${DEVICE}:17/$A17_STABLE_BUILD/$A17_STABLE_INC:user/release-keys) ;; *) GUARD="android17_stable_${DEVICE}_fingerprint_mismatch" ;; esac
-          PROFILE="${DEVICE}-android17-stable-cp2a-260605012"; PROFILE_STATE="auto_android17_stable_cp2a_${DEVICE}"; BUILD_STATE="android17_${DEVICE}_cp2a_15430684_auto_switch"; SOURCE_BUILD="$A17_STABLE_BUILD"; SOURCE_INC="$A17_STABLE_INC"
-        elif [ "$BUILD_ID" = "$A17_CP21_BUILD" ]; then
-          case "$FINGERPRINT" in *:CinnamonBun/$A17_CP21_BUILD/*|*:17/$A17_CP21_BUILD/*) ;; *) GUARD="android17_cp21_${DEVICE}_fingerprint_mismatch" ;; esac
-          PROFILE="${DEVICE}-android17-cp21"; PROFILE_STATE="auto_android17_cp21_${DEVICE}"; BUILD_STATE="android17_cp21_${DEVICE}_auto_switch"; SOURCE_BUILD="$A17_CP21_BUILD"; SOURCE_INC="$INCREMENTAL"
-        else
-          GUARD="unsupported_android17_${DEVICE}_build_$BUILD_ID"
-        fi
-      ;;
+        case "$BUILD_ID" in
+          CP21.*) PROFILE="${DEVICE}-android17-cp21"; PROFILE_STATE="auto_android17_cp21_${DEVICE}_major_guard"; BUILD_STATE="android17_${DEVICE}_${BUILD_ID}_${INCREMENTAL}_major_guard_auto_switch_using_cp21_profile"; SOURCE_BUILD="$A17_CP21_BUILD"; SOURCE_INC="$INCREMENTAL" ;;
+          *) PROFILE="${DEVICE}-android17-stable-cp2a-260605012"; PROFILE_STATE="auto_android17_stable_${DEVICE}_major_guard"; BUILD_STATE="android17_${DEVICE}_${BUILD_ID}_${INCREMENTAL}_major_guard_auto_switch_using_cp2a_profile"; SOURCE_BUILD="$A17_STABLE_BUILD"; SOURCE_INC="$A17_STABLE_INC" ;;
+        esac ;;
       *) GUARD="unsupported_android17_device_$DEVICE" ;;
     esac
   ;;
   *) GUARD="unsupported_android_$ANDROID" ;;
 esac
+
 
 if [ -n "$GUARD" ] || [ -z "$PROFILE" ]; then
   echo "unsupported_or_incompatible_build" > "$G/auto_profile_switch_state"
@@ -164,6 +146,7 @@ rm -f "$MODDIR/skip_mount" "$G/disabled_reason" "$G/profile_stale_after_ota" "$G
   echo "profile=$PROFILE"
   echo "profile_state=$PROFILE_STATE"
   echo "build_state=$BUILD_STATE"
+  echo "build_guard_mode=android_major_only"
   echo "profile_source_build=$SOURCE_BUILD"
   echo "profile_source_incremental=$SOURCE_INC"
   echo "auto_profile_switch=yes"
@@ -171,7 +154,7 @@ rm -f "$MODDIR/skip_mount" "$G/disabled_reason" "$G/profile_stale_after_ota" "$G
   echo "auto_profile_switch_at=$(date -Is 2>/dev/null || date)"
   echo "profile_materialized=yes"
   echo "expected_thermal_files=3"
-  echo "update_json_channel=stable_update_json_remains_1.4.4-universal.1"
+  echo "update_json_channel=stable_update_json_1.4.9-universal.2"
 } > "$STATE"
 echo materialized > "$G/auto_profile_switch_state"
 echo "$PROFILE" > "$G/selected_profile"

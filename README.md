@@ -1,3 +1,15 @@
+<!-- V1410_MAJOR_GUARD_TEST_START -->
+## v1.4.10-universal-test.1 experimental test
+
+Experimental test release for QPR / unsupported-build feedback.
+
+- Android build/fingerprint/incremental checks are relaxed to Android-major + Pixel 10 codename in the test channel.
+- Unsupported devices and unsupported Android major versions remain blocked.
+- pTune conflict guard remains active.
+- Root/backend detection is log-only diagnostics, not a hard block.
+- Stable remains `v1.4.9-universal.2`.
+<!-- V1410_MAJOR_GUARD_TEST_END -->
+
 <!-- README_V149_STABLE_METADATA_HOTFIX_START -->
 ## Stable metadata hotfix: `1.4.9-universal.2`
 
