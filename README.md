@@ -1,3 +1,17 @@
+<!-- V1411_STABLE_START -->
+## 1.4.11-universal.1
+
+Stable promotion of v1.4.11 install debug autosave.
+
+- Promoted after Pixel 10 Pro XL `mustang` post-reboot verification.
+- Keeps Android 16 / Android 17 major guard and known-device guard.
+- Keeps pTune conflict guard active.
+- Preserves v1.4.10-universal.3 profile path fix.
+- Adds install autosave evidence under `/sdcard/Download/pixel_thermal_install_*.txt`.
+- Debug ZIP collector remains available at `/sdcard/Download/pixel_thermal_debug_*.zip`.
+- Stable update channel points to `v1.4.11-universal.1`.
+<!-- V1411_STABLE_END -->
+
 <!-- README_V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_START -->
 ## 1.4.10-universal.1 stable
 

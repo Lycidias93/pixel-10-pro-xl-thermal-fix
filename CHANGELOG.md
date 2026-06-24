@@ -1,5 +1,15 @@
 ## 1.4.11-universal-test.1 - 2026-06-24
 
+
+## 1.4.11-universal.1 - stable install debug autosave
+
+- Promoted v1.4.11 install debug autosave from prerelease to stable.
+- Post-reboot verified on Pixel 10 Pro XL `mustang` with active vendor overlay match.
+- Stable update channel points to `v1.4.11-universal.1`.
+- Install autosave writes `/sdcard/Download/pixel_thermal_install_*.txt`.
+- Debug ZIP collector writes `/sdcard/Download/pixel_thermal_debug_*.zip`.
+- Supersedes `1.4.10-universal.3` and `1.4.11-universal-test.1`.
+
 - Test prerelease: automatic install-debug autosave.
 - Saves install-fail snapshots to Download as `pixel_thermal_install_*.txt`.
 - Attempts bundled debug collector automatically on installer failure using the current update module path.
