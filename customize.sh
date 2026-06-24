@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.11-universal-test.1"
-MODULE_VERSION_CODE="1015101"
+MODULE_VERSION="1.4.12-universal-test.2"
+MODULE_VERSION_CODE="1015202"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -294,7 +294,7 @@ known_bad_ptune=$PTUNE_KNOWN_BAD
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
-update_json_channel=stable_update_json_1.4.10-universal.3_test_manual_install_only
+update_json_channel=stable_update_json_1.4.11-universal.1_test_manual_install_only
 debug_collector=manual_or_auto_on_install_fail_v1411
 compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
 ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
@@ -468,7 +468,7 @@ polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_1.4.10-universal.3_test_manual_install_only
+update_json_channel=stable_update_json_1.4.11-universal.1_test_manual_install_only
 debug_collector=manual_or_auto_on_install_fail_v1411
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh
@@ -481,3 +481,8 @@ ui_print "Target guard PASS"
 case "$android" in 17|17.*) ui_print "Android 17 guarded profile selected" ;; *) ui_print "Android 16 profile selected" ;; esac
 ui_print "Manual debug collector: su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"
 ui_print "Automatic install-fail debug autosave enabled; no bind mounts, no runtime text patching"
+
+# ZRAM_HELPER_CHMOD_V1412_TEST2: keep helper scripts executable for direct Magisk/KSU shell use.
+if [ -d "$MODPATH/tools" ]; then
+  chmod 0755 "$MODPATH"/tools/*.sh 2>/dev/null || true
+fi

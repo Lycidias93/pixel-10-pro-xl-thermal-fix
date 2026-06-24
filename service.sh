@@ -12,7 +12,7 @@ if [ -f "$CONFIG_FILE" ]; then
 fi
 if [ "${ENABLE_ZRAM_100P:-0}" = "1" ] && [ "${ZRAM_RISK_ACK:-}" = "explicit_user_enable" ]; then
   MODDIR="${MODDIR:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
-  if [ -x "$MODDIR/tools/apply-zram-100p.sh" ]; then
+  if [ -x sh "$MODDIR/tools/apply-zram-100p.sh" ]; then
     sh "$MODDIR/tools/apply-zram-100p.sh" boot >/dev/null 2>&1 || true
   fi
 fi

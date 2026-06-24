@@ -478,7 +478,7 @@ Root modules can change system behavior. Use at your own risk, keep a working ro
 - Stable update channel points to 1.4.10-universal.3.
 
 
-## 1.4.11-universal-test.1 install-debug autosave test
+## 1.4.12-universal-test.2 install-debug autosave test
 
 - Adds automatic install-debug autosave to `/sdcard/Download` or `/storage/emulated/0/Download`.
 - On installer failure, a `pixel_thermal_install_*.txt` snapshot is written automatically.
@@ -487,7 +487,7 @@ Root modules can change system behavior. Use at your own risk, keep a working ro
 - Stable update channel remains `v1.4.10-universal.3`; this is a manual prerelease test.
 
 
-### Optional ZRAM 100p test path (1.4.12-universal-test.1)
+### Optional ZRAM 100p test path (1.4.12-universal-test.2)
 
 This test release adds an optional, disabled-by-default ZRAM 100p path inspired by pTune's Tensor ZRAM setup. It is not part of the thermal overlay default path.
 
@@ -510,3 +510,22 @@ su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/zram-debug.sh
 ```
 
 The test overlays `/vendor/etc/fstab.zram.100p` with `zramsize=100%,zram_backingdev_size=2G` and applies the ZRAM props used by the experimental PowerPulse/pTune path. Reboot is recommended after enable/disable.
+
+<!-- V1412_TEST2_EXEC_METADATA_FIX_START -->
+### 1.4.12-universal-test.2 test2 shell-entrypoint fix
+
+`1.4.12-universal-test.2` replaces the bad `1.4.12-universal-test.1` prerelease.
+
+- Fixes mixed installer/autosave metadata that still reported `1.4.11-universal-test.1`.
+- Keeps optional ZRAM 100p disabled by default.
+- Ensures helper scripts are chmodded during install.
+- Documents the compatible invocation form for Magisk/KernelSU/HybridMount environments:
+
+```sh
+su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh
+su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-zram-100p.sh
+su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/zram-debug.sh
+```
+
+Stable update channel remains `1.4.11-universal.1` until this prerelease is verified.
+<!-- V1412_TEST2_EXEC_METADATA_FIX_END -->

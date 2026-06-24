@@ -1,6 +1,6 @@
 
 
-## 1.4.12-universal-test.1
+## 1.4.12-universal-test.2
 
 - Add optional ZRAM 100p test path, disabled by default.
 - Add `/vendor/etc/fstab.zram.100p` overlay for Tensor ZRAM 100p testing.
@@ -8,7 +8,7 @@
 - Add service hook that applies ZRAM 100p only when explicitly enabled in config.
 - Extend debug collector with ZRAM/fstab/mmd/proc-swaps evidence.
 - Stable update channel remains `1.4.11-universal.1`; this is a manual test prerelease.
-## 1.4.11-universal-test.1 - 2026-06-24
+## 1.4.12-universal-test.2 - 2026-06-24
 
 
 ## 1.4.11-universal.1 - stable install debug autosave
@@ -18,7 +18,7 @@
 - Stable update channel points to `v1.4.11-universal.1`.
 - Install autosave writes `/sdcard/Download/pixel_thermal_install_*.txt`.
 - Debug ZIP collector writes `/sdcard/Download/pixel_thermal_debug_*.zip`.
-- Supersedes `1.4.10-universal.3` and `1.4.11-universal-test.1`.
+- Supersedes `1.4.10-universal.3` and `1.4.12-universal-test.2`.
 
 - Test prerelease: automatic install-debug autosave.
 - Saves install-fail snapshots to Download as `pixel_thermal_install_*.txt`.
@@ -558,3 +558,10 @@ Credits:
 - Renamed the internal hash helper to avoid collision with the shell `hash` built-in.
 - Added backend probe capture to `collect-debug.sh`.
 - No thermal value changes; stable update JSON unchanged.
+
+## 1.4.12-universal-test.2 test2
+
+- Fix mixed metadata from `1.4.12-universal-test.1` where install autosave/state still reported `1.4.11-universal-test.1`.
+- Fix helper execution compatibility by chmodding tools during install and documenting `su -c sh ...` entrypoints.
+- Keep optional ZRAM 100p disabled by default.
+- Stable update channel remains `1.4.11-universal.1`.
