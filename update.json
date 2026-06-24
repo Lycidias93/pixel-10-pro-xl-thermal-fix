@@ -1,6 +1,6 @@
 {
-  "version": "1.4.10-universal.2",
-  "versionCode": 1015003,
-  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v1.4.10-universal.2/pixel-10-thermal-polling-fix-1.4.10-universal.2.zip",
-  "changelog": "Stable profile packaging hotfix for 1.4.10-universal.2."
+  "version": "1.4.10-universal.3",
+  "versionCode": 1015004,
+  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v1.4.10-universal.3/pixel-10-thermal-polling-fix-1.4.10-universal.3.zip",
+  "changelog": "Stable profile path hotfix for 1.4.10-universal.3."
 }

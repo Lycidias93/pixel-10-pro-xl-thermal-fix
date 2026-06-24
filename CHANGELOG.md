@@ -1,3 +1,10 @@
+## 1.4.10-universal.3 - 2026-06-24
+
+- Stable profile path hotfix.
+- Fixes the v1.4.10-universal.2 install abort caused by customize.sh checking only the nested profile path while the ZIP used top-level profile folders.
+- Adds robust profile lookup for nested and top-level profile packaging.
+- Keeps Android-major guard relaxation from v1.4.10.
+
 ## 1.4.10-universal.2 - 2026-06-24
 
 - Stable profile packaging hotfix.

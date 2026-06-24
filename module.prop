@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.10-universal.2
-versionCode=1015003
+version=1.4.10-universal.3
+versionCode=1015004
 author=Lycidias93, based on marx161
-description=Pixel 10 thermal polling overlay; stable Android-major guard profile packaging hotfix
+description=Pixel 10 thermal polling overlay; stable Android-major guard profile path hotfix
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

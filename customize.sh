@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.10-universal.2"
-MODULE_VERSION_CODE="1015003"
+MODULE_VERSION="1.4.10-universal.3"
+MODULE_VERSION_CODE="1015004"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -17,10 +17,10 @@ A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal stable Android-major guard profile packaging hotfix"
+ui_print "  Universal stable Android-major guard profile path hotfix"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Stable updateJson channel: 1.4.10-universal.2"
+ui_print "Stable updateJson channel: 1.4.10-universal.3"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
@@ -187,7 +187,7 @@ known_bad_ptune=$PTUNE_KNOWN_BAD
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
-update_json_channel=stable_update_json_1.4.9-universal.2
+update_json_channel=stable_update_json_1.4.10-universal.3
 debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
 compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
 ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
@@ -276,8 +276,16 @@ case "$android" in
 esac
 
 profile_dir="$MODPATH/profiles/$profile/system/vendor/etc"
+if [ ! -s "$profile_dir/thermal_info_config_throttling.json" ]; then
+  if [ -s "$MODPATH/$profile/thermal_info_config_throttling.json" ]; then
+    profile_dir="$MODPATH/$profile"
+  elif [ -s "$MODPATH/profiles/$profile/thermal_info_config_throttling.json" ]; then
+    profile_dir="$MODPATH/profiles/$profile"
+  fi
+fi
 active_dir="$MODPATH/system/vendor/etc"
-for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$profile_dir/$f" ] || abort "! Missing profile file: $profile/$f"; done
+ui_print "profile_dir=$profile_dir"
+for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$profile_dir/$f" ] || abort "! Missing profile file: $profile_dir/$f"; done
 [ -r /vendor/etc/thermal_info_config_throttling.json ] || abort "! Stock thermal throttling config not readable"
 grep -q "VIRTUAL-SKIN" /vendor/etc/thermal_info_config_throttling.json || abort "! Expected stock thermal marker missing"
 
@@ -352,7 +360,7 @@ polling_values_changed_by_this_release=source_profile_only
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_1.4.9-universal.2
+update_json_channel=stable_update_json_1.4.10-universal.3
 debug_collector=manual_only_v9_auto_profile_switch_and_ptune_evidence
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh

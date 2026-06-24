@@ -454,3 +454,11 @@ Root modules can change system behavior. Use at your own risk, keep a working ro
 - Build ID, fingerprint and incremental remain log/warn only, not hard blockers.
 - pTune conflict guard remains active.
 - Stable update channel points to 1.4.10-universal.2.
+
+## 1.4.10-universal.3 stable profile path hotfix
+
+- Fixes v1.4.10-universal.2 install abort after selecting the correct Android-major profile.
+- Installer now accepts both nested `profiles/<profile>/system/vendor/etc` and top-level `<profile>` profile layouts.
+- Build ID, fingerprint and incremental remain log/warn only, not hard blockers.
+- Android 16/17 and Pixel 10 codename guards remain active.
+- Stable update channel points to 1.4.10-universal.3.
