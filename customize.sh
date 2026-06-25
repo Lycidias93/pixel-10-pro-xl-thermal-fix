@@ -6,8 +6,8 @@ if [ -r "$MODULE_PROP" ]; then
   MODULE_VERSION="$(sed -n 's/^version=//p' "$MODULE_PROP" | head -n 1)"
   MODULE_VERSION_CODE="$(sed -n 's/^versionCode=//p' "$MODULE_PROP" | head -n 1)"
 fi
-[ -n "$MODULE_VERSION" ] || MODULE_VERSION="1.4.12-universal.1"
-[ -n "$MODULE_VERSION_CODE" ] || MODULE_VERSION_CODE="1015209"
+[ -n "$MODULE_VERSION" ] || MODULE_VERSION="1.4.13-universal-test.1"
+[ -n "$MODULE_VERSION_CODE" ] || MODULE_VERSION_CODE="1015301"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -22,10 +22,10 @@ A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal stable installer"
+ui_print "  Universal test installer"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Stable release; updateJson points to 1.4.12-universal.1"
+ui_print "Prerelease test; stable updateJson remains 1.4.12-universal.1"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
@@ -301,7 +301,7 @@ known_bad_ptune=$PTUNE_KNOWN_BAD
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
-update_json_channel=stable_update_json_1.4.11-universal.1_test_manual_install_only
+update_json_channel=stable_update_json_1.4.12-universal.1_test_manual_install_only
 debug_collector=manual_or_auto_on_install_fail_v1411
 compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
 ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
@@ -398,6 +398,35 @@ if [ ! -s "$profile_dir/thermal_info_config_throttling.json" ]; then
     profile_dir="$MODPATH/profiles/$profile"
   fi
 fi
+
+# BEGIN PIXEL_THERMAL_OUTDOOR_PROFILE_MENU_V1413_TEST1
+base_profile="$profile"
+if [ -s "$MODPATH/tools/thermal-outdoor-menu.sh" ]; then
+  chmod 0755 "$MODPATH/tools/thermal-outdoor-menu.sh" 2>/dev/null || true
+  BASE_PROFILE="$base_profile" MODDIR="$MODPATH" sh "$MODPATH/tools/thermal-outdoor-menu.sh" install || ui_print "! Thermal outdoor menu failed nonfatal; keeping stock profile"
+else
+  ui_print "! Thermal outdoor menu helper missing; keeping stock profile"
+fi
+THERMAL_OUTDOOR_PROFILE="$(config_get THERMAL_OUTDOOR_PROFILE)"
+[ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE="stock"
+if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ]; then
+  outdoor_profile="${base_profile}-outdoor-g4-adapted"
+  outdoor_profile_dir="$MODPATH/profiles/$outdoor_profile/system/vendor/etc"
+  if [ -s "$outdoor_profile_dir/thermal_info_config_throttling.json" ]; then
+    profile="$outdoor_profile"
+    profile_dir="$outdoor_profile_dir"
+    profile_state="${profile_state}_outdoor_g4_adapted_test"
+    build_state="${build_state}_outdoor_g4_adapted_test"
+    ui_print "- Thermal Outdoor Profile: outdoor-g4-adapted"
+  else
+    THERMAL_OUTDOOR_PROFILE="stock_missing_profile"
+    ui_print "! Thermal Outdoor Profile missing for $base_profile; keeping stock"
+  fi
+else
+  ui_print "- Thermal Outdoor Profile: stock"
+fi
+# END PIXEL_THERMAL_OUTDOOR_PROFILE_MENU_V1413_TEST1
+
 active_dir="$MODPATH/system/vendor/etc"
 
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$profile_dir/$f" ] || thermal_abort "! Missing profile file: $profile_dir/$f"; done
@@ -497,13 +526,16 @@ active_overlay_dir=system/vendor/etc
 zram_fstab_template=tools/fstab.zram.100p
 zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
 zram_feature=optional_volume_key_menu_v1412_stable
+thermal_outdoor_feature=optional_volume_key_menu_v1413_test1
+thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
+thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
 
 expected_thermal_files=3
-polling_values_changed_by_this_release=source_profile_only
+polling_values_changed_by_this_release=source_profile_or_optional_outdoor_g4_adapted_test
 bind_mount_model=no
 live_runtime_text_patch_model=no
 selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_1.4.11-universal.1_test_manual_install_only
+update_json_channel=stable_update_json_1.4.12-universal.1_test_manual_install_only
 debug_collector=manual_or_auto_on_install_fail_v1411
 debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh

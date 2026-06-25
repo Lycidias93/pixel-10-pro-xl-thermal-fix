@@ -667,3 +667,18 @@ Stable `v1.4.12-universal.1` promotes the verified test8 runtime result.
 - Silent install proof: `DEBUG_MODE=0`, `debug_mode=0`, `forbidden_silent_logs=0`.
 - Credits preserved: Harish / Codecity001 for PR #65 log cleanup/debug-gating and testing; JoshuaDoes for ZRAM/mmd/service timing and resetprop boot-complete context.
 <!-- PIXEL_THERMAL_V1412_STABLE_END -->
+
+<!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_START -->
+## Pixel Thermal 1.4.13-universal-test.1 outdoor-g4-adapted test
+
+`1.4.13-universal-test.1` is a prerelease test line. Stable `update.json` remains `1.4.12-universal.1`.
+
+- Adds installer Volume-key menu for `Thermal Outdoor Profile`.
+- Default/timeout: `stock`.
+- Volume Up: `outdoor-g4-adapted`.
+- The previous +1 C canary idea was replaced before release. This profile uses degree-based G4/P9-inspired targets, not mdeg.
+- No Pixel 9 JSON is transplanted directly.
+- Blocked: battery, USB, charging, speaker, emergency, shutdown and critical paths.
+- Modified sensors: `VIRTUAL-SKIN, VIRTUAL-SKIN-CPU-HIGH, VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-HINT, VIRTUAL-SKIN-SOC`.
+- Patch report: `/storage/emulated/0/Download/pixel_local__repo-helper-work/pixel-thermal-v1413-test1-outdoor-g4-adapted/outdoor_g4_adapted_patch_report.json`.
+<!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_END -->

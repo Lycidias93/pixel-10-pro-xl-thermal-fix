@@ -628,3 +628,16 @@ Stable promotion from verified `v1.4.12-universal-test.8`.
 - Fixes the stable update channel to `1.4.12-universal.1`.
 - Preserves JoshuaDoes mmd/service timing and resetprop boot-complete context as vNext nuance, without changing the verified persist-prop path.
 <!-- PIXEL_THERMAL_V1412_STABLE_CHANGELOG_END -->
+
+<!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_CHANGELOG_START -->
+## 1.4.13-universal-test.1 - 2026-06-26
+
+Prerelease test for optional G5 `outdoor-g4-adapted` thermal profile.
+
+- Adds install-time Volume-key menu for optional thermal outdoor profile.
+- Keeps safe default/timeout as stock.
+- Adds generated `mustang-android17-stable-cp2a-260605012-outdoor-g4-adapted` profile.
+- Uses degree-based G4/P9-inspired threshold targets for selected virtual skin/CPU/SOC throttle sensors.
+- Blocks battery/USB/charging/speaker/emergency/shutdown/critical paths for first pass.
+- Keeps stable `update.json` on `1.4.12-universal.1`.
+<!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_CHANGELOG_END -->
