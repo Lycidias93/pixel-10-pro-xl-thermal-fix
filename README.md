@@ -610,3 +610,20 @@ Stable update channel remains `v1.4.11-universal.1`.
 - The guarded reinit helper remains available but is not the default path.
 
 <!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_END -->
+
+<!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_START -->
+
+### Pixel Thermal 1.4.12-universal-test.6 runtime proof
+
+`1.4.12-universal-test.6` has a post-reboot ZRAM 100p proof on Pixel 10 Pro XL (`mustang`, Android 17 `CP2A.260605.012`, incremental `15430684`).
+
+- Install menu path: Vol+ selected ZRAM 100p.
+- Runtime props: `mmd.zram.size=100%`, `vendor.zram.size=100p`, `persist.vendor.boot.zram.size=100p`.
+- Runtime fstab: module overlay and `/vendor/etc/fstab.zram.100p` present.
+- Runtime mmd: running after boot.
+- Runtime ZRAM: `/sys/block/zram0/disksize=16323969024` and `/proc/swaps` reports `15941372` KiB.
+- Runtime compression: `lz77eh`.
+- Conclusion: PASS; Harish's persist-property/timing hypothesis is confirmed for the official test6 path.
+- Stable update channel remains `v1.4.11-universal.1`.
+
+<!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_END -->

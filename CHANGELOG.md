@@ -604,3 +604,7 @@ Credits:
 - Keep stable channel on `v1.4.11-universal.1`.
 
 <!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_END -->
+
+<!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_START -->
+- Document `1.4.12-universal-test.6` post-reboot runtime proof: Vol+ ZRAM menu path yields 100p props, fstab present, and `zram0` disksize `16323969024`.
+<!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_END -->
