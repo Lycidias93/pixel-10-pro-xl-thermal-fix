@@ -608,3 +608,7 @@ Credits:
 <!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_START -->
 - Document `1.4.12-universal-test.6` post-reboot runtime proof: Vol+ ZRAM menu path yields 100p props, fstab present, and `zram0` disksize `16323969024`.
 <!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_END -->
+
+<!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_START -->
+- Add `1.4.12-universal-test.7` prerelease: integrate PR #65 ZRAM install log cleanup/debug-mode gating while preserving the verified test6 ZRAM 100p runtime path and credits.
+<!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_END -->

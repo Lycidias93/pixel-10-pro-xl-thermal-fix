@@ -6,7 +6,13 @@ ALT_DOWNLOAD="/storage/emulated/0/Download"
 choose_download() { for d in "$DOWNLOAD" "$ALT_DOWNLOAD"; do [ -d "$d" ] && [ -w "$d" ] && { echo "$d"; return 0; }; done; echo "$ALT_DOWNLOAD"; }
 DL="$(choose_download)"
 TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"
-LOG="$DL/pixel_thermal_zram_100p_disable_${TS}.txt"
+dbg="$(grep -E '^(DEBUG_MODE|debug_mode)=' "$CONFIG_FILE" 2>/dev/null | tail -n 1 | cut -d= -f2 | tr -d '\r')"
+if [ "$dbg" = "1" ]; then
+  LOG="$DL/pixel_thermal_zram_100p_disable_${TS}.txt"
+else
+  LOG="/dev/null"
+fi
+
 mkdir -p "$CONFIG_DIR" "$DL" 2>/dev/null || true
 if [ -f "$CONFIG_FILE" ]; then
   grep -v -E '^(ENABLE_ZRAM_100P|ZRAM_RESTART_MMD|ZRAM_RISK_ACK)=' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" 2>/dev/null || true

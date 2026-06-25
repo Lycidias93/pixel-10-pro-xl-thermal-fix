@@ -65,6 +65,13 @@ THERMAL_INSTALL_DEBUG_COLLECT_STDOUT="$THERMAL_INSTALL_DEBUG_DIR/${THERMAL_INSTA
 thermal_save_install_debug() {
   result="${1:-unknown}"
   reason="${2:-none}"
+  if [ "$result" = "success" ]; then
+    local dbg_mode="$(config_get DEBUG_MODE)"
+    [ -z "$dbg_mode" ] && dbg_mode="$(config_get debug_mode)"
+    if [ "$dbg_mode" != "1" ]; then
+      return 0
+    fi
+  fi
   mkdir -p "$THERMAL_INSTALL_DEBUG_DIR" 2>/dev/null || true
   {
     echo "debug_type=pixel_thermal_install_autosave"
@@ -154,15 +161,10 @@ thermal_abort() {
 
 
 
-ui_print "model=$model"
-ui_print "device=$device"
-ui_print "android=$android"
-ui_print "android_sdk=$android_sdk"
-ui_print "build_id=$build_id"
-ui_print "incremental=$incremental"
-ui_print "root_impl=$root_impl"
-ui_print "mount_backend_hint=$mount_backend_hint"
-ui_print "root_backend_guard_mode=$root_backend_guard_mode"
+ui_print "- Device: $model ($device)"
+ui_print "- Android: $android (SDK $android_sdk) | Build: $build_id"
+ui_print "- Root: $root_impl"
+
 
 
 CONFIG_DIR="/data/adb/$MODULE_ID"
@@ -392,18 +394,13 @@ if [ ! -s "$profile_dir/thermal_info_config_throttling.json" ]; then
   fi
 fi
 active_dir="$MODPATH/system/vendor/etc"
-ui_print "profile_dir=$profile_dir"
+
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$profile_dir/$f" ] || thermal_abort "! Missing profile file: $profile_dir/$f"; done
 [ -r /vendor/etc/thermal_info_config_throttling.json ] || thermal_abort "! Stock thermal throttling config not readable"
 grep -q "VIRTUAL-SKIN" /vendor/etc/thermal_info_config_throttling.json || thermal_abort "! Expected stock thermal marker missing"
 
-ui_print "selected_profile=$profile"
-ui_print "profile_state=$profile_state"
-ui_print "build_state=$build_state"
-ui_print "profile_source_android=$profile_source_android"
-ui_print "profile_source_build=$profile_source_build"
-ui_print "profile_source_incremental=$profile_source_incremental"
-ui_print "Materializing selected profile into active Magisk overlay path"
+ui_print "- Selected Profile: $profile"
+ui_print "- Materializing active thermal overlay..."
 
 rm -rf "$active_dir"; mkdir -p "$active_dir"
 cp -fp "$profile_dir"/*.json "$active_dir"/
@@ -420,16 +417,15 @@ done
 if [ -n "$zram_fstab_src" ]; then
   cp -fp "$zram_fstab_src" "$active_dir/fstab.zram.100p" || thermal_abort "! Failed to materialize active ZRAM fstab"
   chmod 0644 "$active_dir/fstab.zram.100p" 2>/dev/null || true
-  ui_print "zram_fstab_materialized=yes"
+  ui_print "- Materialized ZRAM fstab layout"
 else
-  ui_print "! zram_fstab_materialized=no template_missing"
+  ui_print "! ZRAM layout template missing"
 fi
 # END PIXEL_THERMAL_ZRAM_FSTAB_PRESERVE_V1412_TEST4
 
 # BEGIN PIXEL_THERMAL_ZRAM_VOLUME_MENU_V1412_TEST6
 if [ -s "$MODPATH/tools/zram-menu.sh" ]; then
   chmod 0755 "$MODPATH/tools/zram-menu.sh" 2>/dev/null || true
-  ui_print "ZRAM 100p install choice: Vol+ enable, Vol- disable, timeout keep/safe"
   MODDIR="$MODPATH" sh "$MODPATH/tools/zram-menu.sh" install || ui_print "! ZRAM menu failed nonfatal; keeping existing/safe config"
 else
   ui_print "! ZRAM menu helper missing; keeping existing/safe config"
@@ -511,10 +507,9 @@ debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
 EOF
 
 thermal_save_install_debug "success" "install_completed"
-ui_print "Target guard PASS"
-case "$android" in 17|17.*) ui_print "Android 17 guarded profile selected" ;; *) ui_print "Android 16 profile selected" ;; esac
-ui_print "Manual debug collector: su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"
-ui_print "Automatic install-fail debug autosave enabled; no bind mounts, no runtime text patching"
+ui_print "- Target validation: PASS"
+ui_print "- Successfully applied thermal fix for Android $android"
+
 
 # ZRAM_HELPER_CHMOD_V1412_TEST2: keep helper scripts executable for direct Magisk/KSU shell use.
 if [ -d "$MODPATH/tools" ]; then

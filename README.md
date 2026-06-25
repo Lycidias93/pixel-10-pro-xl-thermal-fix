@@ -627,3 +627,16 @@ Stable update channel remains `v1.4.11-universal.1`.
 - Stable update channel remains `v1.4.11-universal.1`.
 
 <!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_END -->
+
+<!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_START -->
+### Pixel Thermal 1.4.12-universal-test.7 ZRAM log cleanup
+
+`1.4.12-universal-test.7` integrates the PR #65 installation cleanup from Harish / Codecity001 on top of the verified test6 runtime path.
+
+- Keeps the Volume-key ZRAM menu from test6.
+- Adds a Debug Mode Volume-key prompt so normal installs stay quiet and verbose ZRAM logs are opt-in.
+- Guards success install autosave and generated ZRAM text logs behind `DEBUG_MODE=1` / `debug_mode=1`.
+- Keeps failure/debug collection available when needed.
+- Stable update channel remains `v1.4.11-universal.1`.
+- Credits for Harish and JoshuaDoes remain in `CREDITS.md` and release notes.
+<!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_END -->

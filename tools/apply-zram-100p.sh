@@ -19,7 +19,13 @@ mkdir -p "$CONFIG_DIR" "$DL" 2>/dev/null || true
 TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"
 STATE="$CONFIG_DIR/zram-100p.state"
 BACKUP="$CONFIG_DIR/zram-100p-backup-$TS.txt"
-LOG="$DL/pixel_thermal_zram_100p_${TS}.txt"
+dbg="$(grep -E '^(DEBUG_MODE|debug_mode)=' "$CONFIG_FILE" 2>/dev/null | tail -n 1 | cut -d= -f2 | tr -d '\r')"
+if [ "$dbg" = "1" ]; then
+  LOG="$DL/pixel_thermal_zram_100p_${TS}.txt"
+else
+  LOG="/dev/null"
+fi
+
 
 prop_get() { getprop "$1" 2>/dev/null || true; }
 prop_set() {
