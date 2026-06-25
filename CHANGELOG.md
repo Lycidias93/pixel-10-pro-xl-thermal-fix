@@ -612,3 +612,7 @@ Credits:
 <!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_START -->
 - Add `1.4.12-universal-test.7` prerelease: integrate PR #65 ZRAM install log cleanup/debug-mode gating while preserving the verified test6 ZRAM 100p runtime path and credits.
 <!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_END -->
+
+<!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_START -->
+- `1.4.12-universal-test.8`: metadata/build-guard hotfix; `customize.sh` now derives installer version metadata from `module.prop`, preventing a repeat of the test7 module.prop/customize mismatch. Runtime ZRAM/log-cleanup code unchanged from test7; stable channel remains `v1.4.11-universal.1`.
+<!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_END -->

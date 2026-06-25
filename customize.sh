@@ -1,8 +1,13 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.12-universal-test.6"
-MODULE_VERSION_CODE="1015206"
+MODULE_PROP="${MODPATH:-.}/module.prop"
+if [ -r "$MODULE_PROP" ]; then
+  MODULE_VERSION="$(sed -n 's/^version=//p' "$MODULE_PROP" | head -n 1)"
+  MODULE_VERSION_CODE="$(sed -n 's/^versionCode=//p' "$MODULE_PROP" | head -n 1)"
+fi
+[ -n "$MODULE_VERSION" ] || MODULE_VERSION="1.4.12-universal-test.8"
+[ -n "$MODULE_VERSION_CODE" ] || MODULE_VERSION_CODE="1015208"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -17,7 +22,7 @@ A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal Polling Fix"
-ui_print "  Universal test auto install debug autosave"
+ui_print "  Universal prerelease installer"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Prerelease test; stable updateJson remains 1.4.11-universal.1"

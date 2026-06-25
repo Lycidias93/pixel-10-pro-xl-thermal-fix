@@ -640,3 +640,17 @@ Stable update channel remains `v1.4.11-universal.1`.
 - Stable update channel remains `v1.4.11-universal.1`.
 - Credits for Harish and JoshuaDoes remain in `CREDITS.md` and release notes.
 <!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_END -->
+
+<!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_START -->
+
+### Pixel Thermal 1.4.12-universal-test.8 metadata guard hotfix
+
+`1.4.12-universal-test.8` supersedes `1.4.12-universal-test.7` because test7 correctly bumped `module.prop` but left the installer-local `customize.sh` metadata constants at `1.4.12-universal-test.6`.
+
+- `module.prop`: `1.4.12-universal-test.8` / `1015208`.
+- `customize.sh`: derives `MODULE_VERSION` and `MODULE_VERSION_CODE` from `module.prop`, with `1.4.12-universal-test.8` fallback.
+- Runtime code path remains the PR #65 log-cleanup / debug-mode gated ZRAM menu from test7.
+- Credits for Harish and JoshuaDoes remain in `CREDITS.md` and release notes.
+- Stable update channel remains `v1.4.11-universal.1`.
+
+<!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_END -->
