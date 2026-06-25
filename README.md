@@ -654,3 +654,16 @@ Stable update channel remains `v1.4.11-universal.1`.
 - Stable update channel remains `v1.4.11-universal.1`.
 
 <!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_END -->
+
+<!-- PIXEL_THERMAL_V1412_STABLE_START -->
+## Pixel Thermal 1.4.12-universal.1 stable
+
+Stable `v1.4.12-universal.1` promotes the verified test8 runtime result.
+
+- Version: `1.4.12-universal.1` / versionCode `1015209`.
+- Stable updateJson now points to `v1.4.12-universal.1`.
+- Runtime basis: `v1.4.12-universal-test.8` post-reboot PASS on Pixel 10 Pro XL (`mustang`).
+- ZRAM 100p proof: `mmd.zram.size=100%`, `vendor.zram.size=100p`, `/sys/block/zram0/disksize=16323969024`, `/proc/swaps` size about `15941372` KiB, compression `lz77eh`.
+- Silent install proof: `DEBUG_MODE=0`, `debug_mode=0`, `forbidden_silent_logs=0`.
+- Credits preserved: Harish / Codecity001 for PR #65 log cleanup/debug-gating and testing; JoshuaDoes for ZRAM/mmd/service timing and resetprop boot-complete context.
+<!-- PIXEL_THERMAL_V1412_STABLE_END -->

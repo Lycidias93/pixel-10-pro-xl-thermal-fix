@@ -616,3 +616,15 @@ Credits:
 <!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_START -->
 - `1.4.12-universal-test.8`: metadata/build-guard hotfix; `customize.sh` now derives installer version metadata from `module.prop`, preventing a repeat of the test7 module.prop/customize mismatch. Runtime ZRAM/log-cleanup code unchanged from test7; stable channel remains `v1.4.11-universal.1`.
 <!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_END -->
+
+<!-- PIXEL_THERMAL_V1412_STABLE_CHANGELOG_START -->
+## 1.4.12-universal.1 - 2026-06-25
+
+Stable promotion from verified `v1.4.12-universal-test.8`.
+
+- Promotes optional ZRAM 100p with post-reboot proof on `mustang`.
+- Promotes Harish / Codecity001 PR #65 debug-gated install log cleanup.
+- Keeps manual `zram-debug.sh` logs available while silent installs avoid success autosave/zram menu/zram apply textlogs.
+- Fixes the stable update channel to `1.4.12-universal.1`.
+- Preserves JoshuaDoes mmd/service timing and resetprop boot-complete context as vNext nuance, without changing the verified persist-prop path.
+<!-- PIXEL_THERMAL_V1412_STABLE_CHANGELOG_END -->

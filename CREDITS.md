@@ -1,13 +1,14 @@
 # Credits
 
-## Pixel Thermal 1.4.12 ZRAM test line
+## Pixel Thermal 1.4.12 ZRAM + log-cleanup release line
 
-- **Harish**: Pixel 10 Pro (`blazer`) install/runtime testing, ZRAM debug logs, reboot verification, issue reports, and the install-time Volume-key ZRAM selection plus Magisk Action UX recommendation.
-- **JoshuaDoes**: ZRAM 100p technical input and inspiration around the `mmd` restart path (`stop mmd && start mmd`) and early service timing after Magisk mounts the vendor overlay.
+- **Harish / Codecity001**: Pixel 10 Pro (`blazer`) install/runtime testing, ZRAM debug logs, reboot verification, issue reports, install-time Volume-key ZRAM selection, Magisk Action UX recommendation, and PR #65 log cleanup/debug-gating for clean silent installs.
+- **JoshuaDoes**: ZRAM 100p technical input and context around the `mmd` restart path (`stop mmd && start mmd`), early service timing after Magisk mounts the vendor overlay, and the `resetprop` / `sys.boot_completed` timing nuance for possible future in-memory property handling.
 
-These credits apply to the optional ZRAM 100p test line around `v1.4.12-universal-test.4` through `v1.4.12-universal-test.6`.
+These credits apply to the optional ZRAM 100p release line from the `v1.4.12-universal-test.*` builds through stable `1.4.12-universal.1`.
 
 Notes:
 
-- ZRAM remains an optional test feature, gated by explicit user choice.
-- Stable update channel remains `v1.4.11-universal.1`.
+- ZRAM remains optional and gated by explicit user choice.
+- Stable update channel now points to `1.4.12-universal.1`.
+- The existing module author attribution remains in `module.prop`.

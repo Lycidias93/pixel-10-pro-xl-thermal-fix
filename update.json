@@ -1,6 +1,6 @@
 {
-  "version": "1.4.11-universal.1",
-  "versionCode": 1015102,
-  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v1.4.11-universal.1/pixel-10-thermal-polling-fix-1.4.11-universal.1.zip",
-  "changelog": "Stable install debug autosave and debug collector evidence for v1.4.11-universal.1."
+  "version": "1.4.12-universal.1",
+  "versionCode": 1015209,
+  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v1.4.12-universal.1/pixel-10-thermal-polling-fix-1.4.12-universal.1.zip",
+  "changelog": "Stable v1.4.12 promotes verified Pixel 10 Android 17 thermal overlay, optional ZRAM 100p, Harish/Codecity001 PR #65 debug-gated install log cleanup, and JoshuaDoes mmd/boot-timing context."
 }
