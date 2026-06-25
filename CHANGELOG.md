@@ -588,3 +588,15 @@ Credits:
 - Refuses live reinit when current swap usage is above a safety threshold.
 - Supersedes `v1.4.12-universal-test.4` for ZRAM-size testing; stable channel remains `v1.4.11-universal.1`.
 <!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_END -->
+
+
+<!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_START -->
+
+## 1.4.12-universal-test.6
+
+- Add install/action Volume-key ZRAM 100p menu.
+- Write `persist.*` ZRAM props without `resetprop -n`.
+- Move optional ZRAM service apply to the early boot service path.
+- Keep stable channel on `v1.4.11-universal.1`.
+
+<!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_END -->

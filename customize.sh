@@ -1,8 +1,8 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
-MODULE_VERSION="1.4.12-universal-test.5"
-MODULE_VERSION_CODE="1015205"
+MODULE_VERSION="1.4.12-universal-test.6"
+MODULE_VERSION_CODE="1015206"
 A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
 A17_CP31_PROFILE_SOURCE_BUILD="CP31.260508.005"
 A17_CP31_PROFILE_SOURCE_INCREMENTAL="15421345"
@@ -20,7 +20,7 @@ ui_print "  Pixel 10 Thermal Polling Fix"
 ui_print "  Universal test auto install debug autosave"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Prerelease test; stable updateJson remains 1.4.10-universal.3"
+ui_print "Prerelease test; stable updateJson remains 1.4.11-universal.1"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
@@ -426,6 +426,17 @@ else
 fi
 # END PIXEL_THERMAL_ZRAM_FSTAB_PRESERVE_V1412_TEST4
 
+# BEGIN PIXEL_THERMAL_ZRAM_VOLUME_MENU_V1412_TEST6
+if [ -s "$MODPATH/tools/zram-menu.sh" ]; then
+  chmod 0755 "$MODPATH/tools/zram-menu.sh" 2>/dev/null || true
+  ui_print "ZRAM 100p install choice: Vol+ enable, Vol- disable, timeout keep/safe"
+  MODDIR="$MODPATH" sh "$MODPATH/tools/zram-menu.sh" install || ui_print "! ZRAM menu failed nonfatal; keeping existing/safe config"
+else
+  ui_print "! ZRAM menu helper missing; keeping existing/safe config"
+fi
+# END PIXEL_THERMAL_ZRAM_VOLUME_MENU_V1412_TEST6
+
+
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || thermal_abort "! Failed to materialize active file: $f"; done
 
 rm -f "$MODPATH/disable" "$MODPATH/skip_mount" "$MODPATH/remove"
@@ -484,7 +495,7 @@ active_overlay_dir=system/vendor/etc
 
 zram_fstab_template=tools/fstab.zram.100p
 zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
-zram_feature=optional_disabled_by_default_v1412_test4
+zram_feature=optional_volume_key_menu_v1412_test6
 
 expected_thermal_files=3
 polling_values_changed_by_this_release=source_profile_only

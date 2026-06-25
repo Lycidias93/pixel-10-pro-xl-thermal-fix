@@ -586,3 +586,18 @@ su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/reinit-zram-100p.sh
 
 Stable update channel remains `v1.4.11-universal.1`.
 <!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_END -->
+
+
+<!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_START -->
+
+### 1.4.12-universal-test.6 optional ZRAM volume-key menu
+
+`1.4.12-universal-test.6` keeps the stable channel at `v1.4.11-universal.1` and changes only the manual prerelease path.
+
+- Install-time Volume-key menu: Vol+ enables ZRAM 100p, Vol- disables it, timeout keeps the current/safe default.
+- Magisk action runs the same ZRAM menu after installation.
+- `persist.*` ZRAM properties are written without `resetprop -n` so they can persist across reboot.
+- Optional ZRAM apply now runs at the early start of `service.sh` before the boot-completed wait.
+- The guarded reinit helper remains available but is not the default path.
+
+<!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_END -->

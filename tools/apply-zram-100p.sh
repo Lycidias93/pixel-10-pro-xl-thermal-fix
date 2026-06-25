@@ -24,15 +24,30 @@ LOG="$DL/pixel_thermal_zram_100p_${TS}.txt"
 prop_get() { getprop "$1" 2>/dev/null || true; }
 prop_set() {
   k="$1"; v="$2"
-  if command -v resetprop >/dev/null 2>&1; then
-    resetprop -n "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
-  elif [ -x /data/adb/ksu/bin/resetprop ]; then
-    /data/adb/ksu/bin/resetprop -n "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
-  elif [ -x /data/adb/magisk/resetprop ]; then
-    /data/adb/magisk/resetprop -n "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
-  else
-    setprop "$k" "$v" 2>/dev/null || true
-  fi
+  case "$k" in
+    persist.*)
+      if command -v resetprop >/dev/null 2>&1; then
+        resetprop "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
+      elif [ -x /data/adb/ksu/bin/resetprop ]; then
+        /data/adb/ksu/bin/resetprop "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
+      elif [ -x /data/adb/magisk/resetprop ]; then
+        /data/adb/magisk/resetprop "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
+      else
+        setprop "$k" "$v" 2>/dev/null || true
+      fi
+      ;;
+    *)
+      if command -v resetprop >/dev/null 2>&1; then
+        resetprop -n "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
+      elif [ -x /data/adb/ksu/bin/resetprop ]; then
+        /data/adb/ksu/bin/resetprop -n "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
+      elif [ -x /data/adb/magisk/resetprop ]; then
+        /data/adb/magisk/resetprop -n "$k" "$v" >/dev/null 2>&1 || setprop "$k" "$v" 2>/dev/null || true
+      else
+        setprop "$k" "$v" 2>/dev/null || true
+      fi
+      ;;
+  esac
 }
 
 keys='mm.zram.maintenance.first_delay_seconds mm.zram.maintenance.periodic_delay_seconds mmd.zram.writeback.max_idle_seconds mmd.zram.comp_algorithm mmd.zram.enabled mmd.zram.size vendor.zram.size persist.device_config.vendor_system_native_boot.zram_size persist.vendor.boot.zram.size'
