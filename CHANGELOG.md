@@ -578,3 +578,13 @@ Credits:
 - Hotfix optional ZRAM 100p service path: service now applies after boot/mount settle and before exit.
 - Switch mmd handling to stop/start restart model with fallbacks.
 - Replaces `v1.4.12-universal-test.2` for ZRAM testing; stable channel remains `v1.4.11-universal.1`.
+
+<!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_START -->
+
+## 1.4.12-universal-test.5
+
+- Adds guarded manual `tools/reinit-zram-100p.sh` helper for the remaining ZRAM-size test path.
+- Helper is disabled by default and requires explicit config + command ACK.
+- Refuses live reinit when current swap usage is above a safety threshold.
+- Supersedes `v1.4.12-universal-test.4` for ZRAM-size testing; stable channel remains `v1.4.11-universal.1`.
+<!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_END -->

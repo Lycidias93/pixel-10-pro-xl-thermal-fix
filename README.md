@@ -562,3 +562,27 @@ Stable update channel remains `1.4.11-universal.1` until this prerelease is veri
 - ZRAM apply now uses `stop mmd` then `start mmd` with property fallbacks instead of only `ctl.restart mmd`.
 - Keep stable channel on `v1.4.11-universal.1`; this remains a manual prerelease test feature.
 - Shell-compatible commands remain preferred: `su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh`.
+
+<!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_START -->
+
+### 1.4.12-universal-test.5 guarded ZRAM reinit helper
+
+`1.4.12-universal-test.5` is a manual prerelease test that adds `tools/reinit-zram-100p.sh`.
+It is disabled by default and refuses to run unless both conditions are true:
+
+```sh
+ENABLE_ZRAM_100P=1
+ZRAM_REINIT_ACK=I_UNDERSTAND_ZRAM_SWAPOFF_RISK
+```
+
+The helper also refuses when current swap usage is above `ZRAM_REINIT_MAX_SWAP_USED_KB` (default `524288`).
+This prevents unsafe live `swapoff` attempts while several GB are currently stored in ZRAM.
+
+Manual test command after a fresh reboot and low swap usage:
+
+```sh
+su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/reinit-zram-100p.sh --i-understand-risk
+```
+
+Stable update channel remains `v1.4.11-universal.1`.
+<!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_END -->
