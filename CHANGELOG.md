@@ -1,3 +1,7 @@
+<!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_START -->
+- Add credits for Harish and JoshuaDoes for the Pixel Thermal 1.4.12 optional ZRAM 100p test line.
+<!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_END -->
+
 ## 1.4.12-universal-test.4
 - Fixes optional ZRAM 100p fstab preservation after Harish/Joshua feedback.
 - Preserves `fstab.zram.100p` through thermal profile materialization.

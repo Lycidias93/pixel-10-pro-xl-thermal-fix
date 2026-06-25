@@ -1,3 +1,12 @@
+<!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_START -->
+## Credits for Pixel Thermal 1.4.12 ZRAM work
+
+- **Harish**: Pixel 10 Pro (`blazer`) install/runtime testing, ZRAM debug logs, reboot verification, issue reports, and the install-time Volume-key ZRAM selection plus Magisk Action UX recommendation.
+- **JoshuaDoes**: ZRAM 100p technical input and inspiration around the `mmd` restart path (`stop mmd && start mmd`) and early service timing after Magisk mounts the vendor overlay.
+
+These credits apply to the optional ZRAM 100p test line around `v1.4.12-universal-test.4` through `v1.4.12-universal-test.6`. Stable update channel remains `v1.4.11-universal.1`.
+<!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_END -->
+
 ## 1.4.12-universal-test.4 prerelease: optional ZRAM 100p test4
 
 This prerelease replaces the bad `v1.4.12-universal-test.1`, `test.2`, and `test.3` ZRAM test builds.
