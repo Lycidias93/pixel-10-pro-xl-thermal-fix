@@ -409,18 +409,22 @@ else
 fi
 THERMAL_OUTDOOR_PROFILE="$(config_get THERMAL_OUTDOOR_PROFILE)"
 [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE="stock"
-if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ]; then
-  outdoor_profile="${base_profile}-outdoor-g4-adapted"
+if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ] || [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted-plus" ]; then
+  outdoor_profile="${base_profile}-${THERMAL_OUTDOOR_PROFILE}"
   outdoor_profile_dir="$MODPATH/profiles/$outdoor_profile/system/vendor/etc"
   if [ -s "$outdoor_profile_dir/thermal_info_config_throttling.json" ]; then
     profile="$outdoor_profile"
     profile_dir="$outdoor_profile_dir"
-    profile_state="${profile_state}_outdoor_g4_adapted_test"
-    build_state="${build_state}_outdoor_g4_adapted_test"
-    ui_print "- Thermal Outdoor Profile: outdoor-g4-adapted"
+    case "$THERMAL_OUTDOOR_PROFILE" in
+      outdoor-g4-adapted-plus) outdoor_state_token="outdoor_g4_adapted_plus_test" ;;
+      *) outdoor_state_token="outdoor_g4_adapted_test" ;;
+    esac
+    profile_state="${profile_state}_${outdoor_state_token}"
+    build_state="${build_state}_${outdoor_state_token}"
+    ui_print "- Thermal Outdoor Profile: $THERMAL_OUTDOOR_PROFILE"
   else
+    ui_print "! Thermal Outdoor Profile missing for $outdoor_profile; keeping stock"
     THERMAL_OUTDOOR_PROFILE="stock_missing_profile"
-    ui_print "! Thermal Outdoor Profile missing for $base_profile; keeping stock"
   fi
 else
   ui_print "- Thermal Outdoor Profile: stock"
@@ -528,7 +532,7 @@ active_overlay_dir=system/vendor/etc
 zram_fstab_template=tools/fstab.zram.100p
 zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
 zram_feature=optional_volume_key_menu_v1412_stable
-thermal_outdoor_feature=optional_volume_key_menu_v1413_test1
+thermal_outdoor_feature=optional_volume_key_menu_v1413_test4_plus
 thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
 thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
 

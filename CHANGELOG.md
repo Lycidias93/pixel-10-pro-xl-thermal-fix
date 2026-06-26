@@ -1,3 +1,16 @@
+<!-- PIXEL_THERMAL_V1413_TEST4_PLUS_START -->
+## 1.4.13-universal-test.4 - Pixel 9 inspired outdoor plus test
+
+- Adds `outdoor-g4-adapted-plus` as a conservative Pixel 9 inspired thermal threshold test profile.
+- Keeps `outdoor-g4-adapted` available as the safer baseline profile material.
+- Volume Up in the outdoor menu selects the new plus profile for this test build.
+- Keeps polling delays unchanged; does not apply the Pixel 9 mod's 300000 ms polling delay behavior.
+- Does not modify charge, USB, battery, speaker, shutdown, or emergency safety paths.
+- Keeps optional ZRAM 100p resetprop-rs boot_early PR70 logic from `1.4.13-universal-test.3`.
+- Adds Pixel 9 mod inspiration credits for nokia5700black, JohnTheFarm3r, and Rana260492 based on the user-provided XDA packages/threads.
+- Stable update channel remains unchanged; this is a manual prerelease test build.
+<!-- PIXEL_THERMAL_V1413_TEST4_PLUS_END -->
+
 <!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_START -->
 - Add credits for Harish and JoshuaDoes for the Pixel Thermal 1.4.12 optional ZRAM 100p test line.
 <!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_END -->

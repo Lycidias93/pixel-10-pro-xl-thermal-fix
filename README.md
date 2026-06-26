@@ -1,3 +1,17 @@
+<!-- README_PIXEL_THERMAL_V1413_TEST4_PLUS_START -->
+## 1.4.13-universal-test.4 prerelease: outdoor-g4-adapted-plus
+
+This manual test build adds a conservative Pixel 9 inspired `outdoor-g4-adapted-plus` profile for Pixel 10 Android 17 profile testing.
+
+Safety boundary:
+- No Pixel 9 300000 ms polling-delay behavior is copied.
+- No charge, USB, battery, speaker, shutdown, or emergency paths are changed.
+- The plus profile only raises selected virtual skin / CPU thermal thresholds slightly above `outdoor-g4-adapted`.
+- Intended for live Pixel 10 post-reboot testing only, not stable promotion.
+
+Credits: Pixel 9 thermal mod inspiration from nokia5700black, JohnTheFarm3r, and Rana260492 via the user-provided XDA Pixel 9 Pro XL packages/threads.
+<!-- README_PIXEL_THERMAL_V1413_TEST4_PLUS_END -->
+
 <!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_START -->
 ## Credits for Pixel Thermal 1.4.12 ZRAM work
 

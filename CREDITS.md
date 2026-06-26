@@ -1,3 +1,16 @@
+<!-- PIXEL_THERMAL_V1413_TEST4_PIXEL9_CREDITS_START -->
+## Credits for Pixel 9 thermal mod inspiration
+
+- **nokia5700black**: Pixel 9 Pro XL ThermalThrottling-mod inspiration from the user-provided XDA pre-March Pixel 9 Pro XL package/thread.
+- **JohnTheFarm3r**: Pixel 9 Pro XL thermal throttling modifier inspiration from the user-provided XDA Pixel 9 Pro XL packages/threads.
+- **Rana260492**: Pixel 9 Pro XL Android 15/16 post-March thermal throttling modifier inspiration from the user-provided XDA package/thread.
+- Pixel 10 `outdoor-g4-adapted-plus` intentionally does **not** copy the Pixel 9 5-minute polling delay, USB, charge, battery, speaker, shutdown, or emergency changes. It only uses conservative threshold inspiration.
+
+Reference threads provided by user:
+- https://xdaforums.com/t/mod-thermal-throttling-modifier-pixel-9-pro-xl.4690006/
+- https://xdaforums.com/t/mod-throttling-mod-for-march-15-16-android-9-pro-xl.4735878/
+<!-- PIXEL_THERMAL_V1413_TEST4_PIXEL9_CREDITS_END -->
+
 # Credits
 
 ## Pixel Thermal 1.4.12 ZRAM + log-cleanup release line
