@@ -669,9 +669,9 @@ Stable `v1.4.12-universal.1` promotes the verified test8 runtime result.
 <!-- PIXEL_THERMAL_V1412_STABLE_END -->
 
 <!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_START -->
-## Pixel Thermal 1.4.13-universal-test.1 outdoor-g4-adapted test
+## Pixel Thermal 1.4.13-universal-test.3 outdoor-g4-adapted test
 
-`1.4.13-universal-test.1` is a prerelease test line. Stable `update.json` remains `1.4.12-universal.1`.
+`1.4.13-universal-test.3` is a prerelease test line. Stable `update.json` remains `1.4.12-universal.1`.
 
 - Adds installer Volume-key menu for `Thermal Outdoor Profile`.
 - Default/timeout: `stock`.
@@ -682,3 +682,12 @@ Stable `v1.4.12-universal.1` promotes the verified test8 runtime result.
 - Modified sensors: `VIRTUAL-SKIN, VIRTUAL-SKIN-CPU-HIGH, VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-HINT, VIRTUAL-SKIN-SOC`.
 - Patch report: `/storage/emulated/0/Download/pixel_local__repo-helper-work/pixel-thermal-v1413-test1-outdoor-g4-adapted/outdoor_g4_adapted_patch_report.json`.
 <!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_END -->
+
+<!-- PIXEL_THERMAL_V1413_TEST3_PR70_ALLEN_VNEXT_START -->
+## Pixel Thermal 1.4.13-universal-test.3 PR70 + Allen + vNext test
+
+- Accepts PR70 ZRAM resetprop-rs boot_early model.
+- Adds Allen fix: outdoor-g4-adapted profiles for mustang Android 17 CP21/CP31 plus stable CP2A.
+- Keeps stable updateJson on 1.4.12-universal.1.
+- Credits: Harish / Codecity001, JoshuaDoes, Allen Chang.
+<!-- PIXEL_THERMAL_V1413_TEST3_PR70_ALLEN_VNEXT_END -->

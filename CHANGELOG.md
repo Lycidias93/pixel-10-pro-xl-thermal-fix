@@ -630,7 +630,7 @@ Stable promotion from verified `v1.4.12-universal-test.8`.
 <!-- PIXEL_THERMAL_V1412_STABLE_CHANGELOG_END -->
 
 <!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_CHANGELOG_START -->
-## 1.4.13-universal-test.1 - 2026-06-26
+## 1.4.13-universal-test.3 - 2026-06-26
 
 Prerelease test for optional G5 `outdoor-g4-adapted` thermal profile.
 
@@ -641,3 +641,12 @@ Prerelease test for optional G5 `outdoor-g4-adapted` thermal profile.
 - Blocks battery/USB/charging/speaker/emergency/shutdown/critical paths for first pass.
 - Keeps stable `update.json` on `1.4.12-universal.1`.
 <!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_CHANGELOG_END -->
+
+<!-- PIXEL_THERMAL_V1413_TEST3_PR70_ALLEN_VNEXT_CHANGELOG_START -->
+## 1.4.13-universal-test.3 - 2026-06-26
+
+- Accepted PR70 ZRAM resetprop-rs boot_early rework.
+- Added Allen CP31/CP21 outdoor-g4-adapted profile fix.
+- Preserved debug-gated logs and stable updateJson 1.4.12-universal.1.
+- Credits: Harish / Codecity001, JoshuaDoes, Allen Chang.
+<!-- PIXEL_THERMAL_V1413_TEST3_PR70_ALLEN_VNEXT_CHANGELOG_END -->
