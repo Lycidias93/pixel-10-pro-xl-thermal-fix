@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          python3 <<'PY' > /tmp/telegram-message.html
+          python3 <<'PY'
           import datetime as dt
           import html
           import json
@@ -157,7 +157,7 @@ jobs:
                       out.append(item)
               return out
 
-          def body_changelog(markdown, summary="", max_items=7):
+          def body_changelog(markdown, summary="", max_items=None):
               out = []
               seen = set()
               for title, lines in split_body_sections(markdown):
@@ -175,7 +175,7 @@ jobs:
                           if key and key not in seen:
                               seen.add(key)
                               out.append(item)
-                          if len(out) >= max_items:
+                          if max_items is not None and len(out) >= max_items:
                               return out
               return out
 
@@ -202,7 +202,7 @@ jobs:
               candidates.sort(key=lambda item: item[0], reverse=True)
               return candidates[0][1]
 
-          def compare_changelog(prev_tag, max_items=7):
+          def compare_changelog(prev_tag, max_items=None):
               if not prev_tag:
                   return []
               base = urllib.parse.quote(prev_tag, safe="")
@@ -226,7 +226,7 @@ jobs:
                   if lower not in seen:
                       seen.add(lower)
                       out.append(item)
-                  if len(out) >= max_items:
+                  if max_items is not None and len(out) >= max_items:
                       break
               return out
 
@@ -250,18 +250,42 @@ jobs:
           if name and name != tag:
               parts.append(f"Release: {html.escape(tag)}")
 
-          bullet_lines = "\n".join(f"• {html.escape(item)}" for item in changes[:7])
-          parts.append(f"<b>Changelog {html.escape(since)}</b>\n{bullet_lines}")
-          parts.append(f'<a href="{html.escape(url)}">Open GitHub Release</a>')
+          def split_messages(header_parts, changelog_heading, change_items, release_link, max_len=3600):
+              messages = []
+              current = "\n\n".join(header_parts + [changelog_heading])
+              for item in change_items:
+                  bullet = f"• {html.escape(item)}"
+                  candidate = current + "\n" + bullet
+                  if len(candidate) > max_len and current != "\n\n".join(header_parts + [changelog_heading]):
+                      messages.append(current)
+                      current = changelog_heading + " (continued)" + "\n" + bullet
+                  elif len(candidate) > max_len:
+                      messages.append(current)
+                      current = changelog_heading + " (continued)" + "\n" + bullet
+                  else:
+                      current = candidate
 
-          message = "\n\n".join(parts)
-          if len(message) > 3500:
-              message = message[:3400].rstrip() + "\n\n…\n\n" + f'<a href="{html.escape(url)}">Open GitHub Release</a>'
-          print(message)
+              link_block = f'<a href="{html.escape(release_link)}">Open GitHub Release</a>'
+              if len(current + "\n\n" + link_block) > max_len:
+                  messages.append(current)
+                  messages.append(link_block)
+              else:
+                  messages.append(current + "\n\n" + link_block)
+              return messages
+
+          changelog_heading = f"<b>Changelog {html.escape(since)}</b>"
+          messages = split_messages(parts, changelog_heading, changes, url)
+          for idx, message in enumerate(messages, 1):
+              with open(f"/tmp/telegram-message-{idx:03d}.html", "w", encoding="utf-8") as fh:
+                  fh.write(message)
           PY
 
-          curl -fsS --retry 3 -X POST \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "parse_mode=HTML" \
-            --data-urlencode "text@/tmp/telegram-message.html"
+          for message_file in /tmp/telegram-message-*.html; do
+            test -s "$message_file"
+            curl -fsS --retry 3 -X POST \
+              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d "chat_id=${TELEGRAM_CHAT_ID}" \
+              -d "parse_mode=HTML" \
+              --data-urlencode "text@${message_file}"
+            sleep 0.5
+          done
