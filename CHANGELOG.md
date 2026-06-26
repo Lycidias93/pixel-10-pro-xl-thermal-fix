@@ -1,3 +1,14 @@
+## 1.4.13-universal-test.13
+
+- Supersedes `1.4.13-universal-test.12`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Adds DOWN-only key detection for installer menu input.
+- Ignores key-release events and adds debounce delay to avoid double-cycling.
+- Applies the same cycle/confirm UX to Thermal profile, Debug logging, and ZRAM 100% prompts.
+- Cleans up outdoor state/source labels to test13 naming.
+- Power button is not used.
+
 ## 1.4.13-universal-test.12
 
 - Supersedes `1.4.13-universal-test.11`.

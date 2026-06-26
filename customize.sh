@@ -429,9 +429,9 @@ case "$THERMAL_OUTDOOR_PROFILE" in
       profile="$outdoor_profile"
       profile_dir="$outdoor_profile_dir"
       case "$THERMAL_OUTDOOR_PROFILE" in
-        outdoor-safe) outdoor_state_token="outdoor_safe_test9" ;;
-        outdoor-plus) outdoor_state_token="outdoor_plus_test9" ;;
-        outdoor-extended) outdoor_state_token="outdoor_extended_test9" ;;
+        outdoor-safe) outdoor_state_token="outdoor_safe_test13" ;;
+        outdoor-plus) outdoor_state_token="outdoor_plus_test13" ;;
+        outdoor-extended) outdoor_state_token="outdoor_extended_test13" ;;
       esac
       profile_state="${profile_state}_${outdoor_state_token}"
       build_state="${build_state}_${outdoor_state_token}"
@@ -548,7 +548,7 @@ active_overlay_dir=system/vendor/etc
 zram_fstab_template=tools/fstab.zram.100p
 zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
 zram_feature=optional_volume_key_menu_v1412_stable
-thermal_outdoor_feature=optional_clean_volume_cycle_menu_v1413_test12
+thermal_outdoor_feature=optional_debounced_volume_cycle_menu_v1413_test13
 thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
 thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
 

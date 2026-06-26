@@ -1,3 +1,23 @@
+## 1.4.13-universal-test.13 prerelease: debounced cycle menus
+
+Test13 supersedes Test12.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and active outdoor safe/plus/extended choices.
+
+Installer UX changes:
+
+- Uses DOWN-only key detection for Volume Up / Volume Down.
+- Ignores key-release events.
+- Adds a short debounce delay after each keypress.
+- Uses the same cycle/confirm model for all interactive prompts:
+  - Thermal Throttle Fix Profile
+  - Pixel Thermal Debug Logging
+  - Optional ZRAM 100% Profile
+- Volume Up cycles through all options.
+- Volume Down confirms the selected option.
+- Timeout confirms the selected option.
+- Power button is not used.
+
 ## 1.4.13-universal-test.12 prerelease: clean Thermal Throttle Fix profile menu
 
 Test12 supersedes Test11.

@@ -14,6 +14,12 @@ msg() {
   [ "$LOG" = "/dev/null" ] || echo "$*" >> "$LOG" 2>/dev/null || true
 }
 
+cfg_get() {
+  _k="$1"
+  [ -r "$CONFIG_FILE" ] || return 0
+  grep -E "^${_k}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${_k}=//" | tr -d '\r'
+}
+
 cfg_set() {
   _k="$1"
   _v="$2"
@@ -24,14 +30,22 @@ cfg_set() {
   mv "$_tmp" "$CONFIG_FILE"
 }
 
-read_key() {
-  _key=""
-  if command -v getevent >/dev/null 2>&1; then
-    _key="$(timeout 12 getevent -qlc 1 2>/dev/null | grep -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN" | head -1 || true)"
+read_key_once() {
+  if ! command -v getevent >/dev/null 2>&1; then
+    echo timeout
+    return 0
   fi
-  case "$_key" in
-    *KEY_VOLUMEUP*) echo up ;;
-    *KEY_VOLUMEDOWN*) echo down ;;
+
+  _ev=""
+  if command -v timeout >/dev/null 2>&1; then
+    _ev="$(timeout 12 getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
+  else
+    _ev="$(getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
+  fi
+
+  case "$_ev" in
+    *KEY_VOLUMEUP*) sleep 0.45 2>/dev/null || true; echo up ;;
+    *KEY_VOLUMEDOWN*) sleep 0.45 2>/dev/null || true; echo down ;;
     *) echo timeout ;;
   esac
 }
@@ -57,6 +71,15 @@ option_at() {
   esac
 }
 
+index_for() {
+  case "$1" in
+    outdoor-safe) echo 1 ;;
+    outdoor-plus) echo 2 ;;
+    outdoor-extended) echo 3 ;;
+    *) echo 0 ;;
+  esac
+}
+
 label_for() {
   case "$1" in
     stock) echo "Stock / Factory Thermal" ;;
@@ -77,17 +100,19 @@ index_label() {
   esac
 }
 
-
-show_current_clean() {
+show_current() {
   _idx="$1"
   _profile="$(option_at "$_idx")"
   _label="$(label_for "$_profile")"
   _num="$(index_label "$_idx")"
-  msg "Selected [$_num]: $_label"
+  msg ""
+  msg "Now selected: [$_num] $_label"
+  msg "Volume Up = next | Volume Down = confirm"
 }
 
-idx=0
-choice="stock"
+existing="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+idx="$(index_for "$existing")"
+choice="$(option_at "$idx")"
 steps=0
 confirm_reason="timeout"
 
@@ -95,26 +120,25 @@ msg ""
 msg "----------------------------------------"
 msg "Thermal Throttle Fix Profile"
 msg "----------------------------------------"
-msg "All options are cycle-selectable:"
 msg "[1/4] Stock / Factory Thermal"
 msg "[2/4] Outdoor Safe Throttle Fix"
 msg "[3/4] Outdoor Plus Throttle Fix"
 msg "[4/4] Outdoor Extended Throttle Fix"
 msg ""
 msg "Volume Up   = next profile"
-msg "Volume Down = confirm shown profile"
-msg "Timeout     = confirm shown profile"
+msg "Volume Down = confirm selected profile"
+msg "Timeout     = confirm selected profile"
 msg "Power       = not used"
 msg "----------------------------------------"
-show_current_clean "$idx"
+show_current "$idx"
 
-while [ "$steps" -lt 16 ]; do
-  key="$(read_key)"
+while [ "$steps" -lt 12 ]; do
+  key="$(read_key_once)"
   case "$key" in
     up)
       idx=$(( (idx + 1) % 4 ))
       steps=$(( steps + 1 ))
-      show_current_clean "$idx"
+      show_current "$idx"
     ;;
     down)
       choice="$(option_at "$idx")"
@@ -129,7 +153,7 @@ while [ "$steps" -lt 16 ]; do
   esac
 done
 
-if [ "$steps" -ge 16 ]; then
+if [ "$steps" -ge 12 ]; then
   choice="$(option_at "$idx")"
   confirm_reason="max_steps"
 fi
@@ -154,19 +178,19 @@ case "$choice" in
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-safe
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_safe
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test12_clean_cycle
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test13_debounced_cycle
   ;;
   outdoor-plus)
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-plus
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_plus
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test12_clean_cycle
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test13_debounced_cycle
   ;;
   outdoor-extended)
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-extended
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_extended
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable_extended
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test12_clean_cycle
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test13_debounced_cycle
   ;;
   *)
     cfg_set THERMAL_OUTDOOR_PROFILE stock
