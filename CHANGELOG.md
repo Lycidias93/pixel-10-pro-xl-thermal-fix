@@ -1,3 +1,15 @@
+## 1.4.13-universal-test.17
+
+- Supersedes `1.4.13-universal-test.16`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Adds remembered settings at the start of install.
+- Adds Safety Level Normal/Strict.
+- Adds a short conflict scan for foreign thermal overlays, polling drift, and pTune presence.
+- Adds Polling Fix selection: Mod values or Stock values.
+- Adds pTune Override ON/OFF selection before the pTune guard is evaluated.
+- Adds shared compact cycle menu helper used by installer menus.
+- Stores long details in config/install-state instead of printing long paths in the installer.
+
 ## 1.4.13-universal-test.16
 
 - Supersedes `1.4.13-universal-test.15`.

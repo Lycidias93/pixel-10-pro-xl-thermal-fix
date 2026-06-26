@@ -1,3 +1,21 @@
+## 1.4.13-universal-test.17 prerelease: full installer options menu
+
+Test17 supersedes Test16.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and compact 30 second cycle menus.
+
+Installer UX and safety changes:
+
+- Adds a remembered settings prompt at the start of install.
+- Adds Safety Level: Normal or Strict.
+- Adds a short conflict scan for foreign thermal overlays, polling drift, and pTune presence.
+- Adds Polling Fix selection: Mod values or Stock values.
+- Adds pTune Override selection: ON or OFF before the pTune guard runs.
+- Keeps Thermal Profile selection: Stock, Outdoor Safe, Outdoor Plus, Outdoor Extended.
+- Keeps Debug Logging and ZRAM 100% cycle menus.
+- Adds a shared compact volume-cycle menu helper.
+- Keeps Volume Up to cycle, Volume Down to select, 30 second timeout to keep shown option, and no Power button usage.
+
 ## 1.4.13-universal-test.16 prerelease: faster installer key response
 
 Test16 supersedes Test15.
