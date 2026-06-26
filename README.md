@@ -1,3 +1,14 @@
+## 1.4.13-universal-test.10 prerelease: volume-only outdoor selection
+
+Test10 supersedes Test9.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and active outdoor safe/plus/extended choices, but removes Power button use from the outdoor installer menu.
+
+Outdoor selection is now volume-key-only:
+
+- Volume Up / Volume Down / Timeout only
+- No Power button selection path
+
 ## 1.4.13-universal-test.9 prerelease: full A17 profile matrix
 
 Test9 generates a complete Android 17 Pixel 10 profile matrix for `frankel`, `blazer`, `mustang`, and `rango` across CP2A, CP21, and CP31.

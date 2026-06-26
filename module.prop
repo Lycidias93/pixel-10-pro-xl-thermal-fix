@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=1.4.13-universal-test.9
-versionCode=1015309
+version=1.4.13-universal-test.10
+versionCode=1015310
 author=Lycidias93, based on marx161
-description=Pixel 10 Android 17 thermal and memory control; full A17 device/build profile matrix, active outdoor safe/plus/extended profiles, ZRAM 100p resetprop-rs boot_early, pTune guard, and boot-preserved profile switching. Stable channel stays 1.4.12
+description=Pixel 10 Android 17 thermal and memory control; full A17 device/build profile matrix, volume-only active outdoor safe/plus/extended profiles, ZRAM 100p resetprop-rs boot_early, pTune guard, and boot-preserved profile switching. Stable channel stays 1.4.12
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

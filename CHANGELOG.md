@@ -1,3 +1,12 @@
+## 1.4.13-universal-test.10
+
+- Supersedes `1.4.13-universal-test.9`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Changes the outdoor installer menu to volume-key-only selection.
+- Removes Power button use from outdoor profile selection.
+- Keeps factory JSON shape preservation and VIRTUAL-SKIN / VIRTUAL-SKIN-HINT-only outdoor threshold policy unchanged.
+
 ## 1.4.13-universal-test.9
 
 - Adds full Android 17 Pixel 10 device/build profile matrix for `frankel`, `blazer`, `mustang`, and `rango` across CP2A, CP21, and CP31 factory vendor sources.

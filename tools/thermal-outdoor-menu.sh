@@ -20,19 +20,18 @@ cfg_set() {
   _tmp="${CONFIG_FILE}.tmp.$$"
   touch "$CONFIG_FILE" 2>/dev/null || true
   grep -v "^${_k}=" "$CONFIG_FILE" 2>/dev/null > "$_tmp" || true
-  printf "%s=%s\n" "$_k" "$_v" >> "$_tmp"
+  printf "%s=%s\\n" "$_k" "$_v" >> "$_tmp"
   mv "$_tmp" "$CONFIG_FILE"
 }
 
 read_key() {
   _key=""
   if command -v getevent >/dev/null 2>&1; then
-    _key="$(timeout 10 getevent -qlc 1 2>/dev/null | grep -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN|KEY_POWER" | head -1 || true)"
+    _key="$(timeout 10 getevent -qlc 1 2>/dev/null | grep -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN" | head -1 || true)"
   fi
   case "$_key" in
     *KEY_VOLUMEUP*) echo up ;;
     *KEY_VOLUMEDOWN*) echo down ;;
-    *KEY_POWER*) echo power ;;
     *) echo timeout ;;
   esac
 }
@@ -52,28 +51,41 @@ choice="stock"
 
 msg "----------------------------------------"
 msg "Outdoor profile"
-msg "Volume Up: outdoor-safe"
+msg "Volume Up: enable outdoor"
 msg "Volume Down: stock/default"
-msg "Power/Timeout: plus/extended menu"
+msg "Timeout: stock/default"
 msg "----------------------------------------"
 
 case "$(read_key)" in
-  up) choice="outdoor-safe" ;;
-  down|timeout) choice="stock" ;;
-  power) choice="stock_then_more" ;;
+  up) choice="outdoor-enabled" ;;
+  *) choice="stock" ;;
 esac
 
-if [ "$choice" = "stock_then_more" ]; then
+if [ "$choice" = "outdoor-enabled" ]; then
   msg "----------------------------------------"
-  msg "Stronger outdoor profile"
-  msg "Volume Up: outdoor-plus"
-  msg "Power: outdoor-extended"
-  msg "Volume Down/Timeout: stock/default"
+  msg "Outdoor level"
+  msg "Volume Up: outdoor-safe"
+  msg "Volume Down: stronger profiles"
+  msg "Timeout: outdoor-safe"
   msg "----------------------------------------"
+
   case "$(read_key)" in
-    up) choice="outdoor-plus" ;;
-    power) choice="outdoor-extended" ;;
-    *) choice="stock" ;;
+    down) choice="outdoor-stronger" ;;
+    *) choice="outdoor-safe" ;;
+  esac
+fi
+
+if [ "$choice" = "outdoor-stronger" ]; then
+  msg "----------------------------------------"
+  msg "Stronger outdoor level"
+  msg "Volume Up: outdoor-plus"
+  msg "Volume Down: outdoor-extended"
+  msg "Timeout: outdoor-plus"
+  msg "----------------------------------------"
+
+  case "$(read_key)" in
+    down) choice="outdoor-extended" ;;
+    *) choice="outdoor-plus" ;;
   esac
 fi
 
@@ -87,21 +99,21 @@ case "$choice" in
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-safe
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_safe
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test9_full_matrix
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test10_full_matrix_volume_only
     msg "selected: outdoor-safe"
   ;;
   outdoor-plus)
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-plus
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_plus
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test9_full_matrix
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test10_full_matrix_volume_only
     msg "selected: outdoor-plus"
   ;;
   outdoor-extended)
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-extended
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_extended
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable_extended
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test9_full_matrix
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test10_full_matrix_volume_only
     msg "selected: outdoor-extended"
   ;;
   *)
