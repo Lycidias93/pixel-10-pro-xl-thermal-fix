@@ -1,3 +1,16 @@
+## 1.4.13-universal-test.11 prerelease: cycle/confirm outdoor selection
+
+Test11 supersedes Test10.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and active outdoor safe/plus/extended choices, but replaces the previous staged outdoor menu with a clearer volume-key cycle/confirm menu.
+
+Outdoor selection:
+
+- Volume Up cycles: Stock → Safe → Plus → Extended
+- Volume Down confirms the shown option
+- Timeout selects Stock/default
+- Power button is not used
+
 ## 1.4.13-universal-test.10 prerelease: volume-only outdoor selection
 
 Test10 supersedes Test9.

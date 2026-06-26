@@ -1,3 +1,15 @@
+## 1.4.13-universal-test.11
+
+- Supersedes `1.4.13-universal-test.10`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Replaces the staged outdoor menu with a cycle/confirm menu.
+- Volume Up cycles Stock → Safe → Plus → Extended.
+- Volume Down confirms the shown option.
+- Timeout selects Stock/default.
+- Power button is not used.
+- Cleans up installer labels from older Thermal Polling/Test9 wording.
+
 ## 1.4.13-universal-test.10
 
 - Supersedes `1.4.13-universal-test.9`.
