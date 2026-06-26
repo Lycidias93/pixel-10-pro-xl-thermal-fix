@@ -27,7 +27,7 @@ cfg_set() {
 read_key() {
   _key=""
   if command -v getevent >/dev/null 2>&1; then
-    _key="$(timeout 10 getevent -qlc 1 2>/dev/null | grep -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN" | head -1 || true)"
+    _key="$(timeout 12 getevent -qlc 1 2>/dev/null | grep -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN" | head -1 || true)"
   fi
   case "$_key" in
     *KEY_VOLUMEUP*) echo up ;;
@@ -59,102 +59,133 @@ option_at() {
 
 label_for() {
   case "$1" in
-    stock) echo "Stock / default" ;;
-    outdoor-safe) echo "Outdoor Safe" ;;
-    outdoor-plus) echo "Outdoor Plus" ;;
-    outdoor-extended) echo "Outdoor Extended" ;;
-    *) echo "Stock / default" ;;
+    stock) echo "Stock / Factory Thermal" ;;
+    outdoor-safe) echo "Outdoor Safe Throttle Fix" ;;
+    outdoor-plus) echo "Outdoor Plus Throttle Fix" ;;
+    outdoor-extended) echo "Outdoor Extended Throttle Fix" ;;
+    *) echo "Stock / Factory Thermal" ;;
   esac
+}
+
+index_label() {
+  case "$1" in
+    0) echo "1/4" ;;
+    1) echo "2/4" ;;
+    2) echo "3/4" ;;
+    3) echo "4/4" ;;
+    *) echo "1/4" ;;
+  esac
+}
+
+
+show_current_clean() {
+  _idx="$1"
+  _profile="$(option_at "$_idx")"
+  _label="$(label_for "$_profile")"
+  _num="$(index_label "$_idx")"
+  msg "Selected [$_num]: $_label"
 }
 
 idx=0
 choice="stock"
-confirmed=0
 steps=0
+confirm_reason="timeout"
 
+msg ""
 msg "----------------------------------------"
-msg "Outdoor profile selection"
-msg "Volume Up: next option"
-msg "Volume Down: confirm shown option"
-msg "Timeout: Stock / default"
-msg "No Power button is used"
+msg "Thermal Throttle Fix Profile"
 msg "----------------------------------------"
+msg "All options are cycle-selectable:"
+msg "[1/4] Stock / Factory Thermal"
+msg "[2/4] Outdoor Safe Throttle Fix"
+msg "[3/4] Outdoor Plus Throttle Fix"
+msg "[4/4] Outdoor Extended Throttle Fix"
+msg ""
+msg "Volume Up   = next profile"
+msg "Volume Down = confirm shown profile"
+msg "Timeout     = confirm shown profile"
+msg "Power       = not used"
+msg "----------------------------------------"
+show_current_clean "$idx"
 
-while [ "$steps" -lt 8 ]; do
-  current="$(option_at "$idx")"
-  current_label="$(label_for "$current")"
-
-  msg "Current: $current_label"
-  msg "Volume Up = next | Volume Down = confirm"
-
+while [ "$steps" -lt 16 ]; do
   key="$(read_key)"
   case "$key" in
     up)
       idx=$(( (idx + 1) % 4 ))
       steps=$(( steps + 1 ))
+      show_current_clean "$idx"
     ;;
     down)
-      choice="$current"
-      confirmed=1
+      choice="$(option_at "$idx")"
+      confirm_reason="volume_down"
       break
     ;;
-    *)
-      choice="stock"
-      confirmed=0
+    timeout)
+      choice="$(option_at "$idx")"
+      confirm_reason="timeout"
       break
     ;;
   esac
 done
 
-if [ "$steps" -ge 8 ] && [ "$confirmed" -ne 1 ]; then
-  choice="stock"
+if [ "$steps" -ge 16 ]; then
+  choice="$(option_at "$idx")"
+  confirm_reason="max_steps"
 fi
 
 if ! variant_exists "$choice"; then
-  msg "! selected outdoor variant missing: $choice"
+  msg ""
+  msg "! Selected profile files are missing: $choice"
+  msg "! Falling back to Stock / Factory Thermal"
   choice="stock"
+  confirm_reason="missing_profile_fallback"
 fi
+
+choice_label="$(label_for "$choice")"
+
+msg ""
+msg "Confirmed Thermal Throttle Fix Profile:"
+msg "$choice_label"
+msg "----------------------------------------"
 
 case "$choice" in
   outdoor-safe)
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-safe
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_safe
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test11_full_matrix_volume_cycle
-    msg "confirmed: Outdoor Safe"
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test12_clean_cycle
   ;;
   outdoor-plus)
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-plus
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_plus
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test11_full_matrix_volume_cycle
-    msg "confirmed: Outdoor Plus"
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test12_clean_cycle
   ;;
   outdoor-extended)
     cfg_set THERMAL_OUTDOOR_PROFILE outdoor-extended
     cfg_set THERMAL_OUTDOOR_TARGET outdoor_extended
     cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable_extended
-    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test11_full_matrix_volume_cycle
-    msg "confirmed: Outdoor Extended"
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE test12_clean_cycle
   ;;
   *)
     cfg_set THERMAL_OUTDOOR_PROFILE stock
     cfg_set THERMAL_OUTDOOR_TARGET stock
-    cfg_set THERMAL_OUTDOOR_RISK_ACK disabled_by_user_or_timeout
+    cfg_set THERMAL_OUTDOOR_RISK_ACK disabled_or_stock_selected
     cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE stock
-    msg "confirmed: Stock / default"
   ;;
 esac
 
 if [ "$LOG" != "/dev/null" ]; then
   {
     echo "choice=$choice"
-    echo "confirmed=$confirmed"
+    echo "choice_label=$choice_label"
+    echo "confirm_reason=$confirm_reason"
     echo "steps=$steps"
     echo
     echo "== after =="
     grep -E "^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_PROFILE_SOURCE|THERMAL_OUTDOOR_TARGET)=" "$CONFIG_FILE" 2>/dev/null || true
-    echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_DONE choice=$choice confirmed=$confirmed steps=$steps"
+    echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_DONE choice=$choice confirm_reason=$confirm_reason steps=$steps"
   } >> "$LOG" 2>&1 || true
 fi
 

@@ -1,3 +1,16 @@
+## 1.4.13-universal-test.12
+
+- Supersedes `1.4.13-universal-test.11`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Replaces the outdoor menu with a cleaner Thermal Throttle Fix profile selector.
+- Shows all four options up front.
+- Volume Up cycles through Stock, Safe, Plus, and Extended.
+- Volume Down confirms the shown option.
+- Timeout confirms the shown option.
+- Power button is not used.
+- Cleans up profile naming and installer labels.
+
 ## 1.4.13-universal-test.11
 
 - Supersedes `1.4.13-universal-test.10`.

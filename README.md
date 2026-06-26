@@ -1,3 +1,24 @@
+## 1.4.13-universal-test.12 prerelease: clean Thermal Throttle Fix profile menu
+
+Test12 supersedes Test11.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and active outdoor safe/plus/extended choices, but replaces the installer UX with a cleaner Thermal Throttle Fix profile selector.
+
+Selection model:
+
+- All options are shown up front.
+- Volume Up cycles through every option.
+- Volume Down confirms the shown option.
+- Timeout confirms the shown option.
+- Power button is not used.
+
+Profiles:
+
+- Stock / Factory Thermal
+- Outdoor Safe Throttle Fix
+- Outdoor Plus Throttle Fix
+- Outdoor Extended Throttle Fix
+
 ## 1.4.13-universal-test.11 prerelease: cycle/confirm outdoor selection
 
 Test11 supersedes Test10.

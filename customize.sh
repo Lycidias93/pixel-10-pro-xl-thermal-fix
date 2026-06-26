@@ -22,7 +22,7 @@ A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3
 
 ui_print "----------------------------------------"
 ui_print "  Pixel 10 Thermal & Memory Control"
-ui_print "  A17 full profile matrix installer"
+ui_print "  A17 Thermal Throttle Fix profile installer"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
 ui_print "Prerelease test; stable updateJson remains 1.4.12-universal.1"
@@ -406,7 +406,7 @@ if command -v profile_matrix_base >/dev/null 2>&1; then
   if [ -n "$matrix_profile" ] && [ -s "$MODPATH/profiles/$matrix_profile/system/vendor/etc/thermal_info_config_throttling.json" ]; then
     profile="$matrix_profile"
     profile_dir="$MODPATH/profiles/$profile/system/vendor/etc"
-    ui_print "- A17 profile matrix: $profile"
+    ui_print "- A17 device/build profile: $profile"
   fi
 fi
 
@@ -548,7 +548,7 @@ active_overlay_dir=system/vendor/etc
 zram_fstab_template=tools/fstab.zram.100p
 zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
 zram_feature=optional_volume_key_menu_v1412_stable
-thermal_outdoor_feature=optional_volume_cycle_menu_v1413_test11
+thermal_outdoor_feature=optional_clean_volume_cycle_menu_v1413_test12
 thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
 thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
 
