@@ -1,3 +1,18 @@
+## 1.4.13-universal-test.16 prerelease: faster installer key response
+
+Test16 supersedes Test15.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and compact 30 second cycle menus.
+
+Installer UX changes:
+
+- Keeps permissive Volume Up/Down event matching for Magisk/getevent compatibility.
+- Reduces debounce from 1.20s to 0.45s.
+- Removes the extra pre-read sleep from menu input handling.
+- Keeps Volume Up to cycle and Volume Down to select.
+- Keeps Timeout to keep/select the shown option.
+- Power button is not used.
+
 ## 1.4.13-universal-test.15 prerelease: key detection compatibility fix
 
 Test15 supersedes Test14.

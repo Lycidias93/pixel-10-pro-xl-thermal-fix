@@ -6,7 +6,7 @@ BASE_PROFILE="${BASE_PROFILE:-}"
 CONFIG_FILE="${CONFIG_FILE:-/data/adb/pixel-10-pro-xl-thermal-fix/config.env}"
 LOG="${LOG:-/dev/null}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-30}"
-DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-1.20}"
+DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-0.45}"
 
 mkdir -p "$(dirname "$CONFIG_FILE")" 2>/dev/null || true
 mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
@@ -35,8 +35,7 @@ cfg_set() {
 read_key_once() {
   # Magisk/getevent compatibility:
   # Accept any Volume Up/Down event, because DOWN-only formatting varies.
-  # Sleep before and after reading to avoid counting key release as a second press.
-  sleep 0.25 2>/dev/null || true
+  # Keep debounce short enough for responsive Magisk installer UX.
 
   if ! command -v getevent >/dev/null 2>&1; then
     echo timeout

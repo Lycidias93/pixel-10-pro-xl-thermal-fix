@@ -1,3 +1,13 @@
+## 1.4.13-universal-test.16
+
+- Supersedes `1.4.13-universal-test.15`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps compact 30s cycle menus for Thermal, Debug, and ZRAM.
+- Keeps permissive Volume Up/Down event matching for Magisk/getevent compatibility.
+- Reduces debounce from 1.20s to 0.45s to make selection feel responsive again.
+- Removes the extra pre-read sleep from menu input handling.
+- Power button is not used.
+
 ## 1.4.13-universal-test.15
 
 - Supersedes `1.4.13-universal-test.14`.

@@ -8,7 +8,7 @@ MODE="${1:-action}"
 DOWNLOAD="/sdcard/Download"
 ALT_DOWNLOAD="/storage/emulated/0/Download"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-30}"
-DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-1.20}"
+DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-0.45}"
 
 choose_download() {
   for d in "$DOWNLOAD" "$ALT_DOWNLOAD"; do
@@ -46,8 +46,7 @@ cfg_get() {
 read_key_once() {
   # Magisk/getevent compatibility:
   # Accept any Volume Up/Down event, because DOWN-only formatting varies.
-  # Sleep before and after reading to avoid counting key release as a second press.
-  sleep 0.25 2>/dev/null || true
+  # Keep debounce short enough for responsive Magisk installer UX.
 
   if ! command -v getevent >/dev/null 2>&1; then
     echo timeout
