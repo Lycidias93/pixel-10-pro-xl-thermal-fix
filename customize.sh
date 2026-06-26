@@ -400,6 +400,16 @@ if [ ! -s "$profile_dir/thermal_info_config_throttling.json" ]; then
 fi
 
 # BEGIN PIXEL_THERMAL_OUTDOOR_PROFILE_MENU_V1413_TEST1
+[ -s "$MODPATH/tools/profile-matrix-test9.sh" ] && . "$MODPATH/tools/profile-matrix-test9.sh"
+if command -v profile_matrix_base >/dev/null 2>&1; then
+  matrix_profile="$(profile_matrix_base "$device" "$build_id" 2>/dev/null || true)"
+  if [ -n "$matrix_profile" ] && [ -s "$MODPATH/profiles/$matrix_profile/system/vendor/etc/thermal_info_config_throttling.json" ]; then
+    profile="$matrix_profile"
+    profile_dir="$MODPATH/profiles/$profile/system/vendor/etc"
+    ui_print "- Test9 A17 profile matrix: $profile"
+  fi
+fi
+
 base_profile="$profile"
 if [ -s "$MODPATH/tools/thermal-outdoor-menu.sh" ]; then
   chmod 0755 "$MODPATH/tools/thermal-outdoor-menu.sh" 2>/dev/null || true
@@ -407,28 +417,34 @@ if [ -s "$MODPATH/tools/thermal-outdoor-menu.sh" ]; then
 else
   ui_print "! Thermal outdoor menu helper missing; keeping stock profile"
 fi
+
 THERMAL_OUTDOOR_PROFILE="$(config_get THERMAL_OUTDOOR_PROFILE)"
 [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE="stock"
-if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ] || [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted-plus" ]; then
-  outdoor_profile="${base_profile}-${THERMAL_OUTDOOR_PROFILE}"
-  outdoor_profile_dir="$MODPATH/profiles/$outdoor_profile/system/vendor/etc"
-  if [ -s "$outdoor_profile_dir/thermal_info_config_throttling.json" ]; then
-    profile="$outdoor_profile"
-    profile_dir="$outdoor_profile_dir"
-    case "$THERMAL_OUTDOOR_PROFILE" in
-      outdoor-g4-adapted-plus) outdoor_state_token="outdoor_g4_adapted_plus_test" ;;
-      *) outdoor_state_token="outdoor_g4_adapted_test" ;;
-    esac
-    profile_state="${profile_state}_${outdoor_state_token}"
-    build_state="${build_state}_${outdoor_state_token}"
-    ui_print "- Thermal Outdoor Profile: $THERMAL_OUTDOOR_PROFILE"
-  else
-    ui_print "! Thermal Outdoor Profile missing for $outdoor_profile; keeping stock"
-    THERMAL_OUTDOOR_PROFILE="stock_missing_profile"
-  fi
-else
-  ui_print "- Thermal Outdoor Profile: stock"
-fi
+
+case "$THERMAL_OUTDOOR_PROFILE" in
+  outdoor-safe|outdoor-plus|outdoor-extended)
+    outdoor_profile="${base_profile}-${THERMAL_OUTDOOR_PROFILE}"
+    outdoor_profile_dir="$MODPATH/profiles/$outdoor_profile/system/vendor/etc"
+    if [ -s "$outdoor_profile_dir/thermal_info_config_throttling.json" ] && [ -s "$outdoor_profile_dir/thermal_info_config.json" ] && [ -s "$outdoor_profile_dir/thermal_info_config_charge.json" ]; then
+      profile="$outdoor_profile"
+      profile_dir="$outdoor_profile_dir"
+      case "$THERMAL_OUTDOOR_PROFILE" in
+        outdoor-safe) outdoor_state_token="outdoor_safe_test9" ;;
+        outdoor-plus) outdoor_state_token="outdoor_plus_test9" ;;
+        outdoor-extended) outdoor_state_token="outdoor_extended_test9" ;;
+      esac
+      profile_state="${profile_state}_${outdoor_state_token}"
+      build_state="${build_state}_${outdoor_state_token}"
+      ui_print "- Thermal Outdoor Profile: $THERMAL_OUTDOOR_PROFILE"
+    else
+      ui_print "! Thermal Outdoor Profile missing for $outdoor_profile; keeping stock"
+      THERMAL_OUTDOOR_PROFILE="stock_missing_profile"
+    fi
+  ;;
+  *)
+    ui_print "- Thermal Outdoor Profile: stock"
+  ;;
+esac
 # END PIXEL_THERMAL_OUTDOOR_PROFILE_MENU_V1413_TEST1
 
 active_dir="$MODPATH/system/vendor/etc"

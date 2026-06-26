@@ -82,25 +82,36 @@ if [ -n "$GUARD" ] || [ -z "$PROFILE" ]; then
   exit 0
 fi
 
-# Preserve optional thermal outdoor profile selected during install.
-# The base auto switch still decides device/build safety first, then appends
-# the explicitly selected outdoor suffix only when that profile exists.
+# Test9 profile matrix chooses exact device/build base before preserving outdoor variant.
+[ -s "$MODDIR/tools/profile-matrix-test9.sh" ] && . "$MODDIR/tools/profile-matrix-test9.sh"
+if command -v profile_matrix_base >/dev/null 2>&1; then
+  MATRIX_PROFILE="$(profile_matrix_base "$DEVICE" "$BUILD_ID" 2>/dev/null || true)"
+  if [ -n "$MATRIX_PROFILE" ] && [ -s "$MODDIR/profiles/$MATRIX_PROFILE/system/vendor/etc/thermal_info_config_throttling.json" ]; then
+    PROFILE="$MATRIX_PROFILE"
+    log "AUTO_SWITCH_INFO reason=test9_matrix_profile profile=$PROFILE"
+  fi
+fi
+
 BASE_PROFILE="$PROFILE"
 THERMAL_OUTDOOR_PROFILE="$(getcfg THERMAL_OUTDOOR_PROFILE)"
 case "$THERMAL_OUTDOOR_PROFILE" in
-  outdoor-g4-adapted|outdoor-g4-adapted-plus)
+  outdoor-safe|outdoor-plus|outdoor-extended)
     OUTDOOR_PROFILE="${BASE_PROFILE}-${THERMAL_OUTDOOR_PROFILE}"
     OUTDOOR_PROFILE_DIR="$MODDIR/profiles/$OUTDOOR_PROFILE/system/vendor/etc"
     if [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config_throttling.json" ] && [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config.json" ] && [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config_charge.json" ]; then
       PROFILE="$OUTDOOR_PROFILE"
       case "$THERMAL_OUTDOOR_PROFILE" in
-        outdoor-g4-adapted-plus)
-          PROFILE_STATE="${PROFILE_STATE}_outdoor_g4_adapted_plus_test"
-          BUILD_STATE="${BUILD_STATE}_outdoor_g4_adapted_plus_test"
+        outdoor-safe)
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_safe_test9"
+          BUILD_STATE="${BUILD_STATE}_outdoor_safe_test9"
         ;;
-        *)
-          PROFILE_STATE="${PROFILE_STATE}_outdoor_g4_adapted_test"
-          BUILD_STATE="${BUILD_STATE}_outdoor_g4_adapted_test"
+        outdoor-plus)
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_plus_test9"
+          BUILD_STATE="${BUILD_STATE}_outdoor_plus_test9"
+        ;;
+        outdoor-extended)
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_extended_test9"
+          BUILD_STATE="${BUILD_STATE}_outdoor_extended_test9"
         ;;
       esac
     else

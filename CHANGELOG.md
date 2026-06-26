@@ -1,3 +1,13 @@
+## 1.4.13-universal-test.9
+
+- Adds full Android 17 Pixel 10 device/build profile matrix for `frankel`, `blazer`, `mustang`, and `rango` across CP2A, CP21, and CP31 factory vendor sources.
+- Generates base, outdoor-safe, outdoor-plus, and outdoor-extended profiles for every device/build pair.
+- Offers Safe, Plus, and Extended as active install-time choices.
+- Preserves vendor JSON shape: sensor order, threshold array length, hysteresis array length, and NAN positions.
+- Safe/Plus/Extended only adjust `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` thresholds.
+- Keeps USB, charge, battery, speaker, shutdown, emergency, CP2A ZRAM, and resetprop-rs ZRAM paths unchanged.
+- Supersedes Test8 after external mustang CP31 bootloop report.
+
 ## 1.4.13-universal-test.6
 
 - Renames the visible Magisk module name from `Pixel 10 Thermal Polling Fix` to `Pixel 10 Thermal & Memory Control`.

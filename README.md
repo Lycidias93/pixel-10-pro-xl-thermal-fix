@@ -1,3 +1,15 @@
+## 1.4.13-universal-test.9 prerelease: full A17 profile matrix
+
+Test9 generates a complete Android 17 Pixel 10 profile matrix for `frankel`, `blazer`, `mustang`, and `rango` across CP2A, CP21, and CP31.
+
+Each device/build pair has base, outdoor-safe, outdoor-plus, and outdoor-extended profiles.
+
+Safe, Plus, and Extended are active install-time choices.
+
+The generator preserves vendor JSON shape exactly and only changes `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` threshold values for outdoor variants.
+
+This is a prerelease and must not be merged/stabilized until external runtime validation passes.
+
 ## 1.4.13-universal-test.6: module display-name refresh
 
 The visible Magisk module name is now `Pixel 10 Thermal & Memory Control`.
