@@ -1,3 +1,14 @@
+## 1.4.13-universal-test.14
+
+- Supersedes `1.4.13-universal-test.13`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Raises installer interaction timeout to 30 seconds.
+- Keeps DOWN-only key detection and debounce.
+- Reworks Thermal, Debug, and ZRAM prompts into compact narrow-screen friendly menus.
+- Shows all options once and only prints the current selection during cycling.
+- Power button is not used.
+
 ## 1.4.13-universal-test.13
 
 - Supersedes `1.4.13-universal-test.12`.

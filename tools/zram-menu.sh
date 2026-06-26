@@ -7,6 +7,8 @@ CONFIG_FILE="$CONFIG_DIR/config.env"
 MODE="${1:-action}"
 DOWNLOAD="/sdcard/Download"
 ALT_DOWNLOAD="/storage/emulated/0/Download"
+TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-30}"
+DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-0.90}"
 
 choose_download() {
   for d in "$DOWNLOAD" "$ALT_DOWNLOAD"; do
@@ -49,14 +51,14 @@ read_key_once() {
 
   ev=""
   if command -v timeout >/dev/null 2>&1; then
-    ev="$(timeout 12 getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
+    ev="$(timeout "$TIMEOUT_SECONDS" getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
   else
     ev="$(getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
   fi
 
   case "$ev" in
-    *KEY_VOLUMEUP*) sleep 0.45 2>/dev/null || true; echo up ;;
-    *KEY_VOLUMEDOWN*) sleep 0.45 2>/dev/null || true; echo down ;;
+    *KEY_VOLUMEUP*) sleep "$DEBOUNCE_SECONDS" 2>/dev/null || true; echo up ;;
+    *KEY_VOLUMEDOWN*) sleep "$DEBOUNCE_SECONDS" 2>/dev/null || true; echo down ;;
     *) echo timeout ;;
   esac
 }
@@ -75,7 +77,7 @@ enable_zram() {
       MODDIR="$MODDIR" sh "$MODDIR/tools/apply-zram-100p.sh" "$MODE" >/dev/null 2>&1 || true
     fi
   fi
-  msg "- Selected: ENABLE ZRAM 100% (Reboot recommended)"
+  msg "- Selected: ZRAM 100% enabled"
 }
 
 disable_zram() {
@@ -92,7 +94,7 @@ disable_zram() {
   cfg_set ENABLE_ZRAM_100P 0
   cfg_set ZRAM_RESTART_MMD 0
   cfg_set ZRAM_RISK_ACK disabled_by_user
-  msg "- Selected: DISABLE ZRAM 100% (Reboot recommended)"
+  msg "- Selected: ZRAM 100% disabled"
 }
 
 DL="$(choose_download)"
@@ -100,7 +102,7 @@ TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"
 TEMP_LOG="$DL/pixel_thermal_zram_menu_${TS}.txt"
 LOG="/dev/null"
 
-show_two_choice() {
+show_binary_menu() {
   title="$1"
   idx="$2"
   label0="$3"
@@ -110,38 +112,41 @@ show_two_choice() {
   msg "----------------------------------------"
   msg "$title"
   msg "----------------------------------------"
-  msg "[1/2] $label0"
-  msg "[2/2] $label1"
+  msg "1 $label0"
+  msg "2 $label1"
   msg ""
-  msg "Volume Up   = next option"
-  msg "Volume Down = confirm selected option"
-  msg "Timeout     = confirm selected option"
-  msg "Power       = not used"
+  msg "Vol+  next"
+  msg "Vol-  select"
+  msg "30s   keep shown"
+  msg "Power not used"
   msg "----------------------------------------"
-  msg ""
-
   if [ "$idx" = "1" ]; then
-    msg "Now selected: [2/2] $label1"
+    msg "Current 2/2: $label1"
   else
-    msg "Now selected: [1/2] $label0"
+    msg "Current 1/2: $label0"
   fi
-  msg "Volume Up = next | Volume Down = confirm"
 }
 
-cycle_two() {
+cycle_binary() {
   idx="$1"
   title="$2"
   label0="$3"
   label1="$4"
   steps=0
 
+  show_binary_menu "$title" "$idx" "$label0" "$label1"
+
   while [ "$steps" -lt 8 ]; do
-    show_two_choice "$title" "$idx" "$label0" "$label1"
     key="$(read_key_once)"
     case "$key" in
       up)
         if [ "$idx" = "1" ]; then idx=0; else idx=1; fi
         steps=$(( steps + 1 ))
+        if [ "$idx" = "1" ]; then
+          msg "Current 2/2: $label1"
+        else
+          msg "Current 1/2: $label0"
+        fi
       ;;
       down)
         CYCLE_IDX="$idx"
@@ -169,13 +174,13 @@ choose_debug_mode() {
   [ -z "$dbg" ] && dbg="$(cfg_get debug_mode)"
   case "$dbg" in 1) dbg_idx=1 ;; *) dbg_idx=0 ;; esac
 
-  cycle_two "$dbg_idx" "Pixel Thermal Debug Logging" "Silent install" "Verbose debug logs"
+  cycle_binary "$dbg_idx" "Debug Logging" "Silent" "Verbose"
   dbg_idx="$CYCLE_IDX"
   dbg_reason="$CYCLE_REASON"
   dbg_steps="$CYCLE_STEPS"
 
   msg ""
-  msg "Confirmed Debug Logging:"
+  msg "Confirmed:"
   if [ "$dbg_idx" = "1" ]; then
     msg "Verbose debug logs"
     DEBUG_MODE=1
@@ -192,13 +197,15 @@ choose_debug_mode() {
       echo "debug_choice=verbose"
       echo "debug_confirm_reason=$dbg_reason"
       echo "debug_steps=$dbg_steps"
+      echo "timeout_seconds=$TIMEOUT_SECONDS"
+      echo "debounce_seconds=$DEBOUNCE_SECONDS"
       echo
       echo "== before =="
       [ -r "$CONFIG_FILE" ] && grep -E '^(ENABLE_ZRAM_100P|ZRAM_RESTART_MMD|ZRAM_RISK_ACK|ZRAM_REINIT_ACK|DEBUG_MODE|debug_mode)=' "$CONFIG_FILE" || true
       echo
     } > "$LOG" 2>&1
   else
-    msg "Silent install"
+    msg "Silent"
     DEBUG_MODE=0
     cfg_set DEBUG_MODE 0
     cfg_set debug_mode 0
@@ -210,7 +217,7 @@ choose_zram_mode() {
   zram="$(cfg_get ENABLE_ZRAM_100P)"
   case "$zram" in 1) zram_idx=1 ;; *) zram_idx=0 ;; esac
 
-  cycle_two "$zram_idx" "Optional ZRAM 100% Profile" "ZRAM 100% disabled" "ZRAM 100% enabled"
+  cycle_binary "$zram_idx" "ZRAM 100%" "Disabled" "Enabled"
   zram_idx="$CYCLE_IDX"
   zram_reason="$CYCLE_REASON"
   zram_steps="$CYCLE_STEPS"
@@ -220,12 +227,14 @@ choose_zram_mode() {
       echo "zram_choice_index=$zram_idx"
       echo "zram_confirm_reason=$zram_reason"
       echo "zram_steps=$zram_steps"
+      echo "timeout_seconds=$TIMEOUT_SECONDS"
+      echo "debounce_seconds=$DEBOUNCE_SECONDS"
       echo
     } >> "$LOG" 2>&1
   fi
 
   msg ""
-  msg "Confirmed ZRAM 100% Profile:"
+  msg "Confirmed:"
   if [ "$zram_idx" = "1" ]; then
     msg "ZRAM 100% enabled"
     enable_zram

@@ -1,3 +1,21 @@
+## 1.4.13-universal-test.14 prerelease: compact 30s cycle menus
+
+Test14 supersedes Test13.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and active outdoor safe/plus/extended choices.
+
+Installer UX changes:
+
+- Increases interactive timeout to 30 seconds.
+- Keeps DOWN-only key detection and debounce.
+- Uses compact narrow-screen friendly menu text.
+- Shows all options once, then only prints the current selection while cycling.
+- Uses the same cycle/confirm model for Thermal profile, Debug logging, and ZRAM 100%.
+- Volume Up cycles through options.
+- Volume Down confirms the shown option.
+- Timeout keeps/confirms the shown option.
+- Power button is not used.
+
 ## 1.4.13-universal-test.13 prerelease: debounced cycle menus
 
 Test13 supersedes Test12.
