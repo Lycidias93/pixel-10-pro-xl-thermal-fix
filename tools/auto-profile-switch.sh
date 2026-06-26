@@ -102,16 +102,16 @@ case "$THERMAL_OUTDOOR_PROFILE" in
       PROFILE="$OUTDOOR_PROFILE"
       case "$THERMAL_OUTDOOR_PROFILE" in
         outdoor-safe)
-          PROFILE_STATE="${PROFILE_STATE}_outdoor_safe_test14"
-          BUILD_STATE="${BUILD_STATE}_outdoor_safe_test14"
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_safe_test15"
+          BUILD_STATE="${BUILD_STATE}_outdoor_safe_test15"
         ;;
         outdoor-plus)
-          PROFILE_STATE="${PROFILE_STATE}_outdoor_plus_test14"
-          BUILD_STATE="${BUILD_STATE}_outdoor_plus_test14"
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_plus_test15"
+          BUILD_STATE="${BUILD_STATE}_outdoor_plus_test15"
         ;;
         outdoor-extended)
-          PROFILE_STATE="${PROFILE_STATE}_outdoor_extended_test14"
-          BUILD_STATE="${BUILD_STATE}_outdoor_extended_test14"
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_extended_test15"
+          BUILD_STATE="${BUILD_STATE}_outdoor_extended_test15"
         ;;
       esac
     else

@@ -6,7 +6,7 @@ BASE_PROFILE="${BASE_PROFILE:-}"
 CONFIG_FILE="${CONFIG_FILE:-/data/adb/pixel-10-pro-xl-thermal-fix/config.env}"
 LOG="${LOG:-/dev/null}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-30}"
-DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-0.90}"
+DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-1.20}"
 
 mkdir -p "$(dirname "$CONFIG_FILE")" 2>/dev/null || true
 mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
@@ -33,6 +33,11 @@ cfg_set() {
 }
 
 read_key_once() {
+  # Magisk/getevent compatibility:
+  # Accept any Volume Up/Down event, because DOWN-only formatting varies.
+  # Sleep before and after reading to avoid counting key release as a second press.
+  sleep 0.25 2>/dev/null || true
+
   if ! command -v getevent >/dev/null 2>&1; then
     echo timeout
     return 0
@@ -40,9 +45,9 @@ read_key_once() {
 
   _ev=""
   if command -v timeout >/dev/null 2>&1; then
-    _ev="$(timeout "$TIMEOUT_SECONDS" getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
+    _ev="$(timeout "$TIMEOUT_SECONDS" sh -c 'getevent -ql 2>/dev/null | grep -m 1 -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN"' 2>/dev/null || true)"
   else
-    _ev="$(getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
+    _ev="$(getevent -ql 2>/dev/null | grep -m 1 -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN" 2>/dev/null || true)"
   fi
 
   case "$_ev" in

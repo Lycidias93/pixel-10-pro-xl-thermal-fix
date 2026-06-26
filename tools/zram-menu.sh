@@ -8,7 +8,7 @@ MODE="${1:-action}"
 DOWNLOAD="/sdcard/Download"
 ALT_DOWNLOAD="/storage/emulated/0/Download"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-30}"
-DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-0.90}"
+DEBOUNCE_SECONDS="${DEBOUNCE_SECONDS:-1.20}"
 
 choose_download() {
   for d in "$DOWNLOAD" "$ALT_DOWNLOAD"; do
@@ -44,19 +44,24 @@ cfg_get() {
 }
 
 read_key_once() {
+  # Magisk/getevent compatibility:
+  # Accept any Volume Up/Down event, because DOWN-only formatting varies.
+  # Sleep before and after reading to avoid counting key release as a second press.
+  sleep 0.25 2>/dev/null || true
+
   if ! command -v getevent >/dev/null 2>&1; then
     echo timeout
     return 0
   fi
 
-  ev=""
+  _ev=""
   if command -v timeout >/dev/null 2>&1; then
-    ev="$(timeout "$TIMEOUT_SECONDS" getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
+    _ev="$(timeout "$TIMEOUT_SECONDS" sh -c 'getevent -ql 2>/dev/null | grep -m 1 -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN"' 2>/dev/null || true)"
   else
-    ev="$(getevent -ql 2>/dev/null | awk '/KEY_VOLUMEUP|KEY_VOLUMEDOWN/ && ($0 ~ / DOWN$/ || $0 ~ / 00000001$/) { print; exit }' 2>/dev/null || true)"
+    _ev="$(getevent -ql 2>/dev/null | grep -m 1 -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN" 2>/dev/null || true)"
   fi
 
-  case "$ev" in
+  case "$_ev" in
     *KEY_VOLUMEUP*) sleep "$DEBOUNCE_SECONDS" 2>/dev/null || true; echo up ;;
     *KEY_VOLUMEDOWN*) sleep "$DEBOUNCE_SECONDS" 2>/dev/null || true; echo down ;;
     *) echo timeout ;;

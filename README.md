@@ -1,3 +1,19 @@
+## 1.4.13-universal-test.15 prerelease: key detection compatibility fix
+
+Test15 supersedes Test14.
+
+It keeps the full Android 17 Pixel 10 device/build profile matrix and compact 30s cycle menus.
+
+Installer UX changes:
+
+- Keeps the 30 second interaction timeout.
+- Keeps compact narrow-screen friendly menus.
+- Keeps Volume Up to cycle and Volume Down to select.
+- Keeps Timeout to keep/select the shown option.
+- Power button is not used.
+- Changes key input detection from strict DOWN-only matching to permissive Volume Up/Down matching for Magisk/getevent compatibility.
+- Adds a longer 1.20s debounce delay to prevent one physical keypress being counted twice.
+
 ## 1.4.13-universal-test.14 prerelease: compact 30s cycle menus
 
 Test14 supersedes Test13.
