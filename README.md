@@ -1,3 +1,11 @@
+## 1.4.13-universal-test.7 prerelease: CP31 outdoor safety guard
+
+`mustang` CP31 users are forced to the stock/default thermal profile for now.
+
+Reason: an external mustang CP31 report confirmed that default boots fine and vendor matches fine, while selecting the outdoor profile leads to bootloop.
+
+CP2A outdoor-plus behavior is unchanged. ZRAM behavior is unchanged.
+
 ## 1.4.13-universal-test.6: module display-name refresh
 
 The visible Magisk module name is now `Pixel 10 Thermal & Memory Control`.

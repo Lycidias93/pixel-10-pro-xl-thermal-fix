@@ -16,6 +16,23 @@ if [ "$dbg" = "1" ]; then
   LOG="$DL/pixel_thermal_outdoor_menu_${TS}.txt"
   { echo "debug_type=pixel_thermal_outdoor_menu"; echo "time=$(date -Is 2>/dev/null || date)"; echo "mode=$MODE"; echo "module=$MODDIR"; echo "config=$CONFIG_FILE"; echo "base_profile=${BASE_PROFILE:-unset}"; echo; echo "== before =="; [ -r "$CONFIG_FILE" ] && grep -E '^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_TARGET|THERMAL_OUTDOOR_PROFILE_SOURCE|DEBUG_MODE|debug_mode)=' "$CONFIG_FILE" || true; echo; } > "$LOG" 2>&1
 fi
+case "${BASE_PROFILE:-}" in
+  mustang-android17-cp31*)
+    cfg_set THERMAL_OUTDOOR_PROFILE stock
+    cfg_set THERMAL_OUTDOOR_RISK_ACK disabled_by_cp31_bootloop_guard
+    cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE cp31_outdoor_bootloop_guard_test7
+    cfg_set THERMAL_OUTDOOR_TARGET stock
+    msg "----------------------------------------"
+    msg "  Optional Thermal Outdoor Profile"
+    msg "  CP31 outdoor profile disabled by safety guard"
+    msg "  Reason: external mustang CP31 bootloop report"
+    msg "  Keeping STOCK thermal profile"
+    msg "----------------------------------------"
+    if [ "$LOG" != "/dev/null" ]; then { echo "choice=blocked_cp31"; echo; echo "== after =="; [ -r "$CONFIG_FILE" ] && grep -E "^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_PROFILE_SOURCE|THERMAL_OUTDOOR_TARGET|DEBUG_MODE|debug_mode)=" "$CONFIG_FILE" || true; echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_DONE choice=blocked_cp31"; } >> "$LOG" 2>&1; fi
+    exit 0
+  ;;
+esac
+
 msg "----------------------------------------"
 msg "  Optional Thermal Outdoor Profile"
 msg "  Press [Volume Up] to ENABLE outdoor-g4-adapted-plus"

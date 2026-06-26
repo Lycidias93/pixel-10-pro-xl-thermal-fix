@@ -1,3 +1,10 @@
+## 1.4.13-universal-test.7
+
+- Blocks `outdoor-g4-adapted` and `outdoor-g4-adapted-plus` on `mustang-android17-cp31` after an external mustang CP31 bootloop report.
+- Forces CP31 back to stock/default thermal profile even if stale `config.env` still contains an outdoor profile.
+- Keeps CP2A outdoor-plus behavior unchanged.
+- Keeps ZRAM 100p resetprop-rs boot_early path unchanged.
+
 ## 1.4.13-universal-test.6
 
 - Renames the visible Magisk module name from `Pixel 10 Thermal Polling Fix` to `Pixel 10 Thermal & Memory Control`.

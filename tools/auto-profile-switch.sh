@@ -87,6 +87,16 @@ fi
 # the explicitly selected outdoor suffix only when that profile exists.
 BASE_PROFILE="$PROFILE"
 THERMAL_OUTDOOR_PROFILE="$(getcfg THERMAL_OUTDOOR_PROFILE)"
+case "$BASE_PROFILE" in
+  mustang-android17-cp31*)
+    case "$THERMAL_OUTDOOR_PROFILE" in
+      outdoor-g4-adapted|outdoor-g4-adapted-plus)
+        log "AUTO_SWITCH_WARN reason=cp31_outdoor_disabled_by_bootloop_guard base=$BASE_PROFILE outdoor=$THERMAL_OUTDOOR_PROFILE action=keep_base"
+        THERMAL_OUTDOOR_PROFILE="stock_cp31_guard"
+      ;;
+    esac
+  ;;
+esac
 case "$THERMAL_OUTDOOR_PROFILE" in
   outdoor-g4-adapted|outdoor-g4-adapted-plus)
     OUTDOOR_PROFILE="${BASE_PROFILE}-${THERMAL_OUTDOOR_PROFILE}"

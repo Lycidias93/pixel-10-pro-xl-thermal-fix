@@ -409,6 +409,14 @@ else
 fi
 THERMAL_OUTDOOR_PROFILE="$(config_get THERMAL_OUTDOOR_PROFILE)"
 [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE="stock"
+case "$base_profile" in
+  mustang-android17-cp31*)
+    if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ] || [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted-plus" ]; then
+      ui_print "! Thermal Outdoor Profile disabled on CP31 by safety guard; keeping stock"
+      THERMAL_OUTDOOR_PROFILE="stock_cp31_guard"
+    fi
+  ;;
+esac
 if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ] || [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted-plus" ]; then
   outdoor_profile="${base_profile}-${THERMAL_OUTDOOR_PROFILE}"
   outdoor_profile_dir="$MODPATH/profiles/$outdoor_profile/system/vendor/etc"
