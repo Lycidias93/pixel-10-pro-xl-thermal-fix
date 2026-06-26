@@ -1,3 +1,7 @@
+## 1.4.13-universal-test.5 prerelease: boot-preserved outdoor plus
+
+This test build fixes the boot-time auto-profile-switch path so an explicitly selected `outdoor-g4-adapted-plus` profile remains materialized after reboot.
+
 <!-- README_PIXEL_THERMAL_V1413_TEST4_PLUS_START -->
 ## 1.4.13-universal-test.4 prerelease: outdoor-g4-adapted-plus
 

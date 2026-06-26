@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal Polling Fix
-version=1.4.13-universal-test.4
-versionCode=1015304
+version=1.4.13-universal-test.5
+versionCode=1015305
 author=Lycidias93, based on marx161
-description=Pixel 10 Android 17 thermal polling overlay; optional ZRAM 100p resetprop-rs boot_early plus Pixel 9 inspired outdoor-g4-adapted-plus test; stable channel stays 1.4.12
+description=Pixel 10 Android 17 thermal polling overlay; optional ZRAM 100p resetprop-rs boot_early plus Pixel 9 inspired outdoor-g4-adapted-plus boot-preserved test; stable channel stays 1.4.12
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

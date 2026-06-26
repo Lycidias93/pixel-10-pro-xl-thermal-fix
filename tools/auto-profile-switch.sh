@@ -82,6 +82,33 @@ if [ -n "$GUARD" ] || [ -z "$PROFILE" ]; then
   exit 0
 fi
 
+# Preserve optional thermal outdoor profile selected during install.
+# The base auto switch still decides device/build safety first, then appends
+# the explicitly selected outdoor suffix only when that profile exists.
+BASE_PROFILE="$PROFILE"
+THERMAL_OUTDOOR_PROFILE="$(getcfg THERMAL_OUTDOOR_PROFILE)"
+case "$THERMAL_OUTDOOR_PROFILE" in
+  outdoor-g4-adapted|outdoor-g4-adapted-plus)
+    OUTDOOR_PROFILE="${BASE_PROFILE}-${THERMAL_OUTDOOR_PROFILE}"
+    OUTDOOR_PROFILE_DIR="$MODDIR/profiles/$OUTDOOR_PROFILE/system/vendor/etc"
+    if [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config_throttling.json" ] && [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config.json" ] && [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config_charge.json" ]; then
+      PROFILE="$OUTDOOR_PROFILE"
+      case "$THERMAL_OUTDOOR_PROFILE" in
+        outdoor-g4-adapted-plus)
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_g4_adapted_plus_test"
+          BUILD_STATE="${BUILD_STATE}_outdoor_g4_adapted_plus_test"
+        ;;
+        *)
+          PROFILE_STATE="${PROFILE_STATE}_outdoor_g4_adapted_test"
+          BUILD_STATE="${BUILD_STATE}_outdoor_g4_adapted_test"
+        ;;
+      esac
+    else
+      log "AUTO_SWITCH_WARN reason=selected_outdoor_profile_missing base=$BASE_PROFILE outdoor=$THERMAL_OUTDOOR_PROFILE action=keep_base"
+    fi
+  ;;
+esac
+
 PROFILE_DIR="$MODDIR/profiles/$PROFILE/system/vendor/etc"
 ACTIVE_DIR="$MODDIR/system/vendor/etc"
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do

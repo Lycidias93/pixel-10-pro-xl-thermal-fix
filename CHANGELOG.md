@@ -1,3 +1,9 @@
+## 1.4.13-universal-test.5
+
+- Fixes boot-time auto-profile-switch so selected `outdoor-g4-adapted` and `outdoor-g4-adapted-plus` profiles are preserved after reboot.
+- Keeps Pixel 9 inspired plus profile conservative and does not copy 5-minute polling delay, USB, charge, battery, speaker, shutdown, or emergency changes.
+- Keeps PR70 ZRAM resetprop-rs boot_early path unchanged.
+
 <!-- PIXEL_THERMAL_V1413_TEST4_PLUS_START -->
 ## 1.4.13-universal-test.4 - Pixel 9 inspired outdoor plus test
 
