@@ -409,7 +409,7 @@ else
 fi
 THERMAL_OUTDOOR_PROFILE="$(config_get THERMAL_OUTDOOR_PROFILE)"
 [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE="stock"
-if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ] || [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted-plus" ]; then
+if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ] || [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted-plus" ] || [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-safe" ]; then
   outdoor_profile="${base_profile}-${THERMAL_OUTDOOR_PROFILE}"
   outdoor_profile_dir="$MODPATH/profiles/$outdoor_profile/system/vendor/etc"
   if [ -s "$outdoor_profile_dir/thermal_info_config_throttling.json" ]; then
@@ -417,6 +417,7 @@ if [ "$THERMAL_OUTDOOR_PROFILE" = "outdoor-g4-adapted" ] || [ "$THERMAL_OUTDOOR_
     profile_dir="$outdoor_profile_dir"
     case "$THERMAL_OUTDOOR_PROFILE" in
       outdoor-g4-adapted-plus) outdoor_state_token="outdoor_g4_adapted_plus_test" ;;
+      outdoor-safe) outdoor_state_token="cp31_outdoor_safe_test" ;;
       *) outdoor_state_token="outdoor_g4_adapted_test" ;;
     esac
     profile_state="${profile_state}_${outdoor_state_token}"

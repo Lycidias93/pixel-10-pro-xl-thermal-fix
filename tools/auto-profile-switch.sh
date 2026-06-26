@@ -88,7 +88,7 @@ fi
 BASE_PROFILE="$PROFILE"
 THERMAL_OUTDOOR_PROFILE="$(getcfg THERMAL_OUTDOOR_PROFILE)"
 case "$THERMAL_OUTDOOR_PROFILE" in
-  outdoor-g4-adapted|outdoor-g4-adapted-plus)
+  outdoor-g4-adapted|outdoor-g4-adapted-plus|outdoor-safe)
     OUTDOOR_PROFILE="${BASE_PROFILE}-${THERMAL_OUTDOOR_PROFILE}"
     OUTDOOR_PROFILE_DIR="$MODDIR/profiles/$OUTDOOR_PROFILE/system/vendor/etc"
     if [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config_throttling.json" ] && [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config.json" ] && [ -s "$OUTDOOR_PROFILE_DIR/thermal_info_config_charge.json" ]; then
@@ -97,6 +97,10 @@ case "$THERMAL_OUTDOOR_PROFILE" in
         outdoor-g4-adapted-plus)
           PROFILE_STATE="${PROFILE_STATE}_outdoor_g4_adapted_plus_test"
           BUILD_STATE="${BUILD_STATE}_outdoor_g4_adapted_plus_test"
+        ;;
+        outdoor-safe)
+          PROFILE_STATE="${PROFILE_STATE}_cp31_outdoor_safe_test"
+          BUILD_STATE="${BUILD_STATE}_cp31_outdoor_safe_test"
         ;;
         *)
           PROFILE_STATE="${PROFILE_STATE}_outdoor_g4_adapted_test"

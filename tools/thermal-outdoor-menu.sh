@@ -16,17 +16,28 @@ if [ "$dbg" = "1" ]; then
   LOG="$DL/pixel_thermal_outdoor_menu_${TS}.txt"
   { echo "debug_type=pixel_thermal_outdoor_menu"; echo "time=$(date -Is 2>/dev/null || date)"; echo "mode=$MODE"; echo "module=$MODDIR"; echo "config=$CONFIG_FILE"; echo "base_profile=${BASE_PROFILE:-unset}"; echo; echo "== before =="; [ -r "$CONFIG_FILE" ] && grep -E '^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_TARGET|THERMAL_OUTDOOR_PROFILE_SOURCE|DEBUG_MODE|debug_mode)=' "$CONFIG_FILE" || true; echo; } > "$LOG" 2>&1
 fi
+OUTDOOR_OPTION="outdoor-g4-adapted-plus"
+OUTDOOR_SOURCE="pixel9_inspired_g4_adapted_plus_plus_test4"
+OUTDOOR_TARGET="g4_adapted_plus"
+case "${BASE_PROFILE:-}" in
+  mustang-android17-cp31*)
+    OUTDOOR_OPTION="outdoor-safe"
+    OUTDOOR_SOURCE="cp31_outdoor_safe_test8"
+    OUTDOOR_TARGET="cp31_outdoor_safe"
+  ;;
+esac
+
 msg "----------------------------------------"
 msg "  Optional Thermal Outdoor Profile"
-msg "  Press [Volume Up] to ENABLE outdoor-g4-adapted-plus"
+msg "  Press [Volume Up] to ENABLE $OUTDOOR_OPTION"
 msg "  Press [Volume Down] to keep STOCK thermal profile"
 msg "  Timeout (15s) keeps STOCK"
 msg "----------------------------------------"
 choice="$(read_volume_choice)"
 case "$choice" in
-  up) cfg_set THERMAL_OUTDOOR_PROFILE outdoor-g4-adapted-plus; cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable; cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE pixel9_inspired_g4_adapted_plus_plus_test4; cfg_set THERMAL_OUTDOOR_TARGET g4_adapted_plus; msg "selected: enable outdoor-g4-adapted-plus";;
+  up) cfg_set THERMAL_OUTDOOR_PROFILE "$OUTDOOR_OPTION"; cfg_set THERMAL_OUTDOOR_RISK_ACK explicit_user_enable; cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE "$OUTDOOR_SOURCE"; cfg_set THERMAL_OUTDOOR_TARGET "$OUTDOOR_TARGET"; msg "selected: enable $OUTDOOR_OPTION";;
   down) cfg_set THERMAL_OUTDOOR_PROFILE stock; cfg_set THERMAL_OUTDOOR_RISK_ACK disabled_by_user; cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE stock; cfg_set THERMAL_OUTDOOR_TARGET stock; msg "selected: stock";;
-  *) if [ "$(cfg_get THERMAL_OUTDOOR_PROFILE)" = "outdoor-g4-adapted-plus" ]; then msg "selected: timeout; keeping existing outdoor-g4-adapted-plus"; else cfg_set THERMAL_OUTDOOR_PROFILE stock; cfg_set THERMAL_OUTDOOR_RISK_ACK disabled_by_default; cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE stock_timeout; cfg_set THERMAL_OUTDOOR_TARGET stock; msg "selected: timeout; keeping stock"; fi;;
+  *) if [ "$(cfg_get THERMAL_OUTDOOR_PROFILE)" = "$OUTDOOR_OPTION" ]; then msg "selected: timeout; keeping existing $OUTDOOR_OPTION"; else cfg_set THERMAL_OUTDOOR_PROFILE stock; cfg_set THERMAL_OUTDOOR_RISK_ACK disabled_by_default; cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE stock_timeout; cfg_set THERMAL_OUTDOOR_TARGET stock; msg "selected: timeout; keeping stock"; fi;;
 esac
 if [ "$LOG" != "/dev/null" ]; then { echo "choice=$choice"; echo; echo "== after =="; [ -r "$CONFIG_FILE" ] && grep -E '^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_PROFILE_SOURCE|THERMAL_OUTDOOR_TARGET|DEBUG_MODE|debug_mode)=' "$CONFIG_FILE" || true; echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_DONE choice=$choice"; } >> "$LOG" 2>&1; fi
 exit 0

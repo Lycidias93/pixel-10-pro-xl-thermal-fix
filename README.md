@@ -1,3 +1,13 @@
+## 1.4.13-universal-test.8 prerelease: CP31 outdoor-safe validation
+
+This prerelease does not block CP31 outdoor permanently.
+
+Instead, it adds a dedicated `mustang-android17-cp31-outdoor-safe` profile derived from the working CP31 default profile.
+
+Only `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` thresholds are changed for this first CP31 outdoor validation step.
+
+Charge, USB, battery, speaker, shutdown, emergency, CP2A outdoor-plus, and ZRAM behavior are unchanged.
+
 ## 1.4.13-universal-test.6: module display-name refresh
 
 The visible Magisk module name is now `Pixel 10 Thermal & Memory Control`.

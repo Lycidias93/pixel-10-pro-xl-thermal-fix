@@ -1,3 +1,11 @@
+## 1.4.13-universal-test.8
+
+- Replaces the CP31 outdoor block approach with a dedicated `mustang-android17-cp31-outdoor-safe` profile.
+- Builds CP31 outdoor-safe from the known-good CP31 default profile.
+- Changes only `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` thresholds for the first CP31 outdoor validation step.
+- Keeps charge, USB, battery, speaker, shutdown, emergency, CP2A outdoor-plus, and ZRAM behavior unchanged.
+- Test8 is a GitHub prerelease for external CP31 validation and is not merged to main yet.
+
 ## 1.4.13-universal-test.6
 
 - Renames the visible Magisk module name from `Pixel 10 Thermal Polling Fix` to `Pixel 10 Thermal & Memory Control`.
