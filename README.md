@@ -1,3 +1,11 @@
+## 1.4.13-universal-test.6: module display-name refresh
+
+The visible Magisk module name is now `Pixel 10 Thermal & Memory Control`.
+
+The module id remains `pixel-10-pro-xl-thermal-fix` to preserve update compatibility, existing config paths, and clean upgrade behavior.
+
+No runtime logic changed in this rename-only test build.
+
 ## 1.4.13-universal-test.5 prerelease: boot-preserved outdoor plus
 
 This test build fixes the boot-time auto-profile-switch path so an explicitly selected `outdoor-g4-adapted-plus` profile remains materialized after reboot.
