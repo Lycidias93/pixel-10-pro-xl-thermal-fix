@@ -49,6 +49,7 @@ if [ "$MC_INDEX" = "0" ]; then
   cfg_set THERMAL_SETTINGS_MODE last; mc_msg "Settings: last"
 else
   cfg_set THERMAL_SETTINGS_MODE fresh
+  cfg_set DEBUG_MODE 1; cfg_set debug_mode 1; cfg_set LAST_DEBUG_MODE verbose
   cfg_set THERMAL_OUTDOOR_PROFILE stock
   cfg_set THERMAL_POLLING_MODE mod
   cfg_set THERMAL_SAFETY_LEVEL normal

@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=1.4.13-universal-test.18
-versionCode=1015318
+version=1.4.13-universal-test.19
+versionCode=1015319
 author=Lycidias93, based on marx161
-description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test18 ZRAM cleanup with debug verbose default, mandatory resetprop-rs -n check, boot_early install-state logging, no backup state for in-memory props, and mmd restart only outside boot_early. Stable channel stays 1.4.12
+description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test19 fixes Debug Logging default to Verbose for fresh test installs while keeping remembered silent reusable. Stable channel stays 1.4.12
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

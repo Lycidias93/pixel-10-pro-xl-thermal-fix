@@ -1,3 +1,10 @@
+## 1.4.13-universal-test.19
+
+- Supersedes `1.4.13-universal-test.18`.
+- Keeps Test18 ZRAM cleanup behavior.
+- Fixes Debug Logging default selection for fresh test installs so Verbose is shown first.
+- Keeps remembered Silent reusable when using remembered settings.
+
 ## 1.4.13-universal-test.18
 
 - Supersedes `1.4.13-universal-test.17`.

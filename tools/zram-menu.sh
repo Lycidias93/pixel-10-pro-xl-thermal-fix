@@ -19,8 +19,23 @@ disable_zram() { cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set
 DL="$(choose_download)"; TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"; TEMP_LOG="$DL/pixel_thermal_zram_menu_${TS}.txt"; LOG="/dev/null"
 
 choose_debug_mode() {
+  # Test builds default to Verbose. Fresh installs and missing/stale debug state
+  # must show Verbose as the initial selector, while explicit "last silent"
+  # remains reusable when the remembered settings path is chosen.
+  settings_mode="$(cfg_get THERMAL_SETTINGS_MODE)"
+  last_dbg="$(cfg_get LAST_DEBUG_MODE)"
   dbg="$(cfg_get DEBUG_MODE)"; [ -z "$dbg" ] && dbg="$(cfg_get debug_mode)"
-  [ -z "$dbg" ] && dbg="1"
+
+  if [ "$settings_mode" = "fresh" ]; then
+    dbg="1"
+  elif [ "$last_dbg" = "silent" ]; then
+    dbg="0"
+  elif [ "$last_dbg" = "verbose" ]; then
+    dbg="1"
+  elif [ -z "$dbg" ]; then
+    dbg="1"
+  fi
+
   case "$dbg" in 1) dbg_idx=1 ;; *) dbg_idx=0 ;; esac
   mc_cycle2 "Debug Logging" "Silent" "Verbose" "$dbg_idx"
   dbg_idx="$MC_INDEX"; dbg_reason="$MC_REASON"; dbg_steps="$MC_STEPS"

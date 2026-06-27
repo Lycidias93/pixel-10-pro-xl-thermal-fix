@@ -1,3 +1,12 @@
+## 1.4.13-universal-test.19 prerelease: Debug default fix
+
+Test19 supersedes Test18.
+
+- Keeps the Test18 ZRAM cleanup.
+- Fixes the installer's Debug Logging menu so fresh test installs show Verbose as the initial/default choice.
+- Keeps remembered Silent reusable only when the remembered settings path is explicitly used.
+- Keeps the full Android 17 Pixel 10 profile matrix and full installer options menu.
+
 ## 1.4.13-universal-test.18 prerelease: ZRAM cleanup
 
 Test18 supersedes Test17.
