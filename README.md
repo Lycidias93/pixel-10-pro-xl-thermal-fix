@@ -1,3 +1,14 @@
+## 1.4.13-universal-test.20 prerelease: compact installer help
+
+Test20 supersedes Test19.
+
+- Keeps the Test19 Debug Logging default fix.
+- Keeps the Test18 ZRAM cleanup.
+- Adds one-line compact help text to each installer cycle menu.
+- Shortens thermal confirmation labels for Magisk UI readability.
+- Removes a stale fresh-default debug reset that could contradict the Verbose default seed.
+- No thermal profile, polling, ZRAM, or pTune behavior changes.
+
 ## 1.4.13-universal-test.19 prerelease: Debug default fix
 
 Test19 supersedes Test18.

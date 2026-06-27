@@ -55,7 +55,6 @@ else
   cfg_set THERMAL_SAFETY_LEVEL normal
   cfg_set ALLOW_THERMAL_WITH_PTUNE 1
   cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION I_UNDERSTAND_BOOTLOOP_RISK
-  cfg_set DEBUG_MODE 0; cfg_set debug_mode 0
   cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1
   mc_msg "Settings: fresh"
 fi
@@ -74,7 +73,7 @@ else
 fi
 if [ -n "$ptune_path" ]; then cfg_set PTUNE_CONFLICT present; cfg_set PTUNE_CONFLICT_PATH "$ptune_path"; else cfg_set PTUNE_CONFLICT none; cfg_set PTUNE_CONFLICT_PATH none; fi
 
-mc_msg ""; mc_msg "Conflict scan"
+mc_msg ""; mc_msg "Conflict scan"; mc_msg "Checks pTune, overlays, polling."
 [ -n "$foreign_path" ] && mc_msg "Thermal: foreign overlay" || mc_msg "Thermal: PASS"
 [ -n "$foreign_path" ] && mc_msg "Polling: foreign drift" || mc_msg "Polling: PASS"
 [ -n "$ptune_path" ] && mc_msg "pTune: present" || mc_msg "pTune: none"
@@ -101,7 +100,7 @@ else
   cfg_set LAST_PTUNE_OVERRIDE 0
 fi
 
-mc_msg ""; mc_msg "Install choices"
+mc_msg ""; mc_msg "Install choices"; mc_msg "Final selected install state."
 mc_msg "Safety: $safety"
 mc_msg "Polling: $polling"
 mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"

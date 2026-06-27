@@ -15,7 +15,7 @@ cfg_set() { _k="$1"; _v="$2"; _tmp="${CONFIG_FILE}.tmp.$$"; touch "$CONFIG_FILE"
 variant_exists() { _variant="$1"; case "$_variant" in stock|base) return 0 ;; outdoor-safe|outdoor-plus|outdoor-extended) [ -s "$MODDIR/profiles/${BASE_PROFILE}-${_variant}/system/vendor/etc/thermal_info_config_throttling.json" ] ;; *) return 1 ;; esac; }
 option_at() { case "$1" in 0) echo stock ;; 1) echo outdoor-safe ;; 2) echo outdoor-plus ;; 3) echo outdoor-extended ;; *) echo stock ;; esac; }
 index_for() { case "$1" in outdoor-safe) echo 1 ;; outdoor-plus) echo 2 ;; outdoor-extended) echo 3 ;; *) echo 0 ;; esac; }
-long_label_for() { case "$1" in stock) echo "Stock / Factory Thermal" ;; outdoor-safe) echo "Outdoor Safe Throttle Fix" ;; outdoor-plus) echo "Outdoor Plus Throttle Fix" ;; outdoor-extended) echo "Outdoor Extended Throttle Fix" ;; *) echo "Stock / Factory Thermal" ;; esac; }
+long_label_for() { case "$1" in stock) echo "Stock thermal" ;; outdoor-safe) echo "Outdoor Safe" ;; outdoor-plus) echo "Outdoor Plus" ;; outdoor-extended) echo "Outdoor Extended" ;; *) echo "Stock thermal" ;; esac; }
 
 idx="$(index_for "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
 mc_cycle4 "Thermal Profile" "Stock" "Outdoor Safe" "Outdoor Plus" "Outdoor Ext" "$idx"

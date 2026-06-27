@@ -1,3 +1,12 @@
+## 1.4.13-universal-test.20
+
+- Supersedes `1.4.13-universal-test.19`.
+- Adds compact one-line help text to installer cycle menus.
+- Shortens thermal confirmation labels for installer readability.
+- Keeps Test19 Debug Logging default behavior.
+- Keeps Test18 ZRAM cleanup behavior.
+- Removes a stale fresh-default debug reset.
+
 ## 1.4.13-universal-test.19
 
 - Supersedes `1.4.13-universal-test.18`.

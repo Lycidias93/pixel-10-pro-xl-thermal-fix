@@ -19,7 +19,26 @@ mc_read_key() {
   esac
 }
 
-mc_head() { mc_msg ""; mc_msg "----------------------------------------"; mc_msg "$1"; mc_msg "----------------------------------------"; }
+mc_desc() {
+  case "$1" in
+    "Remember Settings") echo "Last choices or fresh start." ;;
+    "Safety Level") echo "Allow testing or block conflicts." ;;
+    "Polling Fix") echo "Module values or stock values." ;;
+    "pTune Override") echo "Allow module beside pTune." ;;
+    "Thermal Profile") echo "Stock, Safe, Plus, or Extended." ;;
+    "Debug Logging") echo "Minimal or full debug evidence." ;;
+    "ZRAM 100%") echo "Stock swap or 100% ZRAM." ;;
+    *) echo "" ;;
+  esac
+}
+mc_head() {
+  _desc="$(mc_desc "$1")"
+  mc_msg ""
+  mc_msg "----------------------------------------"
+  mc_msg "$1"
+  [ -n "$_desc" ] && mc_msg "$_desc"
+  mc_msg "----------------------------------------"
+}
 mc_foot() { mc_msg ""; mc_msg "Vol+  next"; mc_msg "Vol-  select"; mc_msg "30s   keep shown"; mc_msg "Power not used"; mc_msg "----------------------------------------"; }
 
 mc_cycle2() {
