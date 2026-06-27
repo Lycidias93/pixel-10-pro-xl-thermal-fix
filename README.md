@@ -1,3 +1,18 @@
+## 1.4.13-universal-test.18 prerelease: ZRAM cleanup
+
+Test18 supersedes Test17.
+
+ZRAM cleanup changes:
+
+- Keeps the Test17 full installer menu and Android 17 Pixel 10 profile matrix.
+- Makes Debug Logging default to Verbose for test builds.
+- Simplifies `tools/apply-zram-100p.sh` while keeping debug output.
+- Requires executable `tools/resetprop-rs` before applying ZRAM props.
+- Uses `resetprop-rs -n` for in-memory-only ZRAM properties.
+- Logs boot-early ZRAM application explicitly in `install-state.txt`.
+- Restarts `mmd` only outside `boot_early`.
+- Removes backup/restore state assumptions for in-memory-only props.
+
 ## 1.4.13-universal-test.17 prerelease: full installer options menu
 
 Test17 supersedes Test16.

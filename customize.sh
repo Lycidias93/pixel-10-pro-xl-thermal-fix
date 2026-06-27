@@ -438,9 +438,9 @@ case "$THERMAL_OUTDOOR_PROFILE" in
       profile="$outdoor_profile"
       profile_dir="$outdoor_profile_dir"
       case "$THERMAL_OUTDOOR_PROFILE" in
-        outdoor-safe) outdoor_state_token="outdoor_safe_test17" ;;
-        outdoor-plus) outdoor_state_token="outdoor_plus_test17" ;;
-        outdoor-extended) outdoor_state_token="outdoor_extended_test17" ;;
+        outdoor-safe) outdoor_state_token="outdoor_safe_test18" ;;
+        outdoor-plus) outdoor_state_token="outdoor_plus_test18" ;;
+        outdoor-extended) outdoor_state_token="outdoor_extended_test18" ;;
       esac
       profile_state="${profile_state}_${outdoor_state_token}"
       build_state="${build_state}_${outdoor_state_token}"
@@ -566,7 +566,14 @@ active_overlay_dir=system/vendor/etc
 zram_fstab_template=tools/fstab.zram.100p
 zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
 zram_feature=optional_volume_key_menu_v1412_stable
-thermal_outdoor_feature=optional_full_options_menu_v1413_test17
+zram_apply_stage=boot_early
+zram_apply_helper=tools/apply-zram-100p.sh
+zram_resetprop_required=yes
+zram_resetprop_executable=$([ -x "$MODPATH/tools/resetprop-rs" ] && echo yes || echo no)
+zram_resetprop_mode=resetprop-rs_-n
+zram_mmd_restart_policy=outside_boot_early_only
+zram_backup_state_model=none_in_memory_only_props
+thermal_outdoor_feature=optional_full_options_menu_v1413_test18
 thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
 thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
 thermal_settings_mode=$(config_get THERMAL_SETTINGS_MODE)

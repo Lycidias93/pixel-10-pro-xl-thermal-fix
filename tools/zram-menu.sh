@@ -20,6 +20,7 @@ DL="$(choose_download)"; TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"; TE
 
 choose_debug_mode() {
   dbg="$(cfg_get DEBUG_MODE)"; [ -z "$dbg" ] && dbg="$(cfg_get debug_mode)"
+  [ -z "$dbg" ] && dbg="1"
   case "$dbg" in 1) dbg_idx=1 ;; *) dbg_idx=0 ;; esac
   mc_cycle2 "Debug Logging" "Silent" "Verbose" "$dbg_idx"
   dbg_idx="$MC_INDEX"; dbg_reason="$MC_REASON"; dbg_steps="$MC_STEPS"

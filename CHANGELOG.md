@@ -1,3 +1,14 @@
+## 1.4.13-universal-test.18
+
+- Supersedes `1.4.13-universal-test.17`.
+- Keeps Test17 full installer options and profile matrix.
+- Makes Debug Logging default to Verbose for test builds.
+- Cleans up `tools/apply-zram-100p.sh` while preserving debug diagnostics.
+- Adds a hard executable check for `tools/resetprop-rs`.
+- Documents boot-early ZRAM application in `install-state.txt`.
+- Uses `mmd` restart only outside `boot_early`.
+- Documents that no backup state is needed for in-memory-only ZRAM props.
+
 ## 1.4.13-universal-test.17
 
 - Supersedes `1.4.13-universal-test.16`.
