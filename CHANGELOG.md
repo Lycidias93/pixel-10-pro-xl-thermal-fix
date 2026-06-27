@@ -1,3 +1,11 @@
+## 1.4.13-universal-test.21
+
+- Supersedes `1.4.13-universal-test.20`.
+- Behavior-preserving `customize.sh` refactor.
+- Extracts install debug/autosave functions into `tools/install-debug.sh`.
+- Keeps Test20 UI, Test19 debug default, Test18 ZRAM cleanup, and the full Android 17 profile matrix.
+- No thermal profile, polling, ZRAM, pTune, or menu behavior changes intended.
+
 ## 1.4.13-universal-test.20
 
 - Supersedes `1.4.13-universal-test.19`.

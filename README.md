@@ -1,3 +1,12 @@
+## 1.4.13-universal-test.21 prerelease: customize.sh debug refactor
+
+Test21 supersedes Test20.
+
+- Splits install debug/autosave functions out of `customize.sh` into `tools/install-debug.sh`.
+- Keeps runtime behavior unchanged from Test20.
+- Keeps the Android 17 Pixel 10 profile matrix, full installer menu, Debug Verbose default, and boot_early ZRAM path.
+- This is the first small modularization step before stable preparation.
+
 ## 1.4.13-universal-test.20 prerelease: compact installer help
 
 Test20 supersedes Test19.
