@@ -1,3 +1,5 @@
+# [MOD][MAGISK][Pixel 10 Pro/XL][A17] Thermal Polling/Throttle Fix + Memory Control – ZRAM 100%
+
 ## 1.4.13-universal-test.24 prerelease: install finalization refactor
 
 Test24 is a behavior-preserving refactor on top of Test23.

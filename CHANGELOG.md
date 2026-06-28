@@ -1,5 +1,6 @@
 ## 1.4.13-universal-test.24
 
+- Public/XDA title aligned: [MOD][MAGISK][Pixel 10 Pro/XL][A17] Thermal Polling/Throttle Fix + Memory Control – ZRAM 100%
 - Behavior-preserving refactor on top of Test23.
 - Extracts install finalization into `tools/install-finalize.sh`.
 - Moves guard cleanup, utility chmods, and install-state writing out of `customize.sh`.
