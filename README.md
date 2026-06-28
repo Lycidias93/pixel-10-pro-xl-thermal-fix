@@ -1,3 +1,13 @@
+## 1.4.13-universal-test.24 prerelease: install finalization refactor
+
+Test24 is a behavior-preserving refactor on top of Test23.
+
+- Extracts install finalization into `tools/install-finalize.sh`.
+- Moves guard cleanup, utility chmods, and install-state writing out of `customize.sh`.
+- Writes install-state using `printf` lines.
+- Keeps Test23 runtime behavior, pTune Override OFF default, Outdoor Extended profile path, polling mod, and ZRAM path unchanged.
+- Stable channel remains 1.4.12 until final promotion.
+
 ## 1.4.13-universal-test.23 prerelease: stable-candidate metadata test
 
 Test23 is a behavior-preserving stable-candidate metadata test on top of Test22.

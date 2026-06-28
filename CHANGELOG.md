@@ -1,3 +1,11 @@
+## 1.4.13-universal-test.24
+
+- Behavior-preserving refactor on top of Test23.
+- Extracts install finalization into `tools/install-finalize.sh`.
+- Moves guard cleanup, utility chmods, and install-state writing out of `customize.sh`.
+- Writes install-state using `printf` lines.
+- Keeps Test23 runtime behavior unchanged.
+
 ## 1.4.13-universal-test.23
 
 - Stable-candidate metadata test on top of Test22.

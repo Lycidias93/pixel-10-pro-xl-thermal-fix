@@ -215,9 +215,9 @@ case "$THERMAL_OUTDOOR_PROFILE" in
       profile="$outdoor_profile"
       profile_dir="$outdoor_profile_dir"
       case "$THERMAL_OUTDOOR_PROFILE" in
-        outdoor-safe) outdoor_state_token="outdoor_safe_test23" ;;
-        outdoor-plus) outdoor_state_token="outdoor_plus_test23" ;;
-        outdoor-extended) outdoor_state_token="outdoor_extended_test23" ;;
+        outdoor-safe) outdoor_state_token="outdoor_safe_test24" ;;
+        outdoor-plus) outdoor_state_token="outdoor_plus_test24" ;;
+        outdoor-extended) outdoor_state_token="outdoor_extended_test24" ;;
       esac
       profile_state="${profile_state}_${outdoor_state_token}"
       build_state="${build_state}_${outdoor_state_token}"
@@ -284,101 +284,15 @@ fi
 
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || thermal_abort "! Failed to materialize active file: $f"; done
 
-rm -f "$MODPATH/disable" "$MODPATH/skip_mount" "$MODPATH/remove"
-ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
-if [ -d "$ACTIVE_MODPATH" ]; then
-  rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/skip_mount" "$ACTIVE_MODPATH/remove"
-  rm -f "$ACTIVE_MODPATH/guard/disabled_reason" "$ACTIVE_MODPATH/guard/conflict_guard_mode" "$ACTIVE_MODPATH/guard/conflict_ptune_path" "$ACTIVE_MODPATH/guard/guard_override" "$ACTIVE_MODPATH/guard/guard_override_source" "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
+# BEGIN PIXEL_THERMAL_INSTALL_FINALIZE_HELPER_V1413_TEST24
+if [ -s "$MODPATH/tools/install-finalize.sh" ]; then
+  chmod 0755 "$MODPATH/tools/install-finalize.sh" 2>/dev/null || true
+  . "$MODPATH/tools/install-finalize.sh"
+  thermal_finalize_install
+else
+  thermal_abort "! Install finalize helper missing"
 fi
-mkdir -p "$MODPATH/guard"
-rm -f "$MODPATH/guard/pending_boot" "$MODPATH/guard/fail_count" "$MODPATH/guard/disabled_reason" "$MODPATH/guard/conflict_guard_mode" "$MODPATH/guard/conflict_ptune_path" "$MODPATH/guard/guard_override" "$MODPATH/guard/guard_override_source" "$MODPATH/guard/risk_ack"
-if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
-  echo "allow_thermal_with_ptune" > "$MODPATH/guard/guard_override"
-  echo "$CONFIG_FILE" > "$MODPATH/guard/guard_override_source"
-  echo "explicit_user_override" > "$MODPATH/guard/risk_ack"
-  echo "$PTUNE_INSTALLED_PATH" > "$MODPATH/guard/conflict_ptune_path"
-  echo "override_allow_mount_with_ptune" > "$MODPATH/guard/conflict_guard_mode"
-fi
-[ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
-[ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
-[ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-[ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-[ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-[ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
-[ -s "$MODPATH/tools/resetprop-rs" ] && chmod 0755 "$MODPATH/tools/resetprop-rs" || true
-
-
-cat > "$MODPATH/install-state.txt" <<EOF
-module_id=$MODULE_ID
-module_version=$MODULE_VERSION
-module_version_code=$MODULE_VERSION_CODE
-device=$device
-profile=$profile
-profile_state=$profile_state
-build_state=$build_state
-android=$android
-android_sdk=$android_sdk
-build_id=$build_id
-incremental=$incremental
-android_guard=$android_guard
-fingerprint_android_guard=$fingerprint_android_guard
-incremental_guard=${incremental_guard:-not_applicable}
-profile_source_android=$profile_source_android
-profile_source_build=$profile_source_build
-profile_source_incremental=$profile_source_incremental
-source_report_sha256=$source_report_sha256
-config_file=$CONFIG_FILE
-config_ptune_guard_mode=$PTUNE_GUARD_MODE
-config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}
-config_override_allowed=$PTUNE_OVERRIDE_ALLOWED
-risk_ack=$PTUNE_RISK_ACK_STATE
-conflict_guard=${PTUNE_INSTALLED_PATH:+ptune_installed}
-conflict_guard_mode=${PTUNE_INSTALLED_PATH:+override_allow_mount_with_ptune}
-guard_override=$PTUNE_OVERRIDE_NAME
-known_bad_ptune=$PTUNE_KNOWN_BAD
-profile_materialized=yes
-overlay_materializer=customize_guard_first
-active_overlay_dir=system/vendor/etc
-
-zram_fstab_template=tools/fstab.zram.100p
-zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)
-zram_feature=optional_volume_key_menu_v1412_stable
-zram_apply_stage=boot_early
-zram_apply_helper=tools/apply-zram-100p.sh
-zram_resetprop_required=yes
-zram_resetprop_executable=$([ -x "$MODPATH/tools/resetprop-rs" ] && echo yes || echo no)
-zram_resetprop_mode=resetprop-rs_-n
-zram_mmd_restart_policy=outside_boot_early_only
-zram_backup_state_model=none_in_memory_only_props
-thermal_outdoor_feature=optional_full_options_menu_v1413_test23
-thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
-thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
-thermal_settings_mode=$(config_get THERMAL_SETTINGS_MODE)
-thermal_safety_level=$(config_get THERMAL_SAFETY_LEVEL)
-thermal_conflict=$(config_get THERMAL_CONFLICT)
-thermal_conflict_path=$(config_get THERMAL_CONFLICT_PATH)
-thermal_max_profile=$(config_get THERMAL_MAX_PROFILE)
-thermal_polling_mode=$(config_get THERMAL_POLLING_MODE)
-thermal_polling_effective=$(config_get THERMAL_POLLING_EFFECTIVE)
-thermal_polling_conflict=$(config_get THERMAL_POLLING_CONFLICT)
-ptune_override_menu=$(config_get PTUNE_OVERRIDE_MENU)
-last_thermal_outdoor_profile=$(config_get LAST_THERMAL_OUTDOOR_PROFILE)
-last_thermal_polling_mode=$(config_get LAST_THERMAL_POLLING_MODE)
-last_thermal_safety_level=$(config_get LAST_THERMAL_SAFETY_LEVEL)
-last_ptune_override=$(config_get LAST_PTUNE_OVERRIDE)
-
-expected_thermal_files=3
-polling_values_changed_by_this_release=source_profile_or_optional_outdoor_g4_adapted_test
-bind_mount_model=no
-live_runtime_text_patch_model=no
-selinux_overlay_read_policy=hal_thermal_default_system_file_read_only
-update_json_channel=stable_update_json_1.4.12-universal.1_test_manual_install_only
-debug_collector=manual_or_auto_on_install_fail_v1411
-debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
-override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh
-override_disable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-ptune-override.sh
-debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip
-EOF
+# END PIXEL_THERMAL_INSTALL_FINALIZE_HELPER_V1413_TEST24
 
 thermal_save_install_debug "success" "install_completed"
 ui_print "- Target validation: PASS"
