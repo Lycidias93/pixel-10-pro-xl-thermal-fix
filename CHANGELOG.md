@@ -1,3 +1,12 @@
+## 1.4.13-universal-test.22
+
+- Supersedes `1.4.13-universal-test.21` for refactor testing.
+- Extracts pTune guard/preflight logic from `customize.sh` into `tools/ptune-guard.sh`.
+- Converts the extracted skip-mount install-state writer to `printf` lines.
+- Changes Fresh defaults pTune Override start state to OFF.
+- Keeps remembered ON reusable through Use last.
+- Keeps Test21 install debug/autosave helper extraction.
+
 ## 1.4.13-universal-test.21
 
 - Supersedes `1.4.13-universal-test.20`.

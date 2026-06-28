@@ -1,3 +1,16 @@
+## 1.4.13-universal-test.22 prerelease: pTune guard refactor
+
+Test22 supersedes Test21 for refactor testing.
+
+- Splits the pTune guard/preflight logic out of `customize.sh` into `tools/ptune-guard.sh`.
+- Converts the extracted skip-mount install-state writer to `printf` lines.
+- Makes Fresh defaults start with pTune Override OFF.
+- Keeps remembered pTune Override ON reusable only through Use last.
+- Keeps Test21 install debug/autosave helper extraction.
+- Keeps Test20 compact installer help text.
+- Keeps Test18 ZRAM cleanup.
+- No thermal profile, polling, or ZRAM behavior changes intended.
+
 ## 1.4.13-universal-test.21 prerelease: customize.sh debug refactor
 
 Test21 supersedes Test20.

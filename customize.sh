@@ -87,137 +87,15 @@ else
 fi
 # END PIXEL_THERMAL_INSTALL_OPTIONS_MENU_V1413_TEST17
 
-PTUNE_GUARD_MODE="$(config_get PTUNE_GUARD_MODE)"
-[ -n "$PTUNE_GUARD_MODE" ] || PTUNE_GUARD_MODE="strict"
-case "$PTUNE_GUARD_MODE" in strict|active_only|off) ;; *) ui_print "! Invalid PTUNE_GUARD_MODE=$PTUNE_GUARD_MODE, using strict"; PTUNE_GUARD_MODE="strict" ;; esac
-ALLOW_THERMAL_WITH_PTUNE="$(config_get ALLOW_THERMAL_WITH_PTUNE)"
-RISK_ACK_PTUNE_THERMAL_COLLISION="$(config_get RISK_ACK_PTUNE_THERMAL_COLLISION)"
-PTUNE_OVERRIDE_ALLOWED=0
-PTUNE_OVERRIDE_NAME="none"
-PTUNE_RISK_ACK_STATE="not_present"
-if [ "$ALLOW_THERMAL_WITH_PTUNE" = "1" ] && [ "$RISK_ACK_PTUNE_THERMAL_COLLISION" = "I_UNDERSTAND_BOOTLOOP_RISK" ]; then
-  PTUNE_OVERRIDE_ALLOWED=1
-  PTUNE_OVERRIDE_NAME="allow_thermal_with_ptune"
-  PTUNE_RISK_ACK_STATE="explicit_user_override"
+# BEGIN PIXEL_THERMAL_PTUNE_GUARD_HELPER_V1413_TEST22
+if [ -s "$MODPATH/tools/ptune-guard.sh" ]; then
+  chmod 0755 "$MODPATH/tools/ptune-guard.sh" 2>/dev/null || true
+  . "$MODPATH/tools/ptune-guard.sh"
+else
+  thermal_abort "! pTune guard helper missing"
 fi
-if [ "$PTUNE_GUARD_MODE" = "off" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
-  ui_print "! PTUNE_GUARD_MODE=off ignored without risk_ack; using strict"
-  PTUNE_GUARD_MODE="strict"
-fi
-ptune_installed_path() {
-  for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
-    [ -f "$d/module.prop" ] || continue
-    grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
-    [ -e "$d/remove" ] && continue
-    echo "$d"
-    return 0
-  done
-  return 1
-}
-ptune_active_path() {
-  for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
-    [ -f "$d/module.prop" ] || continue
-    grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
-    [ -e "$d/remove" ] && continue
-    [ -e "$d/disable" ] && continue
-    echo "$d"
-    return 0
-  done
-  return 1
-}
-ptune_known_bad_state() {
-  d="$1"
-  vc="$(grep -E '^versionCode=' "$d/module.prop" 2>/dev/null | sed 's/^versionCode=//')"
-  [ "$vc" = "200" ] && echo "yes_versionCode_200_thermalhal_bootloop_on_mustang_cp1a_260505_005" || echo "no"
-}
-PTUNE_INSTALLED_PATH="$(ptune_installed_path 2>/dev/null || true)"
-PTUNE_ACTIVE_PATH="$(ptune_active_path 2>/dev/null || true)"
-PTUNE_KNOWN_BAD="no"
-[ -n "$PTUNE_INSTALLED_PATH" ] && PTUNE_KNOWN_BAD="$(ptune_known_bad_state "$PTUNE_INSTALLED_PATH")"
-PTUNE_CONFLICT_PATH=""
-PTUNE_CONFLICT_REASON="conflict_ptune_active_or_staged"
-PTUNE_CONFLICT_MODE="strict_active_skip_mount"
-case "$PTUNE_GUARD_MODE" in
-  strict) PTUNE_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_active_or_staged"; PTUNE_CONFLICT_MODE="strict_active_skip_mount" ;;
-  active_only) PTUNE_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_active"; PTUNE_CONFLICT_MODE="active_only_skip_mount" ;;
-  off) PTUNE_CONFLICT_PATH=""; PTUNE_CONFLICT_REASON="guard_off"; PTUNE_CONFLICT_MODE="guard_off" ;;
-esac
-if [ -n "$PTUNE_CONFLICT_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
-  ui_print "! pTune conflict detected: $PTUNE_CONFLICT_PATH"
-  ui_print "! pTune guard mode: $PTUNE_GUARD_MODE -> $PTUNE_CONFLICT_MODE"
-  [ "$PTUNE_KNOWN_BAD" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
-  ui_print "! Keeping this module scriptable but skip_mounted"
-  mkdir -p "$MODPATH/guard"
-  rm -f "$MODPATH/disable" "$MODPATH/remove"
-  touch "$MODPATH/skip_mount"
-  echo "$PTUNE_CONFLICT_REASON" > "$MODPATH/guard/disabled_reason"
-  echo "$PTUNE_CONFLICT_PATH" > "$MODPATH/guard/conflict_ptune_path"
-  echo "$PTUNE_CONFLICT_MODE" > "$MODPATH/guard/conflict_guard_mode"
-  rm -f "$MODPATH/guard/guard_override" "$MODPATH/guard/guard_override_source" "$MODPATH/guard/risk_ack" 2>/dev/null || true
-  ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
-  if [ -d "$ACTIVE_MODPATH" ]; then
-    mkdir -p "$ACTIVE_MODPATH/guard"
-    rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/remove"
-    touch "$ACTIVE_MODPATH/skip_mount"
-    echo "$PTUNE_CONFLICT_REASON" > "$ACTIVE_MODPATH/guard/disabled_reason"
-    echo "$PTUNE_CONFLICT_PATH" > "$ACTIVE_MODPATH/guard/conflict_ptune_path"
-    echo "$PTUNE_CONFLICT_MODE" > "$ACTIVE_MODPATH/guard/conflict_guard_mode"
-    rm -f "$ACTIVE_MODPATH/guard/guard_override" "$ACTIVE_MODPATH/guard/guard_override_source" "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
-  fi
-  [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
-  [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
-[ -s "$MODPATH/tools/auto-profile-switch.sh" ] && chmod 0755 "$MODPATH/tools/auto-profile-switch.sh" || true
-[ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-[ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-[ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-[ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-  [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-  [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-  [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-  [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
-  cat > "$MODPATH/install-state.txt" <<EOF
-module_id=$MODULE_ID
-module_version=$MODULE_VERSION
-module_version_code=$MODULE_VERSION_CODE
-device=$device
-profile=skip_mount_by_ptune_guard
-profile_state=${PTUNE_CONFLICT_REASON}
-build_state=not_materialized_due_ptune_guard
-android=$android
-android_sdk=$android_sdk
-build_id=$build_id
-incremental=$incremental
-android_guard=not_evaluated_due_ptune_guard
-fingerprint_android_guard=not_evaluated_due_ptune_guard
-incremental_guard=not_applicable
-profile_materialized=no
-active_overlay_dir=none
-expected_thermal_files=0
-config_file=$CONFIG_FILE
-config_ptune_guard_mode=$PTUNE_GUARD_MODE
-config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}
-config_override_allowed=$PTUNE_OVERRIDE_ALLOWED
-risk_ack=$PTUNE_RISK_ACK_STATE
-conflict_guard=ptune_present
-conflict_guard_mode=$PTUNE_CONFLICT_MODE
-conflict_ptune_path=$PTUNE_CONFLICT_PATH
-known_bad_ptune=$PTUNE_KNOWN_BAD
-bind_mount_model=no
-live_runtime_text_patch_model=no
-selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard
-update_json_channel=stable_update_json_1.4.12-universal.1_test_manual_install_only
-debug_collector=manual_or_auto_on_install_fail_v1411
-compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh
-ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh
-EOF
-  thermal_save_install_debug "skip_mount" "$PTUNE_CONFLICT_REASON"
-  ui_print "Module installed with skip_mount only: $PTUNE_CONFLICT_REASON"
-  exit 0
-fi
+# END PIXEL_THERMAL_PTUNE_GUARD_HELPER_V1413_TEST22
+
 if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
   ui_print "! OVERRIDE: Thermal overlay allowed while pTune is installed"
   ui_print "! Risk_ack accepted: I_UNDERSTAND_BOOTLOOP_RISK"
@@ -337,9 +215,9 @@ case "$THERMAL_OUTDOOR_PROFILE" in
       profile="$outdoor_profile"
       profile_dir="$outdoor_profile_dir"
       case "$THERMAL_OUTDOOR_PROFILE" in
-        outdoor-safe) outdoor_state_token="outdoor_safe_test21" ;;
-        outdoor-plus) outdoor_state_token="outdoor_plus_test21" ;;
-        outdoor-extended) outdoor_state_token="outdoor_extended_test21" ;;
+        outdoor-safe) outdoor_state_token="outdoor_safe_test22" ;;
+        outdoor-plus) outdoor_state_token="outdoor_plus_test22" ;;
+        outdoor-extended) outdoor_state_token="outdoor_extended_test22" ;;
       esac
       profile_state="${profile_state}_${outdoor_state_token}"
       build_state="${build_state}_${outdoor_state_token}"
@@ -472,7 +350,7 @@ zram_resetprop_executable=$([ -x "$MODPATH/tools/resetprop-rs" ] && echo yes || 
 zram_resetprop_mode=resetprop-rs_-n
 zram_mmd_restart_policy=outside_boot_early_only
 zram_backup_state_model=none_in_memory_only_props
-thermal_outdoor_feature=optional_full_options_menu_v1413_test21
+thermal_outdoor_feature=optional_full_options_menu_v1413_test22
 thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
 thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
 thermal_settings_mode=$(config_get THERMAL_SETTINGS_MODE)
