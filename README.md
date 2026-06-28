@@ -7,6 +7,9 @@ Test24 is a behavior-preserving refactor on top of Test23.
 - Writes install-state using `printf` lines.
 - Keeps Test23 runtime behavior, pTune Override OFF default, Outdoor Extended profile path, polling mod, and ZRAM path unchanged.
 - Stable channel remains 1.4.12 until final promotion.
+- Runtime PASS: Pixel 10 Pro XL / `mustang` / Android 17 `CP2A.260605.012` / `15430684` / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test24 install plus post-reboot verification PASS; existing external tester credits and pending-device boundaries remain unchanged.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and the existing CREDITS.md acknowledgements.
 
 ## 1.4.13-universal-test.23 prerelease: stable-candidate metadata test
 

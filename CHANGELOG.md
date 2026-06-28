@@ -5,6 +5,9 @@
 - Moves guard cleanup, utility chmods, and install-state writing out of `customize.sh`.
 - Writes install-state using `printf` lines.
 - Keeps Test23 runtime behavior unchanged.
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test24 install and post-reboot verification PASS; external tester credits and pending-device boundaries are preserved.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
 
 ## 1.4.13-universal-test.23
 
