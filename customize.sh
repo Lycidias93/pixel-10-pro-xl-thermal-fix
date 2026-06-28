@@ -215,9 +215,9 @@ case "$THERMAL_OUTDOOR_PROFILE" in
       profile="$outdoor_profile"
       profile_dir="$outdoor_profile_dir"
       case "$THERMAL_OUTDOOR_PROFILE" in
-        outdoor-safe) outdoor_state_token="outdoor_safe_test22" ;;
-        outdoor-plus) outdoor_state_token="outdoor_plus_test22" ;;
-        outdoor-extended) outdoor_state_token="outdoor_extended_test22" ;;
+        outdoor-safe) outdoor_state_token="outdoor_safe_test23" ;;
+        outdoor-plus) outdoor_state_token="outdoor_plus_test23" ;;
+        outdoor-extended) outdoor_state_token="outdoor_extended_test23" ;;
       esac
       profile_state="${profile_state}_${outdoor_state_token}"
       build_state="${build_state}_${outdoor_state_token}"
@@ -350,7 +350,7 @@ zram_resetprop_executable=$([ -x "$MODPATH/tools/resetprop-rs" ] && echo yes || 
 zram_resetprop_mode=resetprop-rs_-n
 zram_mmd_restart_policy=outside_boot_early_only
 zram_backup_state_model=none_in_memory_only_props
-thermal_outdoor_feature=optional_full_options_menu_v1413_test22
+thermal_outdoor_feature=optional_full_options_menu_v1413_test23
 thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE
 thermal_outdoor_target=$(config_get THERMAL_OUTDOOR_TARGET)
 thermal_settings_mode=$(config_get THERMAL_SETTINGS_MODE)

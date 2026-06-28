@@ -1,3 +1,12 @@
+## 1.4.13-universal-test.23
+
+- Stable-candidate metadata test on top of Test22.
+- No intended runtime behavior changes from Test22.
+- Keeps pTune guard helper extraction.
+- Keeps Fresh pTune Override default OFF.
+- Keeps Outdoor Extended, polling mod, and ZRAM runtime paths unchanged.
+- Stable channel remains 1.4.12 until final promotion.
+
 ## 1.4.13-universal-test.22
 
 - Supersedes `1.4.13-universal-test.21` for refactor testing.

@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=1.4.13-universal-test.22
-versionCode=1015322
+version=1.4.13-universal-test.23
+versionCode=1015323
 author=Lycidias93, based on marx161
-description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test22 extracts pTune guard helper and starts fresh pTune Override OFF. Stable channel stays 1.4.12
+description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test23 is a behavior-preserving stable-candidate metadata test after the Test22 pTune guard refactor. Stable channel stays 1.4.12
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
