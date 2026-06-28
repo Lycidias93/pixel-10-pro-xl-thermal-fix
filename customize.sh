@@ -215,9 +215,9 @@ case "$THERMAL_OUTDOOR_PROFILE" in
       profile="$outdoor_profile"
       profile_dir="$outdoor_profile_dir"
       case "$THERMAL_OUTDOOR_PROFILE" in
-        outdoor-safe) outdoor_state_token="outdoor_safe_test24" ;;
-        outdoor-plus) outdoor_state_token="outdoor_plus_test24" ;;
-        outdoor-extended) outdoor_state_token="outdoor_extended_test24" ;;
+        outdoor-safe) outdoor_state_token="outdoor_safe_test25" ;;
+        outdoor-plus) outdoor_state_token="outdoor_plus_test25" ;;
+        outdoor-extended) outdoor_state_token="outdoor_extended_test25" ;;
       esac
       profile_state="${profile_state}_${outdoor_state_token}"
       build_state="${build_state}_${outdoor_state_token}"
@@ -255,31 +255,15 @@ else
 fi
 # END PIXEL_THERMAL_POLLING_MODE_V1413_TEST17
 
-# BEGIN PIXEL_THERMAL_ZRAM_FSTAB_PRESERVE_V1412_TEST4
-zram_fstab_src=""
-for zram_fstab_candidate in "$MODPATH/tools/fstab.zram.100p" "$MODPATH/system/vendor/etc/fstab.zram.100p"; do
-  if [ -s "$zram_fstab_candidate" ]; then
-    zram_fstab_src="$zram_fstab_candidate"
-    break
-  fi
-done
-if [ -n "$zram_fstab_src" ]; then
-  cp -fp "$zram_fstab_src" "$active_dir/fstab.zram.100p" || thermal_abort "! Failed to materialize active ZRAM fstab"
-  chmod 0644 "$active_dir/fstab.zram.100p" 2>/dev/null || true
-  ui_print "- Materialized ZRAM fstab layout"
+# BEGIN PIXEL_THERMAL_INSTALL_ZRAM_HELPER_V1413_TEST25
+if [ -s "$MODPATH/tools/install-zram.sh" ]; then
+  chmod 0755 "$MODPATH/tools/install-zram.sh" 2>/dev/null || true
+  . "$MODPATH/tools/install-zram.sh"
+  thermal_install_zram
 else
-  ui_print "! ZRAM layout template missing"
+  ui_print "! ZRAM install helper missing; keeping existing/safe config"
 fi
-# END PIXEL_THERMAL_ZRAM_FSTAB_PRESERVE_V1412_TEST4
-
-# BEGIN PIXEL_THERMAL_ZRAM_VOLUME_MENU_V1412_TEST6
-if [ -s "$MODPATH/tools/zram-menu.sh" ]; then
-  chmod 0755 "$MODPATH/tools/zram-menu.sh" 2>/dev/null || true
-  MODDIR="$MODPATH" sh "$MODPATH/tools/zram-menu.sh" install || ui_print "! ZRAM menu failed nonfatal; keeping existing/safe config"
-else
-  ui_print "! ZRAM menu helper missing; keeping existing/safe config"
-fi
-# END PIXEL_THERMAL_ZRAM_VOLUME_MENU_V1412_TEST6
+# END PIXEL_THERMAL_INSTALL_ZRAM_HELPER_V1413_TEST25
 
 
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || thermal_abort "! Failed to materialize active file: $f"; done

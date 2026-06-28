@@ -1,5 +1,16 @@
 # [MOD][MAGISK][Pixel 10 Pro/XL][A17] Thermal Polling/Throttle Fix + Memory Control – ZRAM 100%
 
+## 1.4.13-universal-test.25 prerelease: install-time ZRAM helper refactor
+
+Test25 is a behavior-preserving refactor on top of Test24.
+
+- Extracts install-time ZRAM fstab materialization and ZRAM menu invocation into `tools/install-zram.sh`.
+- Keeps Test24 install-finalize helper behavior, XDA public branding, pTune Override OFF default, Outdoor Extended profile path, polling mod, and ZRAM runtime path unchanged.
+- Adds install-state marker `zram_install_materializer=install_zram_helper_v1413_test25` for verification.
+- Stable channel remains 1.4.12 until final promotion.
+- Credits/Tester/PASS scope from Test24 are preserved.
+
+
 ## 1.4.13-universal-test.24 prerelease: install finalization refactor
 
 Test24 is a behavior-preserving refactor on top of Test23.
