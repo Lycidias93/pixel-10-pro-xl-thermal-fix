@@ -16,6 +16,48 @@ cfg_get() { k="$1"; [ -r "$CONFIG_FILE" ] || return 0; grep -E "^${k}=" "$CONFIG
 enable_zram() { cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled; msg "- Selected: ZRAM enabled"; }
 disable_zram() { cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled; msg "- Selected: ZRAM disabled"; }
 
+apply_last_zram_and_exit() {
+  last_dbg="$(cfg_get LAST_DEBUG_MODE)"
+  [ -n "$last_dbg" ] || last_dbg="$(cfg_get DEBUG_MODE)"
+  case "$last_dbg" in silent|0)
+    cfg_set DEBUG_MODE 0
+    cfg_set debug_mode 0
+    cfg_set LAST_DEBUG_MODE silent
+  ;;
+    *)
+    cfg_set DEBUG_MODE 1
+    cfg_set debug_mode 1
+    cfg_set LAST_DEBUG_MODE verbose
+  ;;
+  esac
+
+  last_zram="$(cfg_get LAST_ZRAM_100P)"
+  [ -n "$last_zram" ] || last_zram="$(cfg_get ENABLE_ZRAM_100P)"
+  case "$last_zram" in disabled|0)
+    cfg_set ENABLE_ZRAM_100P 0
+    cfg_set ZRAM_RESTART_MMD 0
+    cfg_set ZRAM_RISK_ACK disabled_by_user
+    cfg_set LAST_ZRAM_100P disabled
+    zram_choice="disable"
+  ;;
+    *)
+    cfg_set ENABLE_ZRAM_100P 1
+    cfg_set ZRAM_RESTART_MMD 1
+    cfg_set ZRAM_RISK_ACK explicit_user_enable
+    cfg_set LAST_ZRAM_100P enabled
+    zram_choice="enable"
+  ;;
+  esac
+
+  msg ""
+  msg "Use last settings:"
+  msg "ZRAM: $(cfg_get LAST_ZRAM_100P)"
+  msg "No ZRAM menu"
+  msg "----------------------------------------"
+  echo "RESULT: PIXEL_THERMAL_ZRAM_MENU_SKIPPED_USE_LAST choice=$zram_choice confirm_reason=use_last_short_circuit steps=0"
+  exit 0
+}
+
 DL="$(choose_download)"; TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"; TEMP_LOG="$DL/pixel_thermal_zram_menu_${TS}.txt"; LOG="/dev/null"
 
 choose_debug_mode() {
@@ -59,6 +101,9 @@ choose_zram_mode() {
   msg "----------------------------------------"
 }
 
+if [ "$(cfg_get THERMAL_SETTINGS_MODE)" = "last" ]; then
+  apply_last_zram_and_exit
+fi
 choose_debug_mode
 choose_zram_mode
 if [ "$LOG" != "/dev/null" ]; then

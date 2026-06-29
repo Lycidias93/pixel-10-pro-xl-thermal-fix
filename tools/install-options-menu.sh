@@ -43,10 +43,139 @@ has_remembered() {
   return 1
 }
 
+target_for_profile() {
+  case "$1" in
+    outdoor-safe) echo outdoor_safe ;;
+    outdoor-plus) echo outdoor_plus ;;
+    outdoor-extended) echo outdoor_extended ;;
+    *) echo stock ;;
+  esac
+}
+
+risk_for_profile() {
+  case "$1" in
+    outdoor-safe|outdoor-plus) echo explicit_user_enable ;;
+    outdoor-extended) echo explicit_user_enable_extended ;;
+    *) echo disabled_or_stock_selected ;;
+  esac
+}
+
+apply_last_settings_and_exit() {
+  cfg_set THERMAL_SETTINGS_MODE last
+
+  last_safety="$(cfg_get LAST_THERMAL_SAFETY_LEVEL)"
+  [ -n "$last_safety" ] || last_safety="$(cfg_get THERMAL_SAFETY_LEVEL)"
+  case "$last_safety" in strict) safety=strict ;; *) safety=normal ;; esac
+  cfg_set THERMAL_SAFETY_LEVEL "$safety"
+  cfg_set LAST_THERMAL_SAFETY_LEVEL "$safety"
+
+  foreign_path="$(foreign_thermal_overlay 2>/dev/null || true)"
+  ptune_path="$(ptune_present 2>/dev/null || true)"
+  if [ -n "$foreign_path" ]; then
+    cfg_set THERMAL_CONFLICT foreign_overlay
+    cfg_set THERMAL_CONFLICT_PATH "$foreign_path"
+    cfg_set THERMAL_POLLING_CONFLICT foreign_polling_drift
+  else
+    cfg_set THERMAL_CONFLICT none
+    cfg_set THERMAL_CONFLICT_PATH none
+    cfg_set THERMAL_POLLING_CONFLICT none
+  fi
+  if [ -n "$ptune_path" ]; then
+    cfg_set PTUNE_CONFLICT present
+    cfg_set PTUNE_CONFLICT_PATH "$ptune_path"
+  else
+    cfg_set PTUNE_CONFLICT none
+    cfg_set PTUNE_CONFLICT_PATH none
+  fi
+  if [ "$safety" = "strict" ] && [ -n "$foreign_path" ]; then
+    cfg_set THERMAL_MAX_PROFILE outdoor-safe
+  else
+    cfg_set THERMAL_MAX_PROFILE outdoor-extended
+  fi
+
+  last_profile="$(cfg_get LAST_THERMAL_OUTDOOR_PROFILE)"
+  [ -n "$last_profile" ] || last_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+  case "$last_profile" in outdoor-safe|outdoor-plus|outdoor-extended) profile_choice="$last_profile" ;; *) profile_choice=stock ;; esac
+  if [ "$(cfg_get THERMAL_MAX_PROFILE)" = "outdoor-safe" ]; then
+    case "$profile_choice" in outdoor-plus|outdoor-extended) profile_choice=outdoor-safe ;; esac
+  fi
+  cfg_set THERMAL_OUTDOOR_PROFILE "$profile_choice"
+  cfg_set THERMAL_OUTDOOR_TARGET "$(target_for_profile "$profile_choice")"
+  cfg_set THERMAL_OUTDOOR_RISK_ACK "$(risk_for_profile "$profile_choice")"
+  cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE use_last_short_circuit_test28
+  cfg_set LAST_THERMAL_OUTDOOR_PROFILE "$profile_choice"
+
+  last_polling="$(cfg_get LAST_THERMAL_POLLING_MODE)"
+  [ -n "$last_polling" ] || last_polling="$(cfg_get THERMAL_POLLING_MODE)"
+  case "$last_polling" in stock) polling=stock ;; *) polling=mod ;; esac
+  if [ "$safety" = "strict" ] && [ -n "$foreign_path" ] && [ "$polling" = "mod" ]; then
+    polling=stock
+  fi
+  cfg_set THERMAL_POLLING_MODE "$polling"
+  cfg_set LAST_THERMAL_POLLING_MODE "$polling"
+
+  last_ptune="$(cfg_get LAST_PTUNE_OVERRIDE)"
+  [ -n "$last_ptune" ] || last_ptune="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"
+  case "$last_ptune" in
+    1)
+      cfg_set PTUNE_OVERRIDE_MENU on
+      cfg_set ALLOW_THERMAL_WITH_PTUNE 1
+      cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION I_UNDERSTAND_BOOTLOOP_RISK
+      cfg_set LAST_PTUNE_OVERRIDE 1
+    ;;
+    *)
+      cfg_set PTUNE_OVERRIDE_MENU off
+      cfg_set ALLOW_THERMAL_WITH_PTUNE 0
+      cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION none
+      cfg_set LAST_PTUNE_OVERRIDE 0
+    ;;
+  esac
+
+  last_debug="$(cfg_get LAST_DEBUG_MODE)"
+  [ -n "$last_debug" ] || last_debug="$(cfg_get DEBUG_MODE)"
+  case "$last_debug" in silent|0)
+    cfg_set DEBUG_MODE 0
+    cfg_set debug_mode 0
+    cfg_set LAST_DEBUG_MODE silent
+  ;;
+    *)
+    cfg_set DEBUG_MODE 1
+    cfg_set debug_mode 1
+    cfg_set LAST_DEBUG_MODE verbose
+  ;;
+  esac
+
+  last_zram="$(cfg_get LAST_ZRAM_100P)"
+  [ -n "$last_zram" ] || last_zram="$(cfg_get ENABLE_ZRAM_100P)"
+  case "$last_zram" in disabled|0)
+    cfg_set ENABLE_ZRAM_100P 0
+    cfg_set ZRAM_RESTART_MMD 0
+    cfg_set ZRAM_RISK_ACK disabled_by_user
+    cfg_set LAST_ZRAM_100P disabled
+  ;;
+    *)
+    cfg_set ENABLE_ZRAM_100P 1
+    cfg_set ZRAM_RESTART_MMD 1
+    cfg_set ZRAM_RISK_ACK explicit_user_enable
+    cfg_set LAST_ZRAM_100P enabled
+  ;;
+  esac
+
+  mc_msg ""
+  mc_msg "Use last settings"
+  mc_msg "Outdoor: $(cfg_get THERMAL_OUTDOOR_PROFILE)"
+  mc_msg "Polling: $(cfg_get THERMAL_POLLING_MODE)"
+  mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
+  mc_msg "ZRAM: $(cfg_get LAST_ZRAM_100P)"
+  mc_msg "No further install menus"
+  mc_msg "----------------------------------------"
+  exit 0
+}
+
 remember_idx=1; has_remembered && remember_idx=0
 mc_cycle2 "Remember Settings" "Use last" "Fresh defaults" "$remember_idx"
 if [ "$MC_INDEX" = "0" ]; then
-  cfg_set THERMAL_SETTINGS_MODE last; mc_msg "Settings: last"
+  cfg_set THERMAL_SETTINGS_MODE last; mc_msg "Settings: last"; apply_last_settings_and_exit
 else
   cfg_set THERMAL_SETTINGS_MODE fresh
   cfg_set DEBUG_MODE 1; cfg_set debug_mode 1; cfg_set LAST_DEBUG_MODE verbose
