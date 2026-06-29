@@ -2,6 +2,10 @@
 
 ## 1.4.13-universal-test.25 prerelease: install-time ZRAM helper refactor
 
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test25 install and post-reboot runtime verification PASS; Test24 PASS scope and existing external tester credits remain preserved.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and the existing CREDITS.md acknowledgements.
+
 Test25 is a behavior-preserving refactor on top of Test24.
 
 - Extracts install-time ZRAM fstab materialization and ZRAM menu invocation into `tools/install-zram.sh`.
