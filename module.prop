@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=1.4.13-universal-test.26
-versionCode=1015326
+version=1.4.13-universal-test.27
+versionCode=1015327
 author=Lycidias93, based on marx161
-description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test25 extracts install-time ZRAM materialization and menu glue after Test24. Stable channel stays 1.4.12
+description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test27 extracts install-time thermal overlay helper after Test26. Stable channel stays 1.4.12
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
