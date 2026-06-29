@@ -1,3 +1,10 @@
+## 1.4.13-universal-test.26
+
+- Pending runtime PASS until Test26 install and post-reboot verification.
+- Behavior-preserving cleanup: replaces legacy multiline redirect blocks in `tools/collect-debug.sh` and `tools/compat-check.sh` with printf-based output generation.
+- Keeps Test25 runtime behavior, XDA public branding, Credits/Tester/PASS scope, pTune Override OFF default, Outdoor Extended, polling mod, and ZRAM runtime path unchanged.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+
 ## 1.4.13-universal-test.25
 
 - Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.

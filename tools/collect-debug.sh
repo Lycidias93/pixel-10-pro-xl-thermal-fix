@@ -32,18 +32,18 @@ copy_if_readable() {
 make_zip_python() {
   py="$1"
   [ -x "$py" ] || return 1
-  cat > "$WORK/make_zip.py" <<'PYZIP'
-import os, sys, zipfile
-src, out = sys.argv[1], sys.argv[2]
-base = os.path.basename(src.rstrip('/'))
-with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED) as z:
-    for root, dirs, files in os.walk(src):
-        dirs.sort(); files.sort()
-        for f in files:
-            p = os.path.join(root, f)
-            arc = os.path.join(base, os.path.relpath(p, src))
-            z.write(p, arc)
-PYZIP
+  {
+    printf '%s\n' "import os, sys, zipfile"
+    printf '%s\n' "src, out = sys.argv[1], sys.argv[2]"
+    printf '%s\n' "base = os.path.basename(src.rstrip('/'))"
+    printf '%s\n' "with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED) as z:"
+    printf '%s\n' "    for root, dirs, files in os.walk(src):"
+    printf '%s\n' "        dirs.sort(); files.sort()"
+    printf '%s\n' "        for f in files:"
+    printf '%s\n' "            p = os.path.join(root, f)"
+    printf '%s\n' "            arc = os.path.join(base, os.path.relpath(p, src))"
+    printf '%s\n' "            z.write(p, arc)"
+  } > "$WORK/make_zip.py"
   HOME=/data/data/com.termux/files/home PREFIX=/data/data/com.termux/files/usr LD_LIBRARY_PATH=/data/data/com.termux/files/usr/lib "$py" "$WORK/make_zip.py" "$COLLECT" "$ZIP" >/dev/null 2>&1
 }
 make_archive() {
@@ -66,12 +66,12 @@ make_archive() {
   return 1
 }
 
-cat > "$COLLECT/README_UPLOAD_THIS.txt" <<EOF
-Pixel Thermal debug package
-Created: $TS
-Command: su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
-Upload this ZIP plus the Magisk install log or install screenshot.
-EOF
+{
+  printf '%s\n' "Pixel Thermal debug package"
+  printf '%s\n' "Created: $TS"
+  printf '%s\n' "Command: su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"
+  printf '%s\n' "Upload this ZIP plus the Magisk install log or install screenshot."
+} > "$COLLECT/README_UPLOAD_THIS.txt"
 
 collect_file props.txt sh -c 'getprop ro.product.model; getprop ro.product.device; getprop ro.build.version.release; getprop ro.build.version.sdk; getprop ro.build.id; getprop ro.build.version.incremental; getprop ro.build.fingerprint; getprop ro.boot.verifiedbootstate; getprop ro.boot.vbmeta.device_state'
 collect_file module_flags.txt sh -c '[ ! -e "$0/disable" ] && echo disable=absent || echo disable=present; [ ! -e "$0/skip_mount" ] && echo skip_mount=absent || echo skip_mount=present; [ ! -e "$0/remove" ] && echo remove=absent || echo remove=present' "$MODDIR"

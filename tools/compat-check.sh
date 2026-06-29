@@ -125,34 +125,34 @@ if [ "$td" = absent ] && [ "$tr" = absent ] && [ "$ts" = absent ]; then
   [ "$ready" = no ] && safe=no reason=${reason}_overlay_missing
 fi
 
-cat <<EOF
-PTUNE_INSTALLED=$pt_inst
-PTUNE_ENABLED=$pt_en
-PTUNE_STATE=$pstate
-PTUNE_PATH=${pany:-none}
-PTUNE_KNOWN_BAD=$known
-CONFIG_FILE=$CFG
-PTUNE_GUARD_MODE=$mode
-ALLOW_THERMAL_WITH_PTUNE=${allow:-0}
-RISK_ACK_VALID=$ov
-THERMAL_DISABLE=$td
-THERMAL_SKIP_MOUNT=$ts
-THERMAL_REMOVE=$tr
-THERMAL_EXPECTED=$exp
-AUTO_PROFILE_SWITCH_STATE=$auto_state
-AUTO_SELECTED_PROFILE=$selected_profile
-AUTO_SWITCH_REASON=$auto_reason
-BUILD_GUARD_MODE=${build_guard_mode:-unknown}
-PROFILE_STALE_AFTER_OTA=$profile_stale_after_ota
-REINSTALL_REQUIRED=$reinstall_required
-MODULE_OVERLAY_READY=$ready
-ACTIVE_VENDOR_MATCH=$match
-ROOT_IMPL=$root_impl
-META_BACKEND_PRESENT=$meta_backend
-META_BACKEND_KIND=$meta_backend_kind
-META_BACKEND_VERSION=$meta_backend_version
-METAMODULE_INSTALLED=$meta_backend
-VENDOR_OVERLAY_BACKEND_WARN=$warn
-SAFE_TO_REBOOT=$safe
-REASON=$reason
-EOF
+{
+  printf '%s\n' "PTUNE_INSTALLED=$pt_inst"
+  printf '%s\n' "PTUNE_ENABLED=$pt_en"
+  printf '%s\n' "PTUNE_STATE=$pstate"
+  printf '%s\n' "PTUNE_PATH=${pany:-none}"
+  printf '%s\n' "PTUNE_KNOWN_BAD=$known"
+  printf '%s\n' "CONFIG_FILE=$CFG"
+  printf '%s\n' "PTUNE_GUARD_MODE=$mode"
+  printf '%s\n' "ALLOW_THERMAL_WITH_PTUNE=${allow:-0}"
+  printf '%s\n' "RISK_ACK_VALID=$ov"
+  printf '%s\n' "THERMAL_DISABLE=$td"
+  printf '%s\n' "THERMAL_SKIP_MOUNT=$ts"
+  printf '%s\n' "THERMAL_REMOVE=$tr"
+  printf '%s\n' "THERMAL_EXPECTED=$exp"
+  printf '%s\n' "AUTO_PROFILE_SWITCH_STATE=$auto_state"
+  printf '%s\n' "AUTO_SELECTED_PROFILE=$selected_profile"
+  printf '%s\n' "AUTO_SWITCH_REASON=$auto_reason"
+  printf '%s\n' "BUILD_GUARD_MODE=${build_guard_mode:-unknown}"
+  printf '%s\n' "PROFILE_STALE_AFTER_OTA=$profile_stale_after_ota"
+  printf '%s\n' "REINSTALL_REQUIRED=$reinstall_required"
+  printf '%s\n' "MODULE_OVERLAY_READY=$ready"
+  printf '%s\n' "ACTIVE_VENDOR_MATCH=$match"
+  printf '%s\n' "ROOT_IMPL=$root_impl"
+  printf '%s\n' "META_BACKEND_PRESENT=$meta_backend"
+  printf '%s\n' "META_BACKEND_KIND=$meta_backend_kind"
+  printf '%s\n' "META_BACKEND_VERSION=$meta_backend_version"
+  printf '%s\n' "METAMODULE_INSTALLED=$meta_backend"
+  printf '%s\n' "VENDOR_OVERLAY_BACKEND_WARN=$warn"
+  printf '%s\n' "SAFE_TO_REBOOT=$safe"
+  printf '%s\n' "REASON=$reason"
+}
