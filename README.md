@@ -2,6 +2,8 @@
 
 ## 1.4.13-universal-test.26 prerelease: debug/compat token cleanup
 
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test26 install/helper smoke and post-reboot runtime verification PASS; Test25 PASS scope and existing external tester credits remain preserved.
 - Pending runtime PASS until Test26 install and post-reboot verification.
 - Behavior-preserving cleanup: replaces legacy multiline redirect blocks in debug/compat helpers with printf-based output generation.
 - Keeps Test25 runtime behavior, XDA public branding, Credits/Tester/PASS scope, pTune Override OFF default, Outdoor Extended, polling mod, and ZRAM runtime path unchanged.
