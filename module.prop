@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=1.4.13-universal-test.28
-versionCode=1015328
+version=1.4.13-universal-test.29
+versionCode=1015329
 author=Lycidias93, based on marx161
-description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test28 makes Use last settings short-circuit all follow-up install menus. Stable channel stays 1.4.12
+description=Pixel 10 Android 17 Thermal Throttle Fix profiles; Test29 adds read-only profile layout mapping audit helper based on Harish / Codecity001 concept. Stable channel stays 1.4.12
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

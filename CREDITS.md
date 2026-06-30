@@ -28,3 +28,4 @@ Notes:
 - **Harish / Codecity001**: PR70 ZRAM resetprop-rs boot_early rework, script cleanup, debug-gating feedback, and Pixel test iteration.
 - **JoshuaDoes**: resetprop -n, boot timing, mmd restart, and root-detection-safe in-memory property guidance.
 - **Allen Chang**: QPR1/CP31 boot verification and missing outdoor profile report for mustang-android17-cp31.
+- Harish / Codecity001: profile layout refactor concept and mockup reference for Test29.
