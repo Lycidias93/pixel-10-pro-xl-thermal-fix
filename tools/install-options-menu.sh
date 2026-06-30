@@ -175,8 +175,19 @@ apply_last_settings_and_exit() {
 remember_idx=1; has_remembered && remember_idx=0
 mc_cycle2 "Remember Settings" "Use last" "Fresh defaults" "$remember_idx"
 if [ "$MC_INDEX" = "0" ]; then
-  cfg_set THERMAL_SETTINGS_MODE last; mc_msg "Settings: last"; apply_last_settings_and_exit
-else
+  if has_remembered; then
+    cfg_set THERMAL_SETTINGS_MODE last
+    cfg_set USE_LAST_FALLBACK none
+    mc_msg "Settings: last"
+    apply_last_settings_and_exit
+  fi
+  cfg_set USE_LAST_FALLBACK no_saved_fresh_defaults_test28
+  mc_msg ""
+  mc_msg "No saved settings found"
+  mc_msg "Using fresh defaults"
+  MC_INDEX=1
+fi
+if [ "$MC_INDEX" != "0" ]; then
   cfg_set THERMAL_SETTINGS_MODE fresh
   cfg_set DEBUG_MODE 1; cfg_set debug_mode 1; cfg_set LAST_DEBUG_MODE verbose
   cfg_set THERMAL_OUTDOOR_PROFILE stock
