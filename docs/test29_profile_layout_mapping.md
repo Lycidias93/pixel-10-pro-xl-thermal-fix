@@ -50,3 +50,7 @@ Research-only candidates:
 ## Status
 
 This is an audit and mapping helper only. It performs no writes to `/sys`, `/proc`, Magisk module runtime state, routes, DNS, or thermal runtime paths.
+
+## Final runtime verification
+
+Final runtime verification: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 post-reboot PASS; Harish credit active; mapping helper active; G4 legacy preserve PASS; ZRAM runtime PASS; thermal tombstone index empty or absent.
