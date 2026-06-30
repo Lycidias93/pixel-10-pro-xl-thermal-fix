@@ -96,7 +96,7 @@ thermal_finalize_install() {
     printf '%s\n' "bind_mount_model=no"
     printf '%s\n' "live_runtime_text_patch_model=no"
     printf '%s\n' "selinux_overlay_read_policy=hal_thermal_default_system_file_read_only"
-    printf '%s\n' "update_json_channel=stable_update_json_1.4.12-universal.1_test_manual_install_only"
+    printf '%s\n' "update_json_channel=stable_update_json_1.5-universal.1_public_stable"
     printf '%s\n' "debug_collector=manual_or_auto_on_install_fail_v1411"
     printf '%s\n' "debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"
     printf '%s\n' "override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh"

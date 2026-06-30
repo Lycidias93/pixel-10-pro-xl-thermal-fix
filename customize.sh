@@ -25,7 +25,7 @@ ui_print "  Pixel 10 Thermal & Memory Control"
 ui_print "  A17 Thermal Throttle Fix profile installer"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only ThermalHAL overlay policy included"
-ui_print "Prerelease test; stable updateJson remains 1.4.12-universal.1"
+ui_print "Stable 1.5 release; stable updateJson now points to 1.5-universal.1"
 
 model="$(getprop ro.product.model)"
 device="$(getprop ro.product.device)"
