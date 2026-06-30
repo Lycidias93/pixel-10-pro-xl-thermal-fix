@@ -17,6 +17,7 @@ Since last public stable: 1.4.12-universal.1
 - Android 17 CP2A.260605.012 / incremental 15430684.
 - Outdoor Extended, polling mod, pTune Override OFF, ZRAM 100p.
 - ZRAM runtime PASS; thermal tombstone index empty or absent.
+- Final Stable 1.5 post-reboot verification PASS: active 1.5-universal.1, public update channel 1.5, ZRAM runtime PASS, thermal tombstone index empty or absent.
 
 ## Credits
 
