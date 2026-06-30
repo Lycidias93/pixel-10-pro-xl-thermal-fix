@@ -7,8 +7,8 @@ Since last public stable: 1.4.12-universal.1
 
 - Verified Test25-Test29 cleanup chain promoted to stable.
 - ZRAM 100p install and runtime path retained and verified.
-- Use-last install flow now keeps previous settings without repeated menus.
-- Thermal overlay and ZRAM setup are cleaner, easier to verify, and less installer-heavy.
+- Use-last install flow keeps previous settings without repeated option menus.
+- Thermal overlay and ZRAM setup are cleaner and easier to verify.
 - Harish / Codecity001 profile-layout mapping audit added as read-only helper and documentation.
 
 ## Verified profile
@@ -26,6 +26,688 @@ Since last public stable: 1.4.12-universal.1
 - No TensorConservative sysfs/procfs writes.
 - No direct profile resolver layout switch.
 - No new runtime tuning beyond the verified Test25-Test29 chain.
+
+## 1.4.13-universal-test.29 prerelease: Profile layout mapping audit
+
+- Adds a read-only profile layout mapping helper for the proposed `profiles/device/family/variant` structure.
+- Harish / Codecity001 profile layout concept credited as mockup reference and reimplemented on current Test28 main.
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684, Test29 post-reboot verified.
+- Test29 final verify: Harish credit active, mapping helper active, G4 legacy preserve PASS, ZRAM runtime PASS, thermal tombstone index empty or absent.
+- Preserves Test28 Use last settings short-circuit and no-saved Fresh defaults guard.
+- Preserves Test27 install thermal overlay helper boundaries; no runtime resolver switch in this slice.
+- TensorConservative stays research-only; no sysfs/procfs writes are added.
+- Runtime PASS: pending for Test29 until install and post-reboot verification.
+## 1.4.13-universal-test.28 prerelease: Use-last short-circuit
+
+- Makes "Use last settings" apply remembered Outdoor, polling, pTune override, debug, and ZRAM choices without showing the follow-up install menus.
+- Keeps Test27 install thermal overlay helper, Test26 debug/compat token cleanup, Test25 ZRAM install helper, Outdoor Extended, polling mod, and pTune Override OFF behavior unchanged when those were the remembered choices.
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684, rebuilt ZIP post-reboot verified.
+- Test28 final verify: no-saved guard active, saved Use-last short-circuit active, Outdoor Extended, polling mod, pTune Override OFF, ZRAM runtime PASS, thermal tombstone index empty or absent.
+- If no saved values exist and Use last is selected, Test28 visibly falls back to Fresh defaults instead of inventing a last profile.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+
+## 1.4.13-universal-test.27 prerelease: install overlay helper refactor
+
+- Refactors install-time profile/outdoor overlay materialization into `tools/install-thermal-overlay.sh`.
+- Keeps Test26 debug/compat token cleanup, Test25 ZRAM install helper, Outdoor Extended, polling mod, and pTune Override OFF behavior unchanged.
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test27 install/pre-reboot and post-reboot runtime verification PASS; Test26 PASS scope and existing external tester credits remain preserved.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+
+## 1.4.13-universal-test.26
+
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test26 install/helper smoke and post-reboot runtime verification PASS; Test25 PASS scope and existing external tester credits remain preserved.
+- Pending runtime PASS until Test26 install and post-reboot verification.
+- Behavior-preserving cleanup: replaces legacy multiline redirect blocks in `tools/collect-debug.sh` and `tools/compat-check.sh` with printf-based output generation.
+- Keeps Test25 runtime behavior, XDA public branding, Credits/Tester/PASS scope, pTune Override OFF default, Outdoor Extended, polling mod, and ZRAM runtime path unchanged.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+
+## 1.4.13-universal-test.25
+
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test25 install and post-reboot runtime verification PASS; Test24 PASS scope and existing external tester credits remain preserved.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+
+- Behavior-preserving refactor on top of Test24.
+- Extracts install-time ZRAM fstab materialization and ZRAM menu invocation into `tools/install-zram.sh`.
+- Adds install-state marker `zram_install_materializer=install_zram_helper_v1413_test25`.
+- Keeps Test24 runtime behavior, XDA public branding, Credits/Tester/PASS scope, pTune Override OFF default, Outdoor Extended, polling mod, and ZRAM runtime path unchanged.
+
+## 1.4.13-universal-test.24
+
+- Public/XDA title aligned: [MOD][MAGISK][Pixel 10 Pro/XL][A17] Thermal Polling/Throttle Fix + Memory Control – ZRAM 100%
+- Behavior-preserving refactor on top of Test23.
+- Extracts install finalization into `tools/install-finalize.sh`.
+- Moves guard cleanup, utility chmods, and install-state writing out of `customize.sh`.
+- Writes install-state using `printf` lines.
+- Keeps Test23 runtime behavior unchanged.
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 / Outdoor Extended / ZRAM 16 GiB.
+- Tester/PASS scope: local mustang Test24 install and post-reboot verification PASS; external tester credits and pending-device boundaries are preserved.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+
+## 1.4.13-universal-test.23
+
+- Stable-candidate metadata test on top of Test22.
+- No intended runtime behavior changes from Test22.
+- Keeps pTune guard helper extraction.
+- Keeps Fresh pTune Override default OFF.
+- Keeps Outdoor Extended, polling mod, and ZRAM runtime paths unchanged.
+- Stable channel remains 1.4.12 until final promotion.
+
+## 1.4.13-universal-test.22
+
+- Supersedes `1.4.13-universal-test.21` for refactor testing.
+- Extracts pTune guard/preflight logic from `customize.sh` into `tools/ptune-guard.sh`.
+- Converts the extracted skip-mount install-state writer to `printf` lines.
+- Changes Fresh defaults pTune Override start state to OFF.
+- Keeps remembered ON reusable through Use last.
+- Keeps Test21 install debug/autosave helper extraction.
+
+## 1.4.13-universal-test.21
+
+- Supersedes `1.4.13-universal-test.20`.
+- Behavior-preserving `customize.sh` refactor.
+- Extracts install debug/autosave functions into `tools/install-debug.sh`.
+- Keeps Test20 UI, Test19 debug default, Test18 ZRAM cleanup, and the full Android 17 profile matrix.
+- No thermal profile, polling, ZRAM, pTune, or menu behavior changes intended.
+
+## 1.4.13-universal-test.20
+
+- Supersedes `1.4.13-universal-test.19`.
+- Adds compact one-line help text to installer cycle menus.
+- Shortens thermal confirmation labels for installer readability.
+- Keeps Test19 Debug Logging default behavior.
+- Keeps Test18 ZRAM cleanup behavior.
+- Removes a stale fresh-default debug reset.
+
+## 1.4.13-universal-test.19
+
+- Supersedes `1.4.13-universal-test.18`.
+- Keeps Test18 ZRAM cleanup behavior.
+- Fixes Debug Logging default selection for fresh test installs so Verbose is shown first.
+- Keeps remembered Silent reusable when using remembered settings.
+
+## 1.4.13-universal-test.18
+
+- Supersedes `1.4.13-universal-test.17`.
+- Keeps Test17 full installer options and profile matrix.
+- Makes Debug Logging default to Verbose for test builds.
+- Cleans up `tools/apply-zram-100p.sh` while preserving debug diagnostics.
+- Adds a hard executable check for `tools/resetprop-rs`.
+- Documents boot-early ZRAM application in `install-state.txt`.
+- Uses `mmd` restart only outside `boot_early`.
+- Documents that no backup state is needed for in-memory-only ZRAM props.
+
+## 1.4.13-universal-test.17
+
+- Supersedes `1.4.13-universal-test.16`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Adds remembered settings at the start of install.
+- Adds Safety Level Normal/Strict.
+- Adds a short conflict scan for foreign thermal overlays, polling drift, and pTune presence.
+- Adds Polling Fix selection: Mod values or Stock values.
+- Adds pTune Override ON/OFF selection before the pTune guard is evaluated.
+- Adds shared compact cycle menu helper used by installer menus.
+- Stores long details in config/install-state instead of printing long paths in the installer.
+
+## 1.4.13-universal-test.16
+
+- Supersedes `1.4.13-universal-test.15`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps compact 30s cycle menus for Thermal, Debug, and ZRAM.
+- Keeps permissive Volume Up/Down event matching for Magisk/getevent compatibility.
+- Reduces debounce from 1.20s to 0.45s to make selection feel responsive again.
+- Removes the extra pre-read sleep from menu input handling.
+- Power button is not used.
+
+## 1.4.13-universal-test.15
+
+- Supersedes `1.4.13-universal-test.14`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps compact 30s cycle menus for Thermal, Debug, and ZRAM.
+- Replaces strict DOWN-only key matching with permissive Volume Up/Down event matching for Magisk/getevent compatibility.
+- Raises debounce to 1.20s to avoid double-counting one physical keypress.
+- Power button is not used.
+
+## 1.4.13-universal-test.14
+
+- Supersedes `1.4.13-universal-test.13`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Raises installer interaction timeout to 30 seconds.
+- Keeps DOWN-only key detection and debounce.
+- Reworks Thermal, Debug, and ZRAM prompts into compact narrow-screen friendly menus.
+- Shows all options once and only prints the current selection during cycling.
+- Power button is not used.
+
+## 1.4.13-universal-test.13
+
+- Supersedes `1.4.13-universal-test.12`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Adds DOWN-only key detection for installer menu input.
+- Ignores key-release events and adds debounce delay to avoid double-cycling.
+- Applies the same cycle/confirm UX to Thermal profile, Debug logging, and ZRAM 100% prompts.
+- Cleans up outdoor state/source labels to test13 naming.
+- Power button is not used.
+
+## 1.4.13-universal-test.12
+
+- Supersedes `1.4.13-universal-test.11`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Replaces the outdoor menu with a cleaner Thermal Throttle Fix profile selector.
+- Shows all four options up front.
+- Volume Up cycles through Stock, Safe, Plus, and Extended.
+- Volume Down confirms the shown option.
+- Timeout confirms the shown option.
+- Power button is not used.
+- Cleans up profile naming and installer labels.
+
+## 1.4.13-universal-test.11
+
+- Supersedes `1.4.13-universal-test.10`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Replaces the staged outdoor menu with a cycle/confirm menu.
+- Volume Up cycles Stock → Safe → Plus → Extended.
+- Volume Down confirms the shown option.
+- Timeout selects Stock/default.
+- Power button is not used.
+- Cleans up installer labels from older Thermal Polling/Test9 wording.
+
+## 1.4.13-universal-test.10
+
+- Supersedes `1.4.13-universal-test.9`.
+- Keeps the full Android 17 Pixel 10 device/build profile matrix.
+- Keeps Safe, Plus, and Extended active install-time choices.
+- Changes the outdoor installer menu to volume-key-only selection.
+- Removes Power button use from outdoor profile selection.
+- Keeps factory JSON shape preservation and VIRTUAL-SKIN / VIRTUAL-SKIN-HINT-only outdoor threshold policy unchanged.
+
+## 1.4.13-universal-test.9
+
+- Adds full Android 17 Pixel 10 device/build profile matrix for `frankel`, `blazer`, `mustang`, and `rango` across CP2A, CP21, and CP31 factory vendor sources.
+- Generates base, outdoor-safe, outdoor-plus, and outdoor-extended profiles for every device/build pair.
+- Offers Safe, Plus, and Extended as active install-time choices.
+- Preserves vendor JSON shape: sensor order, threshold array length, hysteresis array length, and NAN positions.
+- Safe/Plus/Extended only adjust `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` thresholds.
+- Keeps USB, charge, battery, speaker, shutdown, emergency, CP2A ZRAM, and resetprop-rs ZRAM paths unchanged.
+- Supersedes Test8 after external mustang CP31 bootloop report.
+
+## 1.4.13-universal-test.6
+
+- Renames the visible Magisk module name from `Pixel 10 Thermal Polling Fix` to `Pixel 10 Thermal & Memory Control`.
+- Keeps the Magisk module id `pixel-10-pro-xl-thermal-fix` unchanged for update/config compatibility.
+- No runtime logic changes.
+
+## 1.4.13-universal-test.5
+
+- Fixes boot-time auto-profile-switch so selected `outdoor-g4-adapted` and `outdoor-g4-adapted-plus` profiles are preserved after reboot.
+- Keeps Pixel 9 inspired plus profile conservative and does not copy 5-minute polling delay, USB, charge, battery, speaker, shutdown, or emergency changes.
+- Keeps PR70 ZRAM resetprop-rs boot_early path unchanged.
+
+<!-- PIXEL_THERMAL_V1413_TEST4_PLUS_START -->
+## 1.4.13-universal-test.4 - Pixel 9 inspired outdoor plus test
+
+- Adds `outdoor-g4-adapted-plus` as a conservative Pixel 9 inspired thermal threshold test profile.
+- Keeps `outdoor-g4-adapted` available as the safer baseline profile material.
+- Volume Up in the outdoor menu selects the new plus profile for this test build.
+- Keeps polling delays unchanged; does not apply the Pixel 9 mod's 300000 ms polling delay behavior.
+- Does not modify charge, USB, battery, speaker, shutdown, or emergency safety paths.
+- Keeps optional ZRAM 100p resetprop-rs boot_early PR70 logic from `1.4.13-universal-test.3`.
+- Adds Pixel 9 mod inspiration credits for nokia5700black, JohnTheFarm3r, and Rana260492 based on the user-provided XDA packages/threads.
+- Stable update channel remains unchanged; this is a manual prerelease test build.
+<!-- PIXEL_THERMAL_V1413_TEST4_PLUS_END -->
+
+<!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_START -->
+- Add credits for Harish and JoshuaDoes for the Pixel Thermal 1.4.12 optional ZRAM 100p test line.
+<!-- PIXEL_THERMAL_V1412_TEST6_CREDITS_END -->
+
+## 1.4.12-universal-test.4
+- Fixes optional ZRAM 100p fstab preservation after Harish/Joshua feedback.
+- Preserves `fstab.zram.100p` through thermal profile materialization.
+- Keeps fstab template outside `system/vendor/etc` so customize.sh cannot delete the source.
+- Updates installer/autosave metadata to `1.4.12-universal-test.4` / `1015204`.
+- Keeps stable update channel on `v1.4.11-universal.1`.
+
+
+
+## 1.4.12-universal-test.2
+
+- Add optional ZRAM 100p test path, disabled by default.
+- Add `/vendor/etc/fstab.zram.100p` overlay for Tensor ZRAM 100p testing.
+- Add enable/disable/debug helper tools for ZRAM testing.
+- Add service hook that applies ZRAM 100p only when explicitly enabled in config.
+- Extend debug collector with ZRAM/fstab/mmd/proc-swaps evidence.
+- Stable update channel remains `1.4.11-universal.1`; this is a manual test prerelease.
+## 1.4.12-universal-test.2 - 2026-06-24
+
+
+## 1.4.11-universal.1 - stable install debug autosave
+
+- Promoted v1.4.11 install debug autosave from prerelease to stable.
+- Post-reboot verified on Pixel 10 Pro XL `mustang` with active vendor overlay match.
+- Stable update channel points to `v1.4.11-universal.1`.
+- Install autosave writes `/sdcard/Download/pixel_thermal_install_*.txt`.
+- Debug ZIP collector writes `/sdcard/Download/pixel_thermal_debug_*.zip`.
+- Supersedes `1.4.10-universal.3` and `1.4.12-universal-test.2`.
+
+- Test prerelease: automatic install-debug autosave.
+- Saves install-fail snapshots to Download as `pixel_thermal_install_*.txt`.
+- Attempts bundled debug collector automatically on installer failure using the current update module path.
+- Records device/build, selected profile, root/mount backend, pTune guard state and recent thermal logcat.
+- Stable update channel remains `v1.4.10-universal.3`.
+
+
+## 1.4.10-universal.3 - 2026-06-24
+
+- Stable profile path hotfix.
+- Fixes the v1.4.10-universal.2 install abort caused by customize.sh checking only the nested profile path while the ZIP used top-level profile folders.
+- Adds robust profile lookup for nested and top-level profile packaging.
+- Keeps Android-major guard relaxation from v1.4.10.
+
+## 1.4.10-universal.2 - 2026-06-24
+
+- Stable profile packaging hotfix.
+- Rebuilds the release ZIP with profile directories included at the expected top-level paths.
+- Fixes install failure: missing `thermal_info_config_throttling.json` after selecting an Android 17 profile.
+- Keeps Android-major guard relaxation from 1.4.10-universal.1.
+
+<!-- V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_START -->
+## 1.4.10-universal.1 - stable Android-major guard hotfix
+
+- Promotes v1.4.10 Android-major guard behavior to stable.
+- Build ID / fingerprint / incremental are diagnostic, not hard blockers.
+- Android-major and Pixel 10 codename guards remain active.
+- Unknown devices remain blocked.
+- pTune conflict guard remains active.
+- Root / mount backend detection remains log-only.
+- Stable update channel now points to `1.4.10-universal.1` / `1015002`.
+<!-- V1410_STABLE_ANDROID_MAJOR_GUARD_HOTFIX_20260624_END -->
+
+<!-- V1410_MAJOR_GUARD_TEST_START -->
+## v1.4.10-universal-test.1 experimental test
+
+Experimental test release for QPR / unsupported-build feedback.
+
+- Android build/fingerprint/incremental checks are relaxed to Android-major + Pixel 10 codename in the test channel.
+- Unsupported devices and unsupported Android major versions remain blocked.
+- pTune conflict guard remains active.
+- Root/backend detection is log-only diagnostics, not a hard block.
+- Stable remains `v1.4.9-universal.2`.
+<!-- V1410_MAJOR_GUARD_TEST_END -->
+
+
+<!-- V149_STABLE_METADATA_HOTFIX_START -->
+## 1.4.9-universal.2 stable metadata hotfix
+
+- Promotes installer-internal metadata from `1.4.9-universal-test.2` / `1014902` to `1.4.9-universal.2` / `1014904`.
+- Fixes stale install text that still said prerelease and old stable update channel.
+- Marks `mustang` Android 17 Stable CP2A runtime proof as verified in installer state.
+- Thermal profile files and auto-switch logic are unchanged from the validated 1.4.9 stable line.
+<!-- V149_STABLE_METADATA_HOTFIX_END -->
+
+## 1.4.9-universal.1 - stable final
+
+- Promote guarded auto-profile-switch to the stable channel after local stable-gate dry-run PASS.
+- Dry-run coverage: A16 installed state to A17 stable rematerializes, current A17 profile remains valid, unknown A17 build blocks safely.
+- Runtime proof remains `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684` with `AUTO_SWITCH_PASS reason=current_profile_valid`.
+- Stable update channel now points to `1.4.9-universal.1` / `versionCode=1014903`.
+- `frankel` and `rango` Android 17 stable profiles remain included but pending live post-reboot verification.
+
+## 1.4.9-universal-test.2 - runtime proof for guarded auto-profile-switch
+
+- Verified `mustang` / Android 17 Stable `CP2A.260605.012` / incremental `15430684` after reboot.
+- Auto-switch result: `AUTO_SWITCH_PASS reason=current_profile_valid`.
+- Compat result: `PROFILE_STALE_AFTER_OTA=no`, `REINSTALL_REQUIRED=no`, `MODULE_OVERLAY_READY=yes`, `ACTIVE_VENDOR_MATCH=yes`, `VENDOR_OVERLAY_BACKEND_WARN=no`, `SAFE_TO_REBOOT=yes`.
+- Debug proof: `pixel_thermal_debug_20260621_124205.zip` / SHA256 `de5713b1a42e79f83b0ac439ce20a78bfbd55c2b68fff23f4f16156505c4b898`.
+- ThermalHAL proof: live `pixel-thermal` output present and `thermal_tombstone_index.txt` empty.
+- Stable `update.json` intentionally unchanged on `v1.4.4-universal.1`.
+
+## 1.4.9-universal-test.2 - guarded auto-profile-switch after compatible OTA/build changes
+
+- Add boot-time guarded auto-profile-switch helper for compatible Pixel 10 Android build changes.
+- The helper reselects the current device/build/fingerprint profile and rematerializes the active module overlay when the installed profile is stale after OTA.
+- Unknown or incompatible Android/build/fingerprint changes set `skip_mount` and write `PROFILE_STALE_AFTER_OTA=yes` / `REINSTALL_REQUIRED=yes` instead of applying a blind profile.
+- pTune guard remains authoritative: active/staged pTune still blocks unless explicit risk-ack override is configured.
+- Stable `update.json` remains on `1.4.4-universal.1`.
+
+## Unreleased - public README refresh after 1.4.9 test.1
+
+- Rewrote README for the current public XDA/GitHub state after `v1.4.9-universal-test.1`.
+- Documented Android 17 stable `CP2A.260605.012 / 15430684` support scope and live-verified `blazer` status.
+- Documented pTune latest-alpha override compatibility, KernelSU-Next/mountify validation, current stable/prerelease links and verification commands.
+- No runtime, profile, package, release ZIP or `update.json` change.
+
+## 1.4.9-universal-test.1 - Android 17 stable CP2A guarded factory import
+
+- Import guarded Android 17 stable `CP2A.260605.012` / `15430684` factory thermal profiles for `mustang`, `blazer`, `frankel` and `rango`.
+- Profile state is factory-evidence imported and pending live post-reboot runtime verification.
+- Stable `update.json` remains on `1.4.4-universal.1`.
+
+
+## Unreleased - vNext credits
+
+- Credit `pogo-airsupport` for KernelSU-Next / MetaModule-mountify compatibility verification of `v1.4.8-universal-test.3` with `ACTIVE_VENDOR_MATCH=yes`.
+
+## 1.4.8-universal-test.1 guard_first vNext
+
+- User disable/remove/skip_mount markers are authoritative.
+- Disabled pTune is inactive.
+- Added stock-export guard, quarantine helper, and vendor overlay backend diagnostics.
+- Service health is read-only and does not mutate markers.
+- Stable updateJson unchanged.
+
+## 1.4.7-universal-test.3
+
+- Added always-materialized pTune override helper: `tools/enable-ptune-override.sh`.
+- Added safe rollback helper: `tools/disable-ptune-override.sh`.
+- Hardened `compat-check.sh` with `MODULE_OVERLAY_READY` and `ACTIVE_VENDOR_MATCH`.
+- Hardened `post-fs-data.sh`: override config without overlay files is blocked back to skip_mount for the next boot.
+- Kept default strict pTune guard and stable updateJson unchanged.
+
+## 1.4.7-universal-test.2 - prerelease pTune config guard tools
+
+- Add `config.env` support with `ALLOW_THERMAL_WITH_PTUNE=1` plus required `RISK_ACK_PTUNE_THERMAL_COLLISION=I_UNDERSTAND_BOOTLOOP_RISK` for dangerous override tests.
+- Keep safe default: pTune installed means this module remains enabled but `skip_mount` is kept.
+- Add immediate `health.log` start marker and service-side config guard/watch evidence.
+- Add `tools/compat-check.sh` and `tools/collect-ptune-evidence.sh`.
+- Include config/compat/pTune known-bad evidence in the manual debug ZIP.
+- Keep stable `update.json` unchanged on `1.4.4-universal.1`.
+
+## 1.4.7-universal-test.1 - prerelease strict pTune installed-presence guard
+
+- Treat a non-removed `id=ptune` module as a conflict even when pTune is disabled.
+- Keep this module enabled but `skip_mount`ed with `disabled_reason=conflict_ptune_installed` and `conflict_guard_mode=strict_presence_skip_mount` while pTune is installed.
+- Add a lightweight service watcher that preserves `skip_mount` for the next boot if pTune is installed after this module was already active.
+- Keep stable `update.json` on `1.4.4-universal.1`.
+
+## Unreleased - stock debug helper ADB fallback
+
+- Document an ADB-push workflow for stock Android shells without `curl`/`wget` and `su` variants without `-c` support.
+- Improve `tools/pixel10-stock-thermal-debug-online.sh` summary output with per-file SHA256, sizes, `VIRTUAL-SKIN` counts, `PollingDelay` counts/values and bounded context.
+- Print `adb pull` hints for the generated archive and checksum at the end of helper runs.
+- No module runtime, thermal profile, polling value, release ZIP, stable channel or `update.json` change.
+
+## 1.4.6-universal-test.1 - prerelease guarded QPR1 Beta 4 CP31 test
+
+## 1.4.6-universal-test.2 - prerelease
+
+- Add stale-disable cleanup for pTune soft-conflict installs: active and staging module `disable` flags are removed while preserving `skip_mount`.
+- Clear stale pTune conflict guard files when pTune is absent so the no-pTune overlay path can be verified cleanly.
+- Keep guarded Android 17 QPR1 Beta 4 `CP31.260522.006 / 15591510` support from `1.4.6-universal-test.1`.
+- Keep stable `update.json` on `1.4.4-universal.1`.
+
+
+- Add exact-fingerprint guarded support for Pixel 10 Pro XL / `mustang` on Android 17 QPR1 Beta 4 `CP31.260522.006` / `15591510`.
+- Reuse the existing `mustang-android17-cp31` patched profile because supplied stock `CP31.260522.006` ThermalHAL configs match the known CP31 stock structure.
+- Keep pTune soft conflict guard from `1.4.5-universal-test.2`.
+- No thermal profile value, polling value, `sepolicy.rule`, stable release channel or `update.json` promotion change.
+
+## Unreleased - online stock thermal debug helper
+
+- Add `tools/pixel10-stock-thermal-debug-online.sh` for read-only stock ThermalHAL evidence collection on unsupported or newer firmware.
+- Document the online helper command for Android 17 QPR/QPR1 beta requests such as `CP31.260522.006`.
+- No module runtime, thermal profile, polling value, release ZIP, stable channel or `update.json` change.
+
+## 1.4.5-universal-test.2 - prerelease pTune soft conflict boot guard
+
+- Change pTune conflict handling from hard `disable` to soft `skip_mount` only, so `post-fs-data.sh` can keep checking on every boot.
+- Keep `disable` absent during pTune conflict; keep `skip_mount` present and write `disabled_reason=conflict_ptune_active` plus `conflict_guard_mode=soft_skip_mount_only`.
+- If pTune is removed later, boot guard clears `skip_mount`; the overlay becomes active on the following boot.
+- No thermal profile, polling value, `sepolicy.rule`, release ZIP stable channel or `update.json` promotion change.
+
+## 1.4.5-universal-test.1 - prerelease pTune conflict guard
+
+- Add pTune conflict auto-disable guard for active or staged `id=ptune` modules.
+- Set `disable` and `skip_mount` with `disabled_reason=conflict_ptune_active` instead of competing for the same Pixel ThermalHAL overlay files.
+- Add pTune/conflict status files to the manual debug ZIP.
+- No thermal profile, polling value, `sepolicy.rule`, release ZIP stable channel or `update.json` promotion change.
+
+## Unreleased - pTune compatibility boundary
+
+- Documented that pTune may integrate similar Pixel 10 thermal-polling changes but should not be installed alongside this module.
+- Clarified that this module remains the minimal standalone verified reference path for the Pixel ThermalHAL polling change.
+- Added verification requirements for pTune or other bundled integrations before treating them as a replacement.
+- No runtime thermal profile, release ZIP, module.prop or updateJson change.
+
+## 1.4.4-universal-test.2 - prerelease test
+
+## 1.4.4-universal.1 - stable channel promotion
+
+- Promoted `1.4.4-universal-test.2` to stable update channel as `1.4.4-universal.1`.
+- Stable `update.json` now points to `1.4.4-universal.1` / versionCode `1014403`.
+- Carries forward the SELinux overlay-read hotfix and improved debug evidence collection.
+- Keeps CP21 profiles guarded and still requiring post-reboot tester debug ZIPs before PASS status.
+- Credits: Jiggs, Harish, maicol07.
+
+
+- Add prerelease `1.4.4-universal-test.2`.
+- Carry forward `1.4.3-universal.3` SELinux overlay-read hotfix.
+- Keep stable `update.json` on `1.4.3-universal.3`.
+- Enable guarded Android 17 CP21 test profiles for frankel, blazer, mustang and rango.
+- Improve manual debug ZIP evidence: SELinux contexts, AVC denial summary, sepolicy copy, time context, and old-vs-fresh ThermalHAL tombstone marker.
+- Credits: Jiggs, Harish, maicol07.
+
+## 1.4.3-universal.3 - stable SELinux overlay-read hotfix
+
+- Fixed ThermalHAL crash loop on setups where Magisk_mounted `/vendor/etc/thermal_info_config*.json` appears as `system_file`.
+- Added read-only `sepolicy.rule` for `hal_thermal_default` to read/open/getattr/map Magisk overlay config files.
+- No thermal profile values changed versus `v1.4.3-universal.2`.
+- Stable updateJson now points to `1.4.3-universal.3`.
+
+## 1.4.3-universal.2 - Universal boot guard hotfix
+
+
+## 1.4.4-universal-test.1
+
+Prerelease universal Android 17 CP21 test build.
+
+### Added
+
+- Guarded Android 17 CP21 runtime test profiles for Frankel, Blazer, Mustang and Rango.
+- Runtime profiles generated from imported CP21 factory evidence.
+- Install-state `verification_state` markers for PASS versus pending scopes.
+- Documentation that stable `update.json` remains on v1.4.3-universal.2.
+
+### Changed
+
+- Android 17 CP21 guarded test install path is enabled in the universal prerelease ZIP.
+- Android 17 Mustang CP31 verified path remains unchanged.
+- Android 16 universal path remains unchanged.
+
+### Verification state
+
+PASS:
+
+- Mustang Android 16 CP1A.260505.005
+- Blazer Android 16 CP1A.260505.005
+- Mustang Android 17 CP31.260508.005 / 15421345
+
+Pending runtime verification:
+
+- Frankel Android 16
+- Rango Android 16
+- Frankel Android 17 CP21.260330.011
+- Blazer Android 17 CP21.260330.011
+- Mustang Android 17 CP21.260330.011
+- Rango Android 17 CP21.260330.011
+
+
+- Fixed `post-fs-data.sh` boot guard so Android 16 `frankel`, `blazer`, and `rango` universal profiles are not disabled after install.
+- Keeps thermal profile files unchanged from `1.4.3-universal.1`.
+- Keeps Android 17 support restricted to `mustang` / `CP31.260508.005` / `15421345`.
+- Updated stable `update.json` to `1.4.3-universal.2` / versionCode `1014305`.
+
+## Unreleased
+
+- Added named Android 17 Mustang tester credit for `Jiggs` in README/release documentation.
+- Documented the online stock debug report path for unsupported Pixel 10 devices and newer firmware before installing the module.
+- Documented vNext guard plan: unsupported installs may generate a pre-abort stock debug ZIP, but must still abort without enabling profiles or materializing overlays.
+
+## 1.4.3-universal.1 - Stable universal release
+
+- Promoted the Android 16 universal + Android 17 Mustang CP31 profile line to stable.
+- Updated `update.json` to `1.4.3-universal.1` / versionCode `1014304`.
+- Kept Android 17 strictly guarded to `mustang` / `CP31.260508.005` / `15421345`.
+- Added scaffold-only Android 17 pending profile docs for `frankel`, `blazer` and `rango`; these are not enabled.
+- Kept debug collection manual-only via `tools/collect-debug.sh`.
+
+## Toggle debug helper - 2026-06-03
+
+- Added public read-only `tools/pixel_thermal_toggle_debug.sh` for cases where Magisk keeps the module disabled.
+- The helper records module flags, Magisk staging directories, AshLooper/AshReXcue status, thermal mountinfo and Magisk logs.
+- No runtime thermal profile, release ZIP, module.prop or updateJson change.
+
+## v1.4.2-universal-test.1
+
+- Documented Mustang post-reboot PASS for `v1.4.2-universal-test.1`; stable `update.json` remains unchanged and additional devices remain beta/pending. - 2026-06-02
+
+- Pre-release build for Android 16-only Pixel 10-series profile expansion.
+- Adds `frankel`, `blazer`, and `rango` install-time beta/pending profile support.
+- Keeps `mustang` as verified/stable.
+- Blocks Android 17 pending separate factory evidence/profile files.
+- Keeps `update.json` stable channel unchanged.
+
+## Unreleased
+
+- Strengthened install-time Android guard: Android 16 profiles now abort on non-Android-16 devices and document that Android 17 requires separate factory evidence/profile files.
+
+- Added factory-based minimal polling source profiles for Pixel 10 Android 16 `CP1A.260505.005`: `frankel`, `blazer`, and `rango` now use factory thermal JSON plus only allowed VIRTUAL-SKIN polling-delay changes to `5000`. No release ZIP, module.prop bump, or update.json change in this step.
+
+<!-- DEBUG_REPORT_PERMISSION_DENIED_FIX_20260602_START -->
+## Debug report PermissionError fix - 2026-06-02
+
+- Fixed the public thermal debug report tool so restricted `/data/adb/modules/...` access does not abort report generation.
+- Narrowed the privacy sanitizer account pattern to avoid false positives on the report's own `accounts_collected=false` metadata and README wording.
+- Runtime thermal profiles, release ZIPs, updateJson and stable channel are unchanged.
+
+<!-- DEBUG_REPORT_PERMISSION_DENIED_FIX_20260602_END -->
+
+<!-- DEBUG_REPORT_PERMISSION_FIX_20260602_START -->
+## Debug report tool - permission handling
+
+- Online `tools/pixel_thermal_debug_report.py` now tolerates `PermissionError` on `/data/adb/modules/...`.
+- Module-state collection records `module_path_readable=false` and `module_path_error=permission_denied` instead of aborting.
+- Thermal file, AshLooper and sanitizer reads now use guarded filesystem helpers.
+- No runtime thermal profile, ZIP asset, release channel or `updateJson` change.
+
+<!-- DEBUG_REPORT_PERMISSION_FIX_20260602_END -->
+
+## v1.3-mustang.15
+
+- Stable Mustang tooling/support release.
+- Runtime thermal scope unchanged from `v1.3-mustang.14`.
+- Debug report ZIP now defaults to `/storage/emulated/0/Download`.
+- Added `--out-dir` support for custom debug report locations.
+- Added debug report schema manifest, file hashes and stronger sanitizer metadata.
+- README now explains daily-use expectations, public verify command, support matrix and compatibility report workflow.
+- Added AshLooper GitHub credit and checksum release asset.
+
+## v1.3-mustang.14
+
+- Stable minor release with no runtime thermal scope change versus `v1.3-mustang.13`.
+- Bundles `tools/pixel_thermal_debug_report.py` for sanitized compatibility reports from new Mustang firmwares or other Pixel 10-series devices.
+- Adds a public README verify command without project-internal `cgprep`/`cgrun` tooling.
+- Adds explicit AshLooper credit and GitHub link as the external bootloop protection used during testing.
+- Keeps older `v1.3-mustang.*` releases as historical prerelease/bisect/test releases.
+
+## Release archive note
+
+- `v1.3-mustang.13` is the current stable Mustang release.
+- Earlier `v1.3-mustang.*` releases are historical bisect/test builds and are kept for audit, rollback context and troubleshooting.
+- Do not prefer older bisect builds for normal installation unless explicitly debugging a regression.
+
+
+## Documentation cleanup - README intro and changelog placement
+
+- Reworked README to start with a short explanation of why this Mustang fork exists.
+- Added credits section.
+- Removed per-version changelog-style sections from README.
+- Kept release history in CHANGELOG.md.
+
+
+## v1.3-mustang.13
+
+- Stable cleanup release for Pixel 10 Pro XL / mustang.
+- No runtime thermal scope change versus v1.3-mustang.12.
+- Keeps all verified 300000ms -> 5000ms PollingDelay targets across throttling, base and charge configs.
+- Fixes stale installer text that still said thermal_info_config_throttling.json only.
+- Keeps VIRTUAL-SKIN entries with absent/null PollingDelay untouched.
+
+
+## v1.3-mustang.12
+
+- Adds both remaining true 300000ms charge thermal config candidates to the stable v1.3-mustang.11 baseline: thermal_info_config_charge.json VIRTUAL-SKIN-CHARGE-WIRED and VIRTUAL-SKIN-CHARGE-PERSIST PollingDelay 300000ms -> 5000ms.
+- Keeps all eight throttling-only VIRTUAL-SKIN targets from v1.3-mustang.10.
+- Keeps thermal_info_config.json VIRTUAL-SKIN-SPEAKER from v1.3-mustang.11.
+- Does not alter VIRTUAL-SKIN entries with absent/null PollingDelay.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.11
+
+- Adds the first base thermal config candidate to the stable v1.3-mustang.10 throttling baseline: thermal_info_config.json VIRTUAL-SKIN-SPEAKER PollingDelay 300000ms -> 5000ms.
+- Keeps all eight throttling-only VIRTUAL-SKIN targets from v1.3-mustang.10.
+- Does not add thermal_info_config_charge.json.
+- Does not alter VIRTUAL-SKIN entries with absent/null PollingDelay.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.10
+
+- Adds the final remaining throttling-only VIRTUAL-SKIN sensor to the stable v1.3-mustang.9 baseline: VIRTUAL-SKIN-SOC-EXTREME PollingDelay 300000ms -> 5000ms.
+- Active targets: VIRTUAL-SKIN, VIRTUAL-SKIN-HINT, VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-HIGH, VIRTUAL-SKIN-SOC, VIRTUAL-SKIN-SOC-EXTREME.
+- Keeps overlay scope limited to system/vendor/etc/thermal_info_config_throttling.json.
+- Does not restore thermal_info_config.json or thermal_info_config_charge.json.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.9
+
+- Adds one additional SOC-adjacent VIRTUAL-SKIN throttling sensor to the stable v1.3-mustang.8 baseline: VIRTUAL-SKIN-SOC PollingDelay 300000ms -> 5000ms.
+- Active targets: VIRTUAL-SKIN, VIRTUAL-SKIN-HINT, VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-HIGH, VIRTUAL-SKIN-SOC.
+- Keeps overlay scope limited to system/vendor/etc/thermal_info_config_throttling.json.
+- Does not restore thermal_info_config.json or thermal_info_config_charge.json.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.8
+
+- Adds one additional VIRTUAL-SKIN throttling sensor to the stable v1.3-mustang.7 baseline: VIRTUAL-SKIN-HINT PollingDelay 300000ms -> 5000ms.
+- Active targets: VIRTUAL-SKIN, VIRTUAL-SKIN-HINT, VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-HIGH.
+- Keeps overlay scope limited to system/vendor/etc/thermal_info_config_throttling.json.
+- Does not restore thermal_info_config.json or thermal_info_config_charge.json.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.7
+
+- Adds one additional generic VIRTUAL-SKIN throttling sensor to the stable v1.3-mustang.6 baseline: VIRTUAL-SKIN PollingDelay 300000ms -> 5000ms.
+- Active targets: VIRTUAL-SKIN, VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-HIGH.
+- Keeps overlay scope limited to system/vendor/etc/thermal_info_config_throttling.json.
+- Does not restore thermal_info_config.json or thermal_info_config_charge.json.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.6
+
+- Adds one additional CPU-adjacent VIRTUAL-SKIN throttling sensor to the stable v1.3-mustang.5 baseline: VIRTUAL-SKIN-CPU-HIGH PollingDelay 300000ms -> 5000ms.
+- Active targets: VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-HIGH.
+- Keeps overlay scope limited to system/vendor/etc/thermal_info_config_throttling.json.
+- Does not restore thermal_info_config.json or thermal_info_config_charge.json.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.5
+
+- Adds one additional CPU-adjacent VIRTUAL-SKIN throttling sensor to the stable v1.3-mustang.4 baseline: VIRTUAL-SKIN-CPU-MID PollingDelay 300000ms -> 5000ms.
+- Active targets: VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-CPU-MID.
+- Keeps overlay scope limited to system/vendor/etc/thermal_info_config_throttling.json.
+- Does not restore thermal_info_config.json or thermal_info_config_charge.json.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
+
+## v1.3-mustang.4
+
+- Adds one additional VIRTUAL-SKIN throttling sensor to the stable v1.3-mustang.3 baseline: VIRTUAL-SKIN-CPU-ODPM PollingDelay 300000ms -> 5000ms.
+- Keeps overlay scope limited to system/vendor/etc/thermal_info_config_throttling.json.
+- Does not restore thermal_info_config.json or thermal_info_config_charge.json.
+- Requires post-reboot runtime verification for fresh ThermalHAL tombstones.
 # Changelog
 
 ## v1.3-mustang.3

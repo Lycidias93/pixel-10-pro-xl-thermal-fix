@@ -7,8 +7,8 @@ Since last public stable: 1.4.12-universal.1
 
 - Verified Test25-Test29 cleanup chain promoted to stable.
 - ZRAM 100p install and runtime path retained and verified.
-- Use-last install flow now keeps previous settings without repeated menus.
-- Thermal overlay and ZRAM setup are cleaner, easier to verify, and less installer-heavy.
+- Use-last install flow keeps previous settings without repeated option menus.
+- Thermal overlay and ZRAM setup are cleaner and easier to verify.
 - Harish / Codecity001 profile-layout mapping audit added as read-only helper and documentation.
 
 ## Verified profile
@@ -26,6 +26,26 @@ Since last public stable: 1.4.12-universal.1
 - No TensorConservative sysfs/procfs writes.
 - No direct profile resolver layout switch.
 - No new runtime tuning beyond the verified Test25-Test29 chain.
+
+## 1.4.13-universal-test.29 prerelease: Profile layout mapping audit
+
+- Adds a read-only profile layout mapping helper for the proposed `profiles/device/family/variant` structure.
+- Harish / Codecity001 profile layout concept credited as mockup reference and reimplemented on current Test28 main.
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684, Test29 post-reboot verified.
+- Test29 final verify: Harish credit active, mapping helper active, G4 legacy preserve PASS, ZRAM runtime PASS, thermal tombstone index empty or absent.
+- Preserves Test28 Use last settings short-circuit and no-saved Fresh defaults guard.
+- Preserves Test27 install thermal overlay helper boundaries; no runtime resolver switch in this slice.
+- TensorConservative stays research-only; no sysfs/procfs writes are added.
+- Runtime PASS: pending for Test29 until install and post-reboot verification.
+## 1.4.13-universal-test.28 prerelease: Use-last short-circuit
+
+- Makes "Use last settings" apply remembered Outdoor, polling, pTune override, debug, and ZRAM choices without showing the follow-up install menus.
+- Keeps Test27 install thermal overlay helper, Test26 debug/compat token cleanup, Test25 ZRAM install helper, Outdoor Extended, polling mod, and pTune Override OFF behavior unchanged when those were the remembered choices.
+- Runtime PASS: Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684, rebuilt ZIP post-reboot verified.
+- Test28 final verify: no-saved guard active, saved Use-last short-circuit active, Outdoor Extended, polling mod, pTune Override OFF, ZRAM runtime PASS, thermal tombstone index empty or absent.
+- If no saved values exist and Use last is selected, Test28 visibly falls back to Fresh defaults instead of inventing a last profile.
+- Credits preserved: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+
 # [MOD][MAGISK][Pixel 10 Pro/XL][A17] Thermal Polling/Throttle Fix + Memory Control – ZRAM 100%
 
 ## 1.4.13-universal-test.27 prerelease: install overlay helper refactor
