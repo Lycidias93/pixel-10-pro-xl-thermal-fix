@@ -4,7 +4,7 @@
 
 Stable **1.5-universal.1** promotes the verified Test25–Test29 chain: cleaner install flow, safer profile selection, Outdoor Extended, Use-last, ZRAM 100p, and read-only profile layout auditing.
 
-[Download latest release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest) · [Release notes](RELEASE_NOTES_v1.5-universal.1.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+[Download latest release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest) · [Telegram](https://t.me/lycidias93) · [Release notes](RELEASE_NOTES_v1.5-universal.1.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
 ---
 
@@ -72,6 +72,22 @@ For a full debug package:
 ```sh
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
+
+Online debug command, using the latest helper from main:
+
+```sh
+cd /sdcard/Download
+curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/collect-debug.sh
+su -c "sh -n /sdcard/Download/collect-debug.sh && sh /sdcard/Download/collect-debug.sh"
+```
+
+Generated output:
+
+```text
+/sdcard/Download/pixel_thermal_debug_*.zip
+```
+
+Review generated output before posting it publicly.
 
 ---
 
