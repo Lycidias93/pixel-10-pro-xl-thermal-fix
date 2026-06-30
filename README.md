@@ -12,12 +12,12 @@ Stable **1.5-universal.1** promotes the verified Test25–Test29 chain: cleaner 
 
 This module installs guarded Pixel 10 thermal and memory overlays through Magisk. It does **not** replace Android thermal management; the stock thermal HAL remains in control while selected profile inputs are changed for supported device/build combinations.
 
-| Function | Technical change | Everyday benefit |
-|---|---|---|
-| **Thermal polling** | Preserves the verified polling-mod path for supported Pixel 10 thermal configs. | Aims for more consistent thermal sensor/update behavior during longer load, charging, navigation, camera use, or outdoor use. |
-| **Throttling profiles** | Applies guarded `thermal_info_config*.json` profile overlays, including the verified **Outdoor Extended** path. | Can make sustained load feel less abrupt by using tested profile variants, without disabling thermal safety. |
-| **ZRAM 100p** | Optional boot/runtime memory profile for the verified ZRAM 100p path. | Can help multitasking under memory pressure and reduce app reloads in daily use. |
-| **Compatibility guard** | Activates only when device/build/profile evidence matches the supported matrix. | Reduces the risk of applying the wrong thermal profile to an unknown build. |
+Main functions:
+
+- **Thermal polling:** preserves the verified polling-mod path for supported Pixel 10 thermal configs. In daily use, this aims for more consistent thermal sensor/update behavior during longer load, charging, navigation, camera use, or outdoor use.
+- **Throttling profiles:** applies guarded `thermal_info_config*.json` profile overlays, including the verified **Outdoor Extended** path. This can make sustained load feel less abrupt by using tested profile variants, without disabling thermal safety.
+- **ZRAM 100p:** optional boot/runtime memory profile for the verified ZRAM 100p path. This can help multitasking under memory pressure and reduce app reloads in daily use.
+- **Compatibility guard:** activates only when device/build/profile evidence matches the supported matrix. This reduces the risk of applying the wrong thermal profile to an unknown build.
 
 It is **not** an overclock, benchmark unlock, FPS tweak, or thermal safety bypass.
 
