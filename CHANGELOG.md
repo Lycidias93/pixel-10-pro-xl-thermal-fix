@@ -1,3 +1,11 @@
+# Stable 1.5
+
+- Stable Release: 1.5-universal.1
+- Runtime PASS chain: Test25, Test26, Test27, Test28, Test29.
+- Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684 verified through Test29 post-reboot.
+- Includes ZRAM 100p, Outdoor Extended, polling mod, pTune Override OFF, Use-last short-circuit, no-saved fallback, and Harish / Codecity001 profile layout mapping audit.
+- TensorConservative sysfs/procfs writes are intentionally not included.
+- Credits since last public stable: Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
 ## 1.4.13-universal-test.29 prerelease: Profile layout mapping audit
 
 - Adds a read-only profile layout mapping helper for the proposed `profiles/device/family/variant` structure.
