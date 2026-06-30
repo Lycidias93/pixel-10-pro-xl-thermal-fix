@@ -1,42 +1,30 @@
 # Pixel 10 Thermal & Memory Control 1.5
 
 Stable release: 1.5-universal.1
+Since last public stable: 1.4.12-universal.1
 
-## Verified refactor chain
+## What changed
 
-- Test25: install-time ZRAM materialization and menu helper extracted, runtime PASS.
-- Test26: debug and compatibility forbidden-token cleanup, runtime PASS.
-- Test27: install-time thermal overlay helper extracted, runtime PASS.
-- Test28: Use last settings short-circuit and no-saved fallback, runtime PASS.
-- Test29: Harish / Codecity001 profile layout mapping docs/helper, runtime PASS.
+- Promotes the verified Test25-Test29 cleanup chain to stable.
+- Keeps the verified ZRAM 100p path and post-reboot runtime behavior.
+- Keeps previous install choices with the Use-last flow, without repeated option menus.
+- Uses the cleaner install-time thermal overlay and ZRAM helper structure.
+- Adds the Harish / Codecity001 profile-layout mapping audit as read-only helper/docs.
 
-## Verified behavior
+## Verified on
 
-- Pixel 10 Pro XL / mustang / Android 17 CP2A.260605.012 / 15430684.
-- Outdoor Extended profile.
-- Polling mod.
-- pTune Override OFF.
-- ZRAM 100p runtime PASS.
-- Thermal tombstone index empty or absent.
-- G4 legacy variants preserved in mapping audit.
+- Pixel 10 Pro XL / mustang.
+- Android 17 CP2A.260605.012 / incremental 15430684.
+- Outdoor Extended, polling mod, pTune Override OFF, ZRAM 100p.
+- ZRAM runtime PASS; thermal tombstone index empty or absent.
 
-## Credits since last public stable
+## Credits
 
-- Harish / Codecity001: profile layout refactor concept and mockup reference for Test29.
-- Harish / Codecity001: PR70 ZRAM resetprop-rs boot_early rework, script cleanup, debug-gating feedback, Pixel test iteration.
-- Harish / Codecity001: install/runtime testing, ZRAM debug logs, reboot verification, issue reports, Volume-key ZRAM selection, Magisk Action UX recommendation, PR #65 cleanup/debug-gating, outdoor-g4-adapted profile UX/testing direction.
-- JoshuaDoes: preserved credited ZRAM/mmd/service timing and resetprop boot-complete context.
-- Allen Chang: preserved credited contribution.
-- Jiggs: preserved credited contribution.
-- maicol07: preserved credited contribution.
-- Existing CREDITS.md acknowledgements remain part of the project credits.
+- Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
+- Detailed acknowledgements remain in CREDITS.md.
 
-## Exclusions
+## Not included
 
 - No TensorConservative sysfs/procfs writes.
-- No direct profile resolver layout switch in Stable 1.5.
-- No additional runtime feature changes beyond the verified Test25-Test29 chain.
-
-## Update channel
-
-Stable channel now points to 1.5-universal.1 after final release publication.
+- No direct profile resolver layout switch.
+- No new runtime tuning beyond the verified Test25-Test29 chain.
