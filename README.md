@@ -4,7 +4,7 @@
 
 Stable **1.5-universal.1** promotes the verified Test25–Test29 chain: cleaner install flow, safer profile selection, Outdoor Extended, Use-last, ZRAM 100p, and read-only profile layout auditing.
 
-[Download latest release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest) · [Telegram](https://t.me/lycidias93) · [Release notes](RELEASE_NOTES_v1.5-universal.1.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+[Download latest release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](RELEASE_NOTES_v1.5-universal.1.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
 ---
 
@@ -49,6 +49,16 @@ A PASS on one Pixel 10 model does **not** automatically verify every other coden
 
 ## Install
 
+### Requirements
+
+- Supported Pixel 10-series device/build.
+- Magisk is the recommended install path.
+- Keep a working rollback path before flashing.
+- Do not force unsupported devices or builds.
+- Reboot and verify after install/update.
+
+### Install/update
+
 1. Download the latest ZIP from [Releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest).
 2. Install it in Magisk.
 3. Choose the desired install options.
@@ -73,7 +83,7 @@ For a full debug package:
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
 
-Online debug command, using the latest helper from main:
+Online debug command for Termux / shells with `curl`, using the latest helper from main:
 
 ```sh
 cd /sdcard/Download
@@ -88,6 +98,8 @@ Generated output:
 ```
 
 Review generated output before posting it publicly.
+
+Do not post raw tokens, private hostnames, private IPs, MAC addresses, personal paths, or unrelated logs.
 
 ---
 
@@ -134,6 +146,26 @@ Artifact:
 ```text
 pixel-10-thermal-memory-control-1.5-universal.1.zip
 SHA256: 225013f7e51cb29b1ceebb1460f6f5125c134518ae900c2587f4416c2b6f057f
+```
+
+---
+
+## Rollback / emergency disable
+
+Normal rollback: disable or remove the module in Magisk, then reboot.
+
+Emergency disable from a root shell:
+
+```sh
+su -c "touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/disable"
+su -c "reboot"
+```
+
+If mount behavior is the suspected issue:
+
+```sh
+su -c "touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/skip_mount"
+su -c "reboot"
 ```
 
 ---

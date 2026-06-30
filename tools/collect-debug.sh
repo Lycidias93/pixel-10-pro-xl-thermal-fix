@@ -110,6 +110,9 @@ for f in thermal_info_config_throttling.json thermal_info_config.json thermal_in
   [ -n "$p" ] && copy_if_readable "$p" "$COLLECT/profile/$f"
 done
 collect_file guard_first_state_machine.txt sh -c 'echo boot_id=$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || echo unknown); echo; echo == modules_update ==; ls -la /data/adb/modules_update/pixel-10-pro-xl-thermal-fix /data/adb/modules_update/ptune 2>/dev/null || true; echo; echo == proc_mounts ==; grep -E "pixel-10-pro-xl-thermal-fix|/vendor/etc/thermal_info_config" /proc/mounts 2>/dev/null || true'
+# PIXEL_THERMAL_ZRAM_100P_COLLECT_START
+collect_file zram_100p_status.txt sh -c 'echo "== config =="; cat /data/adb/pixel-10-pro-xl-thermal-fix/config.env 2>/dev/null || true; echo; echo "== props =="; for k in mm.zram.maintenance.first_delay_seconds mm.zram.maintenance.periodic_delay_seconds mmd.zram.writeback.max_idle_seconds mmd.zram.comp_algorithm mmd.zram.enabled mmd.zram.size vendor.zram.size persist.device_config.vendor_system_native_boot.zram_size persist.vendor.boot.zram.size; do echo "$k=$(getprop "$k" 2>/dev/null || true)"; done; echo; echo "== fstab.zram.100p =="; for f in "$0/system/vendor/etc/fstab.zram.100p" /vendor/etc/fstab.zram.100p; do echo "-- $f"; [ -r "$f" ] && { ls -l "$f"; cat "$f"; } || echo absent; done; echo; echo "== swaps =="; cat /proc/swaps 2>/dev/null || true; echo; echo "== zram sysfs =="; for f in /sys/block/zram0/disksize /sys/block/zram0/comp_algorithm /sys/block/zram0/backing_dev /sys/block/zram0/mm_stat; do echo "-- $f"; cat "$f" 2>/dev/null || true; done' "$MODDIR"
+# PIXEL_THERMAL_ZRAM_100P_COLLECT_END
 collect_file sha256sums.txt sh -c 'cd "$0" && find . -type f -print | sort | while read f; do sha256sum "$f" 2>/dev/null || true; done' "$COLLECT"
 
 make_archive || true
@@ -129,7 +132,3 @@ fi
 echo "FAILED: no ZIP engine available. Install Termux python and run again."
 echo "Work dir left at: $COLLECT"
 exit 1
-
-# PIXEL_THERMAL_ZRAM_100P_COLLECT_START
-collect_file zram_100p_status.txt sh -c 'echo "== config =="; cat /data/adb/pixel-10-pro-xl-thermal-fix/config.env 2>/dev/null || true; echo; echo "== props =="; for k in mm.zram.maintenance.first_delay_seconds mm.zram.maintenance.periodic_delay_seconds mmd.zram.writeback.max_idle_seconds mmd.zram.comp_algorithm mmd.zram.enabled mmd.zram.size vendor.zram.size persist.device_config.vendor_system_native_boot.zram_size persist.vendor.boot.zram.size; do echo "$k=$(getprop "$k" 2>/dev/null || true)"; done; echo; echo "== fstab.zram.100p =="; for f in "$0/system/vendor/etc/fstab.zram.100p" /vendor/etc/fstab.zram.100p; do echo "-- $f"; [ -r "$f" ] && { ls -l "$f"; cat "$f"; } || echo absent; done; echo; echo "== swaps =="; cat /proc/swaps 2>/dev/null || true; echo; echo "== zram sysfs =="; for f in /sys/block/zram0/disksize /sys/block/zram0/comp_algorithm /sys/block/zram0/backing_dev /sys/block/zram0/mm_stat; do echo "-- $f"; cat "$f" 2>/dev/null || true; done' "$MODDIR"
-# PIXEL_THERMAL_ZRAM_100P_COLLECT_END
