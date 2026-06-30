@@ -69,6 +69,8 @@ A PASS on one Pixel 10 model does **not** automatically verify every other coden
 4. Reboot.
 5. Run the compatibility check.
 
+Stable update channel: [update.json](update.json)
+
 ```sh
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/compat-check.sh
 ```
@@ -105,6 +107,31 @@ Review generated output before posting it publicly.
 
 Do not post raw tokens, private hostnames, private IPs, MAC addresses, personal paths, or unrelated logs.
 
+When reporting issues, include:
+
+- device and codename
+- Android version, build ID, incremental and fingerprint
+- root solution and version
+- module version and install/update path
+- compat-check result
+- debug ZIP, plus the Magisk install log or install screenshot when relevant
+
+For Magisk module-state or toggle issues:
+
+```sh
+cd /sdcard/Download
+curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_toggle_debug.sh
+su -c "sh -n /sdcard/Download/pixel_thermal_toggle_debug.sh && sh /sdcard/Download/pixel_thermal_toggle_debug.sh"
+```
+
+Generated module-state output:
+
+```text
+/sdcard/Download/pixel_thermal_toggle_debug_*.txt
+```
+
+This helper is read-only; it does not delete, disable, enable, mount, or patch anything.
+
 ---
 
 ## Install options
@@ -131,6 +158,12 @@ Stable 1.5 intentionally does **not** include:
 - blind Android 17 support using unrelated files
 
 The module prefers guarded activation over risky auto-detection.
+
+Advanced compatibility:
+
+- **pTune:** advanced/experimental. pTune Override stays OFF by default and requires an explicit risk acknowledgement.
+- **KernelSU-Next / mountify:** community-tested paths exist, but verify `ACTIVE_VENDOR_MATCH=yes` after reboot.
+- **Unknown root or mount backends:** collect debug evidence before reporting; do not force unsupported profiles.
 
 ---
 
