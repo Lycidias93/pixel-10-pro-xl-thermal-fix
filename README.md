@@ -1,594 +1,149 @@
-# Stable 1.5
+# Pixel 10 Thermal & Memory Control
 
-Stable release: 1.5-universal.1
-Since last public stable: 1.4.12-universal.1
+**Magisk module for Pixel 10-series thermal profiles and optional ZRAM 100p.**
 
-## What changed since v1.4.12-universal.1
+Stable **1.5-universal.1** promotes the verified Test25–Test29 chain: cleaner install flow, safer profile selection, Outdoor Extended, Use-last, ZRAM 100p, and read-only profile layout auditing.
 
-### Install / UX
+[Download latest release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest) · [Release notes](RELEASE_NOTES_v1.5-universal.1.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
-- Use-last flow: previous choices are reused without repeated option menus.
-- Fresh-default fallback added when no saved settings exist.
-- Cleaner installer output for Stable 1.5.
-- Public update channel now points to 1.5-universal.1.
+---
 
-### Thermal
+## What this module does
 
-- Outdoor Extended path verified and promoted.
-- Thermal overlay materialization moved into a dedicated helper.
-- Polling mod path preserved and verified.
-- pTune Override remains OFF by default.
+- Applies guarded Pixel 10 thermal profile overlays through Magisk.
+- Offers install-time profile choices for thermal behavior and ZRAM.
+- Keeps stock Android thermal control in charge.
+- Stores install state and compatibility evidence for safer troubleshooting.
 
-### ZRAM / Memory
+It is **not** an overclock, benchmark unlock, FPS tweak, or thermal safety bypass.
 
-- ZRAM 100p install path moved into helper logic.
-- Boot-early resetprop-rs ZRAM path verified.
-- Post-reboot ZRAM runtime PASS.
+---
 
-### Safety / Compatibility
+## Stable 1.5 highlights
 
-- Known-bad pTune conflict guard preserved.
-- No TensorConservative sysfs/procfs writes.
-- No direct profile resolver layout switch.
-- No new runtime tuning beyond the verified Test25-Test29 chain.
+| Area | Stable 1.5 |
+|---|---|
+| Install UX | Use-last flow reuses previous choices without repeated menus |
+| Safety | Fresh-default fallback when no saved settings exist |
+| Thermal | Outdoor Extended verified and promoted |
+| Memory | Optional ZRAM 100p boot/runtime path verified |
+| Compatibility | Known-bad pTune guard preserved |
+| Refactor | Thermal/ZRAM helper cleanup promoted to stable |
+| Profiles | Harish / Codecity001 profile-layout mapping audit added as read-only helper/docs |
 
-### Profile / Refactor
+---
 
-- Harish / Codecity001 profile-layout mapping audit added as read-only helper/docs.
-- G4 legacy outdoor variants preserved in mapping audit.
-- Test25-Test29 cleanup chain promoted to stable.
+## Compatibility
 
-### Verified on
+| Device / build | Status |
+|---|---|
+| Pixel 10 Pro XL `mustang` / Android 17 `CP2A.260605.012` | Verified |
+| Pixel 10 Pro `blazer` / Android 17 stable | Community verified |
+| Pixel 10 Pro XL `mustang` / Android 17 CP31 beta path | Community verified |
+| Pixel 10 `frankel` / Pixel 10 Pro Fold `rango` | Profiles included, live verification still useful |
+| Unknown devices or builds | Blocked until compatibility evidence exists |
 
-- Pixel 10 Pro XL / mustang.
-- Android 17 CP2A.260605.012 / incremental 15430684.
-- Outdoor Extended, polling mod, pTune Override OFF, ZRAM 100p.
-- ZRAM runtime PASS.
-- Thermal tombstone index empty or absent.
+A PASS on one Pixel 10 model does **not** automatically verify every other codename.
 
-### Credits
+---
 
-- Harish / Codecity001, JoshuaDoes, Allen Chang, Jiggs, maicol07, and existing CREDITS.md acknowledgements.
-- Detailed acknowledgements remain in CREDITS.md.
+## Install
 
-# Pixel 10 Thermal Polling Fix
-
-Magisk thermal polling overlay for Pixel 10-series devices.
-
-- **Stable channel:** `v1.4.9-universal.2` · **VersionCode:** `1014904`
-- **Latest prerelease/test:** none newer than current stable
-- **Android:** Android 16 Pixel 10-series + guarded Android 17 profiles
-- **Root:** Magisk primary; KernelSU-Next / mountify community-tested
-- **Module ID:** `pixel-10-pro-xl-thermal-fix`
-
-## Download
-
-- Current stable release: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.9-universal.2>
-- Previous stable release: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v1.4.4-universal.1>
-- All releases: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases>
-- Issues / compatibility requests: <https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues>
-
-Stable update channel:
-
-```text
-https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
-```
-
-The stable update channel now points to `1.4.9-universal.2`.
-
-## Current status
-
-- **Stable release:** `v1.4.9-universal.2`
-- **Latest prerelease:** none newer than current stable
-- **Install type:** Magisk ZIP
-- **Android 16 verified:** Pixel 10 Pro XL / `mustang`
-- **Android 16 verified:** Pixel 10 Pro / `blazer`
-- **Android 17 CP31 verified:** Pixel 10 Pro XL / `mustang` / `CP31.260508.005` / `15421345`
-- **Android 17 stable verified:** Pixel 10 Pro / `blazer` / `CP2A.260605.012` / `15430684`
-- **Android 17 stable verified:** Pixel 10 Pro XL / `mustang` / `CP2A.260605.012` / `15430684` / Auto-Switch PASS
-- **Android 17 stable included, pending live verify:** `frankel`, `rango`
-- **pTune compatibility:** pTune latest alpha + Thermal Fix override verified on Magisk / `mustang`
-- **KernelSU-Next / mountify:** community-tested with `ACTIVE_VENDOR_MATCH=yes`
-
-## Changelog since `v1.4.8-universal-test.3`
-
-### `v1.4.9-universal-test.1`
-
-- Added guarded Android 17 stable support for `CP2A.260605.012 / 15430684`.
-- Imported Android 17 stable factory thermal profiles for:
-  - Pixel 10 Pro XL / `mustang`
-  - Pixel 10 Pro / `blazer`
-  - Pixel 10 / `frankel`
-  - Pixel 10 Pro Fold / `rango`
-- Added exact build/fingerprint guards for Android 17 stable profiles.
-- Marked Pixel 10 Pro / `blazer` Android 17 stable as live-verified:
-  - `ACTIVE_VENDOR_MATCH=yes`
-  - `thermalhal_running=yes`
-  - `fresh_thermal_tombstone=no`
-- `mustang`, `frankel` and `rango` Android 17 stable profiles are included but still need post-reboot live verification.
-- Stable update channel now points to `1.4.9-universal.2`.
-
-## What it does
-
-This module provides guarded thermal polling profiles for supported Pixel 10-series devices.
-
-The installer selects the matching profile for the device codename, Android version and guarded build/fingerprint, then materializes it into the Magisk overlay path.
-
-Design boundaries:
-
-- no runtime text patching
-- no service-time bind mount model
-- no background polling daemon
-- no unsupported profile activation
-- no blind Android 17 support using Android 16 files
-
-The intended change is targeted thermal polling behavior for selected Pixel thermal config entries. The stock thermal policy remains in charge. This is not an overclock, benchmark unlock, cooling bypass or FPS tweak.
-
-## Compatibility matrix
-
-```text
-Device / Android / Build                                      Status       Notes
-Pixel 10 Pro XL / mustang / Android 16                         PASS         verified
-Pixel 10 Pro / blazer / Android 16                             PASS         tested by Harish
-Pixel 10 Pro XL / mustang / Android 17 CP31 / 15421345         PASS         tested by Jiggs
-Pixel 10 Pro / blazer / Android 17 stable CP2A / 15430684      PASS         tested by Harish
-Pixel 10 Pro XL / mustang / Android 17 stable CP2A / 15430684  PASS         local Auto-Switch/runtime proof
-Pixel 10 / frankel / Android 17 stable CP2A / 15430684         pending      profile included, needs live verify
-Pixel 10 Pro Fold / rango / Android 17 stable CP2A / 15430684  pending      profile included, needs live verify
-Pixel 10 / frankel / Android 16                                beta         needs tester feedback
-Pixel 10 Pro Fold / rango / Android 16                         beta         needs tester feedback
-Other builds / unknown devices                                 blocked      compatibility report required first
-```
-
-A PASS on one Pixel 10 device does not automatically verify the other codenames.
-
-## Safe flow
-
-### Requirements
-
-- Supported Pixel 10-series device/build
-- Magisk recommended as primary install path
-- Working rollback path
-- Recommended during testing: AshLooper / AshReXcue installed, but do not whitelist this module there
-
-### Install / update
-
-1. Download the ZIP from the release page.
-2. Install/update using Magisk.
-3. Reboot.
-4. Run verify before reporting success or bugs.
-
-### Verify after install/update
+1. Download the latest ZIP from [Releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest).
+2. Install it in Magisk.
+3. Choose the desired install options.
+4. Reboot.
+5. Run the compatibility check.
 
 ```sh
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/compat-check.sh
 ```
 
-Expected good result:
+Expected healthy markers:
 
 ```text
 MODULE_OVERLAY_READY=yes
 ACTIVE_VENDOR_MATCH=yes
-VENDOR_OVERLAY_BACKEND_WARN=no
 SAFE_TO_REBOOT=yes
 ```
 
-Manual debug collector after reboot:
+For a full debug package:
 
 ```sh
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
 ```
 
-Output:
+---
+
+## Install options
+
+| Option | Meaning |
+|---|---|
+| **Use last settings** | Reuses the previous thermal/ZRAM choices |
+| **Fresh defaults** | Safe fallback when no saved settings exist |
+| **Outdoor Extended** | Verified 1.5 thermal profile path |
+| **Polling mod** | Preserved verified polling behavior |
+| **pTune Override** | OFF by default |
+| **ZRAM 100p** | Optional memory profile, verified in 1.5 |
+
+---
+
+## Safety notes
+
+Stable 1.5 intentionally does **not** include:
+
+- TensorConservative sysfs/procfs writes
+- direct profile resolver layout switching
+- unsupported device/build activation
+- thermal safety disablement
+- blind Android 17 support using unrelated files
+
+The module prefers guarded activation over risky auto-detection.
+
+---
+
+## Verified Stable 1.5 runtime
+
+- Pixel 10 Pro XL / `mustang`
+- Android 17 `CP2A.260605.012`
+- Incremental `15430684`
+- Outdoor Extended
+- Polling mod
+- pTune Override OFF
+- ZRAM 100p runtime PASS
+- Thermal tombstone index empty or absent
+
+Artifact:
 
 ```text
-/sdcard/Download/pixel_thermal_debug_*.zip
+pixel-10-thermal-memory-control-1.5-universal.1.zip
+SHA256: 225013f7e51cb29b1ceebb1460f6f5125c134518ae900c2587f4416c2b6f057f
 ```
 
-## pTune / KernelSU-Next / mountify compatibility
+---
 
-### pTune
+## Project files
 
-pTune latest alpha was tested with this module on Pixel 10 Pro XL / `mustang`.
+| File | Purpose |
+|---|---|
+| [RELEASE_NOTES_v1.5-universal.1.md](RELEASE_NOTES_v1.5-universal.1.md) | Stable 1.5 release summary |
+| [CHANGELOG.md](CHANGELOG.md) | Full change history |
+| [CREDITS.md](CREDITS.md) | Credits and acknowledgements |
+| [VERIFY_MUSTANG.md](VERIFY_MUSTANG.md) | Mustang verification notes |
+| [docs/test29_profile_layout_mapping.md](docs/test29_profile_layout_mapping.md) | Profile-layout mapping audit notes |
 
-Verified state on Magisk with explicit Thermal Fix pTune override:
+---
 
-```text
-PTUNE_ENABLED=yes
-ALLOW_THERMAL_WITH_PTUNE=1
-RISK_ACK_VALID=yes
-MODULE_OVERLAY_READY=yes
-ACTIVE_VENDOR_MATCH=yes
-VENDOR_OVERLAY_BACKEND_WARN=no
-SAFE_TO_REBOOT=yes
-thermalhal_running=yes
-fresh_thermal_tombstone=no
-```
+## Credits
 
-Important:
+Created by **Lycidias93**, based on earlier work by **marx161**.
 
-- pTune compatibility is still considered advanced/experimental.
-- By default, the module avoids mounting beside active pTune unless the explicit risk-ack override is configured.
-- Future pTune versions may add their own Mustang thermal overlays. If pTune intentionally takes priority later, compatibility may change by design.
+Stable 1.5 includes testing, feedback, and reference work from **Harish / Codecity001**, **JoshuaDoes**, **Allen Chang**, **Jiggs**, **maicol07**, and the existing project acknowledgements.
 
-### KernelSU-Next / mountify
+See [CREDITS.md](CREDITS.md) for the detailed list.
 
-A tester confirmed KernelSU-Next + MetaModule/mountify with:
+---
 
-```text
-ACTIVE_VENDOR_MATCH=yes
-```
+## License
 
-`v1.4.8-universal-test.3` and newer include improved compat diagnostics for mountify/backend detection and active vendor match checks.
-
-## Debug / support
-
-Please include this when reporting issues:
-
-```text
-Device:
-Codename:
-Android version:
-ROM / build:
-Build incremental:
-Build fingerprint:
-Root solution + version:
-Module version:
-Install/update path:
-Expected result:
-Actual result:
-Compat-check output:
-Debug ZIP:
-```
-
-Installed-module debug after reboot:
-
-```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
-```
-
-Upload:
-
-```text
-/sdcard/Download/pixel_thermal_debug_*.zip
-```
-
-Magisk toggle / module-state issues:
-
-```sh
-cd /sdcard/Download
-curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_toggle_debug.sh
-su -c 'sh /sdcard/Download/pixel_thermal_toggle_debug.sh'
-```
-
-Upload:
-
-```text
-/sdcard/Download/pixel_thermal_toggle_debug_*.txt
-```
-
-This helper only collects module/Magisk/module-state information. It does not delete, enable, disable or patch anything.
-
-For unsupported devices or newer firmware before flashing, use the stock thermal debug helper/report path and upload the generated archive. Do not force-install unsupported profiles.
-
-Public-safe quick debug command:
-
-```sh
-su -c 'MOD=/data/adb/modules/pixel-10-pro-xl-thermal-fix; echo "== module.prop =="; cat "$MOD/module.prop"; echo "== install-state =="; cat "$MOD/install-state.txt"; echo "== compat =="; sh "$MOD/tools/compat-check.sh"; echo "== overlay files =="; ls -l "$MOD/system/vendor/etc"; echo "== recent tombstones =="; ls -lt /data/tombstones | head -20'
-```
-
-Please check generated output before posting it publicly.
-
-Do not post raw MAC addresses, private IPs, hostnames, SSH keys, tokens or personal paths.
-
-## Rollback / uninstall
-
-Normal rollback:
-
-1. Disable or remove the module in Magisk.
-2. Reboot.
-3. Verify that the changed behavior is gone.
-
-Copy commands, if needed:
-
-```sh
-su -c 'touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/disable'
-su -c 'touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/skip_mount'
-su -c 'reboot'
-```
-
-Manual removal, only if normal Magisk removal is not available:
-
-```sh
-su -c 'rm -rf /data/adb/modules/pixel-10-pro-xl-thermal-fix'
-su -c 'reboot'
-```
-
-Only use manual cleanup when normal Magisk removal is not available. Reboot after removal.
-
-## Recent changelog
-
-### `v1.4.9-universal-test.1`
-
-Added:
-
-- Android 17 stable `CP2A.260605.012 / 15430684` guarded profile import.
-- Factory thermal profiles for `mustang`, `blazer`, `frankel` and `rango`.
-- Exact build/fingerprint guards for Android 17 stable profiles.
-
-Verified:
-
-- `blazer` Android 17 stable live verification PASS.
-
-Pending:
-
-- `mustang`, `frankel` and `rango` Android 17 stable need post-reboot live verification.
-
-Notes:
-
-- Stable updateJson now points to `1.4.9-universal.2`.
-
-### `v1.4.8-universal-test.3`
-
-Fixed:
-
-- `ACTIVE_VENDOR_MATCH` false-negative in compat-check.
-- SHA comparison helper no longer conflicts with shell behavior.
-
-Verified:
-
-- pTune latest alpha + Thermal Fix override on Magisk / `mustang`.
-- KernelSU-Next + MetaModule/mountify community validation.
-
-### `v1.4.8-universal-test.2`
-
-Added:
-
-- Improved KernelSU-Next / mountify backend diagnostics.
-- Separated backend detection from actual active vendor match result.
-
-### `v1.4.8-universal-test.1`
-
-Changed:
-
-- User `disable`, `remove` and `skip_mount` markers are authoritative.
-- Disabled pTune is treated as inactive.
-- Added stock-export guard, quarantine helper and backend diagnostics.
-- Service health is read-only and does not mutate markers.
-
-### `v1.4.4-universal.1`
-
-Stable release:
-
-- Current stable update channel target.
-- Pixel 10-series Android 16 profile path.
-- Guarded Android 17 Mustang support.
-- Carries forward SELinux overlay-read hotfix and debug evidence collection improvements.
-
-Older `v1.4.3` builds are superseded by newer stable/test releases.
-
-## Related / other modules
-
-None bundled.
-
-External bootloop safety tools are not included in this module.
-
-Recommended while testing:
-
-- AshLooper / AshReXcue by RipperHybrid
-
-Important:
-
-- Do not whitelist this thermal module in AshLooper / AshReXcue while testing. It should remain able to disable the module if a bad boot happens.
-
-## Credits / disclaimer
-
-Credits:
-
-- marx161 — original thermal polling fix idea and upstream inspiration
-- Lycidias93 — Pixel 10-series fork, controlled profile handling, runtime verification tooling and release packaging
-- Jiggs — Android 17 Mustang / CP31 live testing and debug ZIP verification
-- Harish — Pixel 10 Pro / Blazer Android 16 and Android 17 stable live testing
-- pogo-airsupport — KernelSU-Next / MetaModule / mountify validation
-- RipperHybrid / AshLooper / AshReXcue — external bootloop safety recommendation during testing; not bundled
-- teoweed / teozazaa — external Tensor thermal tweak analysis inspiration only; no code, values, bind-mount model or live patching model reused
-- Android / Magisk / XDA communities
-
-Disclaimer:
-
-Root modules can change system behavior. Use at your own risk, keep a working rollback path, and do not flash modules you do not understand.
-## 1.4.10-universal.2 stable profile packaging hotfix
-
-- Fixes the 1.4.10-universal.1 release ZIP packaging issue where selected profile directories were missing from the install archive.
-- Keeps the Android-major guard stable behavior from 1.4.10: Android 16/17 plus Pixel 10 codename guard.
-- Build ID, fingerprint and incremental remain log/warn only, not hard blockers.
-- pTune conflict guard remains active.
-- Stable update channel points to 1.4.10-universal.2.
-
-## 1.4.10-universal.3 stable profile path hotfix
-
-- Fixes v1.4.10-universal.2 install abort after selecting the correct Android-major profile.
-- Installer now accepts both nested `profiles/<profile>/system/vendor/etc` and top-level `<profile>` profile layouts.
-- Build ID, fingerprint and incremental remain log/warn only, not hard blockers.
-- Android 16/17 and Pixel 10 codename guards remain active.
-- Stable update channel points to 1.4.10-universal.3.
-
-
-## 1.4.12-universal-test.2 install-debug autosave test
-
-- Adds automatic install-debug autosave to `/sdcard/Download` or `/storage/emulated/0/Download`.
-- On installer failure, a `pixel_thermal_install_*.txt` snapshot is written automatically.
-- On installer failure, the bundled debug collector is attempted with `MODDIR=$MODPATH`; collector stdout is also saved in Download.
-- The exact Magisk app UI log is still outside module control, but the autosave captures the relevant installer state, selected profile, device/build, root/mount backend, pTune guard state and recent thermal logcat.
-- Stable update channel remains `v1.4.10-universal.3`; this is a manual prerelease test.
-
-
-### Optional ZRAM 100p test path (1.4.12-universal-test.2)
-
-This test release adds an optional, disabled-by-default ZRAM 100p path inspired by pTune's Tensor ZRAM setup. It is not part of the thermal overlay default path.
-
-Enable manually:
-
-```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh
-```
-
-Disable config:
-
-```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-zram-100p.sh
-```
-
-Debug:
-
-```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/zram-debug.sh
-```
-
-The test overlays `/vendor/etc/fstab.zram.100p` with `zramsize=100%,zram_backingdev_size=2G` and applies the ZRAM props used by the experimental PowerPulse/pTune path. Reboot is recommended after enable/disable.
-
-<!-- V1412_TEST2_EXEC_METADATA_FIX_START -->
-### 1.4.12-universal-test.2 test2 shell-entrypoint fix
-
-`1.4.12-universal-test.2` replaces the bad `1.4.12-universal-test.1` prerelease.
-
-- Fixes mixed installer/autosave metadata that still reported `1.4.11-universal-test.1`.
-- Keeps optional ZRAM 100p disabled by default.
-- Ensures helper scripts are chmodded during install.
-- Documents the compatible invocation form for Magisk/KernelSU/HybridMount environments:
-
-```sh
-su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh
-su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-zram-100p.sh
-su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/zram-debug.sh
-```
-
-Stable update channel remains `1.4.11-universal.1` until this prerelease is verified.
-<!-- V1412_TEST2_EXEC_METADATA_FIX_END -->
-
-### 1.4.12-universal-test.3 service mmd restart hotfix
-
-- Fixes `service.sh` ordering for optional ZRAM 100p so the boot-time apply path runs after boot/mount settle and before `exit 0`.
-- ZRAM apply now uses `stop mmd` then `start mmd` with property fallbacks instead of only `ctl.restart mmd`.
-- Keep stable channel on `v1.4.11-universal.1`; this remains a manual prerelease test feature.
-- Shell-compatible commands remain preferred: `su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-zram-100p.sh`.
-
-<!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_START -->
-
-### 1.4.12-universal-test.5 guarded ZRAM reinit helper
-
-`1.4.12-universal-test.5` is a manual prerelease test that adds `tools/reinit-zram-100p.sh`.
-It is disabled by default and refuses to run unless both conditions are true:
-
-```sh
-ENABLE_ZRAM_100P=1
-ZRAM_REINIT_ACK=I_UNDERSTAND_ZRAM_SWAPOFF_RISK
-```
-
-The helper also refuses when current swap usage is above `ZRAM_REINIT_MAX_SWAP_USED_KB` (default `524288`).
-This prevents unsafe live `swapoff` attempts while several GB are currently stored in ZRAM.
-
-Manual test command after a fresh reboot and low swap usage:
-
-```sh
-su -c sh /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/reinit-zram-100p.sh --i-understand-risk
-```
-
-Stable update channel remains `v1.4.11-universal.1`.
-<!-- PIXEL_THERMAL_V1412_TEST5_GUARDED_ZRAM_REINIT_END -->
-
-
-<!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_START -->
-
-### 1.4.12-universal-test.6 optional ZRAM volume-key menu
-
-`1.4.12-universal-test.6` keeps the stable channel at `v1.4.11-universal.1` and changes only the manual prerelease path.
-
-- Install-time Volume-key menu: Vol+ enables ZRAM 100p, Vol- disables it, timeout keeps the current/safe default.
-- Magisk action runs the same ZRAM menu after installation.
-- `persist.*` ZRAM properties are written without `resetprop -n` so they can persist across reboot.
-- Optional ZRAM apply now runs at the early start of `service.sh` before the boot-completed wait.
-- The guarded reinit helper remains available but is not the default path.
-
-<!-- PIXEL_THERMAL_V1412_TEST6_VOLUME_ZRAM_MENU_END -->
-
-<!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_START -->
-
-### Pixel Thermal 1.4.12-universal-test.6 runtime proof
-
-`1.4.12-universal-test.6` has a post-reboot ZRAM 100p proof on Pixel 10 Pro XL (`mustang`, Android 17 `CP2A.260605.012`, incremental `15430684`).
-
-- Install menu path: Vol+ selected ZRAM 100p.
-- Runtime props: `mmd.zram.size=100%`, `vendor.zram.size=100p`, `persist.vendor.boot.zram.size=100p`.
-- Runtime fstab: module overlay and `/vendor/etc/fstab.zram.100p` present.
-- Runtime mmd: running after boot.
-- Runtime ZRAM: `/sys/block/zram0/disksize=16323969024` and `/proc/swaps` reports `15941372` KiB.
-- Runtime compression: `lz77eh`.
-- Conclusion: PASS; Harish's persist-property/timing hypothesis is confirmed for the official test6 path.
-- Stable update channel remains `v1.4.11-universal.1`.
-
-<!-- PIXEL_THERMAL_V1412_TEST6_RUNTIME_PROOF_END -->
-
-<!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_START -->
-### Pixel Thermal 1.4.12-universal-test.7 ZRAM log cleanup
-
-`1.4.12-universal-test.7` integrates the PR #65 installation cleanup from Harish / Codecity001 on top of the verified test6 runtime path.
-
-- Keeps the Volume-key ZRAM menu from test6.
-- Adds a Debug Mode Volume-key prompt so normal installs stay quiet and verbose ZRAM logs are opt-in.
-- Guards success install autosave and generated ZRAM text logs behind `DEBUG_MODE=1` / `debug_mode=1`.
-- Keeps failure/debug collection available when needed.
-- Stable update channel remains `v1.4.11-universal.1`.
-- Credits for Harish and JoshuaDoes remain in `CREDITS.md` and release notes.
-<!-- PIXEL_THERMAL_V1412_TEST7_ZRAM_LOG_CLEANUP_END -->
-
-<!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_START -->
-
-### Pixel Thermal 1.4.12-universal-test.8 metadata guard hotfix
-
-`1.4.12-universal-test.8` supersedes `1.4.12-universal-test.7` because test7 correctly bumped `module.prop` but left the installer-local `customize.sh` metadata constants at `1.4.12-universal-test.6`.
-
-- `module.prop`: `1.4.12-universal-test.8` / `1015208`.
-- `customize.sh`: derives `MODULE_VERSION` and `MODULE_VERSION_CODE` from `module.prop`, with `1.4.12-universal-test.8` fallback.
-- Runtime code path remains the PR #65 log-cleanup / debug-mode gated ZRAM menu from test7.
-- Credits for Harish and JoshuaDoes remain in `CREDITS.md` and release notes.
-- Stable update channel remains `v1.4.11-universal.1`.
-
-<!-- PIXEL_THERMAL_V1412_TEST8_METADATA_GUARD_END -->
-
-<!-- PIXEL_THERMAL_V1412_STABLE_START -->
-## Pixel Thermal 1.4.12-universal.1 stable
-
-Stable `v1.4.12-universal.1` promotes the verified test8 runtime result.
-
-- Version: `1.4.12-universal.1` / versionCode `1015209`.
-- Stable updateJson now points to `v1.4.12-universal.1`.
-- Runtime basis: `v1.4.12-universal-test.8` post-reboot PASS on Pixel 10 Pro XL (`mustang`).
-- ZRAM 100p proof: `mmd.zram.size=100%`, `vendor.zram.size=100p`, `/sys/block/zram0/disksize=16323969024`, `/proc/swaps` size about `15941372` KiB, compression `lz77eh`.
-- Silent install proof: `DEBUG_MODE=0`, `debug_mode=0`, `forbidden_silent_logs=0`.
-- Credits preserved: Harish / Codecity001 for PR #65 log cleanup/debug-gating and testing; JoshuaDoes for ZRAM/mmd/service timing and resetprop boot-complete context.
-<!-- PIXEL_THERMAL_V1412_STABLE_END -->
-
-<!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_START -->
-## Pixel Thermal 1.4.13-universal-test.3 outdoor-g4-adapted test
-
-`1.4.13-universal-test.3` is a prerelease test line. Stable `update.json` remains `1.4.12-universal.1`.
-
-- Adds installer Volume-key menu for `Thermal Outdoor Profile`.
-- Default/timeout: `stock`.
-- Volume Up: `outdoor-g4-adapted`.
-- The previous +1 C canary idea was replaced before release. This profile uses degree-based G4/P9-inspired targets, not mdeg.
-- No Pixel 9 JSON is transplanted directly.
-- Blocked: battery, USB, charging, speaker, emergency, shutdown and critical paths.
-- Modified sensors: `VIRTUAL-SKIN, VIRTUAL-SKIN-CPU-HIGH, VIRTUAL-SKIN-CPU-LIGHT-ODPM, VIRTUAL-SKIN-CPU-MID, VIRTUAL-SKIN-CPU-ODPM, VIRTUAL-SKIN-HINT, VIRTUAL-SKIN-SOC`.
-- Patch report: `/storage/emulated/0/Download/pixel_local__repo-helper-work/pixel-thermal-v1413-test1-outdoor-g4-adapted/outdoor_g4_adapted_patch_report.json`.
-<!-- PIXEL_THERMAL_V1413_TEST1_OUTDOOR_G4_END -->
-
-<!-- PIXEL_THERMAL_V1413_TEST3_PR70_ALLEN_VNEXT_START -->
-## Pixel Thermal 1.4.13-universal-test.3 PR70 + Allen + vNext test
-
-- Accepts PR70 ZRAM resetprop-rs boot_early model.
-- Adds Allen fix: outdoor-g4-adapted profiles for mustang Android 17 CP21/CP31 plus stable CP2A.
-- Keeps stable updateJson on 1.4.12-universal.1.
-- Credits: Harish / Codecity001, JoshuaDoes, Allen Chang.
-<!-- PIXEL_THERMAL_V1413_TEST3_PR70_ALLEN_VNEXT_END -->
+See [LICENSE](LICENSE).
