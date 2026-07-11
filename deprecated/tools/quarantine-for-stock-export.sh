@@ -1,0 +1,2 @@
+#!/system/bin/sh
+ID="pixel-10-pro-xl-thermal-fix"; B="/data/adb/module_quarantine"; TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"; [ "${1:-}" = --apply ] || { echo RESULT_QUARANTINE_DRY_RUN; exit 0; }; mkdir -p "$B"; [ -d "/data/adb/modules/$ID" ] && mv "/data/adb/modules/$ID" "$B/${ID}_$TS"; [ -d "/data/adb/modules_update/$ID" ] && mv "/data/adb/modules_update/$ID" "$B/${ID}_modules_update_$TS"; echo RESULT_QUARANTINE_APPLIED_REBOOT_REQUIRED

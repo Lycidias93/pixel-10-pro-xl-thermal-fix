@@ -1,0 +1,47 @@
+{
+  "device": "frankel",
+  "build_family": "CP31",
+  "build_id": "CP31.260608.007",
+  "variant": "outdoor-safe",
+  "source_etc": "/storage/emulated/0/Download/pixel_local__repo-helper-work/pixel-thermal-test9-a17-full-profile-matrix/a17_vendor_extract/frankel_beta-cp31.260608.007/vendor/etc",
+  "generator": "test9-a17-full-profile-matrix-v1",
+  "policy": "shape-preserving-threshold-delta",
+  "allowed_modified_sensors": [
+    "VIRTUAL-SKIN",
+    "VIRTUAL-SKIN-HINT"
+  ],
+  "modified": [
+    {
+      "sensor": "VIRTUAL-SKIN",
+      "field": "HotThreshold",
+      "delta": 1.0,
+      "shape": [
+        7,
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "sensor": "VIRTUAL-SKIN-HINT",
+      "field": "HotThreshold",
+      "delta": 1.0,
+      "shape": [
+        7,
+        [
+          0
+        ]
+      ]
+    }
+  ],
+  "forbidden_domains": [
+    "usb",
+    "charge",
+    "battery",
+    "speaker",
+    "shutdown",
+    "emergency",
+    "modem",
+    "radio"
+  ]
+}

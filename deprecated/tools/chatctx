@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$repo_root"
+
+find_toolbox() {
+  if [[ -n "${WORKFLOW_TOOLBOX_ROOT:-}" && -x "$WORKFLOW_TOOLBOX_ROOT/tools/chatctx" ]]; then
+    printf '%s\n' "$WORKFLOW_TOOLBOX_ROOT"
+    return 0
+  fi
+  if [[ -x "$HOME/src/termux-toolbox/tools/chatctx" ]]; then
+    printf '%s\n' "$HOME/src/termux-toolbox"
+    return 0
+  fi
+  local parent
+  parent="$(cd "$repo_root/.." && pwd -P)"
+  if [[ -x "$parent/termux-toolbox/tools/chatctx" ]]; then
+    printf '%s\n' "$parent/termux-toolbox"
+    return 0
+  fi
+  return 1
+}
+
+if toolbox_root="$(find_toolbox)"; then
+  export WORKFLOW_TOOLBOX_ROOT="$toolbox_root"
+  exec "$toolbox_root/tools/chatctx" "${@:-repo}"
+fi
+
+printf '%s\n' 'STATE-GATE INPUT'
+printf 'generated_at=%s\n' "$(date -Is)"
+printf 'repo_root=%s\n' "$repo_root"
+printf '%s\n' 'decision=STOP'
+printf '%s\n' 'reason=central_workflow_toolbox_missing'
+printf '%s\n' 'expected=$WORKFLOW_TOOLBOX_ROOT or $HOME/src/termux-toolbox or ../termux-toolbox'
+printf '%s\n' 'RESULT: WORKFLOW_TOOLBOX_MISSING rc=3'
+exit 3
