@@ -137,6 +137,12 @@ rematerialize_thermal_overlay() {
 }
 
 set_polling() {
+  if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
+    msg "! Thermal features are disabled."
+    msg "! Connect to internet and run Action to enable."
+    sleep 2
+    return 0
+  fi
   cur="$(cfg_get THERMAL_POLLING_MODE)"; case "$cur" in stock) idx=1 ;; *) idx=0 ;; esac
   ui_menu3 "Polling Mode" "Module values" "Stock values" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
@@ -165,6 +171,12 @@ set_thermal_choice() {
 }
 
 set_thermal() {
+  if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
+    msg "! Thermal features are disabled."
+    msg "! Connect to internet and run Action to enable."
+    sleep 2
+    return 0
+  fi
   cur="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   case "$cur" in outdoor-safe) idx=1 ;; outdoor-plus) idx=2 ;; outdoor-extended) idx=3 ;; *) idx=0 ;; esac
   ui_menu5 "Thermal Profile" "Stock" "Outdoor Safe" "Outdoor Plus" "Outdoor Extended" "Back" "$idx"

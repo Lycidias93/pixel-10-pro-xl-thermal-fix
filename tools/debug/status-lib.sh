@@ -98,11 +98,19 @@ status_collect() {
   polling_state="off_or_stock"
   case "$polling_mode" in
     stock)
-      polling_icon="$OFF"
-      polling_state="stock_values_selected"
+      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
+        polling_icon="$BAD"
+        polling_state="disabled_by_ota_or_offline"
+      else
+        polling_icon="$OFF"
+        polling_state="stock_values_selected"
+      fi
     ;;
     *)
-      if [ "$thermal_disable" = "present" ] || [ "$thermal_skip_mount" = "present" ]; then
+      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
+        polling_icon="$BAD"
+        polling_state="disabled_by_ota_or_offline"
+      elif [ "$thermal_disable" = "present" ] || [ "$thermal_skip_mount" = "present" ]; then
         polling_icon="$BAD"
         polling_state="module_disabled_or_skip_mount"
       elif [ "$overlay_ready" = "yes" ] && [ "$active_match" = "yes" ] && [ "$safe_to_reboot" = "yes" ]; then
@@ -122,7 +130,10 @@ status_collect() {
   thermal_state="stock_or_no_custom_profile"
   case "$thermal_profile" in
     outdoor-safe|outdoor-plus|outdoor-extended)
-      if [ "$thermal_disable" = "present" ] || [ "$thermal_skip_mount" = "present" ]; then
+      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
+        thermal_icon="$BAD"
+        thermal_state="disabled_by_ota_or_offline"
+      elif [ "$thermal_disable" = "present" ] || [ "$thermal_skip_mount" = "present" ]; then
         thermal_icon="$BAD"
         thermal_state="module_disabled_or_skip_mount"
       elif [ "$overlay_ready" = "yes" ] && [ "$active_match" = "yes" ] && [ "$safe_to_reboot" = "yes" ]; then
@@ -137,8 +148,13 @@ status_collect() {
       fi
     ;;
     *)
-      thermal_icon="$OFF"
-      thermal_state="stock_profile_selected"
+      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
+        thermal_icon="$BAD"
+        thermal_state="disabled_by_ota_or_offline"
+      else
+        thermal_icon="$OFF"
+        thermal_state="stock_profile_selected"
+      fi
     ;;
   esac
 

@@ -7,6 +7,54 @@ L="$G/bootguard.log"
 mkdir -p "$G"
 log(){ echo "$(date -Is 2>/dev/null || date) $*" >> "$L"; }
 getcfg(){ [ -r "$CFG" ] && grep -E "^$1=" "$CFG" 2>/dev/null | tail -n1 | sed "s/^$1=//" | tr -d '\r'; }
+
+get_current_build_id() {
+  bid="$(getprop ro.build.id 2>/dev/null)"
+  if [ -n "$bid" ]; then
+    echo "$bid"
+    return 0
+  fi
+  for f in /system/build.prop /system/system/build.prop /vendor/build.prop /prop.default; do
+    if [ -f "$f" ]; then
+      bid=$(grep -E "^ro.build.id=" "$f" | head -n 1 | cut -d= -f2 | tr -d '\r')
+      if [ -n "$bid" ]; then
+        echo "$bid"
+        return 0
+      fi
+    fi
+  done
+  echo "unknown"
+}
+
+get_install_state_build_id() {
+  state_file="$MODDIR/install-state.txt"
+  if [ -f "$state_file" ]; then
+    bid=$(grep -E "^build_id=" "$state_file" | head -n 1 | cut -d= -f2 | tr -d '\r')
+    if [ -n "$bid" ]; then
+      echo "$bid"
+      return 0
+    fi
+  fi
+  echo "none"
+}
+
+curr_bid="$(get_current_build_id)"
+inst_bid="$(get_install_state_build_id)"
+
+if [ "$curr_bid" != "unknown" ] && [ "$inst_bid" != "none" ]; then
+  if [ "$curr_bid" != "$inst_bid" ]; then
+    log "BUILD_MISMATCH current=$curr_bid installed=$inst_bid - removing modded thermal files"
+    rm -rf /data/adb/modules/pixel*/system/vendor/etc/thermal_info_config*
+    if [ -f "$CFG" ]; then
+      tmp="$CFG.tmp.$$"
+      grep -v "^THERMAL_DISABLED=" "$CFG" > "$tmp" 2>/dev/null || true
+      echo "THERMAL_DISABLED=1" >> "$tmp"
+      mv "$tmp" "$CFG"
+      chmod 0600 "$CFG" 2>/dev/null || true
+    fi
+  fi
+fi
+
 # BOOTGUARD_V2_PREFLIGHT_START
 if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
   MODDIR="$MODDIR" CONFIG_FILE="$CFG" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" preflight >> "$L" 2>&1 || log "BOOTGUARD_V2_WARN reason=preflight_nonzero"
