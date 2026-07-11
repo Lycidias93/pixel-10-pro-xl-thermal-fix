@@ -5,8 +5,7 @@ CONFIG_DIR="/data/adb/$ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 
 MENU_CYCLE_AVAILABLE=0
-[ -s "$MODDIR/tools/menu-cycle.sh" ] && . "$MODDIR/tools/menu-cycle.sh" && MENU_CYCLE_AVAILABLE=1
-[ -s "$MODDIR/tools/profile-matrix-test9.sh" ] && . "$MODDIR/tools/profile-matrix-test9.sh" || true
+[ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" && MENU_CYCLE_AVAILABLE=1
 
 msg() {
   if command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi
@@ -14,8 +13,8 @@ msg() {
 
 if [ "$MENU_CYCLE_AVAILABLE" != "1" ]; then
   msg "! Action menu unavailable"
-  if [ -s "$MODDIR/tools/status-lib.sh" ]; then
-    sh "$MODDIR/tools/status-lib.sh" print || true
+  if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
+    sh "$MODDIR/tools/debug/status-lib.sh" print || true
   fi
   exit 0
 fi
@@ -52,50 +51,20 @@ strip_outdoor_suffix() {
 }
 
 current_base_profile() {
-  p="$(sed -n 's/^profile=//p' "$MODDIR/install-state.txt" 2>/dev/null | tail -n 1)"
-  [ -n "$p" ] || p="$(cat "$MODDIR/guard/selected_profile" 2>/dev/null | head -n 1)"
-  [ -n "$p" ] || p="unknown"
-  strip_outdoor_suffix "$p"
+  echo "dynamic"
 }
 
 variant_exists() {
-  base="$1"
-  variant="$2"
-  case "$variant" in stock|base) return 0 ;; esac
-  case "$variant" in
-    outdoor-safe|outdoor-plus|outdoor-extended)
-      if command -v profile_matrix_variant >/dev/null 2>&1; then
-        path="$(profile_matrix_variant "$base" "$variant" 2>/dev/null || true)"
-        [ -n "$path" ] && [ -s "$MODDIR/profiles/$path/system/vendor/etc/thermal_info_config_throttling.json" ] && return 0
-      fi
-      [ -s "$MODDIR/profiles/$base-$variant/system/vendor/etc/thermal_info_config_throttling.json" ]
-    ;;
-    *) return 1 ;;
-  esac
+  case "$2" in stock|outdoor-safe|outdoor-plus|outdoor-extended) return 0 ;; *) return 1 ;; esac
 }
 
 selected_variant_profile() {
-  base="$1"
-  choice="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
-  case "$choice" in
-    outdoor-safe|outdoor-plus|outdoor-extended)
-      if variant_exists "$base" "$choice"; then
-        if command -v profile_matrix_variant >/dev/null 2>&1; then
-          profile_matrix_variant "$base" "$choice" 2>/dev/null || echo "$base"
-        else
-          echo "$base-$choice"
-        fi
-      else
-        echo "$base"
-      fi
-    ;;
-    *) echo "$base" ;;
-  esac
+  cfg_get THERMAL_OUTDOOR_PROFILE
 }
 
 refresh_status() {
-  if [ -s "$MODDIR/tools/status-lib.sh" ]; then
-    sh "$MODDIR/tools/status-lib.sh" update >/dev/null 2>&1 || true
+  if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
+    sh "$MODDIR/tools/debug/status-lib.sh" update >/dev/null 2>&1 || true
   fi
 }
 
@@ -104,8 +73,8 @@ show_status() {
   msg "----------------------------------------"
   msg "Pixel 10 Thermal & Memory Control"
   msg "----------------------------------------"
-  if [ -s "$MODDIR/tools/status-lib.sh" ]; then
-    sh "$MODDIR/tools/status-lib.sh" print
+  if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
+    sh "$MODDIR/tools/debug/status-lib.sh" print
   else
     msg "! status-lib missing"
   fi
@@ -149,26 +118,22 @@ ui_menu5() {
 }
 
 rematerialize_thermal_overlay() {
-  base="$(current_base_profile)"
-  if [ "$base" = "unknown" ] || [ ! -d "$MODDIR/profiles/$base/system/vendor/etc" ]; then
-    msg "! Cannot determine profile."; msg "! Run Debug ZIP."; return 1
+  THERMAL_OUTDOOR_PROFILE="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+  [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE="stock"
+
+  THERMAL_POLLING_MODE="$(cfg_get THERMAL_POLLING_MODE)"
+  [ -n "$THERMAL_POLLING_MODE" ] || THERMAL_POLLING_MODE="mod"
+
+  if [ -s "$MODDIR/tools/core/patch-thermal.sh" ]; then
+    chmod 0755 "$MODDIR/tools/core/patch-thermal.sh" 2>/dev/null || true
+    sh "$MODDIR/tools/core/patch-thermal.sh" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$MODDIR" || return 1
+  else
+    msg "! Dynamic patcher core script missing"; return 1
   fi
-  selected="$(selected_variant_profile "$base")"
-  profile_dir="$MODDIR/profiles/$selected/system/vendor/etc"
-  active_dir="$MODDIR/system/vendor/etc"
-  for f in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
-    if [ ! -s "$profile_dir/$f" ]; then msg "! Missing profile file."; msg "$f"; return 1; fi
-  done
-  mkdir -p "$active_dir" "$MODDIR/guard" 2>/dev/null || true
-  rm -f "$active_dir"/thermal_info_config*.json 2>/dev/null || true
-  cp -fp "$profile_dir"/thermal_info_config*.json "$active_dir"/ || return 1
-  chmod 0644 "$active_dir"/thermal_info_config*.json 2>/dev/null || true
-  if [ -s "$MODDIR/tools/apply-polling-mode.sh" ]; then
-    BASE_PROFILE="$base" ACTIVE_DIR="$active_dir" MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/apply-polling-mode.sh" action 2>/dev/null || true
-  fi
-  printf '%s\n' "$selected" > "$MODDIR/guard/selected_profile" 2>/dev/null || true
+
+  printf '%s\n' "dynamic" > "$MODDIR/guard/selected_profile" 2>/dev/null || true
   printf '%s\n' "yes" > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
-  msg "- Profile saved"; msg "- Selected profile:"; msg "$selected"; msg "- Reboot recommended"; msg "- Vendor mount refresh"; return 0
+  msg "- Profile saved"; msg "- Dynamic patching complete"; msg "- Reboot recommended"; msg "- Vendor mount refresh"; return 0
 }
 
 set_polling() {
@@ -200,14 +165,12 @@ set_thermal_choice() {
 }
 
 set_thermal() {
-  base="$(current_base_profile)"
-  if [ "$base" = "unknown" ]; then msg "! Base profile unknown."; msg "Run Debug ZIP."; return 0; fi
   cur="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   case "$cur" in outdoor-safe) idx=1 ;; outdoor-plus) idx=2 ;; outdoor-extended) idx=3 ;; *) idx=0 ;; esac
   ui_menu5 "Thermal Profile" "Stock" "Outdoor Safe" "Outdoor Plus" "Outdoor Extended" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; 2) choice=outdoor-plus ;; 3) choice=outdoor-extended ;; *) msg "Back."; return 0 ;; esac
-  if ! variant_exists "$base" "$choice"; then msg "! Profile missing."; msg "Using Stock"; choice=stock; fi
+  if ! variant_exists "dynamic" "$choice"; then choice=stock; fi
   cfg_set THERMAL_SETTINGS_MODE action_settings
   set_thermal_choice "$choice"
   msg "- Thermal: $choice"
@@ -223,7 +186,7 @@ set_zram() {
     0)
       cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled
       msg "- ZRAM: enabled"
-      if [ -s "$MODDIR/tools/apply-zram-100p.sh" ]; then msg "- Applying runtime props"; MODDIR="$MODDIR" sh "$MODDIR/tools/apply-zram-100p.sh" manual >/dev/null 2>&1 || true; fi
+      if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then msg "- Applying runtime props"; MODDIR="$MODDIR" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1 || true; fi
     ;;
     1)
       cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled
@@ -342,8 +305,8 @@ advanced_loop() {
 debug_zip() {
   show_status
   msg "Creating debug ZIP..."
-  if [ -s "$MODDIR/tools/collect-debug.sh" ]; then
-    out="$(sh "$MODDIR/tools/collect-debug.sh" 2>&1 || true)"
+  if [ -s "$MODDIR/tools/bootguard/collect-debug.sh" ]; then
+    out="$(sh "$MODDIR/tools/bootguard/collect-debug.sh" 2>&1 || true)"
     path="$(printf '%s\n' "$out" | sed -n 's/^Created: //p' | tail -n 1)"
     [ -n "$path" ] || path="$(printf '%s\n' "$out" | grep -E '/sdcard/Download/pixel_thermal_debug_.*\.zip|/storage/emulated/0/Download/pixel_thermal_debug_.*\.zip' | tail -n 1)"
     msg "Debug ZIP created"
@@ -359,10 +322,9 @@ debug_zip() {
 boot_crash_tgz() {
   show_status
   msg "Creating boot crash TGZ..."
-  if [ -s "$MODDIR/tools/boot-crash-log-collect.sh" ]; then
-    out="$(sh "$MODDIR/tools/boot-crash-log-collect.sh" 2>&1 || true)"
-    path="$(printf '%s
-' "$out" | sed -n 's/^Created: //p' | tail -n 1)"
+  if [ -s "$MODDIR/tools/bootguard/boot-crash-log-collect.sh" ]; then
+    out="$(sh "$MODDIR/tools/bootguard/boot-crash-log-collect.sh" 2>&1 || true)"
+    path="$(printf '%s\n' "$out" | sed -n 's/^Created: //p' | tail -n 1)"
     msg "Boot crash archive done"
     if [ -n "$path" ]; then file="${path##*/}"; msg "Folder: Download"; msg "File:"; msg "$file"; fi
     msg "Upload TGZ + install log."
@@ -374,13 +336,13 @@ boot_crash_tgz() {
 
 bootguard_status() {
   msg "Bootguard"
-  if [ -s "$MODDIR/tools/bootguard-lib.sh" ]; then
-    MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard-lib.sh" status || true
+  if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
+    MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" status || true
   else
     msg "! bootguard missing"
   fi
-  if [ -s "$MODDIR/tools/last-good-diff.sh" ]; then
-    MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/last-good-diff.sh" || true
+  if [ -s "$MODDIR/tools/bootguard/last-good-diff.sh" ]; then
+    MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/last-good-diff.sh" || true
   fi
   msg "Back to Debug."
 }
@@ -390,8 +352,8 @@ bootguard_clear() {
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in
     1)
-      if [ -s "$MODDIR/tools/bootguard-lib.sh" ]; then
-        MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard-lib.sh" clear || true
+      if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
+        MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" clear || true
       fi
       msg "Counters cleared"
       msg "Disable preserved"

@@ -22,8 +22,8 @@ prop_get() {
 }
 
 compat_dump() {
-  if [ -x "$MODDIR/tools/compat-check.sh" ] || [ -r "$MODDIR/tools/compat-check.sh" ]; then
-    sh "$MODDIR/tools/compat-check.sh" 2>/dev/null || true
+  if [ -x "$MODDIR/tools/bootguard/compat-check.sh" ] || [ -r "$MODDIR/tools/bootguard/compat-check.sh" ]; then
+    sh "$MODDIR/tools/bootguard/compat-check.sh" 2>/dev/null || true
   fi
 }
 

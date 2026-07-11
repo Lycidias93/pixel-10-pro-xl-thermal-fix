@@ -3,7 +3,7 @@
 # Extracted from customize.sh for Test25.
 
 thermal_install_zram() {
-  zram_fstab_src="$MODPATH/tools/fstab.zram.100p"
+  zram_fstab_src="$MODPATH/tools/zram/fstab.zram.100p"
   if [ -s "$zram_fstab_src" ]; then
     mkdir -p "$active_dir"
     cp -fp "$zram_fstab_src" "$active_dir/fstab.zram.100p" || thermal_abort "! Failed to materialize active ZRAM fstab"
@@ -13,11 +13,11 @@ thermal_install_zram() {
     ui_print "! ZRAM layout template missing"
   fi
 
-  if [ -s "$MODPATH/tools/zram-menu.sh" ]; then
-    chmod 0755 "$MODPATH/tools/zram-menu.sh" 2>/dev/null || true
-    MODDIR="$MODPATH" sh "$MODPATH/tools/zram-menu.sh" install || ui_print "! ZRAM menu failed nonfatal; keeping existing/safe config"
+  if [ -s "$MODPATH/tools/menu/zram-menu.sh" ]; then
+    chmod 0755 "$MODPATH/tools/menu/zram-menu.sh" 2>/dev/null || true
+    MODDIR="$MODPATH" sh "$MODPATH/tools/menu/zram-menu.sh" install || ui_print "! ZRAM menu failed nonfatal; keeping existing/safe config"
   else
     ui_print "! ZRAM menu missing"
-ui_print "! Keeping safe config"
+    ui_print "! Keeping safe config"
   fi
 }

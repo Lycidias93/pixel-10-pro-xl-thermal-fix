@@ -84,21 +84,13 @@ ui_print "! skip_mount active"
     echo "$PTUNE_CONFLICT_MODE" > "$ACTIVE_MODPATH/guard/conflict_guard_mode"
     rm -f "$ACTIVE_MODPATH/guard/guard_override" "$ACTIVE_MODPATH/guard/guard_override_source" "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
   fi
-  [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
-  [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
-[ -s "$MODPATH/tools/auto-profile-switch.sh" ] && chmod 0755 "$MODPATH/tools/auto-profile-switch.sh" || true
-[ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-[ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-[ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-[ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-  [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-  [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-  [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-  [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
+  [ -s "$MODPATH/tools/bootguard/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/bootguard/collect-debug.sh" || true
+  [ -s "$MODPATH/tools/debug/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/debug/pixel_thermal_toggle_debug.sh" || true
+  [ -s "$MODPATH/tools/core/auto-profile-switch.sh" ] && chmod 0755 "$MODPATH/tools/core/auto-profile-switch.sh" || true
+  [ -s "$MODPATH/tools/bootguard/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/bootguard/compat-check.sh" || true
+  [ -s "$MODPATH/tools/ptune/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/ptune/collect-ptune-evidence.sh" || true
+  [ -s "$MODPATH/tools/ptune/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/enable-ptune-override.sh" || true
+  [ -s "$MODPATH/tools/ptune/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/disable-ptune-override.sh" || true
   {
     printf '%s\n' "module_id=$MODULE_ID"
     printf '%s\n' "module_version=$MODULE_VERSION"
@@ -131,8 +123,8 @@ ui_print "! skip_mount active"
     printf '%s\n' "selinux_overlay_read_policy=installed_but_overlay_skipped_due_ptune_guard"
     printf '%s\n' "update_json_channel=stable_update_json_1.5.1-universal.1_public_stable"
     printf '%s\n' "debug_collector=manual_or_auto_on_install_fail_v1411"
-    printf '%s\n' "compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/compat-check.sh"
-    printf '%s\n' "ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/collect-ptune-evidence.sh"
+    printf '%s\n' "compat_check_command=su -c /data/adb/modules/$MODULE_ID/tools/bootguard/compat-check.sh"
+    printf '%s\n' "ptune_evidence_command=su -c /data/adb/modules/$MODULE_ID/tools/ptune/collect-ptune-evidence.sh"
   } > "$MODPATH/install-state.txt"
   thermal_save_install_debug "skip_mount" "$PTUNE_CONFLICT_REASON"
   ui_print "Installed with skip_mount"

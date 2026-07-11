@@ -15,8 +15,8 @@ if [ -f "$CONFIG_FILE" ]; then
 fi
 if [ "${ENABLE_ZRAM_100P:-0}" = "1" ] && [ "${ZRAM_RISK_ACK:-}" = "explicit_user_enable" ]; then
   echo "$(date -Is 2>/dev/null || date) SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip" >> "$L"
-  if [ -r "$MODDIR/tools/apply-zram-100p.sh" ]; then
-    sh "$MODDIR/tools/apply-zram-100p.sh" boot_early >> "$H" 2>&1 || echo "SERVICE_ZRAM result=apply_failed_nonfatal" >> "$H"
+  if [ -r "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
+    sh "$MODDIR/tools/zram/apply-zram-100p.sh" boot_early >> "$H" 2>&1 || echo "SERVICE_ZRAM result=apply_failed_nonfatal" >> "$H"
   else
     echo "SERVICE_ZRAM result=apply_script_absent" >> "$H"
   fi
@@ -49,13 +49,13 @@ sleep 20
   echo health_log_complete=yes
 } >> "$H" 2>&1
 
-if [ -s "$MODDIR/tools/status-lib.sh" ]; then
-  sh "$MODDIR/tools/status-lib.sh" update >> "$H" 2>&1 || true
+if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
+  sh "$MODDIR/tools/debug/status-lib.sh" update >> "$H" 2>&1 || true
 fi
 
 # BOOTGUARD_V2_SUCCESS_START
-if [ -s "$MODDIR/tools/bootguard-lib.sh" ]; then
-  MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard-lib.sh" success >> "$H" 2>&1 || true
+if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
+  MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" success >> "$H" 2>&1 || true
 fi
 # BOOTGUARD_V2_SUCCESS_END
 

@@ -17,4 +17,4 @@ export ZRAM_RESTART_MMD=1
 export ZRAM_RISK_ACK=explicit_user_enable
 
 echo "ZRAM 100p enabled in config. Applying once now and service.sh will re-apply after next boot."
-sh "$MODDIR/tools/apply-zram-100p.sh" manual
+sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual

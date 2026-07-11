@@ -99,5 +99,5 @@ for d in "$STAGEDIR" "$MODDIR" "$PTUNE_DIR"; do
   [ -e "$d/remove" ] && echo remove=present || echo remove=absent
   [ -e "$d/skip_mount" ] && echo skip_mount=present || echo skip_mount=absent
 done
-if [ -x "$MODDIR/tools/compat-check.sh" ]; then echo; echo "== compat-check =="; sh "$MODDIR/tools/compat-check.sh" || true; fi
+if [ -x "$MODDIR/tools/bootguard/compat-check.sh" ]; then echo; echo "== compat-check =="; sh "$MODDIR/tools/bootguard/compat-check.sh" || true; fi
 echo "RESULT: ENABLE_PTUNE_OVERRIDE_DONE profile=$profile"

@@ -106,8 +106,8 @@ thermal_save_install_debug() {
 }
 
 thermal_collect_debug_on_fail() {
-  [ -s "$MODPATH/tools/collect-debug.sh" ] || return 0
-  MODDIR="$MODPATH" sh "$MODPATH/tools/collect-debug.sh" > "$THERMAL_INSTALL_DEBUG_COLLECT_STDOUT" 2>&1 || true
+  [ -s "$MODPATH/tools/bootguard/collect-debug.sh" ] || return 0
+  MODDIR="$MODPATH" sh "$MODPATH/tools/bootguard/collect-debug.sh" > "$THERMAL_INSTALL_DEBUG_COLLECT_STDOUT" 2>&1 || true
   ui_print "Install-fail debug stdout:"
   ui_print "$(basename "$THERMAL_INSTALL_DEBUG_COLLECT_STDOUT")"
   ui_print "In Download folder"

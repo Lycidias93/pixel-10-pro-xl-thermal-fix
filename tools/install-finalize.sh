@@ -23,12 +23,12 @@ thermal_finalize_install() {
     printf '%s\n' "override_allow_mount_with_ptune" > "$MODPATH/guard/conflict_guard_mode"
   fi
 
-  [ -s "$MODPATH/tools/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/collect-debug.sh" || true
-  [ -s "$MODPATH/tools/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/pixel_thermal_toggle_debug.sh" || true
-  [ -s "$MODPATH/tools/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/compat-check.sh" || true
-  [ -s "$MODPATH/tools/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/collect-ptune-evidence.sh" || true
-  [ -s "$MODPATH/tools/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/enable-ptune-override.sh" || true
-  [ -s "$MODPATH/tools/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/disable-ptune-override.sh" || true
+  [ -s "$MODPATH/tools/bootguard/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/bootguard/collect-debug.sh" || true
+  [ -s "$MODPATH/tools/debug/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/debug/pixel_thermal_toggle_debug.sh" || true
+  [ -s "$MODPATH/tools/bootguard/compat-check.sh" ] && chmod 0755 "$MODPATH/tools/bootguard/compat-check.sh" || true
+  [ -s "$MODPATH/tools/ptune/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/ptune/collect-ptune-evidence.sh" || true
+  [ -s "$MODPATH/tools/ptune/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/enable-ptune-override.sh" || true
+  [ -s "$MODPATH/tools/ptune/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/disable-ptune-override.sh" || true
   [ -s "$MODPATH/tools/resetprop-rs" ] && chmod 0755 "$MODPATH/tools/resetprop-rs" || true
 
   {
@@ -63,12 +63,12 @@ thermal_finalize_install() {
     printf '%s\n' "overlay_materializer=install_finalize_helper_v1413_test24"
     printf '%s\n' "active_overlay_dir=system/vendor/etc"
     printf '%s\n' ""
-    printf '%s\n' "zram_fstab_template=tools/fstab.zram.100p"
+    printf '%s\n' "zram_fstab_template=tools/zram/fstab.zram.100p"
     printf '%s\n' "zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)"
     printf '%s\n' "zram_feature=optional_volume_key_menu_v1412_stable"
     printf '%s\n' "zram_install_materializer=install_zram_helper_v1413_test25"
     printf '%s\n' "zram_apply_stage=boot_early"
-    printf '%s\n' "zram_apply_helper=tools/apply-zram-100p.sh"
+    printf '%s\n' "zram_apply_helper=tools/zram/apply-zram-100p.sh"
     printf '%s\n' "zram_resetprop_required=yes"
     printf '%s\n' "zram_resetprop_executable=$([ -x "$MODPATH/tools/resetprop-rs" ] && echo yes || echo no)"
     printf '%s\n' "zram_resetprop_mode=resetprop-rs_-n"
@@ -98,9 +98,9 @@ thermal_finalize_install() {
     printf '%s\n' "selinux_overlay_read_policy=hal_thermal_default_system_file_read_only"
     printf '%s\n' "update_json_channel=stable_update_json_1.5.1-universal.1_public_stable"
     printf '%s\n' "debug_collector=manual_or_auto_on_install_fail_v1411"
-    printf '%s\n' "debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh"
-    printf '%s\n' "override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/enable-ptune-override.sh"
-    printf '%s\n' "override_disable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/disable-ptune-override.sh"
+    printf '%s\n' "debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/bootguard/collect-debug.sh"
+    printf '%s\n' "override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/ptune/enable-ptune-override.sh"
+    printf '%s\n' "override_disable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/ptune/disable-ptune-override.sh"
     printf '%s\n' "debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip"
   } > "$MODPATH/install-state.txt"
 }

@@ -34,5 +34,5 @@ done
 echo "PTUNE_OVERRIDE_DISABLED=yes"
 echo "PTUNE_PRESENT=$ptune_present"
 echo "CONFIG_FILE=$CONFIG_FILE"
-if [ -x "$MODDIR/tools/compat-check.sh" ]; then sh "$MODDIR/tools/compat-check.sh" || true; fi
+if [ -x "$MODDIR/tools/bootguard/compat-check.sh" ]; then sh "$MODDIR/tools/bootguard/compat-check.sh" || true; fi
 echo "RESULT: DISABLE_PTUNE_OVERRIDE_DONE"

@@ -8,8 +8,8 @@ mkdir -p "$G"
 log(){ echo "$(date -Is 2>/dev/null || date) $*" >> "$L"; }
 getcfg(){ [ -r "$CFG" ] && grep -E "^$1=" "$CFG" 2>/dev/null | tail -n1 | sed "s/^$1=//" | tr -d '\r'; }
 # BOOTGUARD_V2_PREFLIGHT_START
-if [ -s "$MODDIR/tools/bootguard-lib.sh" ]; then
-  MODDIR="$MODDIR" CONFIG_FILE="$CFG" sh "$MODDIR/tools/bootguard-lib.sh" preflight >> "$L" 2>&1 || log "BOOTGUARD_V2_WARN reason=preflight_nonzero"
+if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
+  MODDIR="$MODDIR" CONFIG_FILE="$CFG" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" preflight >> "$L" 2>&1 || log "BOOTGUARD_V2_WARN reason=preflight_nonzero"
 fi
 # BOOTGUARD_V2_PREFLIGHT_END
 mode="$(getcfg PTUNE_GUARD_MODE)"; [ -n "$mode" ] || mode=strict; case "$mode" in strict|active_only|off) ;; *) mode=strict;; esac
@@ -26,7 +26,7 @@ for d in /data/adb/modules_update/ptune /data/adb/modules/ptune; do
   case "$d" in /data/adb/modules_update/ptune) ptune_active="$d";; *) [ ! -e "$d/disable" ] && [ -z "$ptune_active" ] && ptune_active="$d";; esac
 done
 if [ -n "$ptune_active" ] && [ "$override" != 1 ]; then echo ptune_active_or_staged > "$G/disabled_reason"; echo "$ptune_active" > "$G/conflict_ptune_path"; echo strict_active_skip_mount > "$G/conflict_guard_mode"; touch "$MODDIR/skip_mount"; log "GUARD_BLOCK reason=ptune_active_or_staged source=ptune_state action=set_skip_mount_for_next_boot path=$ptune_active"; exit 0; fi
-if [ -s "$MODDIR/tools/auto-profile-switch.sh" ]; then MODDIR="$MODDIR" sh "$MODDIR/tools/auto-profile-switch.sh" >> "$L" 2>&1 || log "AUTO_SWITCH_WARN reason=helper_rc_nonzero"; fi
+if [ -s "$MODDIR/tools/core/auto-profile-switch.sh" ]; then MODDIR="$MODDIR" sh "$MODDIR/tools/core/auto-profile-switch.sh" >> "$L" 2>&1 || log "AUTO_SWITCH_WARN reason=helper_rc_nonzero"; fi
 [ -e "$MODDIR/skip_mount" ] && { log "GUARD_BLOCK reason=auto_profile_switch_set_skip_mount action=no_further_change"; exit 0; }
 if [ "$override" = 1 ] && [ -n "$ptune_any" ]; then
   ready=yes
