@@ -6,11 +6,13 @@ POLLING_MODE="${1:-mod}"      # "stock" or "mod"
 OUTDOOR_PROFILE="${2:-stock}" # "stock", "outdoor-safe", "outdoor-plus", "outdoor-extended"
 
 ORIGINALS_DIR="./scratch/originals"
+PATCHED_TEMP_DIR="./scratch/patched_temp"
 TARGET_DIR="./scratch/output"
 SRC_DIR="./dev_tools/stock"
 
-# Create directories
-mkdir -p "$ORIGINALS_DIR"
+# Ensure directories are clean
+rm -rf "$ORIGINALS_DIR" "$PATCHED_TEMP_DIR"
+mkdir -p "$ORIGINALS_DIR" "$PATCHED_TEMP_DIR"
 mkdir -p "$TARGET_DIR"
 
 # Determine temperature delta
@@ -37,6 +39,38 @@ echo "- Source directory: $SRC_DIR"
 echo "- Polling mode: $POLLING_MODE"
 echo "- Outdoor profile: $OUTDOOR_PROFILE"
 
+get_sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" 2>/dev/null | awk '{print $1}'
+  else
+    echo "unknown"
+  fi
+}
+
+count_polling_delays() {
+  file="$1"
+  pattern="$2"
+  awk -v pat="$pattern" '
+    BEGIN { total = 0 }
+    {
+      s = $0
+      while (match(s, pat)) {
+        total++
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+    END { print total }
+  ' "$file"
+}
+
+# Initialize verification
+valid_files=""
+validation_failed=0
+
+# JSON report builder
+json_content="{"
+first_file=1
+
 for f in $FILES; do
   src_file="$SRC_DIR/$f"
   if [ ! -r "$src_file" ]; then
@@ -48,9 +82,13 @@ for f in $FILES; do
   orig_file="$ORIGINALS_DIR/$f"
   cp -fp "$src_file" "$orig_file"
   
-  # 2. Run awk patch from originals to target directory
-  out_file="$TARGET_DIR/$f"
-  echo "  Processing: $f -> $out_file"
+  # Compute original hash & count
+  sha_orig=$(get_sha256 "$orig_file")
+  count_orig=$(count_polling_delays "$orig_file" '"PollingDelay"[[:space:]]*:[[:space:]]*300000')
+  
+  # 2. Run awk patch from originals to temp directory
+  temp_out_file="$PATCHED_TEMP_DIR/$f"
+  echo "  Processing: $f -> $temp_out_file"
   
   awk -v delta="$delta" -v poll_mode="$POLLING_MODE" '
     BEGIN {
@@ -105,7 +143,60 @@ for f in $FILES; do
     {
       print
     }
-  ' "$orig_file" > "$out_file"
+  ' "$orig_file" > "$temp_out_file"
+  
+  # Compute modded hash & count
+  sha_mod=$(get_sha256 "$temp_out_file")
+  count_mod=$(count_polling_delays "$temp_out_file" '"PollingDelay"[[:space:]]*:[[:space:]]*5000')
+  
+  # Verification check
+  file_status="passed"
+  if [ "$POLLING_MODE" = "mod" ]; then
+    if [ "$count_orig" -ne "$count_mod" ]; then
+      echo "  [VALIDATION FAILED] $f: Original 300000 count ($count_orig) does not match patched 5000 count ($count_mod)!" >&2
+      file_status="failed"
+      validation_failed=1
+    fi
+  fi
+  
+  # Append to JSON string
+  if [ "$first_file" -eq 1 ]; then
+    first_file=0
+  else
+    json_content="$json_content,"
+  fi
+  
+  json_content="$json_content
+  \"$f\": {
+    \"original_sha256\": \"$sha_orig\",
+    \"original_polling_count\": $count_orig,
+    \"patched_sha256\": \"$sha_mod\",
+    \"patched_polling_count\": $count_mod,
+    \"validation\": \"$file_status\"
+  }"
+  
+  valid_files="$valid_files $f"
 done
+
+json_content="$json_content
+}"
+
+# Write report
+echo "$json_content" > "./scratch/validation_report.json"
+
+# Validate status
+if [ "$validation_failed" -ne 0 ]; then
+  echo "Error: Verification failed for one or more files! Not moving files to target directory." >&2
+  rm -rf "$PATCHED_TEMP_DIR"
+  exit 1
+fi
+
+echo "Validation passed! Moving patched files to $TARGET_DIR..."
+for f in $valid_files; do
+  cp -fp "$PATCHED_TEMP_DIR/$f" "$TARGET_DIR/$f"
+done
+
+# Cleanup temp dir
+rm -rf "$PATCHED_TEMP_DIR"
 
 echo "Dynamic patching complete!"
