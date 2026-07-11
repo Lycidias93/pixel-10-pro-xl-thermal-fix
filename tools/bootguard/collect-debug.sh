@@ -103,14 +103,11 @@ collect_file checks.txt sh -c 'grep -E "^(id|version|versionCode|description|upd
 copy_if_readable "$MODDIR/module.prop" "$COLLECT/module/module.prop"
 copy_if_readable "$MODDIR/install-state.txt" "$COLLECT/module/install-state.txt"
 copy_if_readable "$MODDIR/health.log" "$COLLECT/module/health.log"
-copy_if_readable "$MODDIR/profile-info.json" "$COLLECT/module/profile-info.json"
 copy_if_readable "/data/adb/pixel-10-pro-xl-thermal-fix/config.env" "$COLLECT/module/config.env"
 copy_if_readable "$MODDIR/sepolicy.rule" "$COLLECT/module/sepolicy.rule"
 for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
   copy_if_readable "/vendor/etc/$f" "$COLLECT/vendor-active/$f"
   copy_if_readable "$MODDIR/system/vendor/etc/$f" "$COLLECT/module-overlay/$f"
-  p="$(find "$MODDIR/profiles" -path "*/system/vendor/etc/$f" -type f 2>/dev/null | head -n 1)"
-  [ -n "$p" ] && copy_if_readable "$p" "$COLLECT/profile/$f"
 done
 collect_file guard_first_state_machine.txt sh -c 'echo boot_id=$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || echo unknown); echo; echo == modules_update ==; ls -la /data/adb/modules_update/pixel-10-pro-xl-thermal-fix /data/adb/modules_update/ptune 2>/dev/null || true; echo; echo == proc_mounts ==; grep -E "pixel-10-pro-xl-thermal-fix|/vendor/etc/thermal_info_config" /proc/mounts 2>/dev/null || true'
 # PIXEL_THERMAL_ZRAM_100P_COLLECT_START
