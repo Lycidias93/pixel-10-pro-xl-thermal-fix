@@ -1,0 +1,8 @@
+{
+  "decision": "pass",
+  "observed_pollingdelay_300000": 31,
+  "observed_pollingdelay_file_count": 8,
+  "reference": "blazer CP2A.260705.006",
+  "schema_version": 1,
+  "verified_source_expected_31_in_8": true
+}

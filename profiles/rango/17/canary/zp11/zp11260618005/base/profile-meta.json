@@ -1,0 +1,31 @@
+{
+  "android": "17",
+  "build_id": "ZP11.260618.005",
+  "build_slug": "zp11260618005",
+  "channel": "canary",
+  "device": "rango",
+  "factory_archive_sha256": "bc0036793e00083ce4a365475a8765da6d10585d9bd9acdb86b6c0a1aff112db",
+  "family": "zp11",
+  "lowercase_pollingdelay_count": 0,
+  "pollingdelay_300000": 40,
+  "pollingdelay_30000_count": 0,
+  "pollingdelay_file_count": 7,
+  "pollingdelay_total": 40,
+  "schema_version": 1,
+  "source_bundle_filename": "pixel10-stock-thermal-zp11.260618.005-july-2026-for-harish.zip",
+  "source_bundle_sha256": "9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd",
+  "source_kind": "official_google_factory_stock",
+  "source_metadata_provenance": {
+    "build.txt": "per_device_metadata",
+    "factory_sha256.txt": "per_device_metadata",
+    "source_url.txt": "per_device_metadata",
+    "variant.txt": "per_device_metadata"
+  },
+  "source_url": "https://dl.google.com/developers/android/CANARY/images/factory/rango_beta-zp11.260618.005-factory-bc003679.zip",
+  "stock_files_byte_preserved": true,
+  "strict_json_failures_preserved_from_stock": [
+    "thermal_info_config_bg_tasks_throttling.json"
+  ],
+  "thermal_json_count": 9,
+  "variant": "base"
+}

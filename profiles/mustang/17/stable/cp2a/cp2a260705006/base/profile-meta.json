@@ -1,0 +1,31 @@
+{
+  "android": "17",
+  "build_id": "CP2A.260705.006",
+  "build_slug": "cp2a260705006",
+  "channel": "stable",
+  "device": "mustang",
+  "factory_archive_sha256": "ee273544840afb3718aba973c0a78274062c96af9f6576c5c07654527dd163a3",
+  "family": "cp2a",
+  "lowercase_pollingdelay_count": 0,
+  "pollingdelay_300000": 30,
+  "pollingdelay_30000_count": 0,
+  "pollingdelay_file_count": 8,
+  "pollingdelay_total": 30,
+  "schema_version": 1,
+  "source_bundle_filename": "pixel10-stock-thermal-cp2a.260705.006-july-2026-for-harish.zip",
+  "source_bundle_sha256": "6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455",
+  "source_kind": "official_google_factory_stock",
+  "source_metadata_provenance": {
+    "build.txt": "per_device_metadata",
+    "factory_sha256.txt": "per_device_metadata",
+    "source_url.txt": "per_device_metadata",
+    "variant.txt": "bundle_verified_fallback"
+  },
+  "source_url": "https://dl.google.com/dl/android/aosp/mustang-cp2a.260705.006-factory-ee273544.zip",
+  "stock_files_byte_preserved": true,
+  "strict_json_failures_preserved_from_stock": [
+    "thermal_info_config_bg_tasks_throttling.json"
+  ],
+  "thermal_json_count": 10,
+  "variant": "base"
+}

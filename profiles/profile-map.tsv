@@ -1,0 +1,9 @@
+device	android	build_id	channel	family	build_slug	path	thermal_json_count	pollingdelay_300000	pollingdelay_file_count	source_bundle_sha256
+blazer	17	CP2A.260705.006	stable	cp2a	cp2a260705006	profiles/blazer/17/stable/cp2a/cp2a260705006/base	10	31	8	6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455
+blazer	17	ZP11.260618.005	canary	zp11	zp11260618005	profiles/blazer/17/canary/zp11/zp11260618005/base	10	31	8	9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd
+frankel	17	CP2A.260705.006	stable	cp2a	cp2a260705006	profiles/frankel/17/stable/cp2a/cp2a260705006/base	10	31	8	6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455
+frankel	17	ZP11.260618.005	canary	zp11	zp11260618005	profiles/frankel/17/canary/zp11/zp11260618005/base	10	31	8	9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd
+mustang	17	CP2A.260705.006	stable	cp2a	cp2a260705006	profiles/mustang/17/stable/cp2a/cp2a260705006/base	10	30	8	6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455
+mustang	17	ZP11.260618.005	canary	zp11	zp11260618005	profiles/mustang/17/canary/zp11/zp11260618005/base	10	30	8	9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd
+rango	17	CP2A.260705.006	stable	cp2a	cp2a260705006	profiles/rango/17/stable/cp2a/cp2a260705006/base	9	39	7	6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455
+rango	17	ZP11.260618.005	canary	zp11	zp11260618005	profiles/rango/17/canary/zp11/zp11260618005/base	9	40	7	9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd

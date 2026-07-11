@@ -1,0 +1,6 @@
+{
+  "build.txt": "per_device_metadata",
+  "factory_sha256.txt": "per_device_metadata",
+  "source_url.txt": "per_device_metadata",
+  "variant.txt": "bundle_verified_fallback"
+}

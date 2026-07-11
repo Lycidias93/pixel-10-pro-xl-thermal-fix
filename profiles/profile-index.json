@@ -1,0 +1,111 @@
+{
+  "canonical_path_rule": "profiles/<device>/17/<channel>/<family>/<build_slug>/base",
+  "profiles": [
+    {
+      "android": "17",
+      "build_id": "CP2A.260705.006",
+      "build_slug": "cp2a260705006",
+      "channel": "stable",
+      "device": "blazer",
+      "family": "cp2a",
+      "path": "profiles/blazer/17/stable/cp2a/cp2a260705006/base",
+      "pollingdelay_300000": 31,
+      "pollingdelay_file_count": 8,
+      "source_bundle_sha256": "6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455",
+      "thermal_json_count": 10
+    },
+    {
+      "android": "17",
+      "build_id": "CP2A.260705.006",
+      "build_slug": "cp2a260705006",
+      "channel": "stable",
+      "device": "frankel",
+      "family": "cp2a",
+      "path": "profiles/frankel/17/stable/cp2a/cp2a260705006/base",
+      "pollingdelay_300000": 31,
+      "pollingdelay_file_count": 8,
+      "source_bundle_sha256": "6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455",
+      "thermal_json_count": 10
+    },
+    {
+      "android": "17",
+      "build_id": "CP2A.260705.006",
+      "build_slug": "cp2a260705006",
+      "channel": "stable",
+      "device": "mustang",
+      "family": "cp2a",
+      "path": "profiles/mustang/17/stable/cp2a/cp2a260705006/base",
+      "pollingdelay_300000": 30,
+      "pollingdelay_file_count": 8,
+      "source_bundle_sha256": "6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455",
+      "thermal_json_count": 10
+    },
+    {
+      "android": "17",
+      "build_id": "CP2A.260705.006",
+      "build_slug": "cp2a260705006",
+      "channel": "stable",
+      "device": "rango",
+      "family": "cp2a",
+      "path": "profiles/rango/17/stable/cp2a/cp2a260705006/base",
+      "pollingdelay_300000": 39,
+      "pollingdelay_file_count": 7,
+      "source_bundle_sha256": "6aa022b923ec029d50588c5889af1a6bf731b33be82fea44b034b205be042455",
+      "thermal_json_count": 9
+    },
+    {
+      "android": "17",
+      "build_id": "ZP11.260618.005",
+      "build_slug": "zp11260618005",
+      "channel": "canary",
+      "device": "blazer",
+      "family": "zp11",
+      "path": "profiles/blazer/17/canary/zp11/zp11260618005/base",
+      "pollingdelay_300000": 31,
+      "pollingdelay_file_count": 8,
+      "source_bundle_sha256": "9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd",
+      "thermal_json_count": 10
+    },
+    {
+      "android": "17",
+      "build_id": "ZP11.260618.005",
+      "build_slug": "zp11260618005",
+      "channel": "canary",
+      "device": "frankel",
+      "family": "zp11",
+      "path": "profiles/frankel/17/canary/zp11/zp11260618005/base",
+      "pollingdelay_300000": 31,
+      "pollingdelay_file_count": 8,
+      "source_bundle_sha256": "9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd",
+      "thermal_json_count": 10
+    },
+    {
+      "android": "17",
+      "build_id": "ZP11.260618.005",
+      "build_slug": "zp11260618005",
+      "channel": "canary",
+      "device": "mustang",
+      "family": "zp11",
+      "path": "profiles/mustang/17/canary/zp11/zp11260618005/base",
+      "pollingdelay_300000": 30,
+      "pollingdelay_file_count": 8,
+      "source_bundle_sha256": "9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd",
+      "thermal_json_count": 10
+    },
+    {
+      "android": "17",
+      "build_id": "ZP11.260618.005",
+      "build_slug": "zp11260618005",
+      "channel": "canary",
+      "device": "rango",
+      "family": "zp11",
+      "path": "profiles/rango/17/canary/zp11/zp11260618005/base",
+      "pollingdelay_300000": 40,
+      "pollingdelay_file_count": 7,
+      "source_bundle_sha256": "9a42ec71a54fe519e24eab58fd8794ed05b4a89df086566f8c5e52644ddf9fdd",
+      "thermal_json_count": 9
+    }
+  ],
+  "resolver_contract": "exact device + Android major + exact build id; no family fallback",
+  "schema_version": 1
+}

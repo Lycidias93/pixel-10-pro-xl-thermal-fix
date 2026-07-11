@@ -1,0 +1,29 @@
+{
+    "Sensors":[
+        {
+            "Name":"AA_ACTIVE_PROPERTY",
+            "Type":"UNKNOWN",
+            "Hidden":true,
+            "TempPathType": "DEVICE_PROPERTY",
+            "TempPath":"vendor.thermal.mode.aa"
+        },
+        {
+            "Name":"DEVICE-SCREEN-AOD-OFF-HINT",
+            "Type":"UNKNOWN",
+            "VirtualSensor":true,
+            "TriggerSensor": [
+                "VIRTUAL-SKIN-OVER-35C-TRIGGER"
+            ],
+            "Formula":"COUNT_THRESHOLD",
+            "Combination":["AA_ACTIVE_PROPERTY", "VIRTUAL-SKIN"],
+            "Coefficient":[1.0, 39000],
+            "CountThresholdHysteresis": [0.0, 2000],
+            "HotThreshold":["NAN", 2.0, "NAN", "NAN", "NAN", "NAN", "NAN"],
+            "HotHysteresis":[0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "Multiplier":1,
+            "SendCallback":true,
+            "PollingDelay":300000,
+            "PassiveDelay":7000
+        }
+    ]
+}
