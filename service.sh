@@ -1,5 +1,6 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
+ID="pixel-10-pro-xl-thermal-fix"
 G="$MODDIR/guard"
 L="$G/bootguard.log"
 H="$MODDIR/health.log"
@@ -9,7 +10,7 @@ echo "timestamp_start=$(date +%s 2>/dev/null || echo unknown)" > "$H"
 echo "health_log_model=read_only_guard_first_plus_zram_100p_boot_early_v1413_test18" >> "$H"
 
 # PIXEL_THERMAL_ZRAM_100P_SERVICE_START
-CONFIG_FILE="/data/adb/pixel-10-pro-xl-thermal-fix/config.env"
+CONFIG_FILE="/data/adb/$ID/config.env"
 if [ -f "$CONFIG_FILE" ]; then
   . "$CONFIG_FILE" 2>/dev/null || true
 fi
@@ -45,7 +46,7 @@ sleep 20
   [ -e "$MODDIR/remove" ] && echo remove=present || echo remove=absent
   echo
   echo "== mounts =="
-  grep -E 'pixel-10-pro-xl-thermal-fix|/vendor/etc/thermal_info_config|/vendor/etc/fstab.zram.100p' /proc/mounts 2>/dev/null || true
+  grep -E "$ID|/vendor/etc/thermal_info_config|/vendor/etc/fstab.zram.100p" /proc/mounts 2>/dev/null || true
   echo health_log_complete=yes
 } >> "$H" 2>&1
 
