@@ -1,0 +1,6 @@
+{
+  "version": "1.5.1-universal.1",
+  "versionCode": 1016108,
+  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v1.5.1-universal.1/pixel-10-thermal-memory-control-1.5.1-universal.1.zip",
+  "changelog": "Stable 1.5.1 promotes the verified Test7 dynamic manager Ampel and Action dashboard: P/T/Z status with active values, Settings/Debug/Advanced menu, pTune status consistency, dynamic thermal overlay checks, Profile Matrix PASS count 67, and ZRAM 100p runtime proof via active swap plus non-zero disksize. Credits include Allen Chang for Ampel/Action menu idea and Beta 1/QPR1 testing."
+}

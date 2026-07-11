@@ -1,0 +1,7 @@
+id=pixel-10-pro-xl-thermal-fix
+name=Pixel 10 Thermal & Memory Control
+version=1.5.2-universal-test.7
+versionCode=1016207
+author=Lycidias93, marx161, Codecity001
+description=Pre-release test.7: Canary/ZP diagnostic safe mode, normal devices unchanged. P: diagnostic/stock, T: no-overlay on Canary, Z: off on Canary
+updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

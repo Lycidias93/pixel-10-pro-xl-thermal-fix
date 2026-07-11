@@ -1,0 +1,29 @@
+#!/sbin/sh
+OUTFD="$2"
+ZIPFILE="$3"
+ui_print() {
+  if [ -n "$OUTFD" ]; then
+    echo -e "ui_print $1\nui_print" >> /proc/self/fd/"$OUTFD" 2>/dev/null || echo "$1"
+  else
+    echo "$1"
+  fi
+}
+require_magisk() {
+  ui_print "*******************************"
+  ui_print " Magisk/KernelSU module installer required"
+  ui_print "*******************************"
+  exit 1
+}
+umask 022
+mount /data 2>/dev/null || true
+if [ -f /data/adb/magisk/util_functions.sh ]; then
+  . /data/adb/magisk/util_functions.sh
+elif [ -f /data/adb/ksu/util_functions.sh ]; then
+  . /data/adb/ksu/util_functions.sh
+elif [ -f /data/adb/ap/bin/util_functions.sh ]; then
+  . /data/adb/ap/bin/util_functions.sh
+else
+  require_magisk
+fi
+install_module
+exit 0
