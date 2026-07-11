@@ -1,0 +1,19 @@
+{
+  "supported_devices": {
+    "mustang": "Pixel 10 Pro XL",
+    "blazer": "Pixel 10 Pro",
+    "frankel": "Pixel 10",
+    "rango": "Pixel 10 Pro Fold"
+  },
+  "supported_android_versions": [
+    "16",
+    "17"
+  ],
+  "verified_builds": [
+    "CP1A.260505.005",
+    "CP21.260330.011",
+    "CP2A.260605.012",
+    "CP31.260522.006",
+    "CP31.260618.005"
+  ]
+}
