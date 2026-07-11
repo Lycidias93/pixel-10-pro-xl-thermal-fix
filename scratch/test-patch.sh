@@ -11,7 +11,9 @@ TARGET_DIR="./scratch/output"
 SRC_DIR="./dev_tools/stock"
 
 # Ensure directories are clean
-rm -rf "$ORIGINALS_DIR" "$PATCHED_TEMP_DIR"
+# We keep ORIGINALS_DIR persistent to cache the stock vendor files,
+# but PATCHED_TEMP_DIR is recreated fresh for every run.
+rm -rf "$PATCHED_TEMP_DIR"
 mkdir -p "$ORIGINALS_DIR" "$PATCHED_TEMP_DIR"
 mkdir -p "$TARGET_DIR"
 
@@ -49,17 +51,60 @@ get_sha256() {
 
 count_polling_delays() {
   file="$1"
-  pattern="$2"
-  awk -v pat="$pattern" '
+  val="$2"
+  awk -v val="$val" '
     BEGIN { total = 0 }
     {
+      pat1 = sprintf("%c", 34) "PollingDelay" sprintf("%c", 34) ":" val
+      pat2 = sprintf("%c", 34) "PollingDelay" sprintf("%c", 34) ": " val
       s = $0
-      while (match(s, pat)) {
+      while (i = index(s, pat1)) {
         total++
-        s = substr(s, RSTART + RLENGTH)
+        s = substr(s, i + length(pat1))
+      }
+      s = $0
+      while (i = index(s, pat2)) {
+        total++
+        s = substr(s, i + length(pat2))
       }
     }
     END { print total }
+  ' "$file"
+}
+
+get_hot_thresholds() {
+  file="$1"
+  awk '
+    BEGIN {
+      in_target = ""
+      res = ""
+    }
+    index($0, "\"Name\"") && index($0, "\"VIRTUAL-SKIN-HINT\"") {
+      in_target = "VIRTUAL-SKIN-HINT"
+    }
+    index($0, "\"Name\"") && !index($0, "\"VIRTUAL-SKIN-HINT\"") && index($0, "\"VIRTUAL-SKIN\"") {
+      in_target = "VIRTUAL-SKIN"
+    }
+    index($0, "\"Name\"") && !index($0, "\"VIRTUAL-SKIN\"") && !index($0, "\"VIRTUAL-SKIN-HINT\"") {
+      in_target = ""
+    }
+    in_target != "" && index($0, "\"HotThreshold\"") {
+      start = index($0, "[")
+      end = index($0, "]")
+      if (start > 0 && end > start) {
+        arr = substr($0, start, end - start + 1)
+        gsub(/[[:space:]]+/, "", arr)
+        # Convert double quotes to single quotes to prevent JSON parsing errors
+        gsub(sprintf("%c", 34), sprintf("%c", 39), arr)
+        if (res == "") {
+          res = in_target ": " arr
+        } else {
+          res = res " | " in_target ": " arr
+        }
+      }
+      in_target = ""
+    }
+    END { print res }
   ' "$file"
 }
 
@@ -78,13 +123,41 @@ for f in $FILES; do
     continue
   fi
   
-  # 1. Copy stock file to originals temp directory
+  # 1. Sourcing original file (active overlay check)
   orig_file="$ORIGINALS_DIR/$f"
-  cp -fp "$src_file" "$orig_file"
+  
+  # Check if we already have a valid stock file saved in originals
+  use_existing=0
+  if [ -r "$orig_file" ]; then
+    # Verify the saved file has 300000 delays (is stock)
+    count_back=$(count_polling_delays "$orig_file" "300000")
+    if [ "$count_back" -gt 0 ]; then
+      use_existing=1
+    fi
+  fi
+  
+  if [ "$use_existing" -eq 1 ]; then
+    # We already have the clean stock file saved, keep using it!
+    echo "  Sourcing: $f (from stock cache)"
+  else
+    # Sourcing from active system (first install or cache was missing/invalid)
+    # But wait! If active system file is already modded (contains 5000), 
+    # we should NOT save it as our stock file!
+    count_sys_5k=$(count_polling_delays "$src_file" "5000")
+    if [ "$count_sys_5k" -eq 0 ]; then
+      # System file is clean stock, copy to originals cache
+      cp -fp "$src_file" "$orig_file"
+      echo "  Sourcing: $f (from system stock)"
+    else
+      # System file is modded and we have no stock backup!
+      echo "  [WARNING] Sourcing modded file $f as stock (no backup available)!" >&2
+      cp -fp "$src_file" "$orig_file"
+    fi
+  fi
   
   # Compute original hash & count
   sha_orig=$(get_sha256 "$orig_file")
-  count_orig=$(count_polling_delays "$orig_file" '"PollingDelay"[[:space:]]*:[[:space:]]*300000')
+  count_orig=$(count_polling_delays "$orig_file" "300000")
   
   # 2. Run awk patch from originals to temp directory
   temp_out_file="$PATCHED_TEMP_DIR/$f"
@@ -147,7 +220,7 @@ for f in $FILES; do
   
   # Compute modded hash & count
   sha_mod=$(get_sha256 "$temp_out_file")
-  count_mod=$(count_polling_delays "$temp_out_file" '"PollingDelay"[[:space:]]*:[[:space:]]*5000')
+  count_mod=$(count_polling_delays "$temp_out_file" "5000")
   
   # Verification check
   file_status="passed"
@@ -158,6 +231,12 @@ for f in $FILES; do
       validation_failed=1
     fi
   fi
+  
+  # Get HotThreshold values for both original and patched files
+  hot_orig=$(get_hot_thresholds "$orig_file")
+  hot_mod=$(get_hot_thresholds "$temp_out_file")
+  [ -n "$hot_orig" ] || hot_orig="none"
+  [ -n "$hot_mod" ] || hot_mod="none"
   
   # Append to JSON string
   if [ "$first_file" -eq 1 ]; then
@@ -172,6 +251,10 @@ for f in $FILES; do
     \"original_polling_count\": $count_orig,
     \"patched_sha256\": \"$sha_mod\",
     \"patched_polling_count\": $count_mod,
+    \"original_outdoor_profile\": \"stock\",
+    \"patched_outdoor_profile\": \"$OUTDOOR_PROFILE\",
+    \"original_hot_thresholds\": \"$hot_orig\",
+    \"patched_hot_thresholds\": \"$hot_mod\",
     \"validation\": \"$file_status\"
   }"
   
@@ -192,6 +275,7 @@ if [ "$validation_failed" -ne 0 ]; then
 fi
 
 echo "Validation passed! Moving patched files to $TARGET_DIR..."
+rm -f "$TARGET_DIR/thermal_info_config"* 2>/dev/null || true
 for f in $valid_files; do
   cp -fp "$PATCHED_TEMP_DIR/$f" "$TARGET_DIR/$f"
 done

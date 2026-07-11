@@ -120,7 +120,7 @@
             "Formula": "MAXIMUM",
             "Combination": ["VIRTUAL-SKIN-EQ"],
             "Coefficient": [1.0],
-            "HotThreshold": ["NAN", 39, 43, 45, 46.5, 52, 65.0],
+            "HotThreshold": ["NAN", 41, 45, 47, 48.5, 54, 67],
             "HotHysteresis": [0.0, 1.9, 1.9, 1.9, 1.4, 1.9, 1.9],
             "SeverityReference": ["ShutdownModePowerTrans", "ShutdownModePowerSteady"],
             "Multiplier": 0.001,
