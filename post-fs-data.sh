@@ -45,6 +45,7 @@ if [ "$curr_bid" != "unknown" ] && [ "$inst_bid" != "none" ]; then
   if [ "$curr_bid" != "$inst_bid" ]; then
     log "BUILD_MISMATCH current=$curr_bid installed=$inst_bid - removing modded thermal files"
     rm -rf /data/adb/modules/pixel*/system/vendor/etc/thermal_info_config*
+    rm -rf /data/adb/pixel-10-pro-xl-thermal-fix/originals
     if [ -f "$CFG" ]; then
       tmp="$CFG.tmp.$$"
       grep -v "^THERMAL_DISABLED=" "$CFG" > "$tmp" 2>/dev/null || true
