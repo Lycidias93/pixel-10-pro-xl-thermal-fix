@@ -98,9 +98,9 @@ thermal_finalize_install() {
     printf '%s\n' "selinux_overlay_read_policy=hal_thermal_default_system_file_read_only"
     printf '%s\n' "update_json_channel=stable_update_json_1.5.1-universal.1_public_stable"
     printf '%s\n' "debug_collector=manual_or_auto_on_install_fail_v1411"
-    printf '%s\n' "debug_collector_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/bootguard/collect-debug.sh"
-    printf '%s\n' "override_enable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/ptune/enable-ptune-override.sh"
-    printf '%s\n' "override_disable_command=su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/ptune/disable-ptune-override.sh"
+    printf '%s\n' "debug_collector_command=su -c /data/adb/modules/$MODULE_ID/tools/bootguard/collect-debug.sh"
+    printf '%s\n' "override_enable_command=su -c /data/adb/modules/$MODULE_ID/tools/ptune/enable-ptune-override.sh"
+    printf '%s\n' "override_disable_command=su -c /data/adb/modules/$MODULE_ID/tools/ptune/disable-ptune-override.sh"
     printf '%s\n' "debug_zip_target=/sdcard/Download/pixel_thermal_debug_*.zip"
   } > "$MODPATH/install-state.txt"
 }

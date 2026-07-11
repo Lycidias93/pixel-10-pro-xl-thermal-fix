@@ -219,6 +219,7 @@ source_report_sha256="dynamic_patching_active"
 build_state="dynamic_${device}_${build_id}_${incremental}"
 profile_state="dynamic_${device}_android${android}"
 profile="dynamic/${device}/android${android}"
+active_dir="$MODPATH/system/vendor/etc"
 # END PIXEL_THERMAL_VERSION_CHECK_V2
 
 # BEGIN PIXEL_THERMAL_INSTALL_OVERLAY_HELPER_V1413_TEST27
