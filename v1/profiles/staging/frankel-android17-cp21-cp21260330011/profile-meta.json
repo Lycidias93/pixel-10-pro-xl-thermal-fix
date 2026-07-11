@@ -1,9 +1,0 @@
-{
-  "device": "frankel",
-  "build_family": "CP21",
-  "build_id": "CP21.260330.011",
-  "variant": "base",
-  "source_etc": "/storage/emulated/0/Download/pixel_local__repo-helper-work/pixel-thermal-test9-a17-full-profile-matrix/a17_vendor_extract/frankel_beta-cp21.260330.011/vendor/etc",
-  "generator": "test9-a17-full-profile-matrix-v1",
-  "policy": "factory-vendor-default-shape-preserved"
-}

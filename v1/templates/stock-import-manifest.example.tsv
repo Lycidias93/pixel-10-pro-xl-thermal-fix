@@ -1,2 +1,0 @@
-device	build	incremental	source_kind	source_path	relative_path	sha256	bytes	profile_consumers	classification	notes
-mustang	CP31.260618.005	pending_exact_incremental	factory_image	factory/mustang/CP31.260618.005/vendor/etc/thermal_info_config.json	originals/mustang/CP31.260618.005/thermal_info_config.json	64_HEX_SHA256	0	mustang-android17-cp31-cp31260618005	unknown	example row only
