@@ -23,9 +23,6 @@ if [ "$(cfg_get THERMAL_SETTINGS_MODE)" = "last" ]; then
   choice="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   [ -n "$choice" ] || choice="$(cfg_get LAST_THERMAL_OUTDOOR_PROFILE)"
   case "$choice" in outdoor-safe|outdoor-plus|outdoor-extended) ;; *) choice=stock ;; esac
-  max_profile="$(cfg_get THERMAL_MAX_PROFILE)"
-  safety="$(cfg_get THERMAL_SAFETY_LEVEL)"
-  case "$max_profile:$choice" in outdoor-safe:outdoor-plus|outdoor-safe:outdoor-extended) choice="outdoor-safe" ;; esac
   if ! variant_exists "$choice"; then
     msg ""
     msg "! Missing remembered profile: $choice"
@@ -45,7 +42,7 @@ if [ "$(cfg_get THERMAL_SETTINGS_MODE)" = "last" ]; then
   esac
   cfg_set LAST_THERMAL_OUTDOOR_PROFILE "$choice"
   if [ "$LOG" != "/dev/null" ]; then
-    { echo "choice=$choice"; echo "choice_label=$choice_label"; echo "confirm_reason=$confirm_reason"; echo "steps=0"; echo "safety=$safety"; echo "max_profile=$max_profile"; echo; echo "== after =="; grep -E "^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_PROFILE_SOURCE|THERMAL_OUTDOOR_TARGET|THERMAL_SAFETY_LEVEL|THERMAL_MAX_PROFILE)=" "$CONFIG_FILE" 2>/dev/null || true; echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_SKIPPED_USE_LAST choice=$choice confirm_reason=$confirm_reason steps=0"; } >> "$LOG" 2>&1 || true
+    { echo "choice=$choice"; echo "choice_label=$choice_label"; echo "confirm_reason=$confirm_reason"; echo "steps=0"; echo; echo "== after =="; grep -E "^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_PROFILE_SOURCE|THERMAL_OUTDOOR_TARGET)=" "$CONFIG_FILE" 2>/dev/null || true; echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_SKIPPED_USE_LAST choice=$choice confirm_reason=$confirm_reason steps=0"; } >> "$LOG" 2>&1 || true
   fi
   exit 0
 fi
@@ -53,8 +50,6 @@ fi
 idx="$(index_for "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
 mc_cycle4 "Thermal Profile" "Stock" "Outdoor Safe" "Outdoor Plus" "Outdoor Ext" "$idx"
 choice="$(option_at "$MC_INDEX")"; confirm_reason="$MC_REASON"; steps="$MC_STEPS"
-max_profile="$(cfg_get THERMAL_MAX_PROFILE)"; safety="$(cfg_get THERMAL_SAFETY_LEVEL)"
-case "$max_profile:$choice" in outdoor-safe:outdoor-plus|outdoor-safe:outdoor-extended) choice="outdoor-safe"; confirm_reason="${confirm_reason}_strict_blocked_to_safe"; msg ""; msg "Strict conflict block:"; msg "Using Outdoor Safe" ;; esac
 if ! variant_exists "$choice"; then msg ""; msg "! Missing profile: $choice"; msg "! Fallback: Stock"; choice="stock"; confirm_reason="missing_profile_fallback"; fi
 choice_label="$(long_label_for "$choice")"
 msg ""; msg "Confirmed:"; msg "$choice_label"; msg "----------------------------------------"
@@ -66,6 +61,6 @@ case "$choice" in
 esac
 cfg_set LAST_THERMAL_OUTDOOR_PROFILE "$choice"
 if [ "$LOG" != "/dev/null" ]; then
-  { echo "choice=$choice"; echo "choice_label=$choice_label"; echo "confirm_reason=$confirm_reason"; echo "steps=$steps"; echo "safety=$safety"; echo "max_profile=$max_profile"; echo; echo "== after =="; grep -E "^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_PROFILE_SOURCE|THERMAL_OUTDOOR_TARGET|THERMAL_SAFETY_LEVEL|THERMAL_MAX_PROFILE)=" "$CONFIG_FILE" 2>/dev/null || true; echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_DONE choice=$choice confirm_reason=$confirm_reason steps=$steps"; } >> "$LOG" 2>&1 || true
+  { echo "choice=$choice"; echo "choice_label=$choice_label"; echo "confirm_reason=$confirm_reason"; echo "steps=$steps"; echo; echo "== after =="; grep -E "^(THERMAL_OUTDOOR_PROFILE|THERMAL_OUTDOOR_RISK_ACK|THERMAL_OUTDOOR_PROFILE_SOURCE|THERMAL_OUTDOOR_TARGET)=" "$CONFIG_FILE" 2>/dev/null || true; echo "RESULT: PIXEL_THERMAL_OUTDOOR_MENU_DONE choice=$choice confirm_reason=$confirm_reason steps=$steps"; } >> "$LOG" 2>&1 || true
 fi
 exit 0

@@ -109,7 +109,6 @@ case "$build_id:$fingerprint" in
       echo "THERMAL_OUTDOOR_PROFILE=stock"
       echo "THERMAL_OUTDOOR_TARGET=stock"
       echo "THERMAL_SETTINGS_MODE=canary_diagnostic"
-      echo "THERMAL_SAFETY_LEVEL=normal"
       echo "THERMAL_POLLING_MODE=stock"
       echo "THERMAL_POLLING_EFFECTIVE=stock"
       echo "BOOTGUARD_FAIL_THRESHOLD=1"

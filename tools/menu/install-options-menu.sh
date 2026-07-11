@@ -21,23 +21,8 @@ ptune_present() {
   done
   return 1
 }
-foreign_thermal_overlay() {
-  for root in /data/adb/modules /data/adb/modules_update; do
-    [ -d "$root" ] || continue
-    for d in "$root"/*; do
-      [ -d "$d" ] || continue
-      b="$(basename "$d")"
-      [ "$b" = "$MODULE_ID" ] && continue
-      [ "$b" = "ptune" ] && continue
-      [ -e "$d/remove" ] && continue
-      [ -e "$d/disable" ] && continue
-      if find "$d/system/vendor/etc" -maxdepth 1 -type f -name 'thermal_info_config*.json' 2>/dev/null | grep -q .; then echo "$d"; return 0; fi
-    done
-  done
-  return 1
-}
 has_remembered() {
-  for k in LAST_THERMAL_OUTDOOR_PROFILE LAST_THERMAL_POLLING_MODE LAST_PTUNE_OVERRIDE LAST_THERMAL_SAFETY_LEVEL LAST_DEBUG_MODE LAST_ZRAM_100P THERMAL_OUTDOOR_PROFILE THERMAL_POLLING_MODE DEBUG_MODE ENABLE_ZRAM_100P; do
+  for k in LAST_THERMAL_OUTDOOR_PROFILE LAST_THERMAL_POLLING_MODE LAST_PTUNE_OVERRIDE LAST_DEBUG_MODE LAST_ZRAM_100P THERMAL_OUTDOOR_PROFILE THERMAL_POLLING_MODE DEBUG_MODE ENABLE_ZRAM_100P; do
     [ -n "$(cfg_get "$k")" ] && return 0
   done
   return 1
@@ -63,23 +48,7 @@ risk_for_profile() {
 apply_last_settings_and_exit() {
   cfg_set THERMAL_SETTINGS_MODE last
 
-  last_safety="$(cfg_get LAST_THERMAL_SAFETY_LEVEL)"
-  [ -n "$last_safety" ] || last_safety="$(cfg_get THERMAL_SAFETY_LEVEL)"
-  case "$last_safety" in strict) safety=strict ;; *) safety=normal ;; esac
-  cfg_set THERMAL_SAFETY_LEVEL "$safety"
-  cfg_set LAST_THERMAL_SAFETY_LEVEL "$safety"
-
-  foreign_path="$(foreign_thermal_overlay 2>/dev/null || true)"
   ptune_path="$(ptune_present 2>/dev/null || true)"
-  if [ -n "$foreign_path" ]; then
-    cfg_set THERMAL_CONFLICT foreign_overlay
-    cfg_set THERMAL_CONFLICT_PATH "$foreign_path"
-    cfg_set THERMAL_POLLING_CONFLICT foreign_polling_drift
-  else
-    cfg_set THERMAL_CONFLICT none
-    cfg_set THERMAL_CONFLICT_PATH none
-    cfg_set THERMAL_POLLING_CONFLICT none
-  fi
   if [ -n "$ptune_path" ]; then
     cfg_set PTUNE_CONFLICT present
     cfg_set PTUNE_CONFLICT_PATH "$ptune_path"
@@ -87,18 +56,10 @@ apply_last_settings_and_exit() {
     cfg_set PTUNE_CONFLICT none
     cfg_set PTUNE_CONFLICT_PATH none
   fi
-  if [ "$safety" = "strict" ] && [ -n "$foreign_path" ]; then
-    cfg_set THERMAL_MAX_PROFILE outdoor-safe
-  else
-    cfg_set THERMAL_MAX_PROFILE outdoor-extended
-  fi
 
   last_profile="$(cfg_get LAST_THERMAL_OUTDOOR_PROFILE)"
   [ -n "$last_profile" ] || last_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   case "$last_profile" in outdoor-safe|outdoor-plus|outdoor-extended) profile_choice="$last_profile" ;; *) profile_choice=stock ;; esac
-  if [ "$(cfg_get THERMAL_MAX_PROFILE)" = "outdoor-safe" ]; then
-    case "$profile_choice" in outdoor-plus|outdoor-extended) profile_choice=outdoor-safe ;; esac
-  fi
   cfg_set THERMAL_OUTDOOR_PROFILE "$profile_choice"
   cfg_set THERMAL_OUTDOOR_TARGET "$(target_for_profile "$profile_choice")"
   cfg_set THERMAL_OUTDOOR_RISK_ACK "$(risk_for_profile "$profile_choice")"
@@ -108,9 +69,6 @@ apply_last_settings_and_exit() {
   last_polling="$(cfg_get LAST_THERMAL_POLLING_MODE)"
   [ -n "$last_polling" ] || last_polling="$(cfg_get THERMAL_POLLING_MODE)"
   case "$last_polling" in stock) polling=stock ;; *) polling=mod ;; esac
-  if [ "$safety" = "strict" ] && [ -n "$foreign_path" ] && [ "$polling" = "mod" ]; then
-    polling=stock
-  fi
   cfg_set THERMAL_POLLING_MODE "$polling"
   cfg_set LAST_THERMAL_POLLING_MODE "$polling"
 
@@ -192,57 +150,49 @@ if [ "$MC_INDEX" != "0" ]; then
   cfg_set DEBUG_MODE 1; cfg_set debug_mode 1; cfg_set LAST_DEBUG_MODE verbose
   cfg_set THERMAL_OUTDOOR_PROFILE stock
   cfg_set THERMAL_POLLING_MODE mod
-  cfg_set THERMAL_SAFETY_LEVEL normal
   cfg_set ALLOW_THERMAL_WITH_PTUNE 0
   cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION none
   cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1
   mc_msg "Settings: fresh"
 fi
+  ptune_path="$(ptune_present 2>/dev/null || true)"
+  if [ -n "$ptune_path" ]; then
+    cfg_set PTUNE_CONFLICT present
+    cfg_set PTUNE_CONFLICT_PATH "$ptune_path"
+  else
+    cfg_set PTUNE_CONFLICT none
+    cfg_set PTUNE_CONFLICT_PATH none
+  fi
 
-case "$(cfg_get THERMAL_SAFETY_LEVEL)" in strict) safety_idx=1 ;; *) safety_idx=0 ;; esac
-mc_cycle2 "Safety Level" "Normal" "Strict" "$safety_idx"
-if [ "$MC_INDEX" = "1" ]; then safety=strict; else safety=normal; fi
-cfg_set THERMAL_SAFETY_LEVEL "$safety"; cfg_set LAST_THERMAL_SAFETY_LEVEL "$safety"
+  mc_msg ""
+  mc_msg "Conflict scan"
+  mc_msg "Checks pTune status"
+  [ -n "$ptune_path" ] && mc_msg "pTune: present" || mc_msg "pTune: none"
 
-foreign_path="$(foreign_thermal_overlay 2>/dev/null || true)"
-ptune_path="$(ptune_present 2>/dev/null || true)"
-if [ -n "$foreign_path" ]; then
-  cfg_set THERMAL_CONFLICT foreign_overlay; cfg_set THERMAL_CONFLICT_PATH "$foreign_path"; cfg_set THERMAL_POLLING_CONFLICT foreign_polling_drift
-else
-  cfg_set THERMAL_CONFLICT none; cfg_set THERMAL_CONFLICT_PATH none; cfg_set THERMAL_POLLING_CONFLICT none
-fi
-if [ -n "$ptune_path" ]; then cfg_set PTUNE_CONFLICT present; cfg_set PTUNE_CONFLICT_PATH "$ptune_path"; else cfg_set PTUNE_CONFLICT none; cfg_set PTUNE_CONFLICT_PATH none; fi
+  case "$(cfg_get THERMAL_POLLING_MODE)" in stock) polling_idx=1 ;; *) polling_idx=0 ;; esac
+  mc_cycle2 "Polling Fix" "Mod values" "Stock values" "$polling_idx"
+  [ "$MC_INDEX" = "1" ] && polling=stock || polling=mod
+  cfg_set THERMAL_POLLING_MODE "$polling"; cfg_set LAST_THERMAL_POLLING_MODE "$polling"
 
-mc_msg ""; mc_msg "Conflict scan"; mc_msg "Checks pTune, overlays, polling."
-[ -n "$foreign_path" ] && mc_msg "Thermal: foreign overlay" || mc_msg "Thermal: PASS"
-[ -n "$foreign_path" ] && mc_msg "Polling: foreign drift" || mc_msg "Polling: PASS"
-[ -n "$ptune_path" ] && mc_msg "pTune: present" || mc_msg "pTune: none"
-if [ "$safety" = "strict" ] && [ -n "$foreign_path" ]; then cfg_set THERMAL_MAX_PROFILE outdoor-safe; mc_msg "Strict: max Safe"; else cfg_set THERMAL_MAX_PROFILE outdoor-extended; fi
+  allow="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"; risk="$(cfg_get RISK_ACK_PTUNE_THERMAL_COLLISION)"
+  case "$allow:$risk" in 1:I_UNDERSTAND_BOOTLOOP_RISK) ptune_idx=0 ;; *) ptune_idx=1 ;; esac
+  mc_cycle2 "pTune Override" "Override ON" "Override OFF" "$ptune_idx"
+  if [ "$MC_INDEX" = "0" ]; then
+    cfg_set PTUNE_OVERRIDE_MENU on
+    cfg_set ALLOW_THERMAL_WITH_PTUNE 1
+    cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION I_UNDERSTAND_BOOTLOOP_RISK
+    cfg_set LAST_PTUNE_OVERRIDE 1
+  else
+    cfg_set PTUNE_OVERRIDE_MENU off
+    cfg_set ALLOW_THERMAL_WITH_PTUNE 0
+    cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION none
+    cfg_set LAST_PTUNE_OVERRIDE 0
+  fi
 
-case "$(cfg_get THERMAL_POLLING_MODE)" in stock) polling_idx=1 ;; *) polling_idx=0 ;; esac
-mc_cycle2 "Polling Fix" "Mod values" "Stock values" "$polling_idx"
-[ "$MC_INDEX" = "1" ] && polling=stock || polling=mod
-if [ "$safety" = "strict" ] && [ -n "$foreign_path" ] && [ "$polling" = "mod" ]; then polling=stock; mc_msg "Strict: Stock polling"; fi
-cfg_set THERMAL_POLLING_MODE "$polling"; cfg_set LAST_THERMAL_POLLING_MODE "$polling"
-
-allow="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"; risk="$(cfg_get RISK_ACK_PTUNE_THERMAL_COLLISION)"
-case "$allow:$risk" in 1:I_UNDERSTAND_BOOTLOOP_RISK) ptune_idx=0 ;; *) ptune_idx=1 ;; esac
-mc_cycle2 "pTune Override" "Override ON" "Override OFF" "$ptune_idx"
-if [ "$MC_INDEX" = "0" ]; then
-  cfg_set PTUNE_OVERRIDE_MENU on
-  cfg_set ALLOW_THERMAL_WITH_PTUNE 1
-  cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION I_UNDERSTAND_BOOTLOOP_RISK
-  cfg_set LAST_PTUNE_OVERRIDE 1
-else
-  cfg_set PTUNE_OVERRIDE_MENU off
-  cfg_set ALLOW_THERMAL_WITH_PTUNE 0
-  cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION none
-  cfg_set LAST_PTUNE_OVERRIDE 0
-fi
-
-mc_msg ""; mc_msg "Install choices"; mc_msg "Final selected install state."
-mc_msg "Safety: $safety"
-mc_msg "Polling: $polling"
-mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
-mc_msg "----------------------------------------"
-exit 0
+  mc_msg ""
+  mc_msg "Install choices"
+  mc_msg "Final selected install state."
+  mc_msg "Polling: $polling"
+  mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
+  mc_msg "----------------------------------------"
+  exit 0
