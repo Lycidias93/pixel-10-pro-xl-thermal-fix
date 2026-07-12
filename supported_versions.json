@@ -1,6 +1,4 @@
 {
-  "schema_version": 2,
-  "activation_policy": "exact_git_profile_only",
   "supported_devices": {
     "mustang": "Pixel 10 Pro XL",
     "blazer": "Pixel 10 Pro",
@@ -8,12 +6,15 @@
     "rango": "Pixel 10 Pro Fold"
   },
   "supported_android_versions": [
+    "16",
     "17"
   ],
   "verified_builds": [
+    "CP1A.260505.005",
+    "CP21.260330.011",
+    "CP2A.260605.012",
     "CP2A.260705.006",
-    "ZP11.260618.005"
-  ],
-  "profile_map": "profiles/profile-map.tsv",
-  "fallback_policy": "none"
+    "CP31.260522.006",
+    "CP31.260618.005"
+  ]
 }

@@ -51,11 +51,7 @@ strip_outdoor_suffix() {
 }
 
 current_base_profile() {
-  if [ -r "$MODDIR/guard/selected_profile" ]; then
-    sed -n '1p' "$MODDIR/guard/selected_profile" 2>/dev/null
-  else
-    echo "unresolved"
-  fi
+  echo "dynamic"
 }
 
 variant_exists() {
@@ -132,12 +128,12 @@ rematerialize_thermal_overlay() {
     chmod 0755 "$MODDIR/tools/core/patch-thermal.sh" 2>/dev/null || true
     sh "$MODDIR/tools/core/patch-thermal.sh" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$MODDIR" || return 1
   else
-    msg "! Verified profile patcher missing"; return 1
+    msg "! Dynamic patcher core script missing"; return 1
   fi
 
+  printf '%s\n' "dynamic" > "$MODDIR/guard/selected_profile" 2>/dev/null || true
   printf '%s\n' "yes" > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
-  selected_now="$(current_base_profile)"
-  msg "- Profile saved: $selected_now"; msg "- Verified profile materialization complete"; msg "- Reboot recommended"; msg "- Vendor mount refresh"; return 0
+  msg "- Profile saved"; msg "- Dynamic patching complete"; msg "- Reboot recommended"; msg "- Vendor mount refresh"; return 0
 }
 
 set_polling() {
@@ -186,7 +182,7 @@ set_thermal() {
   ui_menu5 "Thermal Profile" "Stock" "Outdoor Safe" "Outdoor Plus" "Outdoor Extended" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; 2) choice=outdoor-plus ;; 3) choice=outdoor-extended ;; *) msg "Back."; return 0 ;; esac
-  if ! variant_exists "$(current_base_profile)" "$choice"; then choice=stock; fi
+  if ! variant_exists "dynamic" "$choice"; then choice=stock; fi
   cfg_set THERMAL_SETTINGS_MODE action_settings
   set_thermal_choice "$choice"
   msg "- Thermal: $choice"
