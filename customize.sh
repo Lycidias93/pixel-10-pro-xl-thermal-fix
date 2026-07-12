@@ -72,94 +72,19 @@ config_get() {
   [ -r "$CONFIG_FILE" ] || return 0
   grep -E "^${key}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${key}=//" | tr -d '\r'
 }
-# BEGIN CANARY_DIAGNOSTIC_NO_OVERLAY_V152T7
-case "$build_id:$fingerprint" in
-  ZP*:*|*:*/ZP*|*:CANARY/*)
-    ui_print "! Canary/ZP diagnostic mode"
-    ui_print "! No thermal overlay, no ZRAM, no Outdoor profile"
-    android_guard="android17_canary_diagnostic_pass"
-    fingerprint_android_guard="canary_zp_diagnostic_guard"
-    incremental_guard="canary_zp_recorded_$incremental"
-    profile="diagnostic/no-overlay"
-    profile_state="canary_zp_diagnostic_no_overlay_no_zram"
-    build_state="canary_zp_${device}_${build_id}_${incremental}_diagnostic_no_overlay_no_zram"
-    profile_source_android="17"
-    profile_source_build="none_diagnostic"
-    profile_source_incremental="none_diagnostic"
-    source_report_sha256="canary_diagnostic_no_overlay_no_zram"
-    profile_dir="none"
-    active_dir="none"
-    PTUNE_GUARD_MODE="diagnostic"
-    PTUNE_INSTALLED_PATH="unset"
-    PTUNE_ACTIVE_PATH="unset"
-    PTUNE_CONFLICT_PATH="unset"
-    PTUNE_CONFLICT_MODE="diagnostic_no_overlay"
-    PTUNE_OVERRIDE_ALLOWED="0"
-    PTUNE_KNOWN_BAD="not_checked_diagnostic"
-    PTUNE_RISK_ACK_STATE="not_applicable_diagnostic"
-    PTUNE_OVERRIDE_NAME="none"
-    THERMAL_OUTDOOR_PROFILE="stock"
-    mkdir -p "$CONFIG_DIR" "$MODPATH/guard"
-    {
-      echo "DEBUG_MODE=1"
-      echo "debug_mode=1"
-      echo "ENABLE_ZRAM_100P=0"
-      echo "ZRAM_RESTART_MMD=0"
-      echo "ZRAM_RISK_ACK=diagnostic_disabled"
-      echo "THERMAL_OUTDOOR_PROFILE=stock"
-      echo "THERMAL_OUTDOOR_TARGET=stock"
-      echo "THERMAL_SETTINGS_MODE=canary_diagnostic"
-      echo "THERMAL_POLLING_MODE=stock"
-      echo "THERMAL_POLLING_EFFECTIVE=stock"
-      echo "BOOTGUARD_FAIL_THRESHOLD=1"
-      echo "CANARY_DIAGNOSTIC_MODE=1"
-    } > "$CONFIG_FILE"
-    rm -rf "$MODPATH/system"
-    if [ -s "$MODPATH/tools/debug/preinstall-debug.sh" ]; then
-      chmod 0755 "$MODPATH/tools/debug/preinstall-debug.sh" 2>/dev/null || true
-      MODULE_VERSION="$MODULE_VERSION" MODULE_VERSION_CODE="$MODULE_VERSION_CODE" sh "$MODPATH/tools/debug/preinstall-debug.sh" install || true
-    fi
-    {
-      echo "module_id=$MODULE_ID"
-      echo "module_version=$MODULE_VERSION"
-      echo "module_version_code=$MODULE_VERSION_CODE"
-      echo "device=$device"
-      echo "profile=$profile"
-      echo "profile_state=$profile_state"
-      echo "build_state=$build_state"
-      echo "android=$android"
-      echo "android_sdk=$android_sdk"
-      echo "build_id=$build_id"
-      echo "incremental=$incremental"
-      echo "android_guard=$android_guard"
-      echo "fingerprint_android_guard=$fingerprint_android_guard"
-      echo "incremental_guard=$incremental_guard"
-      echo "profile_source_android=$profile_source_android"
-      echo "profile_source_build=$profile_source_build"
-      echo "profile_source_incremental=$profile_source_incremental"
-      echo "source_report_sha256=$source_report_sha256"
-      echo "profile_materialized=no"
-      echo "overlay_materializer=canary_diagnostic_no_overlay_v152t7"
-      echo "active_overlay_dir=none"
-      echo
-      echo "zram_fstab_materialized=no"
-      echo "zram_feature=disabled_canary_diagnostic"
-      echo "zram_apply_stage=disabled"
-      echo "thermal_outdoor_profile=stock"
-      echo "thermal_outdoor_target=stock"
-      echo "thermal_polling_mode=stock"
-      echo "thermal_polling_effective=stock"
-      echo "debug_collector=canary_preinstall_debug_v152t7"
-      echo "debug_zip_target=/sdcard/Download/pixel_thermal_canary_diagnostic_*.tgz"
-    } > "$MODPATH/install-state.txt"
-    thermal_save_install_debug "success" "canary_diagnostic_no_overlay_no_zram"
-    ui_print "- Diagnostic install-state written"
-    ui_print "- Debug TGZ: /sdcard/Download/pixel_thermal_canary_diagnostic_*.tgz"
-    ui_print "- Reboot test: safe diagnostic, no overlay"
-    exit 0
-  ;;
-esac
-# END CANARY_DIAGNOSTIC_NO_OVERLAY_V152T7
+config_set() {
+  key="$1"
+  value="$2"
+  mkdir -p "$CONFIG_DIR" 2>/dev/null || true
+  touch "$CONFIG_FILE" 2>/dev/null || true
+  tmp="$CONFIG_FILE.tmp.$$"
+  grep -v "^${key}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
+  printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  mv "$tmp" "$CONFIG_FILE"
+  chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
+}
+# Canary/ZP uses the normal verified dynamic V2 path.
+
 # BEGIN PIXEL_THERMAL_INSTALL_OPTIONS_MENU_V1413_TEST17
 if [ -s "$MODPATH/tools/menu/install-options-menu.sh" ]; then
   chmod 0755 "$MODPATH/tools/menu/menu-cycle.sh" "$MODPATH/tools/menu/install-options-menu.sh" 2>/dev/null || true
@@ -185,44 +110,28 @@ ui_print "! Thermal allowed with pTune"
   ui_print "! Risk ack accepted"
   [ "$PTUNE_KNOWN_BAD" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
 fi
-# BEGIN PIXEL_THERMAL_VERSION_CHECK_V2
+# BEGIN PIXEL_THERMAL_VERSION_CHECK_V3
 SUPPORTED_JSON="$MODPATH/supported_versions.json"
-if [ ! -f "$SUPPORTED_JSON" ]; then
-  thermal_abort "! Central database (supported_versions.json) is missing!"
-fi
+SUPPORTED_HELPER="$MODPATH/tools/core/supported-build.sh"
+[ -r "$SUPPORTED_HELPER" ] || thermal_abort "! supported-build helper missing"
+. "$SUPPORTED_HELPER"
+thermal_supported_validate_file "$SUPPORTED_JSON" || thermal_abort "! supported_versions.json is invalid"
 
-# Verify device
 if ! grep -q "\"$device\"[[:space:]]*:" "$SUPPORTED_JSON"; then
   thermal_abort "! Unsupported device: $device"
 fi
 
-# Verify Android version
-if ! grep -q "\"$android\"" "$SUPPORTED_JSON" && ! grep -q "\"$android_sdk\"" "$SUPPORTED_JSON"; then
-  thermal_abort "! Unsupported Android version: $android (SDK $android_sdk)"
-fi
-
-# Verify build ID (warning if unverified, but allow install)
-is_verified_bid=0
-if [ -f "$SUPPORTED_JSON" ]; then
-  res_bid=$(awk -v dev="$device" -v android="$android" -v bid="$build_id" '
-    BEGIN { found_dev = 0; found_android = 0; supported = 0 }
-    index($0, "\"" dev "\"") && index($0, "{") { found_dev = 1; next }
-    found_dev && index($0, "\"" android "\"") && index($0, "[") { found_android = 1; next }
-    found_android && index($0, "]") { found_android = 0 }
-    found_dev && !found_android && index($0, "}") { found_dev = 0 }
-    found_dev && found_android && index($0, "\"" bid "\"") { supported = 1; exit }
-    END { print supported }
-  ' "$SUPPORTED_JSON")
-  if [ "$res_bid" = "1" ]; then
-    is_verified_bid=1
-  fi
-fi
-
-if [ "$is_verified_bid" -eq 1 ]; then
+THERMAL_INSTALL_ENABLED=0
+if thermal_supported_check "$SUPPORTED_JSON" "$device" "$android" "$build_id"; then
+  THERMAL_INSTALL_ENABLED=1
+  config_set THERMAL_DISABLED 0
+  config_set CANARY_DIAGNOSTIC_MODE 0
   ui_print "- Build ID: $build_id (Verified)"
 else
-  ui_print "! Warning: Build ID '$build_id' is unverified for this module."
-  ui_print "! Installation will proceed, but you might encounter issues."
+  config_set THERMAL_DISABLED 1
+  ui_print "! Build ID '$build_id' is not verified for thermal overlay"
+  ui_print "- Thermal files will not be installed"
+  ui_print "- ZRAM remains available"
 fi
 
 android_guard="android${android}_pass"
@@ -230,12 +139,21 @@ fingerprint_android_guard="fingerprint_android${android}_pass"
 profile_source_android="$android"
 profile_source_build="$build_id"
 profile_source_incremental="$incremental"
-source_report_sha256="dynamic_patching_active"
+source_report_sha256="dynamic_patching_validated"
 build_state="dynamic_${device}_${build_id}_${incremental}"
-profile_state="dynamic_${device}_android${android}"
-profile="dynamic/${device}/android${android}"
+if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
+  profile_state="dynamic_verified_${device}_android${android}"
+  profile="dynamic/${device}/android${android}"
+  profile_materialized=yes
+  expected_thermal_files=dynamic_validated
+else
+  profile_state="thermal_disabled_unsupported_build"
+  profile="dynamic/unsupported"
+  profile_materialized=no
+  expected_thermal_files=0
+fi
 active_dir="$MODPATH/system/vendor/etc"
-# END PIXEL_THERMAL_VERSION_CHECK_V2
+# END PIXEL_THERMAL_VERSION_CHECK_V3
 
 # BEGIN PIXEL_THERMAL_INSTALL_OVERLAY_HELPER_V1413_TEST27
 if [ -s "$MODPATH/tools/core/install-thermal-overlay.sh" ]; then
@@ -261,7 +179,11 @@ fi
 # END PIXEL_THERMAL_INSTALL_ZRAM_HELPER_V1413_TEST25
 
 
-for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$MODPATH/system/vendor/etc/$f" ] || thermal_abort "! Failed to materialize active file: $f"; done
+if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
+  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
+    [ -s "$MODPATH/system/vendor/etc/$f" ] || thermal_abort "! Failed to materialize active file: $f"
+  done
+fi
 
 # BEGIN PIXEL_THERMAL_INSTALL_FINALIZE_HELPER_V1413_TEST24
 if [ -s "$MODPATH/tools/install-finalize.sh" ]; then
@@ -275,7 +197,11 @@ fi
 
 thermal_save_install_debug "success" "install_completed"
 ui_print "- Target validation: PASS"
-ui_print "- Thermal fix applied"
+if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
+  ui_print "- Thermal fix applied"
+else
+  ui_print "- Thermal fix safely disabled for this build"
+fi
 ui_print "- Android: $android"
 
 
