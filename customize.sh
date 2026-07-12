@@ -202,7 +202,23 @@ if ! grep -q "\"$android\"" "$SUPPORTED_JSON" && ! grep -q "\"$android_sdk\"" "$
 fi
 
 # Verify build ID (warning if unverified, but allow install)
-if grep -q "\"$build_id\"" "$SUPPORTED_JSON"; then
+is_verified_bid=0
+if [ -f "$SUPPORTED_JSON" ]; then
+  res_bid=$(awk -v dev="$device" -v android="$android" -v bid="$build_id" '
+    BEGIN { found_dev = 0; found_android = 0; supported = 0 }
+    index($0, "\"" dev "\"") && index($0, "{") { found_dev = 1; next }
+    found_dev && index($0, "\"" android "\"") && index($0, "[") { found_android = 1; next }
+    found_android && index($0, "]") { found_android = 0 }
+    found_dev && !found_android && index($0, "}") { found_dev = 0 }
+    found_dev && found_android && index($0, "\"" bid "\"") { supported = 1; exit }
+    END { print supported }
+  ' "$SUPPORTED_JSON")
+  if [ "$res_bid" = "1" ]; then
+    is_verified_bid=1
+  fi
+fi
+
+if [ "$is_verified_bid" -eq 1 ]; then
   ui_print "- Build ID: $build_id (Verified)"
 else
   ui_print "! Warning: Build ID '$build_id' is unverified for this module."

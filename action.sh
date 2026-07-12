@@ -23,6 +23,26 @@ msg() {
   fi
 }
 
+check_supported() {
+  local dev="$(getprop ro.product.device)"
+  local android="$(getprop ro.build.version.release)"
+  local bid="$1"
+  local json="$MODDIR/supported_versions.json"
+  [ -f "$json" ] || return 1
+  
+  local res
+  res=$(awk -v dev="$dev" -v android="$android" -v bid="$bid" '
+    BEGIN { found_dev = 0; found_android = 0; supported = 0 }
+    index($0, "\"" dev "\"") && index($0, "{") { found_dev = 1; next }
+    found_dev && index($0, "\"" android "\"") && index($0, "[") { found_android = 1; next }
+    found_android && index($0, "]") { found_android = 0 }
+    found_dev && !found_android && index($0, "}") { found_dev = 0 }
+    found_dev && found_android && index($0, "\"" bid "\"") { supported = 1; exit }
+    END { print supported }
+  ' "$json")
+  [ "$res" = "1" ]
+}
+
 curr_bid="$(getprop ro.build.id)"
 inst_bid="none"
 if [ -f "$MODDIR/install-state.txt" ]; then
@@ -35,7 +55,7 @@ if [ "$curr_bid" != "$inst_bid" ]; then
   
   # Check if current build is supported locally
   is_supported=0
-  if [ -f "$MODDIR/supported_versions.json" ] && grep -q "\"$curr_bid\"" "$MODDIR/supported_versions.json"; then
+  if check_supported "$curr_bid"; then
     is_supported=1
   fi
   
@@ -68,7 +88,7 @@ if [ "$curr_bid" != "$inst_bid" ]; then
       rm -f "$TMP_JSON"
       
       # Check again with updated json
-      if grep -q "\"$curr_bid\"" "$MODDIR/supported_versions.json"; then
+      if check_supported "$curr_bid"; then
         is_supported=1
       fi
     else

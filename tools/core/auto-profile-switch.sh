@@ -48,6 +48,25 @@ if ! grep -q "\"$ANDROID\"" "$SUPPORTED_JSON" && ! grep -q "\"$SDK\"" "$SUPPORTE
   exit 0
 fi
 
+# Verify build ID against device and Android version
+res_bid=$(awk -v dev="$DEVICE" -v android="$ANDROID" -v bid="$BUILD_ID" '
+  BEGIN { found_dev = 0; found_android = 0; supported = 0 }
+  index($0, "\"" dev "\"") && index($0, "{") { found_dev = 1; next }
+  found_dev && index($0, "\"" android "\"") && index($0, "[") { found_android = 1; next }
+  found_android && index($0, "]") { found_android = 0 }
+  found_dev && !found_android && index($0, "}") { found_dev = 0 }
+  found_dev && found_android && index($0, "\"" bid "\"") { supported = 1; exit }
+  END { print supported }
+' "$SUPPORTED_JSON")
+
+if [ "$res_bid" != "1" ]; then
+  log "AUTO_SWITCH_BLOCK reason=unsupported_build_id build_id=$BUILD_ID"
+  echo "unsupported_build_id" > "$G/auto_profile_switch_state"
+  touch "$MODDIR/skip_mount"
+  exit 0
+fi
+
+
 PROFILE="dynamic/${DEVICE}/android${ANDROID}"
 PROFILE_STATE="dynamic"
 BUILD_STATE="dynamic_${DEVICE}_${BUILD_ID}_${INCREMENTAL}"
