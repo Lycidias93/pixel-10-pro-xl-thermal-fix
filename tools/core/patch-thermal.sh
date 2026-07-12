@@ -44,12 +44,7 @@ CACHE_PROMOTED=0
 
 CONTROLLED_FILES="
 thermal_info_config.json
-thermal_info_config_aa_throttling.json
-thermal_info_config_bg_tasks_throttling.json
 thermal_info_config_charge.json
-thermal_info_config_earlywarnings.json
-thermal_info_config_lpm.json
-thermal_info_config_stats.json
 thermal_info_config_throttling.json
 "
 REQUIRED_FILES="

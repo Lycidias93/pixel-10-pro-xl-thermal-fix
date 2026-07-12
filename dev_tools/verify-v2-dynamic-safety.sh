@@ -35,8 +35,8 @@ python3 -m json.tool "$supported" >/dev/null || fail 23 supported_versions_json_
 test "$(git -C "$repo" ls-files 'profiles/*' | wc -l | tr -d ' ')" = 0 ||
   fail 24 static_profiles_reintroduced
 
-grep -q 'thermal_info_config_aa_throttling.json' "$patcher" || fail 25 aa_missing
-grep -q 'thermal_info_config_bg_tasks_throttling.json' "$patcher" || fail 26 bg_tasks_missing
+grep -q 'thermal_info_config.json' "$patcher" || fail 25 base_missing
+grep -q 'thermal_info_config_charge.json' "$patcher" || fail 26 charge_missing
 grep -q '"PollingDelay"\[\[:space:\]\]\*:\[\[:space:\]\]\*300000' "$patcher" ||
   fail 27 whitespace_tolerant_replacement_missing
 grep -q 'patched_source_5000_rejected' "$patcher" || fail 28 patched_source_rejection_missing
@@ -95,12 +95,12 @@ THERMAL_BUILD_ID=CP2A.260705.006 \
   sh "$mod/tools/core/patch-thermal.sh" mod stock "$mod" > "$tmp/run1.txt"
 
 grep -q '^PATCH_THERMAL=pass$' "$tmp/run1.txt" || fail 39 first_materialization_failed
-test "$(find "$mod/system/vendor/etc" -maxdepth 1 -type f -name 'thermal_info_config*.json' | wc -l | tr -d ' ')" = 8 ||
-  fail 40 output_inventory_not_8
+test "$(find "$mod/system/vendor/etc" -maxdepth 1 -type f -name 'thermal_info_config*.json' | wc -l | tr -d ' ')" = 3 ||
+  fail 40 output_inventory_not_3
 grep -R '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$mod/system/vendor/etc"/thermal_info_config*.json >/dev/null 2>&1 &&
   fail 41 source_300000_remains
-test "$(grep -R -o '"PollingDelay"[[:space:]]*:[[:space:]]*5000' "$mod/system/vendor/etc"/thermal_info_config*.json | wc -l | tr -d ' ')" = 8 ||
-  fail 42 output_5000_count_not_8
+test "$(grep -R -o '"PollingDelay"[[:space:]]*:[[:space:]]*5000' "$mod/system/vendor/etc"/thermal_info_config*.json | wc -l | tr -d ' ')" = 3 ||
+  fail 42 output_5000_count_not_3
 test -s "$mod/system/vendor/etc/fstab.zram.100p" || fail 43 nonthermal_file_not_preserved
 python3 -m json.tool "$mod/validation_report.json" >/dev/null || fail 44 report_invalid_json
 test -s "$mod/guard/patch-manifest.tsv" || fail 45 patch_manifest_missing
@@ -150,7 +150,7 @@ thermal_supported_check "$supported" blazer 17 UNSUPPORTED.TEST &&
 
 git -C "$repo" diff --check
 printf '%s\n' "PASS static_profiles_absent=yes"
-printf '%s\n' "PASS controlled_files=aa+bg+base+charge+early+lpm+stats+throttling"
+printf '%s\n' "PASS controlled_files=base+charge+throttling"
 printf '%s\n' "PASS polling_whitespace_tolerant=yes"
 printf '%s\n' "PASS patched_source_fail_closed=yes"
 printf '%s\n' "PASS source_cache_build_keyed=yes"
