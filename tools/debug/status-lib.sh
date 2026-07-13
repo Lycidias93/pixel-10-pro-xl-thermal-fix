@@ -1,8 +1,11 @@
 #!/system/bin/sh
+# P/T/Z manager status backed by Dynamic V2 manifests and active values.
+
 ID="${ID:-pixel-10-pro-xl-thermal-fix}"
-MODDIR="${MODDIR:-/data/adb/modules/$ID}"
-CONFIG_DIR="/data/adb/$ID"
-CONFIG_FILE="$CONFIG_DIR/config.env"
+ADB_ROOT="${THERMAL_ADB_ROOT:-/data/adb}"
+MODDIR="${MODDIR:-$ADB_ROOT/modules/$ID}"
+DATA_ROOT="${THERMAL_DATA_ROOT:-$ADB_ROOT/$ID}"
+CONFIG_FILE="$DATA_ROOT/config.env"
 STATUS_FILE="$MODDIR/guard/manager-status.env"
 STATUS_TXT="$MODDIR/guard/manager-status.txt"
 
@@ -12,26 +15,23 @@ BAD="🔴"
 OFF="⚪"
 
 cfg_get() {
-  k="$1"
   [ -r "$CONFIG_FILE" ] || return 0
-  grep -E "^${k}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${k}=//" | tr -d '\r'
+  grep -E "^$1=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^$1=//" | tr -d '\r'
 }
 
 prop_get() {
   getprop "$1" 2>/dev/null || true
 }
 
-compat_dump() {
-  if [ -x "$MODDIR/tools/bootguard/compat-check.sh" ] || [ -r "$MODDIR/tools/bootguard/compat-check.sh" ]; then
-    sh "$MODDIR/tools/bootguard/compat-check.sh" 2>/dev/null || true
-  fi
+kv_get() {
+  [ -r "$2" ] || return 0
+  grep -E "^$1=" "$2" 2>/dev/null | tail -n 1 | sed "s/^$1=//" | tr -d '\r'
 }
 
-kv_get() {
-  k="$1"
-  f="$2"
-  [ -r "$f" ] || return 0
-  grep -E "^${k}=" "$f" 2>/dev/null | tail -n 1 | sed "s/^${k}=//" | tr -d '\r'
+compat_dump() {
+  if [ -r "$MODDIR/tools/bootguard/compat-check.sh" ]; then
+    sh "$MODDIR/tools/bootguard/compat-check.sh" 2>/dev/null || true
+  fi
 }
 
 status_collect() {
@@ -39,36 +39,147 @@ status_collect() {
   tmp="$MODDIR/guard/manager-status.compat.$$"
   compat_dump > "$tmp" 2>/dev/null || true
 
+  exact_supported="$(kv_get EXACT_BUILD_SUPPORTED "$tmp")"
+  source_manifest_valid="$(kv_get DYNAMIC_SOURCE_MANIFEST_VALID "$tmp")"
+  source_cache_valid="$(kv_get DYNAMIC_SOURCE_CACHE_VALID "$tmp")"
+  patch_manifest_valid="$(kv_get DYNAMIC_PATCH_MANIFEST_VALID "$tmp")"
+  report_valid="$(kv_get DYNAMIC_VALIDATION_REPORT_VALID "$tmp")"
+  materialization_valid="$(kv_get DYNAMIC_MATERIALIZATION_VALID "$tmp")"
   overlay_ready="$(kv_get MODULE_OVERLAY_READY "$tmp")"
   active_match="$(kv_get ACTIVE_VENDOR_MATCH "$tmp")"
+  active_polling_valid="$(kv_get ACTIVE_POLLING_VALID "$tmp")"
   safe_to_reboot="$(kv_get SAFE_TO_REBOOT "$tmp")"
-  thermal_disable="$(kv_get THERMAL_DISABLE "$tmp")"
-  thermal_skip_mount="$(kv_get THERMAL_SKIP_MOUNT "$tmp")"
+  thermal_expected="$(kv_get THERMAL_EXPECTED "$tmp")"
+  compat_reason="$(kv_get REASON "$tmp")"
   vendor_warn="$(kv_get VENDOR_OVERLAY_BACKEND_WARN "$tmp")"
   selected_profile="$(kv_get AUTO_SELECTED_PROFILE "$tmp")"
+  source_polling="$(kv_get DYNAMIC_SOURCE_POLLING_300000 "$tmp")"
+  replacements="$(kv_get DYNAMIC_REPLACEMENTS "$tmp")"
+  overlay_300000="$(kv_get DYNAMIC_OVERLAY_POLLING_300000 "$tmp")"
+  overlay_5000="$(kv_get DYNAMIC_OVERLAY_POLLING_5000 "$tmp")"
+  active_300000="$(kv_get ACTIVE_POLLING_300000 "$tmp")"
+  active_5000="$(kv_get ACTIVE_POLLING_5000 "$tmp")"
 
-  [ -n "$overlay_ready" ] || overlay_ready="unknown"
-  [ -n "$active_match" ] || active_match="unknown"
-  [ -n "$safe_to_reboot" ] || safe_to_reboot="unknown"
-  [ -n "$thermal_disable" ] || thermal_disable="unknown"
-  [ -n "$thermal_skip_mount" ] || thermal_skip_mount="unknown"
-  [ -n "$vendor_warn" ] || vendor_warn="unknown"
+  [ -n "$exact_supported" ] || exact_supported=unknown
+  [ -n "$materialization_valid" ] || materialization_valid=unknown
+  [ -n "$overlay_ready" ] || overlay_ready=unknown
+  [ -n "$active_match" ] || active_match=unknown
+  [ -n "$active_polling_valid" ] || active_polling_valid=unknown
+  [ -n "$safe_to_reboot" ] || safe_to_reboot=unknown
+  [ -n "$thermal_expected" ] || thermal_expected=unknown
+  [ -n "$compat_reason" ] || compat_reason=unknown
   [ -n "$selected_profile" ] || selected_profile="$(sed -n 's/^profile=//p' "$MODDIR/install-state.txt" 2>/dev/null | tail -n 1)"
-  [ -n "$selected_profile" ] || selected_profile="unknown"
+  [ -n "$selected_profile" ] || selected_profile=dynamic
 
   polling_mode="$(cfg_get THERMAL_POLLING_MODE)"
-  polling_effective="$(cfg_get THERMAL_POLLING_EFFECTIVE)"
-  [ -n "$polling_mode" ] || polling_mode="$(sed -n 's/^thermal_polling_mode=//p' "$MODDIR/install-state.txt" 2>/dev/null | tail -n 1)"
-  [ -n "$polling_effective" ] || polling_effective="$(sed -n 's/^thermal_polling_effective=//p' "$MODDIR/install-state.txt" 2>/dev/null | tail -n 1)"
-  [ -n "$polling_mode" ] || polling_mode="mod"
-
+  [ -n "$polling_mode" ] || polling_mode="$(kv_get POLLING_MODE "$tmp")"
+  [ -n "$polling_mode" ] || polling_mode=mod
   thermal_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
-  [ -n "$thermal_profile" ] || thermal_profile="$(sed -n 's/^thermal_outdoor_profile=//p' "$MODDIR/install-state.txt" 2>/dev/null | tail -n 1)"
-  [ -n "$thermal_profile" ] || thermal_profile="stock"
+  [ -n "$thermal_profile" ] || thermal_profile="$(kv_get OUTDOOR_PROFILE "$tmp")"
+  [ -n "$thermal_profile" ] || thermal_profile=stock
+  thermal_disabled="$(cfg_get THERMAL_DISABLED)"
+  [ -n "$thermal_disabled" ] || thermal_disabled=0
+
+  source_icon="$BAD"
+  source_state=invalid
+  if [ "$exact_supported" = no ] && [ "$thermal_disabled" = 1 ]; then
+    source_icon="$WARN"
+    source_state=unsupported_build_thermal_disabled
+  elif [ "$exact_supported" = yes ] &&
+       [ "$source_manifest_valid" = yes ] &&
+       [ "$source_cache_valid" = yes ] &&
+       [ "$patch_manifest_valid" = yes ] &&
+       [ "$report_valid" = yes ]; then
+    source_icon="$OK"
+    source_state=dynamic_manifests_verified
+  fi
+
+  polling_icon="$BAD"
+  polling_state=problem
+  polling_value="$polling_mode"
+  if [ "$thermal_disabled" = 1 ]; then
+    polling_icon="$BAD"
+    polling_state=disabled_by_build_guard
+    polling_value=disabled
+  elif [ "$materialization_valid" != yes ]; then
+    polling_icon="$BAD"
+    polling_state=dynamic_materialization_invalid
+  elif [ "$safe_to_reboot" != yes ]; then
+    polling_icon="$BAD"
+    polling_state="unsafe_${compat_reason}"
+  else
+    case "$polling_mode" in
+      stock)
+        polling_value=stock
+        if [ "$active_match" = yes ] && [ "$active_polling_valid" = yes ]; then
+          polling_icon="$OFF"
+          polling_state=stock_active_verified
+        else
+          polling_icon="$WARN"
+          polling_state=stock_validated_needs_reboot
+        fi
+      ;;
+      mod)
+        if [ "$active_match" = yes ] && [ "$active_polling_valid" = yes ]; then
+          polling_icon="$OK"
+          polling_state=active_polling_verified
+          polling_value=5000
+        else
+          polling_icon="$WARN"
+          polling_state=validated_needs_reboot
+          polling_value=mod-pending
+        fi
+      ;;
+      *)
+        polling_icon="$BAD"
+        polling_state=unknown_polling_mode
+      ;;
+    esac
+  fi
+
+  thermal_icon="$BAD"
+  thermal_state=problem
+  thermal_value="$thermal_profile"
+  if [ "$thermal_disabled" = 1 ]; then
+    thermal_icon="$BAD"
+    thermal_state=disabled_by_build_guard
+  elif [ "$materialization_valid" != yes ]; then
+    thermal_icon="$BAD"
+    thermal_state=dynamic_materialization_invalid
+  elif [ "$safe_to_reboot" != yes ]; then
+    thermal_icon="$BAD"
+    thermal_state="unsafe_${compat_reason}"
+  else
+    case "$thermal_profile" in
+      stock)
+        thermal_value=stock
+        if [ "$active_match" = yes ]; then
+          thermal_icon="$OFF"
+          thermal_state=stock_profile_active
+        else
+          thermal_icon="$WARN"
+          thermal_state=stock_profile_validated_needs_reboot
+        fi
+      ;;
+      outdoor-safe|outdoor-plus|outdoor-extended)
+        if [ "$active_match" = yes ]; then
+          thermal_icon="$OK"
+          thermal_state=custom_profile_active
+        else
+          thermal_icon="$WARN"
+          thermal_state=custom_profile_validated_needs_reboot
+        fi
+      ;;
+      *)
+        thermal_icon="$BAD"
+        thermal_state=unknown_thermal_profile
+      ;;
+    esac
+  fi
 
   zram_enabled="$(cfg_get ENABLE_ZRAM_100P)"
   zram_ack="$(cfg_get ZRAM_RISK_ACK)"
-  [ -n "$zram_enabled" ] || zram_enabled="0"
+  [ -n "$zram_enabled" ] || zram_enabled=0
   zram_prop_vendor="$(prop_get vendor.zram.size)"
   zram_prop_mmd="$(prop_get mmd.zram.size)"
   zram_prop_enabled="$(prop_get mmd.zram.enabled)"
@@ -79,7 +190,7 @@ status_collect() {
   zram_disk_size=0
   zram_disk_positive=no
   [ -s "$MODDIR/system/vendor/etc/fstab.zram.100p" ] && zram_mod_fstab=yes
-  [ -r "/vendor/etc/fstab.zram.100p" ] && zram_vendor_fstab=yes
+  [ -r "${THERMAL_VENDOR_DIR:-/vendor/etc}/fstab.zram.100p" ] && zram_vendor_fstab=yes
   grep -E '(^|[[:space:]])/dev/block/zram[0-9]+[[:space:]]' /proc/swaps 2>/dev/null | tail -n 1 >/dev/null && zram_swap_active=yes
   if [ -r /sys/block/zram0/disksize ]; then
     zram_disk_size="$(cat /sys/block/zram0/disksize 2>/dev/null | tr -d '\r' | head -n 1)"
@@ -88,130 +199,76 @@ status_collect() {
     ''|0|*[!0-9]*) zram_disk_positive=no ;;
     *) zram_disk_positive=yes ;;
   esac
-  if [ "$zram_swap_active" = "yes" ] && [ "$zram_disk_positive" = "yes" ]; then
+  if [ "$zram_swap_active" = yes ] && [ "$zram_disk_positive" = yes ]; then
     zram_runtime_active=yes
   fi
   zram_apply_fail=no
-  grep -E "ZRAM_APPLY_FAIL|SERVICE_ZRAM result=apply_failed" "$MODDIR/health.log" "$MODDIR/guard/bootguard.log" 2>/dev/null | tail -n 1 >/dev/null && zram_apply_fail=yes
-
-  polling_icon="$OFF"
-  polling_state="off_or_stock"
-  case "$polling_mode" in
-    stock)
-      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
-        polling_icon="$BAD"
-        polling_state="disabled_by_ota_or_offline"
-      else
-        polling_icon="$OFF"
-        polling_state="stock_values_selected"
-      fi
-    ;;
-    *)
-      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
-        polling_icon="$BAD"
-        polling_state="disabled_by_ota_or_offline"
-      elif [ "$thermal_disable" = "present" ] || [ "$thermal_skip_mount" = "present" ]; then
-        polling_icon="$BAD"
-        polling_state="module_disabled_or_skip_mount"
-      elif [ "$overlay_ready" = "yes" ] && [ "$active_match" = "yes" ] && [ "$safe_to_reboot" = "yes" ]; then
-        polling_icon="$OK"
-        polling_state="active_vendor_match"
-      elif [ "$overlay_ready" = "yes" ]; then
-        polling_icon="$WARN"
-        polling_state="configured_needs_reboot_or_manager_refresh"
-      else
-        polling_icon="$BAD"
-        polling_state="expected_but_overlay_missing"
-      fi
-    ;;
-  esac
-
-  thermal_icon="$OFF"
-  thermal_state="stock_or_no_custom_profile"
-  case "$thermal_profile" in
-    outdoor-safe|outdoor-plus|outdoor-extended)
-      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
-        thermal_icon="$BAD"
-        thermal_state="disabled_by_ota_or_offline"
-      elif [ "$thermal_disable" = "present" ] || [ "$thermal_skip_mount" = "present" ]; then
-        thermal_icon="$BAD"
-        thermal_state="module_disabled_or_skip_mount"
-      elif [ "$overlay_ready" = "yes" ] && [ "$active_match" = "yes" ] && [ "$safe_to_reboot" = "yes" ]; then
-        thermal_icon="$OK"
-        thermal_state="custom_profile_active"
-      elif [ "$overlay_ready" = "yes" ]; then
-        thermal_icon="$WARN"
-        thermal_state="custom_profile_configured_needs_reboot_or_refresh"
-      else
-        thermal_icon="$BAD"
-        thermal_state="custom_profile_expected_but_missing"
-      fi
-    ;;
-    *)
-      if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
-        thermal_icon="$BAD"
-        thermal_state="disabled_by_ota_or_offline"
-      else
-        thermal_icon="$OFF"
-        thermal_state="stock_profile_selected"
-      fi
-    ;;
-  esac
+  grep -E 'ZRAM_APPLY_FAIL|SERVICE_ZRAM result=apply_failed' "$MODDIR/health.log" "$MODDIR/guard/bootguard.log" 2>/dev/null | tail -n 1 >/dev/null && zram_apply_fail=yes
 
   zram_icon="$OFF"
-  zram_state="disabled"
+  zram_state=disabled
   case "$zram_enabled:$zram_ack" in
     1:explicit_user_enable)
-      if [ "$zram_runtime_active" = "yes" ]; then
+      if [ "$zram_runtime_active" = yes ]; then
         zram_icon="$OK"
-        zram_state="runtime_active"
-      elif [ "$zram_apply_fail" = "yes" ]; then
+        zram_state=runtime_active
+      elif [ "$zram_apply_fail" = yes ]; then
         zram_icon="$BAD"
-        zram_state="enabled_but_apply_failed"
-      elif [ "$zram_prop_vendor" = "100p" ] || [ "$zram_prop_mmd" = "100%" ]; then
+        zram_state=enabled_but_apply_failed
+      elif [ "$zram_prop_vendor" = 100p ] || [ "$zram_prop_mmd" = 100% ]; then
         zram_icon="$WARN"
-        zram_state="runtime_props_set_swap_waiting"
-      elif [ "$zram_mod_fstab" = "yes" ]; then
+        zram_state=runtime_props_set_swap_waiting
+      elif [ "$zram_mod_fstab" = yes ]; then
         zram_icon="$WARN"
-        zram_state="enabled_needs_reboot_or_runtime_apply"
+        zram_state=enabled_needs_reboot_or_runtime_apply
       else
         zram_icon="$BAD"
-        zram_state="enabled_but_fstab_missing"
+        zram_state=enabled_but_fstab_missing
       fi
     ;;
     1:*)
       zram_icon="$WARN"
-      zram_state="enabled_but_ack_missing_or_unknown"
+      zram_state=enabled_but_ack_missing_or_unknown
     ;;
     *)
       zram_icon="$OFF"
-      zram_state="disabled"
+      zram_state=disabled
     ;;
   esac
 
-  polling_value="$polling_effective"
-  [ -n "$polling_value" ] || polling_value="$polling_mode"
-  [ -n "$polling_value" ] || polling_value="unknown"
-  thermal_value="$thermal_profile"
-  case "$thermal_value" in
-    outdoor-extended) thermal_value="outdoor-ext" ;;
-    outdoor-plus) thermal_value="outdoor-plus" ;;
-    outdoor-safe) thermal_value="outdoor-safe" ;;
-    ''|stock|stock_profile_selected) thermal_value="stock" ;;
-  esac
-  if [ "$zram_enabled" = "1" ]; then
-    zram_value="100p"
-    [ "$zram_runtime_active" = "yes" ] || zram_value="100p-pending"
+  if [ "$zram_enabled" = 1 ]; then
+    zram_value=100p
+    [ "$zram_runtime_active" = yes ] || zram_value=100p-pending
   else
-    zram_value="off"
+    zram_value=off
   fi
+
+  case "$thermal_value" in
+    outdoor-extended) thermal_value=outdoor-ext ;;
+  esac
+
   desc="description=P:$polling_icon $polling_value | T:$thermal_icon $thermal_value | Z:$zram_icon $zram_value | Action: settings/debug"
 
   {
+    printf '%s\n' "SOURCE_ICON=$source_icon"
+    printf '%s\n' "SOURCE_STATE=$source_state"
+    printf '%s\n' "EXACT_BUILD_SUPPORTED=$exact_supported"
+    printf '%s\n' "SOURCE_MANIFEST_VALID=$source_manifest_valid"
+    printf '%s\n' "SOURCE_CACHE_VALID=$source_cache_valid"
+    printf '%s\n' "PATCH_MANIFEST_VALID=$patch_manifest_valid"
+    printf '%s\n' "VALIDATION_REPORT_VALID=$report_valid"
+    printf '%s\n' "MATERIALIZATION_VALID=$materialization_valid"
     printf '%s\n' "POLLING_ICON=$polling_icon"
     printf '%s\n' "POLLING_STATE=$polling_state"
     printf '%s\n' "POLLING_MODE=$polling_mode"
-    printf '%s\n' "POLLING_EFFECTIVE=$polling_effective"
+    printf '%s\n' "POLLING_EFFECTIVE=$polling_value"
+    printf '%s\n' "SOURCE_POLLING_300000=$source_polling"
+    printf '%s\n' "REPLACEMENTS=$replacements"
+    printf '%s\n' "OVERLAY_POLLING_300000=$overlay_300000"
+    printf '%s\n' "OVERLAY_POLLING_5000=$overlay_5000"
+    printf '%s\n' "ACTIVE_POLLING_VALID=$active_polling_valid"
+    printf '%s\n' "ACTIVE_POLLING_300000=$active_300000"
+    printf '%s\n' "ACTIVE_POLLING_5000=$active_5000"
     printf '%s\n' "THERMAL_ICON=$thermal_icon"
     printf '%s\n' "THERMAL_STATE=$thermal_state"
     printf '%s\n' "THERMAL_PROFILE=$thermal_profile"
@@ -229,6 +286,8 @@ status_collect() {
     printf '%s\n' "MODULE_OVERLAY_READY=$overlay_ready"
     printf '%s\n' "ACTIVE_VENDOR_MATCH=$active_match"
     printf '%s\n' "SAFE_TO_REBOOT=$safe_to_reboot"
+    printf '%s\n' "THERMAL_EXPECTED=$thermal_expected"
+    printf '%s\n' "COMPAT_REASON=$compat_reason"
     printf '%s\n' "VENDOR_OVERLAY_BACKEND_WARN=$vendor_warn"
     printf '%s\n' "POLLING_VALUE=$polling_value"
     printf '%s\n' "THERMAL_VALUE=$thermal_value"
@@ -238,15 +297,21 @@ status_collect() {
 
   {
     printf '%s\n' "Pixel 10 Thermal & Memory Control"
+    printf '%s\n' "Source:  $source_icon  $source_state"
     printf '%s\n' "Polling: $polling_icon  $polling_state"
     printf '%s\n' "Thermal: $thermal_icon  $thermal_state"
     printf '%s\n' "ZRAM:    $zram_icon  $zram_state"
     printf '%s\n' ""
     printf '%s\n' "profile=$thermal_profile"
-    printf '%s\n' "selected_profile=$selected_profile"
-    printf '%s\n' "overlay_ready=$overlay_ready"
+    printf '%s\n' "source_polling_300000=$source_polling"
+    printf '%s\n' "replacements=$replacements"
+    printf '%s\n' "overlay_polling_5000=$overlay_5000"
+    printf '%s\n' "active_polling_5000=$active_5000"
+    printf '%s\n' "materialization_valid=$materialization_valid"
     printf '%s\n' "active_vendor_match=$active_match"
+    printf '%s\n' "active_polling_valid=$active_polling_valid"
     printf '%s\n' "safe_to_reboot=$safe_to_reboot"
+    printf '%s\n' "reason=$compat_reason"
   } > "$STATUS_TXT" 2>/dev/null || true
 
   rm -f "$tmp" 2>/dev/null || true
@@ -258,61 +323,33 @@ status_update_description() {
   mp="$MODDIR/module.prop"
   [ -w "$mp" ] || return 0
   tmp="$mp.tmp.$$"
-  awk -v d="$desc" 'BEGIN{done=0} /^description=/{print d; done=1; next} {print} END{if(done==0) print d}' "$mp" > "$tmp" 2>/dev/null && mv "$tmp" "$mp" 2>/dev/null || rm -f "$tmp" 2>/dev/null || true
+  awk -v d="$desc" 'BEGIN{done=0} /^description=/{print d; done=1; next} {print} END{if(done==0) print d}' "$mp" > "$tmp" 2>/dev/null &&
+    mv "$tmp" "$mp" 2>/dev/null ||
+    rm -f "$tmp" 2>/dev/null ||
+    true
   printf '%s\n' "$desc"
-}
-
-status_word() {
-  case "$1" in
-    active_vendor_match|custom_profile_active|runtime_active|runtime_props_active) echo active ;;
-    configured_needs_reboot_or_manager_refresh|custom_profile_configured_needs_reboot_or_refresh|enabled_needs_reboot_or_runtime_apply|runtime_props_set_swap_waiting) echo pending ;;
-    disabled|stock_profile_selected|stock_values_selected|off_or_stock|stock_or_no_custom_profile) echo off ;;
-    *) echo "$1" ;;
-  esac
 }
 
 status_print() {
   status_collect >/dev/null 2>&1 || true
   get_status_kv() {
-    _k="$1"
-    grep -E "^${_k}=" "$STATUS_FILE" 2>/dev/null | tail -n 1 | sed "s/^${_k}=//"
+    grep -E "^$1=" "$STATUS_FILE" 2>/dev/null | tail -n 1 | sed "s/^$1=//"
   }
-  short_state() {
-    case "$1" in
-      active_vendor_match|custom_profile_active|runtime_active) echo active ;;
-      *pending*|*waiting*|*refresh*|*reboot*) echo pending ;;
-      *failed*|*missing*|*problem*) echo problem ;;
-      stock_profile_selected|stock_values_selected|disabled|off_or_stock|stock_or_no_custom_profile) echo off ;;
-      *) echo "$1" ;;
-    esac
-  }
-  pi="$(get_status_kv POLLING_ICON)"
-  ti="$(get_status_kv THERMAL_ICON)"
-  zi="$(get_status_kv ZRAM_ICON)"
-  ps="$(short_state "$(get_status_kv POLLING_STATE)")"
-  ts="$(short_state "$(get_status_kv THERMAL_STATE)")"
-  zs="$(short_state "$(get_status_kv ZRAM_STATE)")"
-  prof="$(get_status_kv THERMAL_PROFILE)"
-  vendor="$(get_status_kv ACTIVE_VENDOR_MATCH)"
-  reboot="$(get_status_kv SAFE_TO_REBOOT)"
-  overlay="$(get_status_kv MODULE_OVERLAY_READY)"
-  [ "$vendor" = yes ] && vendor=match
-  [ "$reboot" = yes ] && reboot=safe
   printf '%s\n' "Status"
-  printf '%s\n' "Polling: $pi $ps"
-  printf '%s\n' "Thermal: $ti $ts"
-  printf '%s\n' "ZRAM:    $zi $zs"
+  printf '%s\n' "Source:  $(get_status_kv SOURCE_ICON) $(get_status_kv SOURCE_STATE)"
+  printf '%s\n' "Polling: $(get_status_kv POLLING_ICON) $(get_status_kv POLLING_STATE)"
+  printf '%s\n' "Thermal: $(get_status_kv THERMAL_ICON) $(get_status_kv THERMAL_STATE)"
+  printf '%s\n' "ZRAM:    $(get_status_kv ZRAM_ICON) $(get_status_kv ZRAM_STATE)"
   printf '%s\n' ""
-  printf '%s\n' "Profile: $prof"
-  printf '%s\n' "Overlay: $overlay"
-  printf '%s\n' "Vendor: $vendor"
-  printf '%s\n' "Reboot: $reboot"
-  printf '%s\n' ""
-  printf '%s\n' "Legend"
-  printf '%s\n' "🟢 active"
-  printf '%s\n' "🟡 pending"
-  printf '%s\n' "🔴 problem"
-  printf '%s\n' "⚪ off"
+  printf '%s\n' "Source 300000: $(get_status_kv SOURCE_POLLING_300000)"
+  printf '%s\n' "Replacements:  $(get_status_kv REPLACEMENTS)"
+  printf '%s\n' "Overlay 5000:  $(get_status_kv OVERLAY_POLLING_5000)"
+  printf '%s\n' "Active 5000:   $(get_status_kv ACTIVE_POLLING_5000)"
+  printf '%s\n' "Materialized:  $(get_status_kv MATERIALIZATION_VALID)"
+  printf '%s\n' "Vendor match:  $(get_status_kv ACTIVE_VENDOR_MATCH)"
+  printf '%s\n' "Active values: $(get_status_kv ACTIVE_POLLING_VALID)"
+  printf '%s\n' "Reboot safe:   $(get_status_kv SAFE_TO_REBOOT)"
+  printf '%s\n' "Reason:        $(get_status_kv COMPAT_REASON)"
 }
 
 case "${1:-print}" in
