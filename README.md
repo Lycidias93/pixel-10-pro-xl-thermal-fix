@@ -8,12 +8,16 @@ Stable **1.5.1-universal.1** promotes the verified Test7 dynamic manager Ampel/A
 
 ---
 
-## Current pre-release test channel
+## Current pre-release alpha channel
 
-- 1.5.2-universal-test.5 fixes the nested Android 17 Outdoor menu and profile resolver.
-- Use test.5 or newer for Outdoor Extended on CP2A, CP21 and CP31 nested profiles.
-- 1.5.2-universal-test.4 can wrongly fall back to Stock because its Outdoor menu checked old flat profile paths.
-- Stable channel remains 1.5.1-universal.1.
+- Current public pre-release: **1.5.2-universal-v2-alpha.1**.
+- V2 dynamically reads the exact build's stock thermal files and materializes a validated overlay.
+- Only the three critical files are controlled: base, charge and throttling.
+- Mustang / Android 17 / CP2A.260705.006 is runtime verified with Stock Thermal, Polling Mod, 22 active 5000 values, pTune disabled and module ZRAM disabled.
+- Blazer, frankel, rango and Canary/ZP remain alpha validation targets; an exact supported build and a working recovery path are required.
+- Test ZRAM 100p separately only after the base thermal reboot and runtime checks are green.
+- Stable channel remains **1.5.1-universal.1** and stable update.json is unchanged.
+- Alpha users may opt into the V2 test update channel through Action > Advanced > Update Channel.
 
 ## What this module does
 

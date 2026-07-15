@@ -1,3 +1,16 @@
+# 1.5.2-universal-v2-alpha.1
+
+Public V2 alpha pre-release.
+
+- Promotes build-keyed stock-source dynamic thermal materialization for tester validation.
+- Controls only thermal_info_config.json, thermal_info_config_charge.json and thermal_info_config_throttling.json.
+- Preserves the remaining vendor thermal files at stock values, following Harish / Codecity001 real-world logging feedback.
+- Adds source, patch, validation-report and active-vendor value verification.
+- Records Mustang / CP2A.260705.006 runtime PASS with Stock Thermal, Polling Mod, 22 x 5000, pTune disabled and module ZRAM disabled.
+- Restores the Action update-channel switch for optional V2 alpha updates.
+- Keeps stable update.json unchanged on 1.5.1-universal.1.
+- Blazer, frankel, rango, Canary/ZP and ZRAM 100p remain separate alpha validation targets.
+
 # Factory image SSD2 canonical root
 
 - Documents /ssd2/pixel-thermal-factory as the canonical factory image and thermal stock-intake root.
