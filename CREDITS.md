@@ -16,7 +16,7 @@ Reference threads provided by user:
 <!-- PIXEL_THERMAL_V2_ALPHA1_CREDITS_20260715_START -->
 ## Pixel Thermal V2 alpha line
 
-- **Harish / Codecity001**: real-world Pixel 10 Pro logging and commit b9ff85db limiting V2 dynamic patching to the three critical base, charge and throttling configurations, avoiding unnecessary changes to the other vendor thermal files.
+- **Harish / Codecity001**: real-world Pixel 10 Pro logging, commit b9ff85db limiting V2 dynamic patching to the three critical base, charge and throttling configurations, and post-release Blazer / Android 17 stable community runtime PASS confirmation.
 - **Lycidias93**: Mustang CP2A.260705.006 dirty-install, reboot, active-vendor, PollingDelay, Magisk and Bootguard runtime verification.
 <!-- PIXEL_THERMAL_V2_ALPHA1_CREDITS_20260715_END -->
 
