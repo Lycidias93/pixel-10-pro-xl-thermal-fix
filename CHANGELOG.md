@@ -1,3 +1,11 @@
+# V2 Alpha post-release validation status
+
+- Records Blazer / Android 17 stable community runtime PASS confirmed by Harish / Codecity001.
+- Removes Blazer from the open V2 Alpha validation targets.
+- Adds a living validation plan and explicit Alpha 2 versus Beta 1 decision gate.
+- Exact Blazer build-ID and debug-bundle capture remain evidence hardening, not a PASS blocker.
+- Keeps the released Alpha 1 tag, ZIP, module metadata and both update channels unchanged.
+
 # 1.5.2-universal-v2-alpha.1
 
 Public V2 alpha pre-release.

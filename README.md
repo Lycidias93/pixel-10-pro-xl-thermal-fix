@@ -14,10 +14,12 @@ Stable **1.5.1-universal.1** promotes the verified Test7 dynamic manager Ampel/A
 - V2 dynamically reads the exact build's stock thermal files and materializes a validated overlay.
 - Only the three critical files are controlled: base, charge and throttling.
 - Mustang / Android 17 / CP2A.260705.006 is runtime verified with Stock Thermal, Polling Mod, 22 active 5000 values, pTune disabled and module ZRAM disabled.
-- Blazer, frankel, rango and Canary/ZP remain alpha validation targets; an exact supported build and a working recovery path are required.
+- Blazer / Android 17 stable is community runtime PASS, confirmed by Harish / Codecity001. Exact build-ID and debug-bundle capture remain evidence-hardening follow-up and do not revoke the PASS.
+- frankel, rango and Canary/ZP remain alpha validation targets; an exact supported build and a working recovery path are required.
 - Test ZRAM 100p separately only after the base thermal reboot and runtime checks are green.
 - Stable channel remains **1.5.1-universal.1** and stable update.json is unchanged.
 - Alpha users may opt into the V2 test update channel through Action > Advanced > Update Channel.
+- Living validation status and Beta gate: [V2 Alpha validation plan](docs/v2-alpha-validation-plan.md).
 
 ## What this module does
 
