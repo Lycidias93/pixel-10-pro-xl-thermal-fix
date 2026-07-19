@@ -3,7 +3,37 @@
 # Extracted from customize.sh for Test24.
 # Defines thermal_finalize_install and writes install-state without heredoc syntax.
 
+ptune_install_state_classify() {
+  if [ -z "${PTUNE_INSTALLED_PATH:-}" ]; then
+    PTUNE_INSTALL_STATE="absent"
+    PTUNE_INSTALL_CONFLICT_GUARD="none"
+    PTUNE_INSTALL_CONFLICT_MODE="ptune_absent"
+    PTUNE_INSTALL_CONFLICT_PATH=""
+    PTUNE_INSTALL_OVERRIDE_ACTIVE=0
+  elif [ -z "${PTUNE_ACTIVE_PATH:-}" ]; then
+    PTUNE_INSTALL_STATE="installed_disabled"
+    PTUNE_INSTALL_CONFLICT_GUARD="ptune_installed_disabled"
+    PTUNE_INSTALL_CONFLICT_MODE="installed_disabled_no_conflict"
+    PTUNE_INSTALL_CONFLICT_PATH="$PTUNE_INSTALLED_PATH"
+    PTUNE_INSTALL_OVERRIDE_ACTIVE=0
+  elif [ "${PTUNE_OVERRIDE_ALLOWED:-0}" = "1" ]; then
+    PTUNE_INSTALL_STATE="active_explicit_override"
+    PTUNE_INSTALL_CONFLICT_GUARD="ptune_active"
+    PTUNE_INSTALL_CONFLICT_MODE="override_allow_mount_with_ptune"
+    PTUNE_INSTALL_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"
+    PTUNE_INSTALL_OVERRIDE_ACTIVE=1
+  else
+    PTUNE_INSTALL_STATE="active_blocked"
+    PTUNE_INSTALL_CONFLICT_GUARD="ptune_active"
+    PTUNE_INSTALL_CONFLICT_MODE="${PTUNE_CONFLICT_MODE:-strict_active_skip_mount}"
+    PTUNE_INSTALL_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"
+    PTUNE_INSTALL_OVERRIDE_ACTIVE=0
+  fi
+}
+
 thermal_finalize_install() {
+  ptune_install_state_classify
+
   rm -f "$MODPATH/disable" "$MODPATH/skip_mount" "$MODPATH/remove"
 
   ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
@@ -15,12 +45,12 @@ thermal_finalize_install() {
   mkdir -p "$MODPATH/guard"
   rm -f "$MODPATH/guard/pending_boot" "$MODPATH/guard/fail_count" "$MODPATH/guard/disabled_reason" "$MODPATH/guard/conflict_guard_mode" "$MODPATH/guard/conflict_ptune_path" "$MODPATH/guard/guard_override" "$MODPATH/guard/guard_override_source" "$MODPATH/guard/risk_ack"
 
-  if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
+  if [ "$PTUNE_INSTALL_OVERRIDE_ACTIVE" = "1" ]; then
     printf '%s\n' "allow_thermal_with_ptune" > "$MODPATH/guard/guard_override"
     printf '%s\n' "$CONFIG_FILE" > "$MODPATH/guard/guard_override_source"
     printf '%s\n' "explicit_user_override" > "$MODPATH/guard/risk_ack"
-    printf '%s\n' "$PTUNE_INSTALLED_PATH" > "$MODPATH/guard/conflict_ptune_path"
-    printf '%s\n' "override_allow_mount_with_ptune" > "$MODPATH/guard/conflict_guard_mode"
+    printf '%s\n' "$PTUNE_INSTALL_CONFLICT_PATH" > "$MODPATH/guard/conflict_ptune_path"
+    printf '%s\n' "$PTUNE_INSTALL_CONFLICT_MODE" > "$MODPATH/guard/conflict_guard_mode"
   fi
 
   [ -s "$MODPATH/tools/bootguard/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/bootguard/collect-debug.sh" || true
@@ -55,9 +85,13 @@ thermal_finalize_install() {
     printf '%s\n' "config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}"
     printf '%s\n' "config_override_allowed=$PTUNE_OVERRIDE_ALLOWED"
     printf '%s\n' "risk_ack=$PTUNE_RISK_ACK_STATE"
-    printf '%s\n' "conflict_guard=${PTUNE_INSTALLED_PATH:+ptune_installed}"
-    printf '%s\n' "conflict_guard_mode=${PTUNE_INSTALLED_PATH:+override_allow_mount_with_ptune}"
-    printf '%s\n' "guard_override=$PTUNE_OVERRIDE_NAME"
+    printf '%s\n' "ptune_state=$PTUNE_INSTALL_STATE"
+    printf '%s\n' "ptune_installed_path=${PTUNE_INSTALLED_PATH:-none}"
+    printf '%s\n' "ptune_active_path=${PTUNE_ACTIVE_PATH:-none}"
+    printf '%s\n' "conflict_guard=$PTUNE_INSTALL_CONFLICT_GUARD"
+    printf '%s\n' "conflict_guard_mode=$PTUNE_INSTALL_CONFLICT_MODE"
+    printf '%s\n' "conflict_ptune_path=${PTUNE_INSTALL_CONFLICT_PATH:-none}"
+    printf '%s\n' "guard_override=$([ "$PTUNE_INSTALL_OVERRIDE_ACTIVE" = 1 ] && printf '%s' "$PTUNE_OVERRIDE_NAME" || printf '%s' none)"
     printf '%s\n' "known_bad_ptune=$PTUNE_KNOWN_BAD"
     printf '%s\n' "profile_materialized=${profile_materialized:-yes}"
     printf '%s\n' "overlay_materializer=dynamic_safety_v3"
