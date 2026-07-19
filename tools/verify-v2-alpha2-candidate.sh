@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
+MODULE_PROP="$ROOT/module.prop"
+PRERELEASE_JSON="$ROOT/update-prerelease.json"
+BOOTGUARD_GUARD="$ROOT/tools/bootguard/bootguard-threshold-policy-guard.sh"
+PTUNE_GUARD="$ROOT/tools/ptune/ptune-install-state-observability-guard.sh"
+
+fail=0
+pass() { printf 'PASS %s\n' "$*"; }
+err() { printf 'FAIL %s\n' "$*"; fail=1; }
+
+for file in \
+  "$MODULE_PROP" \
+  "$PRERELEASE_JSON" \
+  "$ROOT/tools/bootguard/bootguard-lib.sh" \
+  "$ROOT/tools/install-finalize.sh" \
+  "$ROOT/tools/ptune/ptune-guard.sh" \
+  "$BOOTGUARD_GUARD" \
+  "$PTUNE_GUARD"
+do
+  [[ -s "$file" ]] && pass "file_present=${file#$ROOT/}" || err "file_missing=${file#$ROOT/}"
+done
+
+for script in \
+  "$ROOT/tools/bootguard/bootguard-lib.sh" \
+  "$ROOT/tools/install-finalize.sh" \
+  "$ROOT/tools/ptune/ptune-guard.sh" \
+  "$BOOTGUARD_GUARD" \
+  "$PTUNE_GUARD"
+do
+  bash -n "$script" && pass "syntax=${script#$ROOT/}" || err "syntax=${script#$ROOT/}"
+done
+
+grep -Fxq 'version=1.5.2-universal-v2-alpha.2-candidate.1' "$MODULE_PROP" && pass version || err version
+grep -Fxq 'versionCode=1016209' "$MODULE_PROP" && pass version_code || err version_code
+grep -Fq '"version": "1.5.2-universal-v2-alpha.1"' "$PRERELEASE_JSON" && pass prerelease_channel_unchanged || err prerelease_channel_changed
+
+if bash "$BOOTGUARD_GUARD"; then
+  pass bootguard_threshold_policy
+else
+  err bootguard_threshold_policy
+fi
+
+if bash "$PTUNE_GUARD"; then
+  pass ptune_install_state_observability
+else
+  err ptune_install_state_observability
+fi
+
+if [[ "$fail" -eq 0 ]]; then
+  printf 'RESULT: V2_ALPHA2_CANDIDATE_VERIFY_PASS rc=0\n'
+else
+  printf 'RESULT: V2_ALPHA2_CANDIDATE_VERIFY_FAIL rc=1\n'
+  exit 1
+fi
