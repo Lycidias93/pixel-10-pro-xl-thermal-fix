@@ -21,10 +21,18 @@ num_or_zero() {
   case "$v" in ''|*[!0-9]*) echo 0 ;; *) echo "$v" ;; esac
 }
 
+threshold_minimum() {
+  minimum=2
+  canary="$(cfg_get CANARY_DIAGNOSTIC_MODE)"
+  [ "$canary" = 1 ] && minimum=1
+  echo "$minimum"
+}
+
 threshold() {
   t="$(cfg_get BOOTGUARD_FAIL_THRESHOLD)"
   t="$(num_or_zero "$t")"
-  [ "$t" -ge 1 ] 2>/dev/null || t=1
+  minimum="$(threshold_minimum)"
+  [ "$t" -ge "$minimum" ] 2>/dev/null || t="$minimum"
   [ "$t" -le 5 ] 2>/dev/null || t=5
   echo "$t"
 }
@@ -94,6 +102,7 @@ preflight() {
   fail_file="$G/fail_count"
   last="$G/last_attempt.env"
   thresh="$(threshold)"
+  minimum="$(threshold_minimum)"
 
   if [ -s "$pending" ]; then
     old="$(cat "$fail_file" 2>/dev/null || echo 0)"
@@ -101,13 +110,13 @@ preflight() {
     new=$((old + 1))
     echo "$new" > "$fail_file" 2>/dev/null || true
     cp -fp "$pending" "$G/previous_pending_boot" 2>/dev/null || true
-    log "previous_pending_detected fail_count=$new threshold=$thresh"
+    log "previous_pending_detected fail_count=$new threshold=$thresh minimum=$minimum"
     if [ "$new" -ge "$thresh" ]; then
-      echo "bootguard_v2_fail_threshold fail_count=$new threshold=$thresh" > "$G/disabled_reason" 2>/dev/null || true
+      echo "bootguard_v2_fail_threshold fail_count=$new threshold=$thresh minimum=$minimum" > "$G/disabled_reason" 2>/dev/null || true
       echo "bootguard_v2_self_disable" > "$G/conflict_guard_mode" 2>/dev/null || true
       touch "$MODDIR/disable" 2>/dev/null || true
       touch "$MODDIR/skip_mount" 2>/dev/null || true
-      log "self_disable_set fail_count=$new threshold=$thresh action=disable_and_skip_mount_next_boot"
+      log "self_disable_set fail_count=$new threshold=$thresh minimum=$minimum action=disable_and_skip_mount_next_boot"
       return 0
     fi
   else
@@ -118,7 +127,7 @@ preflight() {
   write_snapshot "$last"
   cp -fp "$last" "$pending" 2>/dev/null || true
   echo "$(date -Is 2>/dev/null || date)" > "$G/pending_boot_started_at" 2>/dev/null || true
-  log "pending_boot_set threshold=$thresh"
+  log "pending_boot_set threshold=$thresh minimum=$minimum"
 }
 
 success() {
@@ -135,6 +144,7 @@ status() {
   echo "pending_boot=$([ -s "$G/pending_boot" ] && echo present || echo absent)"
   echo "fail_count=$(cat "$G/fail_count" 2>/dev/null || echo 0)"
   echo "threshold=$(threshold)"
+  echo "threshold_minimum=$(threshold_minimum)"
   echo "disable=$([ -e "$MODDIR/disable" ] && echo present || echo absent)"
   echo "skip_mount=$([ -e "$MODDIR/skip_mount" ] && echo present || echo absent)"
   echo "disabled_reason=$(cat "$G/disabled_reason" 2>/dev/null || echo none)"
