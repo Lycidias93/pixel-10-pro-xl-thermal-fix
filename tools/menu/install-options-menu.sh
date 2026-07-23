@@ -152,10 +152,7 @@ if [ "$MC_INDEX" != "0" ]; then
   cfg_set THERMAL_POLLING_MODE mod
   cfg_set ALLOW_THERMAL_WITH_PTUNE 0
   cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION none
-  cfg_set ENABLE_ZRAM_100P 0
-  cfg_set ZRAM_RESTART_MMD 0
-  cfg_set ZRAM_RISK_ACK disabled_by_user
-  cfg_set LAST_ZRAM_100P disabled
+  cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1
   mc_msg "Settings: fresh"
 fi
   ptune_path="$(ptune_present 2>/dev/null || true)"
