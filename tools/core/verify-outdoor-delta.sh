@@ -42,13 +42,13 @@ awk -v delta="$EXPECTED_DELTA" '
     if (name != "") {
       source_target = 1
       source_name = name
+      source_target_declarations++
     } else if ($0 ~ /"Name"[[:space:]]*:/) {
       source_target = 0
       source_name = ""
     }
     if (source_target && $0 ~ /"HotThreshold"[[:space:]]*:/) {
       source_arrays++
-      source_zones++
       source_array_name[source_arrays] = source_name
       count = parse_threshold($0, parsed)
       if (count < 1) bad = 1
@@ -75,13 +75,13 @@ awk -v delta="$EXPECTED_DELTA" '
     if (name != "") {
       output_target = 1
       output_name = name
+      output_target_declarations++
     } else if ($0 ~ /"Name"[[:space:]]*:/) {
       output_target = 0
       output_name = ""
     }
     if (output_target && $0 ~ /"HotThreshold"[[:space:]]*:/) {
       output_arrays++
-      output_zones++
       if (output_arrays > source_arrays) bad = 1
       if (output_name != source_array_name[output_arrays]) bad = 1
       count = parse_threshold($0, parsed)
@@ -102,12 +102,12 @@ awk -v delta="$EXPECTED_DELTA" '
     }
   }
   END {
-    if (source_arrays < 1 || source_values < 1) bad = 1
-    if (source_zones != source_arrays) bad = 1
-    if (output_zones != output_arrays) bad = 1
+    if (source_target_declarations != source_arrays) bad = 1
+    if (output_target_declarations != output_arrays) bad = 1
+    if (source_target_declarations != output_target_declarations) bad = 1
     if (source_arrays != output_arrays) bad = 1
     if (source_values != output_values) bad = 1
     if (bad) exit 1
-    printf "%d %d %d\n", source_zones, source_arrays, source_values
+    printf "%d %d %d\n", source_target_declarations, source_arrays, source_values
   }
 ' "$SOURCE_FILE" "$OUTPUT_FILE"
