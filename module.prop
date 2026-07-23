@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=1.5.2-universal-v2-alpha.2-candidate.1
-versionCode=1016209
+version=2.0.0-alpha.2
+versionCode=1016210
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 2 candidate 1: scopes Bootguard threshold 1 to Canary diagnostics and fixes pTune install-state observability. Mustang-only controlled validation; stable and prerelease update channels remain unchanged.
+description=V2 Alpha 2: Android 17 dynamic thermal validation with Polling Mod and ZRAM 100p fresh defaults, corrected Bootguard and pTune state handling, and fail-closed Outdoor delta verification. Publication remains pending final package and runtime verification.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
