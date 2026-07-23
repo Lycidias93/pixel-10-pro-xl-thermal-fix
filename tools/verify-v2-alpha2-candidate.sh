@@ -46,7 +46,7 @@ do
 done
 
 grep -Fxq 'version=2.0.0-alpha.2' "$MODULE_PROP" && pass version || err version
-grep -Fxq 'versionCode=1016210' "$MODULE_PROP" && pass version_code || err version_code
+grep -Fxq 'versionCode=1016211' "$MODULE_PROP" && pass version_code || err version_code
 grep -Fxq '# 2.0.0-alpha.2' "$RELEASE_NOTES" && pass release_notes_version || err release_notes_version
 grep -Fq 'Publication remains pending final package and runtime verification.' "$MODULE_PROP" && pass publication_boundary || err publication_boundary
 grep -Fq '"version": "1.5.2-universal-v2-alpha.1"' "$PRERELEASE_JSON" && pass prerelease_channel_unchanged || err prerelease_channel_changed
