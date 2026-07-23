@@ -7,6 +7,7 @@ PRERELEASE_JSON="$ROOT/update-prerelease.json"
 BOOTGUARD_GUARD="$ROOT/tools/bootguard/bootguard-threshold-policy-guard.sh"
 PTUNE_GUARD="$ROOT/tools/ptune/ptune-install-state-observability-guard.sh"
 POLICY_GUARD="$ROOT/tools/v2-public-alpha2-policy-guard.sh"
+DELTA_GUARD="$ROOT/tools/outdoor-delta-validation-guard.sh"
 
 fail=0
 pass() { printf 'PASS %s\n' "$*"; }
@@ -18,9 +19,12 @@ for file in \
   "$ROOT/tools/bootguard/bootguard-lib.sh" \
   "$ROOT/tools/install-finalize.sh" \
   "$ROOT/tools/ptune/ptune-guard.sh" \
+  "$ROOT/tools/core/patch-thermal-validated.sh" \
+  "$ROOT/tools/core/verify-outdoor-delta.sh" \
   "$BOOTGUARD_GUARD" \
   "$PTUNE_GUARD" \
-  "$POLICY_GUARD"
+  "$POLICY_GUARD" \
+  "$DELTA_GUARD"
 do
   [[ -s "$file" ]] && pass "file_present=${file#$ROOT/}" || err "file_missing=${file#$ROOT/}"
 done
@@ -29,9 +33,12 @@ for script in \
   "$ROOT/tools/bootguard/bootguard-lib.sh" \
   "$ROOT/tools/install-finalize.sh" \
   "$ROOT/tools/ptune/ptune-guard.sh" \
+  "$ROOT/tools/core/patch-thermal-validated.sh" \
+  "$ROOT/tools/core/verify-outdoor-delta.sh" \
   "$BOOTGUARD_GUARD" \
   "$PTUNE_GUARD" \
-  "$POLICY_GUARD"
+  "$POLICY_GUARD" \
+  "$DELTA_GUARD"
 do
   bash -n "$script" && pass "syntax=${script#$ROOT/}" || err "syntax=${script#$ROOT/}"
 done
@@ -56,6 +63,12 @@ if bash "$POLICY_GUARD"; then
   pass v2_public_alpha2_policy
 else
   err v2_public_alpha2_policy
+fi
+
+if bash "$DELTA_GUARD"; then
+  pass outdoor_delta_validation
+else
+  err outdoor_delta_validation
 fi
 
 if [[ "$fail" -eq 0 ]]; then
