@@ -49,7 +49,8 @@ else
   err zero_target_file_contract
 fi
 
-if grep -Fq '<<' "$0"; then
+heredoc_token="$(printf '%s%s' '<' '<')"
+if grep -Fq "$heredoc_token" "$0"; then
   err no_heredoc_contract
 else
   pass no_heredoc_contract
