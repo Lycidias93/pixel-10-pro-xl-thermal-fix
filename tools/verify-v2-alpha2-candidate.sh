@@ -4,6 +4,7 @@ set -Eeuo pipefail
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
 MODULE_PROP="$ROOT/module.prop"
 PRERELEASE_JSON="$ROOT/update-prerelease.json"
+RELEASE_NOTES="$ROOT/RELEASE_NOTES_2.0.0-alpha.2.md"
 BOOTGUARD_GUARD="$ROOT/tools/bootguard/bootguard-threshold-policy-guard.sh"
 PTUNE_GUARD="$ROOT/tools/ptune/ptune-install-state-observability-guard.sh"
 POLICY_GUARD="$ROOT/tools/v2-public-alpha2-policy-guard.sh"
@@ -16,6 +17,7 @@ err() { printf 'FAIL %s\n' "$*"; fail=1; }
 for file in \
   "$MODULE_PROP" \
   "$PRERELEASE_JSON" \
+  "$RELEASE_NOTES" \
   "$ROOT/tools/bootguard/bootguard-lib.sh" \
   "$ROOT/tools/install-finalize.sh" \
   "$ROOT/tools/ptune/ptune-guard.sh" \
@@ -43,8 +45,10 @@ do
   bash -n "$script" && pass "syntax=${script#$ROOT/}" || err "syntax=${script#$ROOT/}"
 done
 
-grep -Fxq 'version=1.5.2-universal-v2-alpha.2-candidate.1' "$MODULE_PROP" && pass version || err version
-grep -Fxq 'versionCode=1016209' "$MODULE_PROP" && pass version_code || err version_code
+grep -Fxq 'version=2.0.0-alpha.2' "$MODULE_PROP" && pass version || err version
+grep -Fxq 'versionCode=1016210' "$MODULE_PROP" && pass version_code || err version_code
+grep -Fxq '# 2.0.0-alpha.2' "$RELEASE_NOTES" && pass release_notes_version || err release_notes_version
+grep -Fq 'Publication remains pending final package and runtime verification.' "$MODULE_PROP" && pass publication_boundary || err publication_boundary
 grep -Fq '"version": "1.5.2-universal-v2-alpha.1"' "$PRERELEASE_JSON" && pass prerelease_channel_unchanged || err prerelease_channel_changed
 
 if bash "$BOOTGUARD_GUARD"; then
