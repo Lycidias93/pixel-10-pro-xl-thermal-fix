@@ -6,6 +6,7 @@ MODULE_PROP="$ROOT/module.prop"
 PRERELEASE_JSON="$ROOT/update-prerelease.json"
 BOOTGUARD_GUARD="$ROOT/tools/bootguard/bootguard-threshold-policy-guard.sh"
 PTUNE_GUARD="$ROOT/tools/ptune/ptune-install-state-observability-guard.sh"
+POLICY_GUARD="$ROOT/tools/v2-public-alpha2-policy-guard.sh"
 
 fail=0
 pass() { printf 'PASS %s\n' "$*"; }
@@ -18,7 +19,8 @@ for file in \
   "$ROOT/tools/install-finalize.sh" \
   "$ROOT/tools/ptune/ptune-guard.sh" \
   "$BOOTGUARD_GUARD" \
-  "$PTUNE_GUARD"
+  "$PTUNE_GUARD" \
+  "$POLICY_GUARD"
 do
   [[ -s "$file" ]] && pass "file_present=${file#$ROOT/}" || err "file_missing=${file#$ROOT/}"
 done
@@ -28,7 +30,8 @@ for script in \
   "$ROOT/tools/install-finalize.sh" \
   "$ROOT/tools/ptune/ptune-guard.sh" \
   "$BOOTGUARD_GUARD" \
-  "$PTUNE_GUARD"
+  "$PTUNE_GUARD" \
+  "$POLICY_GUARD"
 do
   bash -n "$script" && pass "syntax=${script#$ROOT/}" || err "syntax=${script#$ROOT/}"
 done
@@ -47,6 +50,12 @@ if bash "$PTUNE_GUARD"; then
   pass ptune_install_state_observability
 else
   err ptune_install_state_observability
+fi
+
+if bash "$POLICY_GUARD"; then
+  pass v2_public_alpha2_policy
+else
+  err v2_public_alpha2_policy
 fi
 
 if [[ "$fail" -eq 0 ]]; then
