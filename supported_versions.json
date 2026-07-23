@@ -6,7 +6,6 @@
     "rango": "Pixel 10 Pro Fold"
   },
   "supported_android_versions": [
-    "16",
     "17"
   ],
   "verified_builds": {
