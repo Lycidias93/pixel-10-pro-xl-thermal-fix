@@ -42,39 +42,103 @@ else
   err nan_sentinel_contract
 fi
 
+if grep -Fq 'source_target_declarations != source_arrays' "$DELTA_HELPER" &&
+   ! grep -Fq 'source_arrays < 1' "$DELTA_HELPER"; then
+  pass zero_target_file_contract
+else
+  err zero_target_file_contract
+fi
+
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/pixel-thermal-delta.XXXXXX")"
 cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT HUP INT TERM
 
 SOURCE="$TMP/source"
 mkdir -p "$SOURCE"
-for name in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
+
+cat > "$SOURCE/thermal_info_config.json" <<'EOF'
+{
+  "Sensors": [
+    {
+      "Name": "OTHER-CONFIG",
+      "PollingDelay": 300000,
+      "HotThreshold": [99]
+    }
+  ]
+}
+EOF
+
+cat > "$SOURCE/thermal_info_config_charge.json" <<'EOF'
+{
+  "Sensors": [
+    {
+      "Name": "OTHER-CHARGE",
+      "PollingDelay": 300000,
+      "HotThreshold": [88]
+    }
+  ]
+}
+EOF
+
+cat > "$SOURCE/thermal_info_config_throttling.json" <<'EOF'
+{
+  "Sensors": [
+    {
+      "Name": "VIRTUAL-SKIN",
+      "PollingDelay": 300000,
+      "HotThreshold": ["NAN", 39, 43, 45, 46.5, 52, 55.0]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-HINT",
+      "PollingDelay": 300000,
+      "HotThreshold": ["NAN", 37.0, 43.0, 45.0, 46.5, 52.0, 55.0]
+    },
+    {
+      "Name": "OTHER-THROTTLING",
+      "PollingDelay": 300000,
+      "HotThreshold": [77]
+    }
+  ]
+}
+EOF
+
+if metrics="$(sh "$DELTA_HELPER" "$SOURCE/thermal_info_config.json" "$SOURCE/thermal_info_config.json" 0)" &&
+   [[ "$metrics" == '0 0 0' ]]; then
+  pass zero_target_file_metrics
+else
+  err zero_target_file_metrics
+fi
+
+SENTINEL_OUTPUT="$TMP/sentinel-output.json"
+awk '
   {
-    printf '%s\n' '{'
-    printf '%s\n' '  "Sensors": ['
-    printf '%s\n' '    {'
-    printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
-    printf '%s\n' '      "PollingDelay": 300000,'
-    printf '%s\n' '      "HotThreshold": ["NAN", 40, 42, 44]'
-    printf '%s\n' '    },'
-    printf '%s\n' '    {'
-    printf '%s\n' '      "Name": "VIRTUAL-SKIN-HINT",'
-    printf '%s\n' '      "PollingDelay": 300000,'
-    printf '%s\n' '      "HotThreshold": ["NAN", 45, 47]'
-    printf '%s\n' '    },'
-    printf '%s\n' '    {'
-    printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
-    printf '%s\n' '      "PollingDelay": 300000'
-    printf '%s\n' '    },'
-    printf '%s\n' '    {'
-    printf '%s\n' '      "Name": "OTHER",'
-    printf '%s\n' '      "PollingDelay": 300000,'
-    printf '%s\n' '      "HotThreshold": [99]'
-    printf '%s\n' '    }'
-    printf '%s\n' '  ]'
-    printf '%s\n' '}'
-  } > "$SOURCE/$name"
-done
+    line=$0
+    if (line ~ /"HotThreshold"[[:space:]]*:/) {
+      gsub(/39/, "40", line)
+      gsub(/43/, "44", line)
+      gsub(/45/, "46", line)
+      gsub(/46[.]5/, "47.5", line)
+      gsub(/52/, "53", line)
+      gsub(/55[.]0/, "56.0", line)
+      gsub(/37[.]0/, "38.0", line)
+    }
+    print line
+  }
+' "$SOURCE/thermal_info_config_throttling.json" > "$SENTINEL_OUTPUT"
+
+if sh "$DELTA_HELPER" "$SOURCE/thermal_info_config_throttling.json" "$SENTINEL_OUTPUT" 1 >/dev/null; then
+  pass nan_sentinel_preserved_with_numeric_delta
+else
+  err nan_sentinel_preserved_with_numeric_delta
+fi
+
+BAD_SENTINEL="$TMP/bad-sentinel.json"
+sed '0,/"NAN"/s//"INF"/' "$SENTINEL_OUTPUT" > "$BAD_SENTINEL"
+if sh "$DELTA_HELPER" "$SOURCE/thermal_info_config_throttling.json" "$BAD_SENTINEL" 1 >/dev/null 2>&1; then
+  err changed_sentinel_unexpectedly_passed
+else
+  pass changed_sentinel_fail_closed
+fi
 
 run_case() {
   polling="$1"
@@ -104,14 +168,14 @@ run_case() {
   report="$moddir/guard/outdoor-delta-validation.env"
   grep -Fxq "expected_delta=$delta" "$report"
   grep -Fxq 'validated_files=3' "$report"
-  grep -Fxq 'target_zone_count=6' "$report"
-  grep -Fxq 'threshold_array_count=6' "$report"
-  grep -Fxq 'threshold_value_count=21' "$report"
+  grep -Fxq 'target_zone_count=2' "$report"
+  grep -Fxq 'threshold_array_count=2' "$report"
+  grep -Fxq 'threshold_value_count=14' "$report"
   grep -Fxq 'validation=passed' "$report"
   grep -Fq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$case_dir/run.log"
 
   if [[ "$polling" == mod ]]; then
-    grep -Fq 'PATCH_THERMAL_OUTPUT_5000=12' "$case_dir/run.log"
+    grep -Fq 'PATCH_THERMAL_OUTPUT_5000=5' "$case_dir/run.log"
   else
     grep -Fq 'PATCH_THERMAL_OUTPUT_5000=0' "$case_dir/run.log"
   fi
@@ -126,25 +190,25 @@ for fixture in \
 do
   set -- $fixture
   if run_case "$1" "$2" "$3"; then
-    pass "dynamic_fixture=$1/$2/delta$3"
+    pass "real_layout_fixture=$1/$2/delta$3"
   else
-    err "dynamic_fixture=$1/$2/delta$3"
+    err "real_layout_fixture=$1/$2/delta$3"
   fi
 done
 
 BAD_SOURCE="$TMP/bad-source"
 mkdir -p "$BAD_SOURCE"
 cp -fp "$SOURCE"/*.json "$BAD_SOURCE/"
+cat > "$BAD_SOURCE/thermal_info_config.json" <<'EOF'
 {
-  printf '%s\n' '{'
-  printf '%s\n' '  "Sensors": ['
-  printf '%s\n' '    {'
-  printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
-  printf '%s\n' '      "PollingDelay": 300000'
-  printf '%s\n' '    }'
-  printf '%s\n' '  ]'
-  printf '%s\n' '}'
-} > "$BAD_SOURCE/thermal_info_config.json"
+  "Sensors": [
+    {
+      "Name": "VIRTUAL-SKIN",
+      "PollingDelay": 300000
+    }
+  ]
+}
+EOF
 
 bad_dir="$TMP/bad-case"
 mkdir -p "$bad_dir/module/tools/core" "$bad_dir/data"
