@@ -35,6 +35,13 @@ else
   err action_uses_validated_wrapper
 fi
 
+if grep -Fq 'function is_sentinel' "$DELTA_HELPER" &&
+   grep -Fq 'return value == "\"NAN\""' "$DELTA_HELPER"; then
+  pass nan_sentinel_contract
+else
+  err nan_sentinel_contract
+fi
+
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/pixel-thermal-delta.XXXXXX")"
 cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT HUP INT TERM
@@ -48,12 +55,16 @@ for name in thermal_info_config.json thermal_info_config_charge.json thermal_inf
     printf '%s\n' '    {'
     printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
     printf '%s\n' '      "PollingDelay": 300000,'
-    printf '%s\n' '      "HotThreshold": [40, 42, 44]'
+    printf '%s\n' '      "HotThreshold": ["NAN", 40, 42, 44]'
     printf '%s\n' '    },'
     printf '%s\n' '    {'
     printf '%s\n' '      "Name": "VIRTUAL-SKIN-HINT",'
     printf '%s\n' '      "PollingDelay": 300000,'
-    printf '%s\n' '      "HotThreshold": [45, 47]'
+    printf '%s\n' '      "HotThreshold": ["NAN", 45, 47]'
+    printf '%s\n' '    },'
+    printf '%s\n' '    {'
+    printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
+    printf '%s\n' '      "PollingDelay": 300000'
     printf '%s\n' '    },'
     printf '%s\n' '    {'
     printf '%s\n' '      "Name": "OTHER",'
@@ -95,12 +106,12 @@ run_case() {
   grep -Fxq 'validated_files=3' "$report"
   grep -Fxq 'target_zone_count=6' "$report"
   grep -Fxq 'threshold_array_count=6' "$report"
-  grep -Fxq 'threshold_value_count=15' "$report"
+  grep -Fxq 'threshold_value_count=21' "$report"
   grep -Fxq 'validation=passed' "$report"
   grep -Fq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$case_dir/run.log"
 
   if [[ "$polling" == mod ]]; then
-    grep -Fq 'PATCH_THERMAL_OUTPUT_5000=9' "$case_dir/run.log"
+    grep -Fq 'PATCH_THERMAL_OUTPUT_5000=12' "$case_dir/run.log"
   else
     grep -Fq 'PATCH_THERMAL_OUTPUT_5000=0' "$case_dir/run.log"
   fi
