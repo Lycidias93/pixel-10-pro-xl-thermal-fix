@@ -49,6 +49,12 @@ else
   err zero_target_file_contract
 fi
 
+if grep -Fq '<<' "$0"; then
+  err no_heredoc_contract
+else
+  pass no_heredoc_contract
+fi
+
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/pixel-thermal-delta.XXXXXX")"
 cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT HUP INT TERM
@@ -56,51 +62,51 @@ trap cleanup EXIT HUP INT TERM
 SOURCE="$TMP/source"
 mkdir -p "$SOURCE"
 
-cat > "$SOURCE/thermal_info_config.json" <<'EOF'
 {
-  "Sensors": [
-    {
-      "Name": "OTHER-CONFIG",
-      "PollingDelay": 300000,
-      "HotThreshold": [99]
-    }
-  ]
-}
-EOF
+  printf '%s\n' '{'
+  printf '%s\n' '  "Sensors": ['
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "OTHER-CONFIG",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": [99]'
+  printf '%s\n' '    }'
+  printf '%s\n' '  ]'
+  printf '%s\n' '}'
+} > "$SOURCE/thermal_info_config.json"
 
-cat > "$SOURCE/thermal_info_config_charge.json" <<'EOF'
 {
-  "Sensors": [
-    {
-      "Name": "OTHER-CHARGE",
-      "PollingDelay": 300000,
-      "HotThreshold": [88]
-    }
-  ]
-}
-EOF
+  printf '%s\n' '{'
+  printf '%s\n' '  "Sensors": ['
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "OTHER-CHARGE",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": [88]'
+  printf '%s\n' '    }'
+  printf '%s\n' '  ]'
+  printf '%s\n' '}'
+} > "$SOURCE/thermal_info_config_charge.json"
 
-cat > "$SOURCE/thermal_info_config_throttling.json" <<'EOF'
 {
-  "Sensors": [
-    {
-      "Name": "VIRTUAL-SKIN",
-      "PollingDelay": 300000,
-      "HotThreshold": ["NAN", 39, 43, 45, 46.5, 52, 55.0]
-    },
-    {
-      "Name": "VIRTUAL-SKIN-HINT",
-      "PollingDelay": 300000,
-      "HotThreshold": ["NAN", 37.0, 43.0, 45.0, 46.5, 52.0, 55.0]
-    },
-    {
-      "Name": "OTHER-THROTTLING",
-      "PollingDelay": 300000,
-      "HotThreshold": [77]
-    }
-  ]
-}
-EOF
+  printf '%s\n' '{'
+  printf '%s\n' '  "Sensors": ['
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": ["NAN", 39, 43, 45, 46.5, 52, 55.0]'
+  printf '%s\n' '    },'
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "VIRTUAL-SKIN-HINT",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": ["NAN", 37.0, 43.0, 45.0, 46.5, 52.0, 55.0]'
+  printf '%s\n' '    },'
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "OTHER-THROTTLING",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": [77]'
+  printf '%s\n' '    }'
+  printf '%s\n' '  ]'
+  printf '%s\n' '}'
+} > "$SOURCE/thermal_info_config_throttling.json"
 
 if metrics="$(sh "$DELTA_HELPER" "$SOURCE/thermal_info_config.json" "$SOURCE/thermal_info_config.json" 0)" &&
    [[ "$metrics" == '0 0 0' ]]; then
@@ -199,16 +205,16 @@ done
 BAD_SOURCE="$TMP/bad-source"
 mkdir -p "$BAD_SOURCE"
 cp -fp "$SOURCE"/*.json "$BAD_SOURCE/"
-cat > "$BAD_SOURCE/thermal_info_config.json" <<'EOF'
 {
-  "Sensors": [
-    {
-      "Name": "VIRTUAL-SKIN",
-      "PollingDelay": 300000
-    }
-  ]
-}
-EOF
+  printf '%s\n' '{'
+  printf '%s\n' '  "Sensors": ['
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
+  printf '%s\n' '      "PollingDelay": 300000'
+  printf '%s\n' '    }'
+  printf '%s\n' '  ]'
+  printf '%s\n' '}'
+} > "$BAD_SOURCE/thermal_info_config.json"
 
 bad_dir="$TMP/bad-case"
 mkdir -p "$bad_dir/module/tools/core" "$bad_dir/data"
