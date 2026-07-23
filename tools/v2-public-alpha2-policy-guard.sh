@@ -19,15 +19,16 @@ for script in "$OPTIONS" "$CUSTOMIZE" "$HELPER"; do
   bash -n "$script" && pass "syntax=${script#$ROOT/}" || err "syntax=${script#$ROOT/}"
 done
 
-if grep -Fq 'cfg_set ENABLE_ZRAM_100P 0' "$OPTIONS" &&
-   grep -Fq 'cfg_set ZRAM_RESTART_MMD 0' "$OPTIONS" &&
-   grep -Fq 'cfg_set ZRAM_RISK_ACK disabled_by_user' "$OPTIONS" &&
-   grep -Fq 'cfg_set LAST_ZRAM_100P disabled' "$OPTIONS" &&
-   ! grep -Fq 'cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1' "$OPTIONS"
-then
-  pass fresh_zram_safe_default
+if grep -Fq 'cfg_set THERMAL_POLLING_MODE mod' "$OPTIONS"; then
+  pass fresh_polling_mod_default
 else
-  err fresh_zram_safe_default
+  err fresh_polling_mod_default
+fi
+
+if grep -Fq 'cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1' "$OPTIONS"; then
+  pass fresh_zram_100p_default
+else
+  err fresh_zram_100p_default
 fi
 
 if grep -Fq '*-test.*|*alpha*|*beta*|*rc*|*candidate*) ui_print "Prerelease: $MODULE_VERSION"' "$CUSTOMIZE"; then
