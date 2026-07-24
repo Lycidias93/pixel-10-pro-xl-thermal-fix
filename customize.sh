@@ -14,7 +14,7 @@ ui_print "  A17 Thermal Throttle Fix profile installer"
 ui_print "----------------------------------------"
 ui_print "SELinux read-only policy"
 case "$MODULE_VERSION" in
-  *-test.*) ui_print "Prerelease: $MODULE_VERSION" ;;
+  *-test.*|*alpha*|*beta*|*rc*|*candidate*) ui_print "Prerelease: $MODULE_VERSION" ;;
   *) ui_print "Release: $MODULE_VERSION" ;;
 esac
 ui_print "Stable channel: 1.5.1"

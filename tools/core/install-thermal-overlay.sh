@@ -26,11 +26,14 @@ thermal_install_overlay() {
 
   ui_print "- Polling mode: $THERMAL_POLLING_MODE"
   ui_print "- Thermal profile: $THERMAL_OUTDOOR_PROFILE"
-  ui_print "- Materializing validated thermal overlay..."
+  ui_print "- Materializing and validating thermal overlay..."
 
-  [ -s "$MODPATH/tools/core/patch-thermal.sh" ] ||
-    thermal_abort "! Dynamic patcher core script missing"
-  chmod 0755 "$MODPATH/tools/core/patch-thermal.sh" 2>/dev/null || true
-  sh "$MODPATH/tools/core/patch-thermal.sh" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$MODPATH" ||
-    thermal_abort "! Dynamic patching failed"
+  [ -s "$MODPATH/tools/core/patch-thermal-validated.sh" ] ||
+    thermal_abort "! Validated dynamic patcher wrapper missing"
+  chmod 0755 \
+    "$MODPATH/tools/core/patch-thermal.sh" \
+    "$MODPATH/tools/core/verify-outdoor-delta.sh" \
+    "$MODPATH/tools/core/patch-thermal-validated.sh" 2>/dev/null || true
+  sh "$MODPATH/tools/core/patch-thermal-validated.sh" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$MODPATH" ||
+    thermal_abort "! Dynamic patching or outdoor delta validation failed"
 }

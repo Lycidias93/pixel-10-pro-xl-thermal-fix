@@ -78,22 +78,22 @@ done
 
 if [ "$is_supported" -eq 1 ]; then
   if [ "$needs_materialize" -eq 1 ]; then
-    msg "- Verified build; materializing thermal overlay"
+    msg "- Verified build; materializing and validating thermal overlay"
     polling="$(cfg_get THERMAL_POLLING_MODE)"
     outdoor="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
     [ -n "$polling" ] || polling=mod
     [ -n "$outdoor" ] || outdoor=stock
-    if [ -s "$MODDIR/tools/core/patch-thermal.sh" ] &&
-       sh "$MODDIR/tools/core/patch-thermal.sh" "$polling" "$outdoor" "$MODDIR"; then
+    if [ -s "$MODDIR/tools/core/patch-thermal-validated.sh" ] &&
+       sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR"; then
       cfg_set THERMAL_DISABLED 0
       cfg_set CANARY_DIAGNOSTIC_MODE 0
       rm -f "$MODDIR/skip_mount" "$MODDIR/guard/disabled_reason" 2>/dev/null || true
       update_install_state_build
-      msg "- Thermal materialization verified"
+      msg "- Thermal materialization and outdoor delta validation passed"
     else
       remove_thermal_overlay
       cfg_set THERMAL_DISABLED 1
-      msg "! Thermal materialization failed; ZRAM remains available"
+      msg "! Thermal materialization or outdoor delta validation failed; ZRAM remains available"
     fi
   fi
 else
