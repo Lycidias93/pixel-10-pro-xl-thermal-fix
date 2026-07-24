@@ -10,6 +10,7 @@ MODDIR="${MODDIR:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
 RESET="$MODDIR/tools/resetprop-rs"
 DEBUG="${DEBUG_MODE:-${debug_mode:-0}}"
 RESTART="${ZRAM_RESTART_MMD:-1}"
+BIGMAX="2147483647"
 
 log() { echo "$*"; }
 
@@ -35,9 +36,9 @@ prop_set() {
 }
 
 # In-memory only: no original/backup state is needed.
-prop_set mm.zram.maintenance.first_delay_seconds 2147483647
-prop_set mm.zram.maintenance.periodic_delay_seconds 2147483647
-prop_set mmd.zram.writeback.max_idle_seconds 2147483647
+prop_set mm.zram.maintenance.first_delay_seconds "$BIGMAX"
+prop_set mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
+prop_set mmd.zram.writeback.max_idle_seconds "$BIGMAX"
 prop_set mmd.zram.comp_algorithm lz77eh
 prop_set mmd.zram.enabled true
 prop_set mmd.zram.size 100%

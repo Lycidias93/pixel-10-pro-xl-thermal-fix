@@ -6,6 +6,7 @@ LOG="/sdcard/Download/pixel_thermal_zram_reinit_$(date +%Y%m%d_%H%M%S).txt"
 CONFIG="/data/adb/pixel-10-pro-xl-thermal-fix/config.env"
 ZRAM_DEV="/dev/block/zram0"
 ZRAM_SYS="/sys/block/zram0"
+BIGMAX="2147483647"
 
 main() {
   echo "debug_type=pixel_thermal_zram_reinit"
@@ -83,9 +84,9 @@ main() {
   echo
 
   echo "== set props =="
-  setprop mm.zram.maintenance.first_delay_seconds 2147483647
-  setprop mm.zram.maintenance.periodic_delay_seconds 2147483647
-  setprop mmd.zram.writeback.max_idle_seconds 2147483647
+  setprop mm.zram.maintenance.first_delay_seconds "$BIGMAX"
+  setprop mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
+  setprop mmd.zram.writeback.max_idle_seconds "$BIGMAX"
   setprop mmd.zram.comp_algorithm lz77eh
   setprop mmd.zram.enabled true
   setprop mmd.zram.size 100%
