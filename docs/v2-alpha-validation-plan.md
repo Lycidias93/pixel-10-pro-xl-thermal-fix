@@ -1,123 +1,106 @@
 # V2 Alpha validation plan
 
-Status date: `2026-07-24`.
+Status date: `2026-07-25`.
 
-Public prerelease line before publication: `1.5.2-universal-v2-alpha.1`.
+Public prerelease: `2.0.0-alpha.2` / versionCode `1016211`.
 
-Release-ready exact package: `2.0.0-alpha.2` / versionCode `1016211`.
+Current development line: `2.0.0-alpha.3-dev` / versionCode `1016212`.
 
-Stable line remains `1.5.1-universal.1`; stable `update.json` is unchanged.
+Stable remains `1.5.1-universal.1`; stable `update.json` is unchanged.
 
-## Alpha 2 release gate
+## Alpha 2 immutable release state
 
-The exact corrected package has completed the Alpha 2 release gate on Mustang.
+The published Alpha 2 package remains immutable:
 
-Verified package:
+- file: `pixel-10-thermal-memory-control-2.0.0-alpha.2.zip`;
+- SHA-256: `3f66c76d65f0de29f0815c663b5dc34c37f0c1b5084e91d4df8e6d5bc939a4c8`;
+- size: `2017962` bytes;
+- entries: `1514`;
+- versionCode: `1016211`.
 
-- File: `pixel-10-thermal-memory-control-2.0.0-alpha.2.zip`
-- SHA-256: `3f66c76d65f0de29f0815c663b5dc34c37f0c1b5084e91d4df8e6d5bc939a4c8`
-- Size: `2017962` bytes
-- Entries: `1514`
-- Tested source head: `392e7f634f3d2b4fcd676b8ec08337f85f5c4399`
-- V2 merge commit: `ff2ea8bb3f908d9df89a4c947d2852834b75d9fa`
+Do not replace this asset under the same tag. Any package-content change requires a new versionCode, artifact hash, installation, reboot, and runtime verification cycle.
 
-Completed checks:
+## Correct Dynamic V2 admission model
 
-1. Combined policy, syntax, Bootguard, pTune-state, and Outdoor fixture guards passed at the exact source head.
-2. Stock, Safe, Plus, and Extended passed the corrected real-layout delta matrix, including quoted `"NAN"` preservation and legitimate zero-target files.
-3. Two independent ZIP builds were binary-identical.
-4. ZIP integrity, required paths, version metadata, and exclusion of Git metadata and disable markers passed.
-5. The exact ZIP installed on Mustang with Stock Outdoor, Polling Mod, ZRAM 100p, pTune installed-disabled, and no active KPatch module.
-6. The first reboot completed without unexplained disable or skip-mount state.
-7. Postboot verification ended with `RESULT: CG_INSTALLED_RUNTIME_VERIFY_DONE outcome=success workflow_exit_code=0`.
+The exact build list is an evidence registry, not the activation gate.
 
-## Exact Mustang runtime PASS
+A build may enter the Thermal path when:
 
-| Field | Evidence |
-|---|---|
-| Device | Pixel 10 Pro XL (`mustang`) |
-| Android/build | Android 17 / `CP2A.260705.006` / incremental `15641320` |
-| Module | `2.0.0-alpha.2` / `1016211` active; `modules_update` consumed |
-| Markers | `disable`, `skip_mount`, and `remove` absent |
-| Thermal | Stock Outdoor; Polling Mod; all three runtime overlay hashes match |
-| Delta report | 3 files, 2 target zones, 2 arrays, 14 values, delta 0, validation passed |
-| Bootguard | pending absent; fail count 0; threshold 2; last-good present |
-| ZRAM properties | all nine requested properties exact |
-| ZRAM runtime | `16331833344` bytes; `lz77eh`; `/dev/block/zram0` active swap |
-| pTune | installed-disabled; no conflict |
-| KPatch | no active module |
+1. its codename is one of the supported Pixel 10 devices;
+2. its Android major version is supported;
+3. the three local stock thermal files are present and structurally valid;
+4. the generated overlay changes only the controlled polling and Outdoor targets;
+5. source manifest, patch manifest, validation report, and exact Outdoor delta checks pass.
 
-## Changes completed since public Alpha 1
+Build evidence states:
 
-- Polling Mod and ZRAM 100p are fresh-install defaults.
-- Stock Outdoor remains the initial thermal profile and pTune override remains off.
-- V2 activation is Android 17-only and unknown devices/builds fail closed.
-- Alpha, beta, rc, candidate, and test builds are correctly classified as prereleases.
-- Normal Bootguard minimum is 2; minimum 1 is Canary-only.
-- pTune absent, installed-disabled, active-blocked, and active-explicit-override states are reported separately.
-- Installation and Action rematerialization use the validated thermal wrapper.
-- Outdoor Stock/Safe/Plus/Extended require exact `+0/+1/+2/+3` target deltas.
-- Quoted `"NAN"` sentinels remain unchanged.
-- Legitimate zero-target stock files are accepted.
-- Target accounting follows actual `HotThreshold` arrays.
-- Malformed, missing, reordered, renamed, or unexpectedly changed arrays fail closed and roll back.
+- `exact_verified`: build ID already has exact evidence;
+- `dynamic_unverified`: new build ID on a supported platform, admitted only after local stock-derived validation;
+- `unsupported_platform`: unknown codename or unsupported Android version; Thermal stays disabled while ZRAM may remain available.
 
-## Corrected incident history
+An unlisted Canary or monthly build must not require a GitHub refresh before Action opens. It is validated locally against its own stock files. `CANARY_DIAGNOSTIC_MODE` is not enabled merely because the build ID is new, so the normal Bootguard threshold remains active.
 
-The first exact Alpha 2 attempt used versionCode `1016210`. It reached real Mustang Stock materialization, but the initial validator incorrectly required target arrays in every file and rejected quoted `"NAN"` values. Magisk did not stage the module, and the outer installer restored the complete pre-install snapshot.
+## Alpha 3 development scope
 
-The corrected validator and package use versionCode `1016211`. The corrected ZIP then completed reproducible build, installation, reboot, and runtime verification.
+Alpha 3 development addresses the post-Alpha-2 feedback:
 
-The earlier Alpha 1 disable incident proved an over-sensitive Bootguard path because normal installs accepted threshold `1`. It did not prove that Polling Mod caused the interrupted boot. Alpha 2 restores threshold `2` for normal installs.
+- remove the Action-time GitHub API/raw download path;
+- support unlisted Pixel 10 Android 17 builds through local dynamic validation;
+- keep unknown devices, unsupported Android versions, malformed stock layouts, unexpected diffs, and pTune conflicts fail-closed;
+- distinguish exact-build evidence from dynamic runtime admission;
+- improve Magisk/root observability;
+- build a deterministic lean flashable ZIP;
+- keep repository-only content out of the module package;
+- retain independent patch, exact-delta, and runtime verification stages while removing duplicated admission/network logic.
 
-## Evidence boundaries after Alpha 2
+## Lean release package contract
 
-- Mustang exact-package base runtime: PASS.
-- Blazer Android 17 community runtime: PASS; exact build ID and normalized debug evidence remain follow-up.
-- Frankel and rango: exact-build runtime evidence still required before stable support claims.
-- Canary/ZP: recovery-gated; no normal runtime claim.
-- Outdoor Safe, Plus, and Extended: exact real-layout validation PASS; installed Alpha 2 Action-path exercise remains a Beta 1 gate.
-- Active pTune coexistence: advanced/experimental; exact release proof covers pTune installed-disabled.
+The release builder packages tracked runtime content and excludes:
 
-## Alpha 2 publication sequence
+- `.git*` and `.github/`;
+- `deprecated/`;
+- `scratch/`;
+- `dev_tools/`;
+- `docs/`;
+- `tests/`, `test/`, and fixtures;
+- evidence, release-work, and build-output directories;
+- `RELEASE_NOTES_*`;
+- repository README/changelog/credits/verification markdown;
+- nested ZIP files and test/fixture helpers inside runtime trees.
 
-Publication remains fail-closed and ordered:
+The package verifier requires core Magisk/runtime entries, ZIP integrity, no banned paths, no zero-byte files, and an entry-count budget of at most 500.
 
-1. Create the prerelease tag at the exact tested V2 tree.
-2. Upload only `pixel-10-thermal-memory-control-2.0.0-alpha.2.zip`.
-3. Verify the public asset SHA-256 equals `3f66c76d65f0de29f0815c663b5dc34c37f0c1b5084e91d4df8e6d5bc939a4c8`.
-4. Publish the matching release notes.
-5. Only then promote `update-prerelease.json` to Alpha 2.
-6. Re-read the public JSON and release asset after publication.
-7. Keep stable `update.json` unchanged.
+## Runtime validation boundaries
 
-Do not replace an asset under the same tag. Any content change requires a new versionCode, a new artifact hash, and fresh exact-package verification.
+Independent stages remain intentional:
 
-## Beta 1 gate
+1. `patch-thermal.sh` creates the stock-derived controlled overlay and manifests;
+2. `verify-outdoor-delta.sh` independently checks exact Stock/Safe/Plus/Extended target deltas and preserves quoted `"NAN"` sentinels;
+3. `patch-thermal-validated.sh` provides atomic rollback and promotes only validated output;
+4. `compat-check.sh` verifies the installed/runtime state and active vendor hashes.
 
-Proceed to Beta 1 only when all of the following are true:
+These are separate failure boundaries, not redundant test copies. Consolidation removes duplicated build-admission and network-refresh logic without collapsing the independent safety checks.
 
-- Mustang and Blazer base thermal paths remain runtime PASS.
-- Safe, Plus, and Extended are exercised through the installed Alpha 2 Action flow with exact reports and rollback behavior.
-- ZRAM 100p remains healthy as the fresh default.
-- Bootguard shows no regression or unexplained disable.
-- Blazer evidence is normalized with exact build metadata.
-- pTune state observability remains regression-tested.
-- no other blocking defect requires another Alpha package.
+## Alpha 3 gate
+
+Before any Alpha 3 public prerelease:
+
+- PR CI passes shell syntax, dynamic unknown-build admission, and full lean package verification;
+- the exact generated ZIP is reproducible;
+- banned repository-only paths are absent;
+- package metadata reports a new versionCode;
+- install succeeds on an exact-evidence build;
+- install or Action rematerialization succeeds on at least one unlisted supported-platform build using local stock validation;
+- reboot completes without unexplained disable or skip-mount state;
+- Bootguard, Thermal overlays, exact Outdoor delta, ZRAM, pTune state, and active vendor hashes pass;
+- final marker is `RESULT: CG_INSTALLED_RUNTIME_VERIFY_DONE outcome=success workflow_exit_code=0`.
 
 ## Stable gate
 
 Before stable promotion:
 
-- frankel and rango each need exact-build runtime evidence, or they must be removed from stable support claims;
-- Canary/ZP remains excluded unless its exact build and recovery-backed runtime path pass;
-- active pTune coexistence remains opt-in risk and is not implied by base PASS;
-- stable `update.json` changes only in a separate release operation after final stable verification.
-
-## Non-goals for the current Alpha cycle
-
-- WebUI;
-- automatic ZIP download or unattended installation;
-- thermal safety disablement;
-- unsupported device/build activation;
-- widening the dynamic patch scope beyond base, charge, and throttling without new evidence.
+- mustang, blazer, frankel, and rango support claims are backed by honest runtime evidence or narrowed accordingly;
+- dynamic unlisted-build admission has no unexplained Bootguard regression;
+- Canary/ZP recovery limitations are documented honestly;
+- active pTune coexistence remains opt-in and is not implied by base PASS;
+- stable `update.json` changes only in a separate user-confirmed release operation.
