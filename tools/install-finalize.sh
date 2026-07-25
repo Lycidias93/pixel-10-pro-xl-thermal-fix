@@ -1,7 +1,5 @@
 #!/system/bin/sh
 # Pixel 10 Thermal & Memory Control - install finalization helper.
-# Extracted from customize.sh for Test24.
-# Defines thermal_finalize_install and writes install-state without heredoc syntax.
 
 ptune_install_state_classify() {
   if [ -z "${PTUNE_INSTALLED_PATH:-}" ]; then
@@ -31,6 +29,11 @@ ptune_install_state_classify() {
   fi
 }
 
+install_sha() {
+  [ -s "$1" ] || return 0
+  sha256sum "$1" 2>/dev/null | awk '{print $1}'
+}
+
 thermal_finalize_install() {
   ptune_install_state_classify
 
@@ -39,11 +42,25 @@ thermal_finalize_install() {
   ACTIVE_MODPATH="/data/adb/modules/$MODULE_ID"
   if [ -d "$ACTIVE_MODPATH" ]; then
     rm -f "$ACTIVE_MODPATH/disable" "$ACTIVE_MODPATH/skip_mount" "$ACTIVE_MODPATH/remove"
-    rm -f "$ACTIVE_MODPATH/guard/disabled_reason" "$ACTIVE_MODPATH/guard/conflict_guard_mode" "$ACTIVE_MODPATH/guard/conflict_ptune_path" "$ACTIVE_MODPATH/guard/guard_override" "$ACTIVE_MODPATH/guard/guard_override_source" "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
+    rm -f \
+      "$ACTIVE_MODPATH/guard/disabled_reason" \
+      "$ACTIVE_MODPATH/guard/conflict_guard_mode" \
+      "$ACTIVE_MODPATH/guard/conflict_ptune_path" \
+      "$ACTIVE_MODPATH/guard/guard_override" \
+      "$ACTIVE_MODPATH/guard/guard_override_source" \
+      "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
   fi
 
   mkdir -p "$MODPATH/guard"
-  rm -f "$MODPATH/guard/pending_boot" "$MODPATH/guard/fail_count" "$MODPATH/guard/disabled_reason" "$MODPATH/guard/conflict_guard_mode" "$MODPATH/guard/conflict_ptune_path" "$MODPATH/guard/guard_override" "$MODPATH/guard/guard_override_source" "$MODPATH/guard/risk_ack"
+  rm -f \
+    "$MODPATH/guard/pending_boot" \
+    "$MODPATH/guard/fail_count" \
+    "$MODPATH/guard/disabled_reason" \
+    "$MODPATH/guard/conflict_guard_mode" \
+    "$MODPATH/guard/conflict_ptune_path" \
+    "$MODPATH/guard/guard_override" \
+    "$MODPATH/guard/guard_override_source" \
+    "$MODPATH/guard/risk_ack"
 
   if [ "$PTUNE_INSTALL_OVERRIDE_ACTIVE" = "1" ]; then
     printf '%s\n' "allow_thermal_with_ptune" > "$MODPATH/guard/guard_override"
@@ -60,6 +77,12 @@ thermal_finalize_install() {
   [ -s "$MODPATH/tools/ptune/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/enable-ptune-override.sh" || true
   [ -s "$MODPATH/tools/ptune/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/disable-ptune-override.sh" || true
   [ -s "$MODPATH/tools/resetprop-rs" ] && chmod 0755 "$MODPATH/tools/resetprop-rs" || true
+
+  validation_dir="$CONFIG_DIR/validation"
+  validation_state_file="$validation_dir/state.env"
+  validation_report="$validation_dir/validation-report.json"
+  validation_delta="$validation_dir/outdoor-delta-validation.env"
+  validation_manifest="$validation_dir/patch-manifest.tsv"
 
   {
     printf '%s\n' "module_id=$MODULE_ID"
@@ -97,10 +120,26 @@ thermal_finalize_install() {
     printf '%s\n' "overlay_materializer=dynamic_safety_v3"
     printf '%s\n' "active_overlay_dir=system/vendor/etc"
     printf '%s\n' ""
+    printf '%s\n' "install_menu_model=single_process_v1"
+    printf '%s\n' "install_menu_process_count=$(config_get INSTALL_MENU_PROCESS_COUNT)"
+    printf '%s\n' "install_options_confirmed=$(config_get INSTALL_OPTIONS_CONFIRMED)"
+    printf '%s\n' ""
+    printf '%s\n' "validation_state_schema=pixel-thermal-validation-state-v1"
+    printf '%s\n' "validation_state_dir=$validation_dir"
+    printf '%s\n' "validation_state_file=$validation_state_file"
+    printf '%s\n' "validation_state_sha256=$(install_sha "$validation_state_file")"
+    printf '%s\n' "validation_report=$validation_report"
+    printf '%s\n' "validation_report_sha256=$(install_sha "$validation_report")"
+    printf '%s\n' "outdoor_delta_report=$validation_delta"
+    printf '%s\n' "outdoor_delta_report_sha256=$(install_sha "$validation_delta")"
+    printf '%s\n' "patch_manifest=$validation_manifest"
+    printf '%s\n' "patch_manifest_sha256=$(install_sha "$validation_manifest")"
+    printf '%s\n' "validation_legacy_paths=symlinks_only"
+    printf '%s\n' ""
     printf '%s\n' "zram_fstab_template=tools/zram/fstab.zram.100p"
     printf '%s\n' "zram_fstab_materialized=$([ -s "$active_dir/fstab.zram.100p" ] && echo yes || echo no)"
-    printf '%s\n' "zram_feature=optional_volume_key_menu_v1412_stable"
-    printf '%s\n' "zram_install_materializer=install_zram_helper_v1413_test25"
+    printf '%s\n' "zram_feature=single_install_menu_optional_100p"
+    printf '%s\n' "zram_install_materializer=noninteractive_install_zram_v1"
     printf '%s\n' "zram_apply_stage=boot_early"
     printf '%s\n' "zram_apply_helper=tools/zram/apply-zram-100p.sh"
     printf '%s\n' "zram_resetprop_required=yes"
@@ -108,7 +147,7 @@ thermal_finalize_install() {
     printf '%s\n' "zram_resetprop_mode=resetprop-rs_-n"
     printf '%s\n' "zram_mmd_restart_policy=outside_boot_early_only"
     printf '%s\n' "zram_backup_state_model=none_in_memory_only_props"
-    printf '%s\n' "thermal_outdoor_feature=optional_full_options_menu_v1413_test25"
+    printf '%s\n' "thermal_outdoor_feature=single_install_menu_full_profiles_v1"
     printf '%s\n' "thermal_outdoor_profile=$THERMAL_OUTDOOR_PROFILE"
     printf '%s\n' "thermal_polling_mode=$(config_get THERMAL_POLLING_MODE)"
     printf '%s\n' "thermal_polling_effective=$(config_get THERMAL_POLLING_EFFECTIVE)"
@@ -118,7 +157,7 @@ thermal_finalize_install() {
     printf '%s\n' "last_ptune_override=$(config_get LAST_PTUNE_OVERRIDE)"
     printf '%s\n' ""
     printf '%s\n' "expected_thermal_files=${expected_thermal_files:-dynamic_validated}"
-    printf '%s\n' "polling_values_changed_by_this_release=source_profile_or_optional_outdoor_g4_adapted_test"
+    printf '%s\n' "polling_values_changed_by_this_release=stock_300000_to_mod_5000_only"
     printf '%s\n' "bind_mount_model=no"
     printf '%s\n' "live_runtime_text_patch_model=no"
     printf '%s\n' "selinux_overlay_read_policy=hal_thermal_default_system_file_read_only"
