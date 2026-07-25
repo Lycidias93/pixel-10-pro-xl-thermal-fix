@@ -1,0 +1,48 @@
+name: V2 lean package CI
+
+on:
+  pull_request:
+    branches:
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
+
+      - name: Shell syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n dev_tools/build-release-module.sh
+          bash -n dev_tools/verify-release-module.sh
+          bash -n tests/test-dynamic-build-admission.sh
+          bash -n tests/test-release-package-exclusions.sh
+          bash -n action.sh
+          bash -n customize.sh
+          bash -n tools/core/supported-build.sh
+
+      - name: Dynamic unknown-build admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-dynamic-build-admission.sh
+
+      - name: Lean release package
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          bash tests/test-release-package-exclusions.sh
