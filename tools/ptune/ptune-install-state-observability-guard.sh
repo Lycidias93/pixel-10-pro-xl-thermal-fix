@@ -40,11 +40,11 @@ trap 'rm -rf "$TMP"' EXIT
 
 config_get() { return 0; }
 MODULE_ID=pixel-10-pro-xl-thermal-fix
-MODULE_VERSION=1.5.2-universal-v2-alpha.2-candidate.1
-MODULE_VERSION_CODE=1016209
+MODULE_VERSION=2.0.0-alpha.3-dev.2
+MODULE_VERSION_CODE=1016213
 device=mustang
 profile=dynamic/mustang/android17
-profile_state=dynamic_verified_mustang_android17
+profile_state=dynamic_stock_validated_exact_verified
 build_state=dynamic_mustang_CP2A.260705.006_15641320
 android=17
 android_sdk=37
@@ -56,7 +56,9 @@ profile_source_android=17
 profile_source_build=CP2A.260705.006
 profile_source_incremental=15641320
 source_report_sha256=dynamic_patching_validated
-CONFIG_FILE="$TMP/config.env"
+CONFIG_DIR="$TMP/data"
+CONFIG_FILE="$CONFIG_DIR/config.env"
+mkdir -p "$CONFIG_DIR"
 PTUNE_GUARD_MODE=strict
 ALLOW_THERMAL_WITH_PTUNE=0
 PTUNE_RISK_ACK_STATE=not_present
