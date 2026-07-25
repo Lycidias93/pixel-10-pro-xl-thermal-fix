@@ -18,51 +18,51 @@ trap 'rm -rf "$work"' EXIT HUP INT TERM
 source_dir="$work/source"
 mkdir -p "$source_dir"
 
-cat > "$source_dir/thermal_info_config.json" <<'JSON'
 {
-  "Sensors": [
-    {
-      "Name": "OTHER-CONFIG",
-      "PollingDelay": 300000,
-      "HotThreshold": [99]
-    }
-  ]
-}
-JSON
+  printf '%s\n' '{'
+  printf '%s\n' '  "Sensors": ['
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "OTHER-CONFIG",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": [99]'
+  printf '%s\n' '    }'
+  printf '%s\n' '  ]'
+  printf '%s\n' '}'
+} > "$source_dir/thermal_info_config.json"
 
-cat > "$source_dir/thermal_info_config_charge.json" <<'JSON'
 {
-  "Sensors": [
-    {
-      "Name": "OTHER-CHARGE",
-      "PollingDelay": 300000,
-      "HotThreshold": [88]
-    }
-  ]
-}
-JSON
+  printf '%s\n' '{'
+  printf '%s\n' '  "Sensors": ['
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "OTHER-CHARGE",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": [88]'
+  printf '%s\n' '    }'
+  printf '%s\n' '  ]'
+  printf '%s\n' '}'
+} > "$source_dir/thermal_info_config_charge.json"
 
-cat > "$source_dir/thermal_info_config_throttling.json" <<'JSON'
 {
-  "Sensors": [
-    {
-      "Name": "VIRTUAL-SKIN",
-      "PollingDelay": 300000,
-      "HotThreshold": ["NAN", 39, 43, 45, 46.5, 52, 55]
-    },
-    {
-      "Name": "VIRTUAL-SKIN-HINT",
-      "PollingDelay": 300000,
-      "HotThreshold": ["NAN", 37, 43, 45, 46.5, 52, 55]
-    },
-    {
-      "Name": "OTHER-THROTTLING",
-      "PollingDelay": 300000,
-      "HotThreshold": [77]
-    }
-  ]
-}
-JSON
+  printf '%s\n' '{'
+  printf '%s\n' '  "Sensors": ['
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "VIRTUAL-SKIN",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": ["NAN", 39, 43, 45, 46.5, 52, 55]'
+  printf '%s\n' '    },'
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "VIRTUAL-SKIN-HINT",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": ["NAN", 37, 43, 45, 46.5, 52, 55]'
+  printf '%s\n' '    },'
+  printf '%s\n' '    {'
+  printf '%s\n' '      "Name": "OTHER-THROTTLING",'
+  printf '%s\n' '      "PollingDelay": 300000,'
+  printf '%s\n' '      "HotThreshold": [77]'
+  printf '%s\n' '    }'
+  printf '%s\n' '  ]'
+  printf '%s\n' '}'
+} > "$source_dir/thermal_info_config_throttling.json"
 
 run_case() {
   local polling="$1"
