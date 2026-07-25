@@ -31,7 +31,7 @@ for path in "${required[@]}"; do
   }
 done
 
-banned_regex='(^|/)(deprecated|scratch|dev_tools|docs|tests|test|fixtures|evidence|release|release-notes|dist)/|(^|/)\.git|(^|/)RELEASE_NOTES_|(^|/)(README|CHANGELOG|CREDITS|VERIFY_[^/]*)\.md$|(^|/)tools/(v2-public-alpha2-policy-guard|verify-v2-alpha2-candidate)\.sh$|\.zip$|(^|/)(test-[^/]*|[^/]*-test|[^/]*-fixture|[^/]*-fixtures)\.sh$'
+banned_regex='(^|/)(deprecated|scratch|dev_tools|docs|tests|test|fixtures|evidence|release|release-notes|dist)/|(^|/)\.git|(^|/)RELEASE_NOTES_|(^|/)(README|CHANGELOG|CREDITS|VERIFY_[^/]*)\.md$|(^|/)tools/(v2-public-alpha2-policy-guard|verify-v2-alpha2-candidate|outdoor-delta-validation-guard)\.sh$|(^|/)tools/bootguard/bootguard-threshold-policy-guard\.sh$|(^|/)tools/ptune/ptune-install-state-observability-guard\.sh$|\.zip$|(^|/)(test-[^/]*|[^/]*-test|[^/]*-fixture|[^/]*-fixtures)\.sh$'
 if grep -E "$banned_regex" "$entries_file"; then
   printf '%s\n' 'FAIL banned_release_entry_present'
   exit 4
