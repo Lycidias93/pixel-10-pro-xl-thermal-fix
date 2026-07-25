@@ -40,6 +40,15 @@ Build evidence states:
 
 An unlisted Canary or monthly build must not require a GitHub refresh before Action opens. It is validated locally against its own stock files. `CANARY_DIAGNOSTIC_MODE` is not enabled merely because the build ID is new, so the normal Bootguard threshold remains active.
 
+## Feedback and evidence attribution
+
+The two post-Alpha-2 inputs are separate and must not be merged into one tester claim:
+
+- **Allen Chang** supplied the screenshot and installation evidence showing that a July Canary build was classified as unsupported and had Thermal disabled while ZRAM remained active. This is the runtime/evidence input for the dynamic unknown-build admission fix.
+- **Harish / Codecity001** supplied the Alpha packaging and performance review: extraction and Action startup were too slow, repository-only directories and files were shipped unnecessarily, and validation code should remain lean without collapsing independent safety boundaries.
+
+No runtime result, screenshot, or installation log from Allen is attributed to Harish. No package-size or validator-consolidation feedback from Harish is attributed to Allen.
+
 ## Alpha 3 development scope
 
 Alpha 3 development addresses the post-Alpha-2 feedback:
