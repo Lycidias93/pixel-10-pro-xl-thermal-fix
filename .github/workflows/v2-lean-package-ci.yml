@@ -61,11 +61,29 @@ jobs:
           set -euo pipefail
           bash tests/test-validation-state-sot.sh
 
+      - name: Inventory root release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          find . -maxdepth 1 -type f -name 'RELEASE_NOTES_*' -printf '%f\n' \
+            | LC_ALL=C sort \
+            | tee dist/root-release-notes.txt
+
       - name: Release notes layout
         shell: bash
         run: |
           set -euo pipefail
           bash tests/test-release-notes-layout.sh
+
+      - name: Upload release notes inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-release-notes-inventory-${{ github.sha }}
+          path: dist/root-release-notes.txt
+          if-no-files-found: error
+          retention-days: 2
 
       - name: Lean release package contract
         shell: bash
