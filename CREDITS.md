@@ -13,6 +13,13 @@ Reference threads provided by user:
 
 # Credits
 
+## Pixel Thermal V2 Alpha 3 development line
+
+- **Allen Chang**: July Canary screenshot and installation evidence showing the unsupported-build guard disabling Thermal while ZRAM stayed active. This evidence drove the correction that treats exact build IDs as evidence rather than the Dynamic V2 activation gate.
+- **Harish / Codecity001**: post-Alpha-2 package and performance review covering slow extraction, slow Action startup, removal of repository-only content from the flashable ZIP, and leaner validation organization without weakening independent safety checks.
+
+These are separate contributions: Allen supplied the referenced Canary runtime/install evidence; Harish supplied the package-size, Action-performance, and validator-organization feedback.
+
 <!-- PIXEL_THERMAL_V2_ALPHA1_CREDITS_20260715_START -->
 ## Pixel Thermal V2 alpha line
 
