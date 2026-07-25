@@ -32,7 +32,11 @@ jobs:
           bash -n tests/test-release-package-exclusions.sh
           bash -n tests/test-single-install-menu.sh
           bash -n tests/test-validation-state-sot.sh
+          bash -n tests/test-validation-state-runtime.sh
+          bash -n tests/test-outdoor-delta-validation-runtime.sh
           bash -n tests/test-release-notes-layout.sh
+          bash -n tools/bootguard/bootguard-threshold-policy-guard.sh
+          bash -n tools/ptune/ptune-install-state-observability-guard.sh
           bash -n action.sh
           bash -n customize.sh
           bash -n tools/core/supported-build.sh
@@ -60,30 +64,26 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-validation-state-sot.sh
+          bash tests/test-validation-state-runtime.sh
 
-      - name: Inventory root release notes
+      - name: Outdoor delta runtime matrix
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p dist
-          find . -maxdepth 1 -type f -name 'RELEASE_NOTES_*' -printf '%f\n' \
-            | LC_ALL=C sort \
-            | tee dist/root-release-notes.txt
+          bash tests/test-outdoor-delta-validation-runtime.sh
+
+      - name: Bootguard and pTune policy contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/bootguard/bootguard-threshold-policy-guard.sh
+          bash tools/ptune/ptune-install-state-observability-guard.sh
 
       - name: Release notes layout
         shell: bash
         run: |
           set -euo pipefail
           bash tests/test-release-notes-layout.sh
-
-      - name: Upload release notes inventory
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pixel-thermal-release-notes-inventory-${{ github.sha }}
-          path: dist/root-release-notes.txt
-          if-no-files-found: error
-          retention-days: 2
 
       - name: Lean release package contract
         shell: bash
