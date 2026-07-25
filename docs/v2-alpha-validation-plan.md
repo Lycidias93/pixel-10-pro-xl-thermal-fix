@@ -4,7 +4,9 @@ Status date: `2026-07-25`.
 
 Public prerelease: `2.0.0-alpha.2` / versionCode `1016211`.
 
-Current development line: `2.0.0-alpha.3-dev` / versionCode `1016212`.
+Runtime-proven development baseline: `2.0.0-alpha.3-dev` / versionCode `1016212`.
+
+Current refactor line: `2.0.0-alpha.3-dev.2` / versionCode `1016213`.
 
 Stable remains `1.5.1-universal.1`; stable `update.json` is unchanged.
 
@@ -40,44 +42,101 @@ Build evidence states:
 
 An unlisted Canary or monthly build must not require a GitHub refresh before Action opens. It is validated locally against its own stock files. `CANARY_DIAGNOSTIC_MODE` is not enabled merely because the build ID is new, so the normal Bootguard threshold remains active.
 
-## Feedback and evidence attribution
+## Alpha 3 development baseline runtime PASS
 
-The two post-Alpha-2 inputs are separate and must not be merged into one tester claim:
+The lean `2.0.0-alpha.3-dev / 1016212` package passed installation and post-reboot verification on:
 
-- **Allen Chang** supplied the screenshot and installation evidence showing that a July Canary build was classified as unsupported and had Thermal disabled while ZRAM remained active. This is the runtime/evidence input for the dynamic unknown-build admission fix.
-- **Harish / Codecity001** supplied the Alpha packaging and performance review: extraction and Action startup were too slow, repository-only directories and files were shipped unnecessarily, and validation code should remain lean without collapsing independent safety boundaries.
+- device: Pixel 10 Pro XL (`mustang`);
+- Android: `17`;
+- build: `CP2A.260705.006`;
+- incremental: `15641320`;
+- build evidence: `exact_verified`;
+- Thermal: Stock, exact delta `0`;
+- Polling: Mod;
+- ZRAM: 100p with active `lz77eh` swap;
+- pTune: installed-disabled.
 
-No runtime result, screenshot, or installation log from Allen is attributed to Harish. No package-size or validator-consolidation feedback from Harish is attributed to Allen.
+Runtime proof included:
 
-## Alpha 3 development scope
+- `modules_update` consumed and active module metadata exact;
+- three active `/vendor/etc` hashes equal the module overlays;
+- source, patch, validation, exact-delta, and active-polling checks passed;
+- Bootguard pending absent, fail count `0`, threshold `2`, last-good present;
+- ZRAM runtime near 100 percent RAM and no service failure marker;
+- Action contains no network-refresh path;
+- Thermal service responsive and no recent fatal Thermal pattern;
+- final marker: `RESULT: CG_INSTALLED_RUNTIME_VERIFY_DONE outcome=success workflow_exit_code=0`;
+- verifier summary: `checks_failed=0`, `warnings=0`.
 
-Alpha 3 development addresses the post-Alpha-2 feedback:
+This exact runtime-proven package is the rollback anchor for the next refactor.
 
-- remove the Action-time GitHub API/raw download path;
-- support unlisted Pixel 10 Android 17 builds through local dynamic validation;
-- keep unknown devices, unsupported Android versions, malformed stock layouts, unexpected diffs, and pTune conflicts fail-closed;
-- distinguish exact-build evidence from dynamic runtime admission;
-- improve Magisk/root observability;
-- build a deterministic lean flashable ZIP;
-- keep repository-only content out of the module package;
-- retain independent patch, exact-delta, and runtime verification stages while removing duplicated admission/network logic.
+## Attribution boundary
 
-## Lean release package contract
+- **Allen Chang** supplied the July Canary screenshot and installation evidence that exposed the incorrect exact-build activation gate.
+- **Harish / Codecity001** supplied the separate package/performance review: slow extraction, slow Action startup, repository-only files in the flashable ZIP, repeated install questions, duplicated validation outputs, and validator-organization feedback.
 
-The release builder packages tracked runtime content and excludes:
+These inputs must not be cross-attributed.
+
+## Alpha 3 next refactor contract
+
+The `2.0.0-alpha.3-dev.2 / 1016213` line changes package and installer architecture and therefore requires a fresh install/reboot cycle.
+
+### Single install menu
+
+`install-options-menu.sh` is the sole install-time owner for:
+
+- Polling Mode;
+- Thermal Profile;
+- ZRAM;
+- pTune override;
+- Debug logging.
+
+`install-thermal-overlay.sh` and `install-zram.sh` are noninteractive materializers. The Action-only Thermal and ZRAM menus remain available for later runtime changes.
+
+### Canonical validation state
+
+Canonical persistent validation data lives under:
+
+`/data/adb/pixel-10-pro-xl-thermal-fix/validation/`
+
+It contains:
+
+- `validation-report.json`;
+- `outdoor-delta-validation.env`;
+- `patch-manifest.tsv`;
+- `state.env` with schema and hashes.
+
+Historical paths remain compatibility symlinks only. Independent copies are prohibited. `$MODPATH/guard/` remains focused on Bootguard and compatibility markers.
+
+### Lean package and repository layout
+
+The deterministic flashable ZIP excludes:
 
 - `.git*` and `.github/`;
-- `deprecated/`;
-- `scratch/`;
-- `dev_tools/`;
-- `docs/`;
-- `tests/`, `test/`, and fixtures;
-- evidence, release-work, and build-output directories;
-- `RELEASE_NOTES_*`;
+- `deprecated/`, `scratch/`, `dev_tools/`, `docs/`, tests and fixtures;
+- `release/` and `release-notes/`;
+- root `RELEASE_NOTES_*` files;
 - repository README/changelog/credits/verification markdown;
-- nested ZIP files and test/fixture helpers inside runtime trees.
+- release-only Alpha 2 policy/candidate helpers;
+- nested ZIP files.
 
-The package verifier requires core Magisk/runtime entries, ZIP integrity, no banned paths, no zero-byte files, and an entry-count budget of at most 500.
+Repository release notes live under `release-notes/`. CI rejects new root-level `RELEASE_NOTES_*` files.
+
+### Performance budgets
+
+CI records and preserves:
+
+- release ZIP bytes and entry count;
+- deterministic build duration;
+- `action.sh` and `customize.sh` bytes;
+- install-menu process budget.
+
+Current hard budgets are:
+
+- at most `60` ZIP entries;
+- at most `450000` ZIP bytes;
+- at most `12000` bytes for `action.sh`;
+- exactly one install-menu process.
 
 ## Runtime validation boundaries
 
@@ -85,22 +144,23 @@ Independent stages remain intentional:
 
 1. `patch-thermal.sh` creates the stock-derived controlled overlay and manifests;
 2. `verify-outdoor-delta.sh` independently checks exact Stock/Safe/Plus/Extended target deltas and preserves quoted `"NAN"` sentinels;
-3. `patch-thermal-validated.sh` provides atomic rollback and promotes only validated output;
+3. `patch-thermal-validated.sh` provides rollback and promotes only validated output into the canonical validation state;
 4. `compat-check.sh` verifies the installed/runtime state and active vendor hashes.
 
-These are separate failure boundaries, not redundant test copies. Consolidation removes duplicated build-admission and network-refresh logic without collapsing the independent safety checks.
+These are separate failure boundaries, not redundant test copies. Consolidation removes duplicate menus, duplicate persistent reports, build-admission duplication, and network-refresh logic without collapsing independent safety checks.
 
-## Alpha 3 gate
+## Alpha 3 next gate
 
-Before any Alpha 3 public prerelease:
+Before any public Alpha 3 prerelease:
 
-- PR CI passes shell syntax, dynamic unknown-build admission, and full lean package verification;
+- PR CI passes shell syntax, dynamic unknown-build admission, menu deduplication, validation-state SoT, release-note layout, and full lean package verification;
 - the exact generated ZIP is reproducible;
 - banned repository-only paths are absent;
 - package metadata reports a new versionCode;
 - install succeeds on an exact-evidence build;
 - install or Action rematerialization succeeds on at least one unlisted supported-platform build using local stock validation;
 - reboot completes without unexplained disable or skip-mount state;
+- canonical validation files exist and all legacy paths resolve to them as symlinks;
 - Bootguard, Thermal overlays, exact Outdoor delta, ZRAM, pTune state, and active vendor hashes pass;
 - final marker is `RESULT: CG_INSTALLED_RUNTIME_VERIFY_DONE outcome=success workflow_exit_code=0`.
 

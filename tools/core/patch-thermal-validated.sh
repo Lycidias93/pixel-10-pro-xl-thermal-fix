@@ -8,85 +8,92 @@ ID="pixel-10-pro-xl-thermal-fix"
 DATA_ROOT="${THERMAL_DATA_ROOT:-/data/adb/$ID}"
 PATCHER="$MODPATH/tools/core/patch-thermal.sh"
 DELTA_HELPER="$MODPATH/tools/core/verify-outdoor-delta.sh"
+STATE_HELPER="$MODPATH/tools/core/validation-state.sh"
 TARGET_DIR="$MODPATH/system/vendor/etc"
 GUARD_DIR="$MODPATH/guard"
-REPORT_MODULE="$MODPATH/validation_report.json"
-REPORT_DATA="$DATA_ROOT/validation_report.json"
-PATCH_MANIFEST="$GUARD_DIR/patch-manifest.tsv"
-DELTA_REPORT="$GUARD_DIR/outdoor-delta-validation.env"
-DELTA_REPORT_DATA="$DATA_ROOT/outdoor-delta-validation.env"
+
+LEGACY_REPORT_MODULE="$MODPATH/validation_report.json"
+LEGACY_REPORT_DATA="$DATA_ROOT/validation_report.json"
+LEGACY_PATCH_MANIFEST="$GUARD_DIR/patch-manifest.tsv"
+LEGACY_DELTA_MODULE="$GUARD_DIR/outdoor-delta-validation.env"
+LEGACY_DELTA_DATA="$DATA_ROOT/outdoor-delta-validation.env"
+
 RUN_LOG="$GUARD_DIR/.patch-validated-run.$$"
-REPORT_TMP="$GUARD_DIR/.outdoor-delta-validation.env.$$"
-BACKUP_DIR="$GUARD_DIR/.outdoor-delta-backup.$$"
+DELTA_TMP="$GUARD_DIR/.outdoor-delta-validation.env.$$"
+BACKUP_DIR="$GUARD_DIR/.validation-backup.$$"
 VALIDATED=0
-HAD_TARGET=0
-HAD_MANIFEST=0
-HAD_REPORT_MODULE=0
-HAD_REPORT_DATA=0
-HAD_DELTA_REPORT=0
-HAD_DELTA_REPORT_DATA=0
 
 case "$POLLING_MODE" in stock|mod) ;; *) exit 21 ;; esac
 case "$OUTDOOR_PROFILE" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) exit 22 ;; esac
 
 [ -s "$PATCHER" ] || exit 23
 [ -s "$DELTA_HELPER" ] || exit 24
-mkdir -p "$GUARD_DIR" "$DATA_ROOT" "$BACKUP_DIR"
+[ -s "$STATE_HELPER" ] || exit 25
 
-backup_file() {
-  source_path="$1"
-  backup_name="$2"
-  if [ -e "$source_path" ]; then
-    cp -fp "$source_path" "$BACKUP_DIR/$backup_name"
-    return 0
-  fi
-  return 1
-}
+. "$STATE_HELPER"
+thermal_validation_init || exit 26
+mkdir -p "$GUARD_DIR" "$BACKUP_DIR"
 
-restore_file() {
-  target_path="$1"
-  backup_name="$2"
-  had_file="$3"
-  if [ "$had_file" -eq 1 ]; then
-    cp -fp "$BACKUP_DIR/$backup_name" "$target_path" 2>/dev/null || true
+backup_path() {
+  _path="$1"
+  _name="$2"
+  if [ -e "$_path" ] || [ -L "$_path" ]; then
+    cp -fpR "$_path" "$BACKUP_DIR/$_name" 2>/dev/null || true
+    printf '%s\n' present
   else
-    rm -f "$target_path" 2>/dev/null || true
+    printf '%s\n' absent
   fi
 }
 
-rollback_runtime_outputs() {
-  rm -rf "$TARGET_DIR" 2>/dev/null || true
-  if [ "$HAD_TARGET" -eq 1 ] && [ -d "$BACKUP_DIR/target" ]; then
-    mkdir -p "${TARGET_DIR%/*}"
-    cp -fpR "$BACKUP_DIR/target" "$TARGET_DIR" 2>/dev/null || true
+restore_path() {
+  _path="$1"
+  _name="$2"
+  _state="$3"
+  rm -rf "$_path" 2>/dev/null || true
+  if [ "$_state" = present ] && [ -e "$BACKUP_DIR/$_name" ]; then
+    mkdir -p "${_path%/*}" 2>/dev/null || true
+    cp -fpR "$BACKUP_DIR/$_name" "$_path" 2>/dev/null || true
   fi
-  restore_file "$PATCH_MANIFEST" patch-manifest.tsv "$HAD_MANIFEST"
-  restore_file "$REPORT_MODULE" validation-report-module.json "$HAD_REPORT_MODULE"
-  restore_file "$REPORT_DATA" validation-report-data.json "$HAD_REPORT_DATA"
-  restore_file "$DELTA_REPORT" outdoor-delta-module.env "$HAD_DELTA_REPORT"
-  restore_file "$DELTA_REPORT_DATA" outdoor-delta-data.env "$HAD_DELTA_REPORT_DATA"
+}
+
+target_state="$(backup_path "$TARGET_DIR" target)"
+validation_state="$(backup_path "$THERMAL_VALIDATION_DIR" validation)"
+legacy_report_module_state="$(backup_path "$LEGACY_REPORT_MODULE" legacy-report-module)"
+legacy_report_data_state="$(backup_path "$LEGACY_REPORT_DATA" legacy-report-data)"
+legacy_patch_state="$(backup_path "$LEGACY_PATCH_MANIFEST" legacy-patch)"
+legacy_delta_module_state="$(backup_path "$LEGACY_DELTA_MODULE" legacy-delta-module)"
+legacy_delta_data_state="$(backup_path "$LEGACY_DELTA_DATA" legacy-delta-data)"
+
+rollback_outputs() {
+  restore_path "$TARGET_DIR" target "$target_state"
+  restore_path "$THERMAL_VALIDATION_DIR" validation "$validation_state"
+  restore_path "$LEGACY_REPORT_MODULE" legacy-report-module "$legacy_report_module_state"
+  restore_path "$LEGACY_REPORT_DATA" legacy-report-data "$legacy_report_data_state"
+  restore_path "$LEGACY_PATCH_MANIFEST" legacy-patch "$legacy_patch_state"
+  restore_path "$LEGACY_DELTA_MODULE" legacy-delta-module "$legacy_delta_module_state"
+  restore_path "$LEGACY_DELTA_DATA" legacy-delta-data "$legacy_delta_data_state"
 }
 
 cleanup() {
-  rc="$?"
-  if [ "$rc" -ne 0 ] && [ "$VALIDATED" -ne 1 ]; then
-    rollback_runtime_outputs
+  _rc="$?"
+  if [ "$_rc" -ne 0 ] && [ "$VALIDATED" -ne 1 ]; then
+    rollback_outputs
   fi
-  rm -f "$RUN_LOG" "$REPORT_TMP" 2>/dev/null || true
+  rm -f "$RUN_LOG" "$DELTA_TMP" 2>/dev/null || true
   rm -rf "$BACKUP_DIR" 2>/dev/null || true
-  return "$rc"
+  return "$_rc"
 }
 trap cleanup EXIT HUP INT TERM
 
-if [ -d "$TARGET_DIR" ]; then
-  cp -fpR "$TARGET_DIR" "$BACKUP_DIR/target"
-  HAD_TARGET=1
-fi
-backup_file "$PATCH_MANIFEST" patch-manifest.tsv && HAD_MANIFEST=1 || true
-backup_file "$REPORT_MODULE" validation-report-module.json && HAD_REPORT_MODULE=1 || true
-backup_file "$REPORT_DATA" validation-report-data.json && HAD_REPORT_DATA=1 || true
-backup_file "$DELTA_REPORT" outdoor-delta-module.env && HAD_DELTA_REPORT=1 || true
-backup_file "$DELTA_REPORT_DATA" outdoor-delta-data.env && HAD_DELTA_REPORT_DATA=1 || true
+# The lower-level patcher still writes its historical output paths. Remove
+# legacy symlinks before invoking it, then promote its outputs into one
+# canonical persistent validation directory after all independent checks pass.
+rm -f \
+  "$LEGACY_REPORT_MODULE" \
+  "$LEGACY_REPORT_DATA" \
+  "$LEGACY_PATCH_MANIFEST" \
+  "$LEGACY_DELTA_MODULE" \
+  "$LEGACY_DELTA_DATA" 2>/dev/null || true
 
 if sh "$PATCHER" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH" > "$RUN_LOG" 2>&1; then
   cat "$RUN_LOG"
@@ -118,6 +125,7 @@ threshold_value_total=0
 for file in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
   source_file="$CACHE_DIR/$file"
   output_file="$TARGET_DIR/$file"
+
   [ -s "$source_file" ] || {
     printf '%s\n' "PATCH_THERMAL_DELTA_REASON=source_missing_$file"
     exit 60
@@ -126,6 +134,7 @@ for file in thermal_info_config.json thermal_info_config_charge.json thermal_inf
     printf '%s\n' "PATCH_THERMAL_DELTA_REASON=output_missing_$file"
     exit 61
   }
+
   if metrics="$(sh "$DELTA_HELPER" "$source_file" "$output_file" "$DELTA")"; then
     set -- $metrics
     [ "$#" -eq 3 ] || exit 62
@@ -136,10 +145,11 @@ for file in thermal_info_config.json thermal_info_config_charge.json thermal_inf
     printf '%s\n' "PATCH_THERMAL_DELTA_REASON=exact_delta_invalid_${file}_expected_${DELTA}"
     exit 63
   fi
-  validated_files=$(( validated_files + 1 ))
-  target_zone_total=$(( target_zone_total + target_zones ))
-  threshold_array_total=$(( threshold_array_total + threshold_arrays ))
-  threshold_value_total=$(( threshold_value_total + threshold_values ))
+
+  validated_files=$((validated_files + 1))
+  target_zone_total=$((target_zone_total + target_zones))
+  threshold_array_total=$((threshold_array_total + threshold_arrays))
+  threshold_value_total=$((threshold_value_total + threshold_values))
 done
 
 [ "$validated_files" -eq 3 ] || exit 64
@@ -148,7 +158,7 @@ done
 [ "$threshold_value_total" -gt 0 ] || exit 67
 
 {
-  printf '%s\n' "schema=pixel-thermal-outdoor-delta-validation-v1"
+  printf '%s\n' 'schema=pixel-thermal-outdoor-delta-validation-v1'
   printf '%s\n' "device=$DEVICE"
   printf '%s\n' "build_id=$BUILD_ID"
   printf '%s\n' "polling_mode=$POLLING_MODE"
@@ -158,22 +168,44 @@ done
   printf '%s\n' "target_zone_count=$target_zone_total"
   printf '%s\n' "threshold_array_count=$threshold_array_total"
   printf '%s\n' "threshold_value_count=$threshold_value_total"
-  printf '%s\n' "validation=passed"
-} > "$REPORT_TMP"
+  printf '%s\n' 'validation=passed'
+} > "$DELTA_TMP"
 
-mv "$REPORT_TMP" "$DELTA_REPORT"
-cp -fp "$DELTA_REPORT" "$DELTA_REPORT_DATA"
-chmod 0644 "$DELTA_REPORT" "$DELTA_REPORT_DATA" 2>/dev/null || true
+[ -s "$LEGACY_REPORT_MODULE" ] || exit 68
+[ -s "$LEGACY_PATCH_MANIFEST" ] || exit 69
+
+thermal_validation_publish \
+  "$LEGACY_REPORT_MODULE" \
+  "$THERMAL_VALIDATION_REPORT" \
+  0644 || exit 70
+thermal_validation_publish \
+  "$LEGACY_PATCH_MANIFEST" \
+  "$THERMAL_VALIDATION_PATCH_MANIFEST" \
+  0644 || exit 71
+thermal_validation_publish \
+  "$DELTA_TMP" \
+  "$THERMAL_VALIDATION_DELTA" \
+  0644 || exit 72
+
+thermal_validation_write_state \
+  "$DEVICE" \
+  "$BUILD_ID" \
+  "$POLLING_MODE" \
+  "$OUTDOOR_PROFILE" || exit 73
+
+thermal_validation_refresh_legacy_links "$MODPATH" || exit 74
 
 VALIDATED=1
 rm -rf "$BACKUP_DIR"
-printf '%s\n' "PATCH_THERMAL_DELTA_VALIDATION=pass"
+printf '%s\n' 'PATCH_THERMAL_DELTA_VALIDATION=pass'
 printf '%s\n' "PATCH_THERMAL_DELTA_EXPECTED=$DELTA"
 printf '%s\n' "PATCH_THERMAL_DELTA_FILES=$validated_files"
 printf '%s\n' "PATCH_THERMAL_DELTA_TARGET_ZONES=$target_zone_total"
 printf '%s\n' "PATCH_THERMAL_DELTA_THRESHOLD_ARRAYS=$threshold_array_total"
 printf '%s\n' "PATCH_THERMAL_DELTA_THRESHOLD_VALUES=$threshold_value_total"
-printf '%s\n' "PATCH_THERMAL_DELTA_REPORT=$DELTA_REPORT"
+printf '%s\n' "PATCH_THERMAL_VALIDATION_DIR=$THERMAL_VALIDATION_DIR"
+printf '%s\n' "PATCH_THERMAL_DELTA_REPORT=$THERMAL_VALIDATION_DELTA"
+printf '%s\n' 'PATCH_THERMAL_LEGACY_PATHS=symlinks_only'
 trap - EXIT HUP INT TERM
-rm -f "$RUN_LOG"
+rm -f "$RUN_LOG" "$DELTA_TMP"
 exit 0

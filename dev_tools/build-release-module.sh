@@ -24,8 +24,12 @@ trap cleanup EXIT HUP INT TERM
 exclude_path() {
   case "$1" in
     .git*|.github/*|.workflow-baseline|.gitattributes) return 0 ;;
-    deprecated/*|scratch/*|dev_tools/*|docs/*|tests/*|test/*|fixtures/*|evidence/*|release/*|dist/*) return 0 ;;
+    deprecated/*|scratch/*|dev_tools/*|docs/*|tests/*|test/*|fixtures/*|evidence/*|release/*|release-notes/*|dist/*) return 0 ;;
     RELEASE_NOTES_*|README.md|CHANGELOG.md|CREDITS.md|VERIFY_*.md|WORKFLOW_*.md|LICENSE|*.zip) return 0 ;;
+    tools/v2-public-alpha2-policy-guard.sh|tools/verify-v2-alpha2-candidate.sh) return 0 ;;
+    tools/outdoor-delta-validation-guard.sh) return 0 ;;
+    tools/bootguard/bootguard-threshold-policy-guard.sh) return 0 ;;
+    tools/ptune/ptune-install-state-observability-guard.sh) return 0 ;;
     */tests/*|*/test/*|*/fixtures/*|*/scratch/*|*/deprecated/*) return 0 ;;
     */test-*.sh|*/*-test.sh|*/*-fixture.sh|*/*-fixtures.sh|*/*fixture*.json) return 0 ;;
   esac
@@ -50,6 +54,7 @@ required=(
   supported_versions.json
   META-INF/com/google/android/update-binary
   tools/core/supported-build.sh
+  tools/core/validation-state.sh
   tools/core/patch-thermal-validated.sh
   tools/bootguard/compat-check.sh
 )
