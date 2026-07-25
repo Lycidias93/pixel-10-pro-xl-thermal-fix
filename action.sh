@@ -8,6 +8,15 @@ CONFIG_FILE="$CONFIG_DIR/config.env"
 SUPPORTED_HELPER="$MODDIR/tools/core/supported-build.sh"
 SUPPORTED_JSON="$MODDIR/supported_versions.json"
 INSTALL_STATE="$MODDIR/install-state.txt"
+ACTION_PERF="$MODDIR/guard/action-performance.env"
+
+now_ms() {
+  awk '{printf "%d\n", $1 * 1000}' /proc/uptime 2>/dev/null || printf '%s\n' 0
+}
+
+ACTION_STARTED_MS="$(now_ms)"
+MATERIALIZE_STARTED_MS=0
+MATERIALIZE_FINISHED_MS=0
 
 cfg_get() {
   key="$1"
@@ -42,12 +51,36 @@ update_install_state_build() {
   grep -v -E '^(build_id|profile|profile_state|build_guard_mode|build_evidence|profile_materialized|expected_thermal_files)=' "$INSTALL_STATE" > "$tmp" 2>/dev/null || true
   printf '%s\n' "build_id=$CURRENT_BUILD" >> "$tmp"
   printf '%s\n' "profile=dynamic/$CURRENT_DEVICE/android$CURRENT_ANDROID" >> "$tmp"
-  printf '%s\n' "profile_state=dynamic_stock_validated" >> "$tmp"
+  printf '%s\n' "profile_state=dynamic_stock_validated_$evidence" >> "$tmp"
   printf '%s\n' "build_guard_mode=dynamic_local_validation" >> "$tmp"
   printf '%s\n' "build_evidence=$evidence" >> "$tmp"
   printf '%s\n' "profile_materialized=yes" >> "$tmp"
   printf '%s\n' "expected_thermal_files=dynamic_validated" >> "$tmp"
   mv "$tmp" "$INSTALL_STATE"
+}
+
+write_action_performance() {
+  action_finished_ms="$(now_ms)"
+  startup_ms=unknown
+  materialize_ms=0
+  case "$ACTION_STARTED_MS:$action_finished_ms" in
+    *[!0-9:]*|:*|*:) ;;
+    *) startup_ms=$((action_finished_ms - ACTION_STARTED_MS)) ;;
+  esac
+  if [ "$MATERIALIZE_STARTED_MS" -gt 0 ] 2>/dev/null && [ "$MATERIALIZE_FINISHED_MS" -ge "$MATERIALIZE_STARTED_MS" ] 2>/dev/null; then
+    materialize_ms=$((MATERIALIZE_FINISHED_MS - MATERIALIZE_STARTED_MS))
+  fi
+  mkdir -p "$MODDIR/guard" 2>/dev/null || true
+  {
+    printf '%s\n' 'schema=pixel-thermal-action-performance-v1'
+    printf '%s\n' "startup_to_dashboard_ms=$startup_ms"
+    printf '%s\n' "materialize_required=$needs_materialize"
+    printf '%s\n' "materialize_ms=$materialize_ms"
+    printf '%s\n' "build_evidence=$build_evidence"
+    printf '%s\n' 'network_refresh=absent'
+    printf '%s\n' "action_bytes=$(wc -c < "$MODDIR/action.sh" 2>/dev/null | tr -d ' ')"
+  } > "$ACTION_PERF" 2>/dev/null || true
+  msg "- Action prep: ${startup_ms} ms"
 }
 
 [ -r "$SUPPORTED_HELPER" ] || {
@@ -99,6 +132,7 @@ if [ "$platform_supported" -eq 1 ]; then
   esac
 
   if [ "$needs_materialize" -eq 1 ]; then
+    MATERIALIZE_STARTED_MS="$(now_ms)"
     msg "- Materializing three stock-derived thermal overlays"
     polling="$(cfg_get THERMAL_POLLING_MODE)"
     outdoor="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
@@ -107,12 +141,14 @@ if [ "$platform_supported" -eq 1 ]; then
 
     if [ -s "$MODDIR/tools/core/patch-thermal-validated.sh" ] &&
        sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR"; then
+      MATERIALIZE_FINISHED_MS="$(now_ms)"
       cfg_set THERMAL_DISABLED 0
       cfg_set CANARY_DIAGNOSTIC_MODE 0
       rm -f "$MODDIR/skip_mount" "$MODDIR/guard/disabled_reason" 2>/dev/null || true
       update_install_state_build "$build_evidence"
       msg "- Local structure, diff and Outdoor validation passed"
     else
+      MATERIALIZE_FINISHED_MS="$(now_ms)"
       remove_thermal_overlay
       cfg_set THERMAL_DISABLED 1
       msg "! Stock layout could not be validated"
@@ -128,6 +164,8 @@ else
   msg "- Build: ${CURRENT_BUILD:-unknown}"
   msg "- ZRAM remains available"
 fi
+
+write_action_performance
 
 if [ -s "$MODDIR/tools/action-dashboard.sh" ]; then
   sh "$MODDIR/tools/action-dashboard.sh"
