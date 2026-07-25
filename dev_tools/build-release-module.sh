@@ -32,10 +32,12 @@ exclude_path() {
   return 1
 }
 
+included_paths=()
 while IFS= read -r -d '' path; do
   exclude_path "$path" && continue
   [[ -f "$path" ]] || continue
   printf '%s\0' "$path" >> "$list_file"
+  included_paths+=("$path")
   mkdir -p "$stage/$(dirname "$path")"
   cp -p "$path" "$stage/$path"
 done < <(git ls-files -z)
@@ -58,7 +60,15 @@ for path in "${required[@]}"; do
   }
 done
 
-source_date_epoch="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct)}"
+source_date_epoch="${SOURCE_DATE_EPOCH:-}"
+if [[ -z "$source_date_epoch" ]]; then
+  source_date_epoch="$(git log -1 --format=%ct -- "${included_paths[@]}")"
+fi
+[[ "$source_date_epoch" =~ ^[0-9]+$ ]] || {
+  printf 'FAIL source_date_epoch_invalid value=%s\n' "$source_date_epoch"
+  exit 4
+}
+
 find "$stage" -type f -exec touch -d "@$source_date_epoch" {} +
 rm -f "$output"
 
@@ -72,6 +82,7 @@ rm -f "$output"
 "$repo_root/dev_tools/verify-release-module.sh" "$output"
 
 printf 'zip=%s\n' "$output"
+printf 'source_date_epoch=%s\n' "$source_date_epoch"
 printf 'sha256=%s\n' "$(sha256sum "$output" | awk '{print $1}')"
 printf 'bytes=%s\n' "$(wc -c < "$output" | tr -d ' ')"
 printf 'entries=%s\n' "$(unzip -Z1 "$output" | wc -l | tr -d ' ')"

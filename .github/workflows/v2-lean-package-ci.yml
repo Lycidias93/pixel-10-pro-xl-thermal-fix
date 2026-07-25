@@ -40,9 +40,41 @@ jobs:
           set -euo pipefail
           bash tests/test-dynamic-build-admission.sh
 
-      - name: Lean release package
+      - name: Lean release package contract
         shell: bash
         run: |
           set -euo pipefail
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
           bash tests/test-release-package-exclusions.sh
+
+      - name: Build exact Alpha 3 dev test artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version=//p' module.prop | head -n 1)"
+          test -n "$version"
+          mkdir -p dist
+          zip_name="pixel-10-thermal-memory-control-${version}.zip"
+          zip_path="dist/${zip_name}"
+          dev_tools/build-release-module.sh "$zip_path" | tee dist/build-metadata.txt
+          (
+            cd dist
+            sha256sum "$zip_name" > "${zip_name}.sha256"
+            sha256sum -c "${zip_name}.sha256"
+          )
+          unzip -Z1 "$zip_path" > dist/package-entries.txt
+          test "$(unzip -Z1 "$zip_path" | wc -l | tr -d ' ')" -le 500
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_ALPHA3_DEV_CI_ARTIFACT_PASS'
+
+      - name: Upload verified Alpha 3 dev artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-alpha3-dev-${{ github.sha }}
+          path: |
+            dist/pixel-10-thermal-memory-control-*.zip
+            dist/pixel-10-thermal-memory-control-*.zip.sha256
+            dist/build-metadata.txt
+            dist/package-entries.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
