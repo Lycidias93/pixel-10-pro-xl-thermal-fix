@@ -1,19 +1,28 @@
 #!/system/bin/sh
 # Pixel 10 Thermal & Memory Control - install debug/autosave helper.
-# Sourced by customize.sh. Expects MODPATH, MODULE_ID, MODULE_VERSION,
-# MODULE_VERSION_CODE, device/build variables, root_impl, mount_backend_hint,
-# root_backend_guard_mode, config_get, ui_print, and abort from the installer.
+# Sourced by customize.sh.
 
-# BEGIN PIXEL_THERMAL_INSTALL_DEBUG_AUTOSAVE_V1411
 thermal_sanitize_name() {
   echo "${1:-unknown}" | tr -c 'A-Za-z0-9._-' '_'
 }
+
 thermal_choose_download_dir() {
   for d in /sdcard/Download /storage/emulated/0/Download; do
-    if [ -d "$d" ] && [ -w "$d" ]; then echo "$d"; return 0; fi
+    if [ -d "$d" ] && [ -w "$d" ]; then
+      echo "$d"
+      return 0
+    fi
   done
   echo /storage/emulated/0/Download
 }
+
+thermal_battery_field() {
+  _pattern="$1"
+  printf '%s\n' "$THERMAL_BATTERY_DUMP" \
+    | awk -F: -v pattern="$_pattern" '$1 ~ pattern {gsub(/[[:space:]]/,"",$2); print $2; exit}'
+}
+
+THERMAL_INSTALL_STARTED_EPOCH="$(date +%s 2>/dev/null || echo 0)"
 THERMAL_INSTALL_DEBUG_TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"
 THERMAL_INSTALL_DEBUG_DIR="$(thermal_choose_download_dir)"
 THERMAL_INSTALL_DEBUG_BASE="pixel_thermal_install_$(thermal_sanitize_name "$MODULE_VERSION")_$(thermal_sanitize_name "$device")_$(thermal_sanitize_name "$build_id")_$(thermal_sanitize_name "$incremental")_$THERMAL_INSTALL_DEBUG_TS"
@@ -24,22 +33,60 @@ thermal_save_install_debug() {
   result="${1:-unknown}"
   reason="${2:-none}"
   if [ "$result" = "success" ]; then
-    local dbg_mode="$(config_get DEBUG_MODE)"
+    dbg_mode="$(config_get DEBUG_MODE)"
     [ -z "$dbg_mode" ] && dbg_mode="$(config_get debug_mode)"
     if [ "$dbg_mode" != "1" ]; then
       return 0
     fi
   fi
+
+  THERMAL_BATTERY_DUMP="$(dumpsys battery 2>/dev/null || true)"
+  battery_level="$(thermal_battery_field '^[[:space:]]*level$')"
+  battery_status="$(thermal_battery_field '^[[:space:]]*status$')"
+  powered_usb="$(thermal_battery_field 'USB powered')"
+  powered_ac="$(thermal_battery_field 'AC powered')"
+  powered_wireless="$(thermal_battery_field 'Wireless powered')"
+
+  install_finished_epoch="$(date +%s 2>/dev/null || echo 0)"
+  install_elapsed_seconds=unknown
+  case "$THERMAL_INSTALL_STARTED_EPOCH:$install_finished_epoch" in
+    *[!0-9:]*|:*|*:) ;;
+    *) install_elapsed_seconds=$((install_finished_epoch - THERMAL_INSTALL_STARTED_EPOCH)) ;;
+  esac
+
+  package_path="${ZIPFILE:-${ZIP_PATH:-unset}}"
+  package_sha256=unavailable
+  package_bytes=unavailable
+  if [ -n "$package_path" ] && [ "$package_path" != unset ] && [ -s "$package_path" ]; then
+    package_sha256="$(sha256sum "$package_path" 2>/dev/null | awk '{print $1}' || true)"
+    package_bytes="$(wc -c < "$package_path" 2>/dev/null | tr -d ' ' || true)"
+    [ -n "$package_sha256" ] || package_sha256=unavailable
+    [ -n "$package_bytes" ] || package_bytes=unavailable
+  fi
+
   mkdir -p "$THERMAL_INSTALL_DEBUG_DIR" 2>/dev/null || true
   {
     echo "debug_type=pixel_thermal_install_autosave"
     echo "result=$result"
     echo "reason=$reason"
     echo "time=$(date -Is 2>/dev/null || date 2>/dev/null || true)"
+    echo "install_elapsed_seconds=$install_elapsed_seconds"
     echo "module_id=$MODULE_ID"
     echo "module_version=$MODULE_VERSION"
     echo "module_version_code=$MODULE_VERSION_CODE"
     echo "modpath=$MODPATH"
+    echo
+    echo "== package =="
+    echo "package_path=$package_path"
+    echo "package_sha256=$package_sha256"
+    echo "package_bytes=$package_bytes"
+    echo
+    echo "== battery / power =="
+    echo "battery_level=${battery_level:-unknown}"
+    echo "battery_status=${battery_status:-unknown}"
+    echo "powered_usb=${powered_usb:-unknown}"
+    echo "powered_ac=${powered_ac:-unknown}"
+    echo "powered_wireless=${powered_wireless:-unknown}"
     echo
     echo "== device =="
     echo "model=$model"
@@ -82,6 +129,9 @@ thermal_save_install_debug() {
     echo "== guard dir =="
     ls -la "$MODPATH/guard" 2>/dev/null || true
     echo
+    echo "== validation dir =="
+    ls -la "/data/adb/$MODULE_ID/validation" 2>/dev/null || true
+    echo
     echo "== profile dir =="
     [ -n "${profile_dir:-}" ] && ls -la "$profile_dir" 2>/dev/null || true
     echo
@@ -100,9 +150,10 @@ thermal_save_install_debug() {
     echo "== recent thermal logcat =="
     logcat -d -t 300 2>/dev/null | grep -i -E "thermal|ThermalHAL|android.hardware.thermal|pixel-10-pro-xl-thermal-fix|Magisk|KernelSU|SukiSU|APatch" || true
   } > "$THERMAL_INSTALL_DEBUG_LOG" 2>&1 || true
-   ui_print "Install debug autosave:"
-   ui_print "Saved"
-   ui_print "In Download folder"
+
+  ui_print "Install debug autosave:"
+  ui_print "Saved"
+  ui_print "In Download folder"
 }
 
 thermal_collect_debug_on_fail() {
@@ -119,4 +170,3 @@ thermal_abort() {
   thermal_collect_debug_on_fail
   abort "$reason"
 }
-# END PIXEL_THERMAL_INSTALL_DEBUG_AUTOSAVE_V1411
