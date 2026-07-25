@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.2
-versionCode=1016211
+version=2.0.0-alpha.3-dev
+versionCode=1016212
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 2: Android 17 dynamic thermal validation with Polling Mod and ZRAM 100p fresh defaults, corrected Bootguard and pTune state handling, and real-stock-safe Outdoor delta verification including NAN sentinels. Publication remains pending final package and runtime verification.
+description=V2 Alpha 3 development: local dynamic admission for unlisted Pixel 10 Android 17 builds, no Action network wait, stock-derived structural validation, and deterministic lean release packaging with repository-only files excluded.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
