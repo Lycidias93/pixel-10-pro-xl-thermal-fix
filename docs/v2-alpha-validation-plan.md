@@ -2,25 +2,36 @@
 
 Status date: `2026-07-26`.
 
-Public prerelease: `2.0.0-alpha.2` / versionCode `1016211`.
+Public prerelease: `2.0.0-alpha.3-dev.2` / versionCode `1016213`.
 
 Previous runtime-proven rollback baseline: `2.0.0-alpha.3-dev` / versionCode `1016212`.
 
-Current runtime-proven development baseline: `2.0.0-alpha.3-dev.2` / versionCode `1016213`.
-
 Stable remains `1.5.1-universal.1`; stable `update.json` is unchanged.
 
-## Alpha 2 immutable release state
+## Public Alpha 3 dev.2 release state
 
-The published Alpha 2 package remains immutable:
+The published development prerelease is immutable:
 
-- file: `pixel-10-thermal-memory-control-2.0.0-alpha.2.zip`;
-- SHA-256: `3f66c76d65f0de29f0815c663b5dc34c37f0c1b5084e91d4df8e6d5bc939a4c8`;
-- size: `2017962` bytes;
-- entries: `1514`;
-- versionCode: `1016211`.
+- tag: `v2.0.0-alpha.3-dev.2`;
+- file: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.2.zip`;
+- SHA-256: `3590bf96d55fd577326b240301d660fffbdef48513bdbf73cc1305fdb1f6d13b`;
+- size: `303616` bytes;
+- entries: `48`;
+- versionCode: `1016213`;
+- tested source commit: `fe9adf225c7401cb73520705b60a945e88c44bac`;
+- release-notes commit: `ed39ad8833bf71cca09ac5b7032cbab1488169e4`.
 
-Do not replace this asset under the same tag. Any package-content change requires a new versionCode, artifact hash, installation, reboot, and runtime verification cycle.
+Public verification completed successfully:
+
+- release is public and marked prerelease;
+- release title, tag, asset name, and asset size match the bound coordinates;
+- release body matches the repository release notes after ignoring only trailing newline normalization;
+- tag resolves to the exact tested source commit;
+- a fresh public download reproduced the exact byte count and SHA-256;
+- `update-prerelease.json` now points to this release;
+- stable `update.json` remains unchanged.
+
+The previous Alpha 2 asset remains immutable under its historical tag and coordinates.
 
 ## Correct Dynamic V2 admission model
 
@@ -37,18 +48,18 @@ A build may enter the Thermal path when:
 Build evidence states:
 
 - `exact_verified`: build ID already has exact evidence;
-- `dynamic_unverified`: new build ID on a supported platform, admitted only after local stock-derived validation;
+- `dynamic_unverified`: new build ID on a supported platform, admitted after local stock-derived validation;
 - `unsupported_platform`: unknown codename or unsupported Android version; Thermal stays disabled while ZRAM may remain available.
 
 An unlisted Canary or monthly build must not require a GitHub refresh before Action opens. It is validated locally against its own stock files. `CANARY_DIAGNOSTIC_MODE` is not enabled merely because the build ID is new, so the normal Bootguard threshold remains active.
 
-## Alpha 3 development rollback baseline
+## Runtime-proven rollback baseline
 
-The lean `2.0.0-alpha.3-dev / 1016212` package passed installation and post-reboot verification on Mustang and remains the known-good rollback anchor for the next refactor.
+The lean `2.0.0-alpha.3-dev / 1016212` package passed installation and post-reboot verification on Mustang and remains the known-good rollback anchor.
 
 Its proof included exact active vendor hashes, Stock delta `0`, Polling Mod, ZRAM 100p with `lz77eh`, pTune installed-disabled, healthy Bootguard, no Action network-refresh path, and the final installed-runtime marker with zero failures and zero warnings.
 
-## Alpha 3 dev.2 runtime PASS
+## Public Alpha 3 dev.2 runtime PASS
 
 The exact `2.0.0-alpha.3-dev.2 / 1016213` package passed installation and post-reboot verification on:
 
@@ -62,20 +73,13 @@ The exact `2.0.0-alpha.3-dev.2 / 1016213` package passed installation and post-r
 - ZRAM: 100p with active `lz77eh` swap;
 - pTune: installed-disabled.
 
-Exact package binding:
-
-- file: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.2.zip`;
-- SHA-256: `3590bf96d55fd577326b240301d660fffbdef48513bdbf73cc1305fdb1f6d13b`;
-- size: `303616` bytes;
-- tested V2 merge commit: `fe9adf225c7401cb73520705b60a945e88c44bac`.
-
 Installer proof:
 
-- selected Magisk package path was hash- and size-bound to the exact test ZIP;
+- selected Magisk package path was hash- and size-bound to the exact release ZIP;
 - battery was `100` percent and installer elapsed time was `35` seconds;
 - all five choices were collected by one install-menu process;
 - Thermal and ZRAM materializers were noninteractive;
-- 22 controlled PollingDelay values changed from `300000` to `5000`;
+- 22 controlled `PollingDelay` values changed from `300000` to `5000`;
 - canonical validation state was created under `/data/adb/pixel-10-pro-xl-thermal-fix/validation/`;
 - historical report paths were symlinks only.
 
@@ -103,9 +107,7 @@ Full evidence: [2.0.0-alpha.3-dev.2 Mustang runtime evidence](runtime-evidence/2
 
 These inputs must not be cross-attributed.
 
-## Alpha 3 next refactor contract
-
-The `2.0.0-alpha.3-dev.2 / 1016213` line changes package and installer architecture and has now passed its fresh install/reboot cycle on Mustang.
+## Alpha 3 dev.2 architecture contract
 
 ### Single install menu
 
@@ -150,13 +152,6 @@ Repository release notes live under `release-notes/`. CI rejects new root-level 
 
 ### Performance budgets
 
-CI records and preserves:
-
-- release ZIP bytes and entry count;
-- deterministic build duration;
-- `action.sh` and `customize.sh` bytes;
-- install-menu process budget.
-
 Current hard budgets are:
 
 - at most `60` ZIP entries;
@@ -164,7 +159,7 @@ Current hard budgets are:
 - at most `12000` bytes for `action.sh`;
 - exactly one install-menu process.
 
-The tested dev.2 artifact contained `48` entries and `303616` bytes. Its CI build completed in approximately `338` milliseconds on the recorded runner.
+The published dev.2 artifact contains `48` entries and `303616` bytes. Its recorded CI build completed in approximately `338` milliseconds.
 
 ## Runtime validation boundaries
 
@@ -177,24 +172,16 @@ Independent stages remain intentional:
 
 These are separate failure boundaries, not redundant test copies. Consolidation removes duplicate menus, duplicate persistent reports, build-admission duplication, and network-refresh logic without collapsing independent safety checks.
 
-## Remaining public Alpha 3 gate
+## Remaining evidence work
 
-Already complete:
+The public prerelease honestly distinguishes exact Mustang proof from the following open evidence items:
 
-- PR CI passed shell syntax, dynamic unknown-build admission, menu deduplication, validation-state SoT, Outdoor runtime matrix, Bootguard/pTune policies, release-note layout, and full lean package verification;
-- exact generated ZIP was hash-bound and installed;
-- banned repository-only paths were absent;
-- package metadata used the new versionCode;
-- exact-evidence Mustang installation and reboot passed;
-- canonical validation files and all compatibility symlinks passed;
-- Bootguard, Thermal overlays, exact Outdoor delta, ZRAM, pTune state, active vendor hashes, and final installed-runtime marker passed.
+- at least one external unlisted supported-platform build should complete `dynamic_unverified` install or Action rematerialization and postboot verification;
+- Blazer community evidence should be normalized and hardened;
+- Frankel and rango require exact runtime evidence before broad stable claims;
+- active pTune coexistence remains opt-in and is not covered by the base PASS.
 
-Still required before any public Alpha 3 prerelease:
-
-- install or Action rematerialization must succeed on at least one unlisted supported-platform build using `dynamic_unverified` local stock validation;
-- that run must complete a reboot/runtime check without unexplained disable, skip-mount, validation-state, or active-vendor mismatch;
-- public release notes must accurately distinguish exact Mustang proof from unlisted-build dynamic proof;
-- release/tag/asset/channel writes require a separate fresh user-confirmed release operation.
+These are evidence limitations for broader claims and stable promotion, not hidden failures of the published exact Mustang build.
 
 ## Stable gate
 

@@ -9,13 +9,12 @@
 | Lane | Version | Status |
 |---|---|---|
 | Stable | `1.5.1-universal.1` / `1016108` | Public stable channel |
-| Public prerelease | `2.0.0-alpha.2` / `1016211` | Immutable public V2 alpha |
-| Runtime-proven development baseline | `2.0.0-alpha.3-dev` / `1016212` | Mustang postboot PASS |
-| Current V2 refactor | `2.0.0-alpha.3-dev.2` / `1016213` | Not public; new install/reboot verification required |
+| Public prerelease | `2.0.0-alpha.3-dev.2` / `1016213` | Public lean development prerelease; exact Mustang install/postboot PASS |
+| Previous rollback baseline | `2.0.0-alpha.3-dev` / `1016212` | Runtime-proven Mustang rollback anchor |
 
-Stable `update.json` and public prerelease `update-prerelease.json` are changed only through separate release operations. Development commits do not silently promote either channel.
+The public prerelease is bound to tag `v2.0.0-alpha.3-dev.2`, asset `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.2.zip`, SHA-256 `3590bf96d55fd577326b240301d660fffbdef48513bdbf73cc1305fdb1f6d13b`, and size `303616` bytes. Stable `update.json` remains unchanged. Channel changes use separate release operations and are never implied by development commits.
 
-Living status and gates: [V2 Alpha validation plan](docs/v2-alpha-validation-plan.md).
+Living status and evidence boundaries: [V2 Alpha validation plan](docs/v2-alpha-validation-plan.md).
 
 ## Dynamic V2 admission model
 
@@ -70,7 +69,7 @@ The module does **not** disable Android thermal safety, replace the stock Therma
 
 ### Single-pass install choices
 
-The current V2 refactor asks install choices once in `install-options-menu.sh`:
+`install-options-menu.sh` asks once for:
 
 - Polling Mode
 - Thermal Profile
@@ -78,7 +77,7 @@ The current V2 refactor asks install choices once in `install-options-menu.sh`:
 - pTune override
 - Debug logging
 
-Thermal and ZRAM install helpers consume the confirmed configuration without spawning duplicate install submenus. The separate Thermal and ZRAM menus remain available through Magisk Action for later changes.
+Thermal and ZRAM install helpers consume the confirmed configuration without spawning duplicate install submenus. Separate Thermal and ZRAM menus remain available through Magisk Action for later changes.
 
 ### Install and verify
 
@@ -158,7 +157,7 @@ ZRAM 100p is optional and requires explicit user selection. The verified runtime
 - boot-early property application;
 - no persistent backup of transient in-memory properties.
 
-The exact `2.0.0-alpha.3-dev / 1016212` baseline passed with ZRAM 100p active on Mustang.
+The exact public prerelease `2.0.0-alpha.3-dev.2 / 1016213` passed with ZRAM 100p active on Mustang.
 
 ## pTune coexistence
 
@@ -207,9 +206,9 @@ Review debug output before posting it publicly. Remove tokens, personal paths, p
 
 ## Runtime evidence status
 
-### Exact Mustang baseline
+### Exact Mustang public-prerelease baseline
 
-`2.0.0-alpha.3-dev / 1016212` passed post-reboot verification on:
+`2.0.0-alpha.3-dev.2 / 1016213` passed installation and post-reboot verification on:
 
 - Pixel 10 Pro XL (`mustang`)
 - Android `17`
@@ -221,13 +220,16 @@ Review debug output before posting it publicly. Remove tokens, personal paths, p
 - pTune installed-disabled
 - Bootguard pending absent, fail count `0`, threshold `2`, last-good present
 - all three active `/vendor/etc` hashes equal the generated overlays
+- canonical validation hashes and compatibility symlinks exact
 - `checks_failed=0`, `warnings=0`
+
+The published release body and tag target were verified, and a fresh public asset download reproduced exactly `303616` bytes and SHA-256 `3590bf96d55fd577326b240301d660fffbdef48513bdbf73cc1305fdb1f6d13b`.
 
 ### Remaining evidence work
 
 - Blazer: community Android 17 runtime PASS; exact normalized evidence should be hardened.
 - Frankel and rango: exact runtime evidence still required before broad stable claims.
-- Unlisted supported-platform builds: local dynamic validation is supported; at least one external unlisted-build install/postboot proof remains an Alpha 3 gate.
+- Unlisted supported-platform builds: local dynamic validation is supported; an external `dynamic_unverified` install/postboot proof remains an evidence gap, disclosed in the prerelease notes.
 - Active pTune coexistence is not covered by the base PASS.
 
 A PASS on one codename does not automatically verify every other Pixel 10 model.
