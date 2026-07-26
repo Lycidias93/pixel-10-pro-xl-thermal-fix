@@ -13,9 +13,15 @@ fi
 [ -n "$MODULE_VERSION" ] || MODULE_VERSION="unknown"
 [ -n "$MODULE_VERSION_CODE" ] || MODULE_VERSION_CODE="0"
 
-ui_print "----------------------------------------"
+if [ -s "${MODPATH:-.}/tools/menu/menu-cycle.sh" ]; then
+  . "${MODPATH:-.}/tools/menu/menu-cycle.sh"
+else
+  mc_rule() { ui_print "----------------------------------------"; }
+fi
+
+mc_rule
 ui_print "  Pixel 10 Thermal & Memory Control"
-ui_print "----------------------------------------"
+mc_rule
 case "$MODULE_VERSION" in
   *-test.*|*alpha*|*beta*|*rc*|*candidate*) ui_print "Prerelease: $MODULE_VERSION" ;;
   *) ui_print "Release: $MODULE_VERSION" ;;
