@@ -5,10 +5,12 @@ repo_root="$(git rev-parse --show-toplevel)"
 action="$repo_root/tools/action-dashboard.sh"
 policy="$repo_root/tools/core/outdoor-runtime-policy.sh"
 menu="$repo_root/tools/menu/install-options-menu.sh"
+auto_switch="$repo_root/tools/core/auto-profile-switch.sh"
+ptune_override="$repo_root/tools/ptune/enable-ptune-override.sh"
 
-bash -n "$action"
-bash -n "$policy"
-bash -n "$menu"
+for file in "$action" "$policy" "$menu" "$auto_switch" "$ptune_override"; do
+  bash -n "$file"
+done
 
 grep -Fq 'patch-thermal-validated.sh' "$action"
 if grep -Fq 'sh "$MODDIR/tools/core/patch-thermal.sh"' "$action"; then
@@ -25,6 +27,22 @@ grep -Fq 'Existing settings kept' "$action"
 grep -Fq 'action_validated_transaction_v2' "$action"
 grep -Fq 'blocked on $POLICY_BUILD' "$menu"
 
+grep -Fq 'patch-thermal-validated.sh' "$auto_switch"
+if grep -Fq 'sh "$MODDIR/tools/core/patch-thermal.sh"' "$auto_switch"; then
+  printf '%s\n' 'FAIL auto_switch_invokes_raw_patcher'
+  exit 1
+fi
+
+grep -Fq 'patch-thermal-validated.sh' "$ptune_override"
+if grep -Fq 'sh "$target/tools/core/patch-thermal.sh"' "$ptune_override"; then
+  printf '%s\n' 'FAIL ptune_override_invokes_raw_patcher'
+  exit 1
+fi
+if grep -Fq '> "$CONFIG_FILE"' "$ptune_override"; then
+  printf '%s\n' 'FAIL ptune_override_clobbers_config'
+  exit 1
+fi
+
 # Policy truth table.
 # shellcheck disable=SC1090
 . "$policy"
@@ -39,5 +57,7 @@ fi
 
 printf '%s\n' 'PASS action_uses_validated_transaction'
 printf '%s\n' 'PASS action_failure_does_not_commit_requested_profile'
+printf '%s\n' 'PASS auto_switch_uses_validated_materializer'
+printf '%s\n' 'PASS ptune_override_preserves_config_and_validates'
 printf '%s\n' 'PASS runtime_evidence_policy_truth_table'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_ACTION_TRANSACTION_TEST_PASS'
