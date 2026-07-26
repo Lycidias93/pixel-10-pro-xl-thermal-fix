@@ -153,12 +153,12 @@ for file in thermal_info_config.json thermal_info_config_charge.json thermal_inf
 done
 
 [ "$validated_files" -eq 3 ] || exit 64
-[ "$target_zone_total" -gt 0 ] || exit 65
-[ "$threshold_array_total" -eq "$target_zone_total" ] || exit 66
-[ "$threshold_value_total" -gt 0 ] || exit 67
+[ "$target_zone_total" -eq 2 ] || exit 65
+[ "$threshold_array_total" -eq 2 ] || exit 66
+[ "$threshold_value_total" -eq 14 ] || exit 67
 
 {
-  printf '%s\n' 'schema=pixel-thermal-outdoor-delta-validation-v1'
+  printf '%s\n' 'schema=pixel-thermal-outdoor-delta-validation-v2'
   printf '%s\n' "device=$DEVICE"
   printf '%s\n' "build_id=$BUILD_ID"
   printf '%s\n' "polling_mode=$POLLING_MODE"
@@ -168,6 +168,9 @@ done
   printf '%s\n' "target_zone_count=$target_zone_total"
   printf '%s\n' "threshold_array_count=$threshold_array_total"
   printf '%s\n' "threshold_value_count=$threshold_value_total"
+  printf '%s\n' 'target_contract=exact_virtual_skin_pair_v2'
+  printf '%s\n' 'emergency_index_policy=index6_stock_unchanged_max55'
+  printf '%s\n' 'numeric_format_policy=preserve_decimal_scale'
   printf '%s\n' 'validation=passed'
 } > "$DELTA_TMP"
 
@@ -205,6 +208,9 @@ printf '%s\n' "PATCH_THERMAL_DELTA_THRESHOLD_ARRAYS=$threshold_array_total"
 printf '%s\n' "PATCH_THERMAL_DELTA_THRESHOLD_VALUES=$threshold_value_total"
 printf '%s\n' "PATCH_THERMAL_VALIDATION_DIR=$THERMAL_VALIDATION_DIR"
 printf '%s\n' "PATCH_THERMAL_DELTA_REPORT=$THERMAL_VALIDATION_DELTA"
+printf '%s\n' 'PATCH_THERMAL_TARGET_CONTRACT=exact_virtual_skin_pair_v2'
+printf '%s\n' 'PATCH_THERMAL_EMERGENCY_INDEX=index6_stock_unchanged_max55'
+printf '%s\n' 'PATCH_THERMAL_NUMERIC_FORMAT=preserve_decimal_scale'
 printf '%s\n' 'PATCH_THERMAL_LEGACY_PATHS=symlinks_only'
 trap - EXIT HUP INT TERM
 rm -f "$RUN_LOG" "$DELTA_TMP"
