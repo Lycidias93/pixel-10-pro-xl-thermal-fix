@@ -1,12 +1,12 @@
 # V2 Alpha validation plan
 
-Status date: `2026-07-25`.
+Status date: `2026-07-26`.
 
 Public prerelease: `2.0.0-alpha.2` / versionCode `1016211`.
 
-Runtime-proven development baseline: `2.0.0-alpha.3-dev` / versionCode `1016212`.
+Previous runtime-proven rollback baseline: `2.0.0-alpha.3-dev` / versionCode `1016212`.
 
-Current refactor line: `2.0.0-alpha.3-dev.2` / versionCode `1016213`.
+Current runtime-proven development baseline: `2.0.0-alpha.3-dev.2` / versionCode `1016213`.
 
 Stable remains `1.5.1-universal.1`; stable `update.json` is unchanged.
 
@@ -42,9 +42,15 @@ Build evidence states:
 
 An unlisted Canary or monthly build must not require a GitHub refresh before Action opens. It is validated locally against its own stock files. `CANARY_DIAGNOSTIC_MODE` is not enabled merely because the build ID is new, so the normal Bootguard threshold remains active.
 
-## Alpha 3 development baseline runtime PASS
+## Alpha 3 development rollback baseline
 
-The lean `2.0.0-alpha.3-dev / 1016212` package passed installation and post-reboot verification on:
+The lean `2.0.0-alpha.3-dev / 1016212` package passed installation and post-reboot verification on Mustang and remains the known-good rollback anchor for the next refactor.
+
+Its proof included exact active vendor hashes, Stock delta `0`, Polling Mod, ZRAM 100p with `lz77eh`, pTune installed-disabled, healthy Bootguard, no Action network-refresh path, and the final installed-runtime marker with zero failures and zero warnings.
+
+## Alpha 3 dev.2 runtime PASS
+
+The exact `2.0.0-alpha.3-dev.2 / 1016213` package passed installation and post-reboot verification on:
 
 - device: Pixel 10 Pro XL (`mustang`);
 - Android: `17`;
@@ -56,19 +62,39 @@ The lean `2.0.0-alpha.3-dev / 1016212` package passed installation and post-rebo
 - ZRAM: 100p with active `lz77eh` swap;
 - pTune: installed-disabled.
 
-Runtime proof included:
+Exact package binding:
+
+- file: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.2.zip`;
+- SHA-256: `3590bf96d55fd577326b240301d660fffbdef48513bdbf73cc1305fdb1f6d13b`;
+- size: `303616` bytes;
+- tested V2 merge commit: `fe9adf225c7401cb73520705b60a945e88c44bac`.
+
+Installer proof:
+
+- selected Magisk package path was hash- and size-bound to the exact test ZIP;
+- battery was `100` percent and installer elapsed time was `35` seconds;
+- all five choices were collected by one install-menu process;
+- Thermal and ZRAM materializers were noninteractive;
+- 22 controlled PollingDelay values changed from `300000` to `5000`;
+- canonical validation state was created under `/data/adb/pixel-10-pro-xl-thermal-fix/validation/`;
+- historical report paths were symlinks only.
+
+Post-reboot proof:
 
 - `modules_update` consumed and active module metadata exact;
-- three active `/vendor/etc` hashes equal the module overlays;
+- all canonical validation files and hashes matched `state.env` and `install-state.txt`;
+- all five historical validation paths resolved to canonical files as symlinks;
+- three active `/vendor/etc` hashes equalled the module overlays;
 - source, patch, validation, exact-delta, and active-polling checks passed;
+- Outdoor validation reported 3 files, 2 target zones, 2 arrays, and 14 values;
 - Bootguard pending absent, fail count `0`, threshold `2`, last-good present;
 - ZRAM runtime near 100 percent RAM and no service failure marker;
-- Action contains no network-refresh path;
+- Action contained no network-refresh path and exposed performance instrumentation;
 - Thermal service responsive and no recent fatal Thermal pattern;
 - final marker: `RESULT: CG_INSTALLED_RUNTIME_VERIFY_DONE outcome=success workflow_exit_code=0`;
 - verifier summary: `checks_failed=0`, `warnings=0`.
 
-This exact runtime-proven package is the rollback anchor for the next refactor.
+Full evidence: [2.0.0-alpha.3-dev.2 Mustang runtime evidence](runtime-evidence/2.0.0-alpha.3-dev.2-mustang.md).
 
 ## Attribution boundary
 
@@ -79,7 +105,7 @@ These inputs must not be cross-attributed.
 
 ## Alpha 3 next refactor contract
 
-The `2.0.0-alpha.3-dev.2 / 1016213` line changes package and installer architecture and therefore requires a fresh install/reboot cycle.
+The `2.0.0-alpha.3-dev.2 / 1016213` line changes package and installer architecture and has now passed its fresh install/reboot cycle on Mustang.
 
 ### Single install menu
 
@@ -138,6 +164,8 @@ Current hard budgets are:
 - at most `12000` bytes for `action.sh`;
 - exactly one install-menu process.
 
+The tested dev.2 artifact contained `48` entries and `303616` bytes. Its CI build completed in approximately `338` milliseconds on the recorded runner.
+
 ## Runtime validation boundaries
 
 Independent stages remain intentional:
@@ -149,20 +177,24 @@ Independent stages remain intentional:
 
 These are separate failure boundaries, not redundant test copies. Consolidation removes duplicate menus, duplicate persistent reports, build-admission duplication, and network-refresh logic without collapsing independent safety checks.
 
-## Alpha 3 next gate
+## Remaining public Alpha 3 gate
 
-Before any public Alpha 3 prerelease:
+Already complete:
 
-- PR CI passes shell syntax, dynamic unknown-build admission, menu deduplication, validation-state SoT, release-note layout, and full lean package verification;
-- the exact generated ZIP is reproducible;
-- banned repository-only paths are absent;
-- package metadata reports a new versionCode;
-- install succeeds on an exact-evidence build;
-- install or Action rematerialization succeeds on at least one unlisted supported-platform build using local stock validation;
-- reboot completes without unexplained disable or skip-mount state;
-- canonical validation files exist and all legacy paths resolve to them as symlinks;
-- Bootguard, Thermal overlays, exact Outdoor delta, ZRAM, pTune state, and active vendor hashes pass;
-- final marker is `RESULT: CG_INSTALLED_RUNTIME_VERIFY_DONE outcome=success workflow_exit_code=0`.
+- PR CI passed shell syntax, dynamic unknown-build admission, menu deduplication, validation-state SoT, Outdoor runtime matrix, Bootguard/pTune policies, release-note layout, and full lean package verification;
+- exact generated ZIP was hash-bound and installed;
+- banned repository-only paths were absent;
+- package metadata used the new versionCode;
+- exact-evidence Mustang installation and reboot passed;
+- canonical validation files and all compatibility symlinks passed;
+- Bootguard, Thermal overlays, exact Outdoor delta, ZRAM, pTune state, active vendor hashes, and final installed-runtime marker passed.
+
+Still required before any public Alpha 3 prerelease:
+
+- install or Action rematerialization must succeed on at least one unlisted supported-platform build using `dynamic_unverified` local stock validation;
+- that run must complete a reboot/runtime check without unexplained disable, skip-mount, validation-state, or active-vendor mismatch;
+- public release notes must accurately distinguish exact Mustang proof from unlisted-build dynamic proof;
+- release/tag/asset/channel writes require a separate fresh user-confirmed release operation.
 
 ## Stable gate
 
