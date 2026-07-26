@@ -7,8 +7,9 @@ wrapper="$repo_root/tools/core/patch-thermal-validated.sh"
 delta_helper="$repo_root/tools/core/verify-outdoor-delta.sh"
 supported_helper="$repo_root/tools/core/supported-build.sh"
 state_helper="$repo_root/tools/core/validation-state.sh"
+policy_helper="$repo_root/tools/core/outdoor-runtime-policy.sh"
 
-for file in "$patcher" "$wrapper" "$delta_helper" "$supported_helper" "$state_helper"; do
+for file in "$patcher" "$wrapper" "$delta_helper" "$supported_helper" "$state_helper" "$policy_helper"; do
   [[ -s "$file" ]]
   bash -n "$file"
 done
@@ -80,10 +81,12 @@ run_case() {
   cp -fp "$delta_helper" "$moddir/tools/core/verify-outdoor-delta.sh"
   cp -fp "$supported_helper" "$moddir/tools/core/supported-build.sh"
   cp -fp "$state_helper" "$moddir/tools/core/validation-state.sh"
+  cp -fp "$policy_helper" "$moddir/tools/core/outdoor-runtime-policy.sh"
 
   THERMAL_SOURCE_DIR="$source_dir" \
   THERMAL_DATA_ROOT="$datadir" \
   THERMAL_DEVICE=mustang \
+  THERMAL_ANDROID=17 \
   THERMAL_BUILD_ID=CP2A.260705.006 \
     sh "$moddir/tools/core/patch-thermal-validated.sh" \
       "$polling" "$profile" "$moddir" \
@@ -137,10 +140,12 @@ cp -fp "$wrapper" "$bad_dir/module/tools/core/patch-thermal-validated.sh"
 cp -fp "$delta_helper" "$bad_dir/module/tools/core/verify-outdoor-delta.sh"
 cp -fp "$supported_helper" "$bad_dir/module/tools/core/supported-build.sh"
 cp -fp "$state_helper" "$bad_dir/module/tools/core/validation-state.sh"
+cp -fp "$policy_helper" "$bad_dir/module/tools/core/outdoor-runtime-policy.sh"
 
 if THERMAL_SOURCE_DIR="$bad_source" \
    THERMAL_DATA_ROOT="$bad_dir/data" \
    THERMAL_DEVICE=mustang \
+   THERMAL_ANDROID=17 \
    THERMAL_BUILD_ID=CP2A.260705.006 \
    sh "$bad_dir/module/tools/core/patch-thermal-validated.sh" \
      mod outdoor-safe "$bad_dir/module" \
