@@ -7,6 +7,7 @@ STATE="$MODDIR/install-state.txt"
 CFG="/data/adb/$ID/config.env"
 SUPPORTED_JSON="$MODDIR/supported_versions.json"
 SUPPORTED_HELPER="$MODDIR/tools/core/supported-build.sh"
+VALIDATED_PATCHER="$MODDIR/tools/core/patch-thermal-validated.sh"
 mkdir -p "$G"
 
 log(){ echo "$(date -Is 2>/dev/null || date) $*" >> "$L"; }
@@ -83,12 +84,12 @@ if [ "$NEED" -eq 0 ]; then
 fi
 
 log "AUTO_SWITCH_TRIGGER reason=ota_or_overlay_missing profile=$PROFILE build=$BUILD_ID"
-if [ ! -s "$MODDIR/tools/core/patch-thermal.sh" ] ||
-   ! sh "$MODDIR/tools/core/patch-thermal.sh" "$POLLING" "$OUTDOOR" "$MODDIR"; then
+if [ ! -s "$VALIDATED_PATCHER" ] ||
+   ! sh "$VALIDATED_PATCHER" "$POLLING" "$OUTDOOR" "$MODDIR"; then
   remove_thermal_overlay
   cfg_set THERMAL_DISABLED 1
-  echo patching_failed > "$G/auto_profile_switch_state"
-  log "AUTO_SWITCH_BLOCK reason=patching_failed action=thermal_only_disabled"
+  echo validated_patching_failed > "$G/auto_profile_switch_state"
+  log "AUTO_SWITCH_BLOCK reason=validated_patching_failed action=thermal_only_disabled"
   exit 0
 fi
 
@@ -111,13 +112,13 @@ rm -f "$G/disabled_reason" "$G/profile_stale_after_ota" "$G/reinstall_required" 
   printf '%s\n' "profile_source_build=$BUILD_ID"
   printf '%s\n' "profile_source_incremental=$INCREMENTAL"
   printf '%s\n' "auto_profile_switch=yes"
-  printf '%s\n' "auto_profile_switch_state=materialized"
+  printf '%s\n' "auto_profile_switch_state=materialized_validated"
   printf '%s\n' "auto_profile_switch_at=$(date -Is 2>/dev/null || date)"
   printf '%s\n' "profile_materialized=yes"
   printf '%s\n' "expected_thermal_files=dynamic_validated"
 } > "$STATE"
 
-echo materialized > "$G/auto_profile_switch_state"
+echo materialized_validated > "$G/auto_profile_switch_state"
 echo "$PROFILE" > "$G/selected_profile"
-log "AUTO_SWITCH_DONE profile=$PROFILE build=$BUILD_ID incremental=$INCREMENTAL"
+log "AUTO_SWITCH_DONE profile=$PROFILE build=$BUILD_ID incremental=$INCREMENTAL validation=independent"
 exit 0
