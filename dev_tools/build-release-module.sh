@@ -57,6 +57,7 @@ required=(
   META-INF/com/google/android/update-binary
   tools/core/supported-build.sh
   tools/core/validation-state.sh
+  tools/core/outdoor-runtime-policy.sh
   tools/core/patch-thermal-validated.sh
   tools/bootguard/compat-check.sh
 )
