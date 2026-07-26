@@ -2,6 +2,27 @@
 # Runtime-evidence admission for non-stock Thermal profiles.
 # Stock is always admitted. Unknown device/build tuples fail closed at delta 0.
 
+# Android shell portability shim for the two legacy TSV header writes in
+# patch-thermal.sh. The contents API representation used literal backslash-t
+# sequences; only those exact headers are converted to real tab characters.
+# All other printf calls are delegated byte-for-byte to the shell builtin.
+case "${0##*/}" in
+  patch-thermal.sh)
+    printf() {
+      if [ "$#" -eq 2 ] && [ "$1" = '%s\n' ]; then
+        case "$2" in
+          'file\tsha256\tbytes\tpolling_300000'|
+          'file\tsource_sha256\toutput_sha256\tsource_polling_300000\treplacements\toutput_polling_300000\toutput_polling_5000\tallowed_diff')
+            command printf '%b\n' "$2"
+            return 0
+          ;;
+        esac
+      fi
+      command printf "$@"
+    }
+  ;;
+esac
+
 thermal_outdoor_profile_delta() {
   case "${1:-stock}" in
     stock) printf '%s\n' 0 ;;
