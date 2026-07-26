@@ -25,12 +25,18 @@ mc_detect_width() {
 
 MC_UI_WIDTH="$(mc_detect_width)"
 
+mc_msg() {
+  _text="$*"
+  if [ "$_text" = "----------------------------------------" ]; then
+    _text="$(printf '%*s' "$MC_UI_WIDTH" '' | tr ' ' '-')"
+  fi
+  if command -v ui_print >/dev/null 2>&1; then ui_print "$_text"; else echo "$_text"; fi
+}
+
 mc_rule() {
   _rule="$(printf '%*s' "$MC_UI_WIDTH" '' | tr ' ' '-')"
   mc_msg "$_rule"
 }
-
-mc_msg() { if command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi; }
 
 mc_read_key() {
   if ! command -v getevent >/dev/null 2>&1; then echo timeout; return 0; fi
