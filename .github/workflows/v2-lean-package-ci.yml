@@ -35,13 +35,17 @@ jobs:
           bash -n tests/test-validation-state-runtime.sh
           bash -n tests/test-outdoor-delta-validation-runtime.sh
           bash -n tests/test-canary-thermal-patch-hotfix.sh
+          bash -n tests/test-action-thermal-transaction.sh
+          bash -n tests/test-outdoor-runtime-evidence.sh
           bash -n tests/test-release-notes-layout.sh
           bash -n tools/bootguard/bootguard-threshold-policy-guard.sh
           bash -n tools/ptune/ptune-install-state-observability-guard.sh
           bash -n action.sh
           bash -n customize.sh
+          bash -n tools/action-dashboard.sh
           bash -n tools/core/supported-build.sh
           bash -n tools/core/validation-state.sh
+          bash -n tools/core/outdoor-runtime-policy.sh
           bash -n tools/core/patch-thermal-validated.sh
           bash -n tools/core/install-thermal-overlay.sh
           bash -n tools/menu/install-options-menu.sh
@@ -67,12 +71,29 @@ jobs:
           bash tests/test-validation-state-sot.sh
           bash tests/test-validation-state-runtime.sh
 
-      - name: Canary-safe Outdoor delta runtime matrix
+      - name: Outdoor delta runtime matrix
         shell: bash
         run: |
           set -euo pipefail
           bash tests/test-outdoor-delta-validation-runtime.sh
+
+      - name: Canary portable patch and Safe-only policy
+        shell: bash
+        run: |
+          set -euo pipefail
           bash tests/test-canary-thermal-patch-hotfix.sh
+
+      - name: Action and background materialization transaction
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-action-thermal-transaction.sh
+
+      - name: Outdoor runtime evidence policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-outdoor-runtime-evidence.sh
 
       - name: Bootguard and pTune policy contracts
         shell: bash
@@ -111,8 +132,8 @@ jobs:
           customize_bytes="$(wc -c < customize.sh | tr -d ' ')"
           entries="$(unzip -Z1 "$zip_path" | wc -l | tr -d ' ')"
           bytes="$(wc -c < "$zip_path" | tr -d ' ')"
-          test "$entries" -le 60
-          test "$bytes" -le 450000
+          test "$entries" -le 62
+          test "$bytes" -le 460000
           test "$action_bytes" -le 12000
           {
             printf 'build_ms=%s\n' "$build_ms"

@@ -6,12 +6,22 @@ CONFIG_FILE="$CONFIG_DIR/config.env"
 
 MENU_CYCLE_AVAILABLE=0
 [ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" && MENU_CYCLE_AVAILABLE=1
+POLICY_HELPER="$MODDIR/tools/core/outdoor-runtime-policy.sh"
+POLICY_AVAILABLE=0
+[ -s "$POLICY_HELPER" ] && . "$POLICY_HELPER" && POLICY_AVAILABLE=1
+
+POLICY_DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
+POLICY_ANDROID="${THERMAL_ANDROID:-$(getprop ro.build.version.release 2>/dev/null || true)}"
+POLICY_BUILD="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
+[ -n "$POLICY_DEVICE" ] || POLICY_DEVICE=unknown
+[ -n "$POLICY_ANDROID" ] || POLICY_ANDROID=unknown
+[ -n "$POLICY_BUILD" ] || POLICY_BUILD=unknown
 
 msg() {
   if command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi
 }
 
-if [ "$MENU_CYCLE_AVAILABLE" != "1" ]; then
+if [ "$MENU_CYCLE_AVAILABLE" != "1" ] || [ "$POLICY_AVAILABLE" != "1" ]; then
   msg "! Action menu unavailable"
   if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
     sh "$MODDIR/tools/debug/status-lib.sh" print || true
@@ -55,7 +65,22 @@ current_base_profile() {
 }
 
 variant_exists() {
-  case "$2" in stock|outdoor-safe|outdoor-plus|outdoor-extended) return 0 ;; *) return 1 ;; esac
+  case "$2" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) return 1 ;; esac
+  thermal_outdoor_profile_admitted "$2" "$POLICY_DEVICE" "$POLICY_ANDROID" "$POLICY_BUILD"
+}
+
+policy_max_delta() {
+  thermal_outdoor_max_delta "$POLICY_DEVICE" "$POLICY_ANDROID" "$POLICY_BUILD" 2>/dev/null || printf '%s\n' 0
+}
+
+policy_label() {
+  _profile="$1"
+  _label="$2"
+  if variant_exists dynamic "$_profile"; then
+    printf '%s\n' "$_label"
+  else
+    printf '%s\n' "$_label blocked"
+  fi
 }
 
 selected_variant_profile() {
@@ -118,28 +143,37 @@ ui_menu5() {
 }
 
 rematerialize_thermal_overlay() {
-  THERMAL_OUTDOOR_PROFILE="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
-  [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE="stock"
+  _polling="$1"
+  _profile="$2"
 
-  THERMAL_POLLING_MODE="$(cfg_get THERMAL_POLLING_MODE)"
-  [ -n "$THERMAL_POLLING_MODE" ] || THERMAL_POLLING_MODE="mod"
+  if ! variant_exists dynamic "$_profile"; then
+    msg "! Thermal $_profile blocked on $POLICY_BUILD"
+    msg "! Maximum admitted delta: $(policy_max_delta)"
+    return 1
+  fi
 
-  if [ -s "$MODDIR/tools/core/patch-thermal.sh" ]; then
-    chmod 0755 "$MODDIR/tools/core/patch-thermal.sh" 2>/dev/null || true
-    sh "$MODDIR/tools/core/patch-thermal.sh" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$MODDIR" || return 1
-  else
-    msg "! Dynamic patcher core script missing"; return 1
+  _validator="$MODDIR/tools/core/patch-thermal-validated.sh"
+  if [ ! -s "$_validator" ]; then
+    msg "! Validated Thermal materializer missing"
+    return 1
+  fi
+  chmod 0755 "$_validator" 2>/dev/null || true
+  if ! sh "$_validator" "$_polling" "$_profile" "$MODDIR"; then
+    msg "! Thermal validation failed"
+    msg "! Existing settings kept"
+    return 1
   fi
 
   printf '%s\n' "dynamic" > "$MODDIR/guard/selected_profile" 2>/dev/null || true
   printf '%s\n' "yes" > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
-  msg "- Profile saved"; msg "- Dynamic patching complete"; msg "- Reboot recommended"; msg "- Vendor mount refresh"; return 0
+  msg "- Validated profile materialized"
+  msg "- Reboot required"
+  return 0
 }
 
 set_polling() {
   if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
     msg "! Thermal features are disabled."
-    msg "! Connect to internet and run Action to enable."
     sleep 2
     return 0
   fi
@@ -147,11 +181,18 @@ set_polling() {
   ui_menu3 "Polling Mode" "Module values" "Stock values" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in
-    0) cfg_set THERMAL_POLLING_MODE mod; cfg_set LAST_THERMAL_POLLING_MODE mod; msg "- Polling: mod" ;;
-    1) cfg_set THERMAL_POLLING_MODE stock; cfg_set LAST_THERMAL_POLLING_MODE stock; msg "- Polling: stock" ;;
+    0) requested_polling=mod ;;
+    1) requested_polling=stock ;;
     *) msg "Back."; return 0 ;;
   esac
-  rematerialize_thermal_overlay || true
+  current_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+  [ -n "$current_profile" ] || current_profile=stock
+  if rematerialize_thermal_overlay "$requested_polling" "$current_profile"; then
+    cfg_set THERMAL_POLLING_MODE "$requested_polling"
+    cfg_set THERMAL_POLLING_EFFECTIVE "$requested_polling"
+    cfg_set LAST_THERMAL_POLLING_MODE "$requested_polling"
+    msg "- Polling: $requested_polling"
+  fi
   refresh_status; show_status; msg "Back to Settings."
 }
 
@@ -166,27 +207,38 @@ set_thermal_choice() {
   cfg_set THERMAL_OUTDOOR_PROFILE "$choice"
   cfg_set THERMAL_OUTDOOR_TARGET "$target"
   cfg_set THERMAL_OUTDOOR_RISK_ACK "$ack"
-  cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE action_settings_menu
+  cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE action_validated_transaction_v2
+  cfg_set THERMAL_OUTDOOR_MAX_ADMITTED_DELTA "$(policy_max_delta)"
+  cfg_set THERMAL_OUTDOOR_POLICY_EVIDENCE "$(thermal_outdoor_policy_evidence "$POLICY_DEVICE" "$POLICY_ANDROID" "$POLICY_BUILD")"
   cfg_set LAST_THERMAL_OUTDOOR_PROFILE "$choice"
 }
 
 set_thermal() {
   if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
     msg "! Thermal features are disabled."
-    msg "! Connect to internet and run Action to enable."
     sleep 2
     return 0
   fi
   cur="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   case "$cur" in outdoor-safe) idx=1 ;; outdoor-plus) idx=2 ;; outdoor-extended) idx=3 ;; *) idx=0 ;; esac
-  ui_menu5 "Thermal Profile" "Stock" "Outdoor Safe" "Outdoor Plus" "Outdoor Extended" "Back" "$idx"
+  safe_label="$(policy_label outdoor-safe 'Outdoor Safe')"
+  plus_label="$(policy_label outdoor-plus 'Outdoor Plus')"
+  ext_label="$(policy_label outdoor-extended 'Outdoor Extended')"
+  ui_menu5 "Thermal max+$(policy_max_delta)" "Stock" "$safe_label" "$plus_label" "$ext_label" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; 2) choice=outdoor-plus ;; 3) choice=outdoor-extended ;; *) msg "Back."; return 0 ;; esac
-  if ! variant_exists "dynamic" "$choice"; then choice=stock; fi
-  cfg_set THERMAL_SETTINGS_MODE action_settings
-  set_thermal_choice "$choice"
-  msg "- Thermal: $choice"
-  rematerialize_thermal_overlay || true
+  if ! variant_exists dynamic "$choice"; then
+    msg "! $choice is not admitted on $POLICY_BUILD"
+    sleep 2
+    return 0
+  fi
+  current_polling="$(cfg_get THERMAL_POLLING_MODE)"
+  [ -n "$current_polling" ] || current_polling=mod
+  if rematerialize_thermal_overlay "$current_polling" "$choice"; then
+    cfg_set THERMAL_SETTINGS_MODE action_settings
+    set_thermal_choice "$choice"
+    msg "- Thermal: $choice"
+  fi
   refresh_status; show_status; msg "Back to Settings."
 }
 
@@ -286,126 +338,76 @@ update_channel_loop() {
     case "$UI_INDEX" in
       0)
         sh "$MODDIR/tools/update-channel-switch.sh" stable
-        msg "Back to Update Channel."
+        msg "Stable selected"
+        sleep 1
       ;;
       1)
-        sh "$MODDIR/tools/update-channel-switch.sh" test
-        msg "Back to Update Channel."
+        sh "$MODDIR/tools/update-channel-switch.sh" prerelease
+        msg "Test selected"
+        sleep 1
       ;;
-      *)
-        msg "Back."
-        return 0
-      ;;
+      *) msg "Back."; return 0 ;;
     esac
   done
 }
 
 advanced_loop() {
   while :; do
-    ui_menu5 "Advanced" "pTune Status" "Update Channel" "pTune Override OFF" "pTune Override ON" "Back" 0
-    [ "$UI_REASON" = "timeout" ] && return 0
-    case "$UI_INDEX" in
-      0) ptune_status; msg "Back to Advanced." ;;
-      1) update_channel_loop; msg "Back to Advanced." ;;
-      2) ptune_override_off; msg "Back to Advanced." ;;
-      3) ptune_override_on; msg "Back to Advanced." ;;
+    mc_cycle4 "Advanced" "pTune Status" "pTune Override" "Update Channel" "Back" 0
+    [ "$MC_REASON" = "timeout" ] && return 0
+    case "$MC_INDEX" in
+      0) ptune_status; sleep 2 ;;
+      1)
+        if [ "$(cfg_get ALLOW_THERMAL_WITH_PTUNE)" = 1 ]; then ptune_override_off; else ptune_override_on; fi
+        sleep 2
+      ;;
+      2) update_channel_loop ;;
       *) msg "Back."; return 0 ;;
     esac
   done
-}
-
-debug_zip() {
-  show_status
-  msg "Creating debug ZIP..."
-  if [ -s "$MODDIR/tools/bootguard/collect-debug.sh" ]; then
-    out="$(sh "$MODDIR/tools/bootguard/collect-debug.sh" 2>&1 || true)"
-    path="$(printf '%s\n' "$out" | sed -n 's/^Created: //p' | tail -n 1)"
-    [ -n "$path" ] || path="$(printf '%s\n' "$out" | grep -E '/sdcard/Download/pixel_thermal_debug_.*\.zip|/storage/emulated/0/Download/pixel_thermal_debug_.*\.zip' | tail -n 1)"
-    msg "Debug ZIP created"
-    if [ -n "$path" ]; then file="${path##*/}"; msg "Folder: Download"; msg "File:"; msg "$file"; fi
-    msg "Upload ZIP + install log."
-  else
-    msg "! collect-debug missing"
-  fi
-  msg "Back to Action."
-}
-
-
-boot_crash_tgz() {
-  show_status
-  msg "Creating boot crash TGZ..."
-  if [ -s "$MODDIR/tools/bootguard/boot-crash-log-collect.sh" ]; then
-    out="$(sh "$MODDIR/tools/bootguard/boot-crash-log-collect.sh" 2>&1 || true)"
-    path="$(printf '%s\n' "$out" | sed -n 's/^Created: //p' | tail -n 1)"
-    msg "Boot crash archive done"
-    if [ -n "$path" ]; then file="${path##*/}"; msg "Folder: Download"; msg "File:"; msg "$file"; fi
-    msg "Upload TGZ + install log."
-  else
-    msg "! boot-crash collector missing"
-  fi
-  msg "Back to Debug."
-}
-
-bootguard_status() {
-  msg "Bootguard"
-  if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
-    MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" status || true
-  else
-    msg "! bootguard missing"
-  fi
-  if [ -s "$MODDIR/tools/bootguard/last-good-diff.sh" ]; then
-    MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/last-good-diff.sh" || true
-  fi
-  msg "Back to Debug."
-}
-
-bootguard_clear() {
-  ui_menu3 "Clear Counters" "Keep State" "Reset Counters" "Back" 0
-  [ "$UI_REASON" = "timeout" ] && return 0
-  case "$UI_INDEX" in
-    1)
-      if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
-        MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" clear || true
-      fi
-      msg "Counters cleared"
-      msg "Disable preserved"
-    ;;
-    *) msg "No change." ;;
-  esac
-  msg "Back to Debug."
 }
 
 debug_loop() {
   while :; do
-    ui_menu5 "Debug" "Debug ZIP" "Boot Crash Archive" "Bootguard" "Clear Counters" "Back" 0
-    [ "$UI_REASON" = "timeout" ] && return 0
-    case "$UI_INDEX" in
-      0) debug_zip ;;
-      1) boot_crash_tgz ;;
-      2) bootguard_status ;;
-      3) bootguard_clear ;;
+    mc_cycle4 "Debug" "Status" "Collect ZIP" "Toggle Debug" "Back" 0
+    [ "$MC_REASON" = "timeout" ] && return 0
+    case "$MC_INDEX" in
+      0) refresh_status; show_status; sleep 2 ;;
+      1)
+        if [ -s "$MODDIR/tools/bootguard/collect-debug.sh" ]; then
+          sh "$MODDIR/tools/bootguard/collect-debug.sh"
+        else
+          msg "Collector missing"
+        fi
+        sleep 2
+      ;;
+      2)
+        if [ -s "$MODDIR/tools/debug/pixel_thermal_toggle_debug.sh" ]; then
+          sh "$MODDIR/tools/debug/pixel_thermal_toggle_debug.sh"
+        else
+          msg "Toggle helper missing"
+        fi
+        sleep 2
+      ;;
       *) msg "Back."; return 0 ;;
     esac
   done
 }
 
-
 action_loop() {
-  first=1
   while :; do
-    if [ "$first" = "1" ]; then refresh_status; show_status; first=0; fi
-    ui_menu5 "Action" "Status" "Settings" "Debug" "Advanced" "Exit" 0
-    [ "$UI_REASON" = "timeout" ] && exit 0
-    case "$UI_INDEX" in
-      0) refresh_status; show_status; msg "Back to Action." ;;
-      1) settings_loop ;;
-      2) debug_loop ;;
-      3) advanced_loop ;;
-      *) msg "Exit."; exit 0 ;;
+    refresh_status
+    show_status
+    mc_cycle4 "Action" "Settings" "Debug" "Advanced" "Exit" 0
+    [ "$MC_REASON" = "timeout" ] && return 0
+    case "$MC_INDEX" in
+      0) settings_loop ;;
+      1) debug_loop ;;
+      2) advanced_loop ;;
+      *) msg "Exit."; return 0 ;;
     esac
   done
 }
 
-if ! command -v getevent >/dev/null 2>&1; then refresh_status; show_status; exit 0; fi
 action_loop
 exit 0

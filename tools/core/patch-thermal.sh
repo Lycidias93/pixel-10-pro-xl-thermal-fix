@@ -11,20 +11,29 @@ TARGET_DIR="$MODPATH/system/vendor/etc"
 TARGET_PARENT="$MODPATH/system/vendor"
 GUARD_DIR="$MODPATH/guard"
 HELPER="$MODPATH/tools/core/supported-build.sh"
+POLICY_HELPER="$MODPATH/tools/core/outdoor-runtime-policy.sh"
 
 [ -r "$HELPER" ] || {
   printf '%s\n' "PATCH_THERMAL=fail"
   printf '%s\n' "PATCH_THERMAL_REASON=supported_helper_missing"
   exit 20
 }
+[ -r "$POLICY_HELPER" ] || {
+  printf '%s\n' "PATCH_THERMAL=fail"
+  printf '%s\n' "PATCH_THERMAL_REASON=outdoor_runtime_policy_missing"
+  exit 20
+}
 . "$HELPER"
+. "$POLICY_HELPER"
 
 case "$POLLING_MODE" in stock|mod) ;; *) printf '%s\n' "PATCH_THERMAL=fail"; printf '%s\n' "PATCH_THERMAL_REASON=invalid_polling_mode"; exit 21 ;; esac
 case "$OUTDOOR_PROFILE" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) printf '%s\n' "PATCH_THERMAL=fail"; printf '%s\n' "PATCH_THERMAL_REASON=invalid_outdoor_profile"; exit 22 ;; esac
 
 DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
+ANDROID="${THERMAL_ANDROID:-$(getprop ro.build.version.release 2>/dev/null || true)}"
 BUILD_ID="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
 [ -n "$DEVICE" ] || DEVICE=unknown
+[ -n "$ANDROID" ] || ANDROID=unknown
 [ -n "$BUILD_ID" ] || BUILD_ID=unknown
 BUILD_SLUG="$(printf '%s' "$BUILD_ID" | tr -c 'A-Za-z0-9._-' '_')"
 CACHE_DIR="$DATA_ROOT/originals/$DEVICE/$BUILD_SLUG/vendor/etc"
@@ -169,9 +178,18 @@ patch_one() {
       dot = index(value, ".")
       return dot > 0 ? length(value) - dot : 0
     }
-    function add_delta_preserving_scale(value, amount, places) {
+    function add_delta_preserving_scale(value, amount, places, result) {
       places = decimal_places(value)
-      return sprintf("%.*f", places, (value + 0) + amount)
+      result = (value + 0) + amount
+      if (places == 0) return sprintf("%.0f", result)
+      if (places == 1) return sprintf("%.1f", result)
+      if (places == 2) return sprintf("%.2f", result)
+      if (places == 3) return sprintf("%.3f", result)
+      if (places == 4) return sprintf("%.4f", result)
+      if (places == 5) return sprintf("%.5f", result)
+      if (places == 6) return sprintf("%.6f", result)
+      bad = 1
+      return value
     }
     BEGIN { target = ""; bad = 0 }
     {
@@ -241,6 +259,12 @@ case "$OUTDOOR_PROFILE" in
   outdoor-extended) DELTA=3 ;;
 esac
 
+MAX_OUTDOOR_DELTA="$(thermal_outdoor_max_delta "$DEVICE" "$ANDROID" "$BUILD_ID")" || fail 23 outdoor_runtime_policy_lookup_failed
+OUTDOOR_POLICY_EVIDENCE="$(thermal_outdoor_policy_evidence "$DEVICE" "$ANDROID" "$BUILD_ID")" || fail 23 outdoor_runtime_policy_evidence_failed
+if [ "$DELTA" -gt "$MAX_OUTDOOR_DELTA" ]; then
+  fail 23 "outdoor_profile_not_runtime_admitted_${DEVICE}_${ANDROID}_${BUILD_ID}_requested_${DELTA}_max_${MAX_OUTDOOR_DELTA}"
+fi
+
 mkdir -p "$DATA_ROOT" "$CACHE_PARENT" "$TARGET_PARENT" "$GUARD_DIR"
 
 cache_valid=1
@@ -295,7 +319,7 @@ if [ "$cache_valid" -ne 1 ]; then
     [ -s "$SOURCE_DIR/$required" ] || fail 31 "required_stock_file_missing_$required"
   done
 
-  printf '%s\n' "file	sha256	bytes	polling_300000" > "$CACHE_STAGE/source-manifest.tsv"
+  printf '%s\n' "file\tsha256\tbytes\tpolling_300000" > "$CACHE_STAGE/source-manifest.tsv"
   source_files=0
   source_polling_total=0
   for file in $CONTROLLED_FILES; do
@@ -348,13 +372,16 @@ if [ -d "$TARGET_DIR" ]; then
   done
 fi
 
-printf '%s\n' "file	source_sha256	output_sha256	source_polling_300000	replacements	output_polling_300000	output_polling_5000	allowed_diff" > "$PATCH_MANIFEST_TMP"
+printf '%s\n' "file\tsource_sha256\toutput_sha256\tsource_polling_300000\treplacements\toutput_polling_300000\toutput_polling_5000\tallowed_diff" > "$PATCH_MANIFEST_TMP"
 printf '%s\n' '{' > "$REPORT_TMP"
 printf '%s\n' '  "schema": "pixel-thermal-dynamic-validation-v4",' >> "$REPORT_TMP"
 printf '  "device": "%s",\n' "$DEVICE" >> "$REPORT_TMP"
 printf '  "build_id": "%s",\n' "$BUILD_ID" >> "$REPORT_TMP"
 printf '  "polling_mode": "%s",\n' "$POLLING_MODE" >> "$REPORT_TMP"
 printf '  "outdoor_profile": "%s",\n' "$OUTDOOR_PROFILE" >> "$REPORT_TMP"
+printf '  "outdoor_requested_delta": %s,\n' "$DELTA" >> "$REPORT_TMP"
+printf '  "outdoor_max_admitted_delta": %s,\n' "$MAX_OUTDOOR_DELTA" >> "$REPORT_TMP"
+printf '  "outdoor_policy_evidence": "%s",\n' "$OUTDOOR_POLICY_EVIDENCE" >> "$REPORT_TMP"
 printf '%s\n' '  "outdoor_target_contract": "exact_virtual_skin_pair_v2",' >> "$REPORT_TMP"
 printf '%s\n' '  "emergency_index_policy": "index6_stock_unchanged_max55",' >> "$REPORT_TMP"
 printf '%s\n' '  "numeric_format_policy": "preserve_decimal_scale",' >> "$REPORT_TMP"
@@ -465,6 +492,10 @@ chmod 0644 "$PATCH_MANIFEST" "$REPORT_MODULE" "$REPORT_DATA" 2>/dev/null || true
 printf '%s\n' "PATCH_THERMAL=pass"
 printf '%s\n' "PATCH_THERMAL_DEVICE=$DEVICE"
 printf '%s\n' "PATCH_THERMAL_BUILD_ID=$BUILD_ID"
+printf '%s\n' "PATCH_THERMAL_ANDROID=$ANDROID"
+printf '%s\n' "PATCH_THERMAL_OUTDOOR_REQUESTED_DELTA=$DELTA"
+printf '%s\n' "PATCH_THERMAL_OUTDOOR_MAX_ADMITTED_DELTA=$MAX_OUTDOOR_DELTA"
+printf '%s\n' "PATCH_THERMAL_OUTDOOR_POLICY_EVIDENCE=$OUTDOOR_POLICY_EVIDENCE"
 printf '%s\n' "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR"
 printf '%s\n' "PATCH_THERMAL_FILES=$source_files"
 printf '%s\n' "PATCH_THERMAL_SOURCE_300000=$source_polling_total"

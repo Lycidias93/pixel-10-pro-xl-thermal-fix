@@ -43,12 +43,23 @@ if unzip -Z1 "$out_a" | grep -Fxq 'tools/core/outdoor-runtime-evidence.tsv'; the
   exit 1
 fi
 
+unzip -Z1 "$out_a" | grep -Fxq 'tools/core/outdoor-runtime-policy.sh'
+unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq 'outdoor_runtime_policy_missing'
+unzip -p "$out_a" tools/action-dashboard.sh | grep -Fq 'patch-thermal-validated.sh'
+
+if unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq '%.*f'; then
+  printf '%s\n' 'FAIL android_awk_unsupported_dynamic_precision_shipped'
+  exit 1
+fi
+
 grep -q 'RESULT: PIXEL_THERMAL_LEAN_PACKAGE_BUILD_PASS' "$log_a"
 grep -q 'RESULT: PIXEL_THERMAL_LEAN_PACKAGE_BUILD_PASS' "$log_b"
 
 printf 'reproducible_sha256=%s\n' "$(sha256sum "$out_a" | awk '{print $1}')"
 printf '%s\n' 'PASS online_outdoor_collector_syntax_and_contract'
 printf '%s\n' 'PASS online_outdoor_collector_repo_only'
+printf '%s\n' 'PASS runtime_policy_shipped_evidence_repo_only'
+printf '%s\n' 'PASS android_awk_portable_patcher_shipped'
 printf '%s\n' 'PASS release_builder_and_verifier_contract'
 printf '%s\n' 'PASS repeated_release_builds_binary_identical'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_RELEASE_PACKAGE_EXCLUSION_TEST_PASS'
