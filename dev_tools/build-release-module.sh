@@ -30,6 +30,7 @@ exclude_path() {
     tools/outdoor-delta-validation-guard.sh) return 0 ;;
     tools/bootguard/bootguard-threshold-policy-guard.sh) return 0 ;;
     tools/ptune/ptune-install-state-observability-guard.sh) return 0 ;;
+    tools/debug/collect-outdoor-boot-failure-online.sh) return 0 ;;
     */tests/*|*/test/*|*/fixtures/*|*/scratch/*|*/deprecated/*) return 0 ;;
     */test-*.sh|*/*-test.sh|*/*-fixture.sh|*/*-fixtures.sh|*/*fixture*.json) return 0 ;;
   esac
