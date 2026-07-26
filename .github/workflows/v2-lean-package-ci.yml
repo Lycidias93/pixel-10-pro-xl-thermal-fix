@@ -71,13 +71,28 @@ jobs:
           bash tests/test-validation-state-sot.sh
           bash tests/test-validation-state-runtime.sh
 
-      - name: Canary-safe Outdoor policy and Action transaction
+      - name: Outdoor delta runtime matrix
         shell: bash
         run: |
           set -euo pipefail
           bash tests/test-outdoor-delta-validation-runtime.sh
+
+      - name: Canary portable patch and Safe-only policy
+        shell: bash
+        run: |
+          set -euo pipefail
           bash tests/test-canary-thermal-patch-hotfix.sh
+
+      - name: Action and background materialization transaction
+        shell: bash
+        run: |
+          set -euo pipefail
           bash tests/test-action-thermal-transaction.sh
+
+      - name: Outdoor runtime evidence policy
+        shell: bash
+        run: |
+          set -euo pipefail
           bash tests/test-outdoor-runtime-evidence.sh
 
       - name: Bootguard and pTune policy contracts
