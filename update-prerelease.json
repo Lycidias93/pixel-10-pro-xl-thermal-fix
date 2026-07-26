@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0-alpha.2",
-  "versionCode": 1016211,
-  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v2.0.0-alpha.2/pixel-10-thermal-memory-control-2.0.0-alpha.2.zip",
-  "changelog": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/276b5ff5684d9cbc63ff65eb901563cc5257665c/RELEASE_NOTES_2.0.0-alpha.2.md"
+  "version": "2.0.0-alpha.3-dev.2",
+  "versionCode": 1016213,
+  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v2.0.0-alpha.3-dev.2/pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.2.zip",
+  "changelog": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/ed39ad8833bf71cca09ac5b7032cbab1488169e4/release-notes/2.0.0-alpha.3-dev.2.md"
 }
