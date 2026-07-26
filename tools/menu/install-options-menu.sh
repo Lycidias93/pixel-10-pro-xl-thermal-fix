@@ -11,6 +11,17 @@ touch "$CONFIG_FILE" 2>/dev/null || true
 chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
 
 [ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" || exit 0
+POLICY_HELPER="$MODDIR/tools/core/outdoor-runtime-policy.sh"
+[ -s "$POLICY_HELPER" ] && . "$POLICY_HELPER" || exit 23
+
+POLICY_DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
+POLICY_ANDROID="${THERMAL_ANDROID:-$(getprop ro.build.version.release 2>/dev/null || true)}"
+POLICY_BUILD="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
+[ -n "$POLICY_DEVICE" ] || POLICY_DEVICE=unknown
+[ -n "$POLICY_ANDROID" ] || POLICY_ANDROID=unknown
+[ -n "$POLICY_BUILD" ] || POLICY_BUILD=unknown
+POLICY_MAX_DELTA="$(thermal_outdoor_max_delta "$POLICY_DEVICE" "$POLICY_ANDROID" "$POLICY_BUILD")" || POLICY_MAX_DELTA=0
+POLICY_EVIDENCE="$(thermal_outdoor_policy_evidence "$POLICY_DEVICE" "$POLICY_ANDROID" "$POLICY_BUILD")" || POLICY_EVIDENCE=stock_only_no_nonstock_runtime_evidence
 
 cfg_get() {
   _key="$1"
@@ -65,6 +76,26 @@ normalize_profile() {
   esac
 }
 
+cap_profile() {
+  _requested="$(normalize_profile "$1")"
+  _delta="$(thermal_outdoor_profile_delta "$_requested")" || _delta=0
+  if [ "$_delta" -le "$POLICY_MAX_DELTA" ]; then
+    printf '%s\n' "$_requested"
+  else
+    thermal_outdoor_profile_for_delta "$POLICY_MAX_DELTA" 2>/dev/null || printf '%s\n' stock
+  fi
+}
+
+profile_policy_label() {
+  _delta="$1"
+  _label="$2"
+  if [ "$_delta" -le "$POLICY_MAX_DELTA" ]; then
+    printf '%s\n' "$_label"
+  else
+    printf '%s\n' "$_label blocked"
+  fi
+}
+
 profile_target() {
   case "$1" in
     outdoor-safe) printf '%s\n' outdoor_safe ;;
@@ -110,11 +141,19 @@ profile_label() {
 }
 
 apply_profile() {
-  _profile="$(normalize_profile "$1")"
+  _requested="$(normalize_profile "$1")"
+  _profile="$(cap_profile "$_requested")"
+  if [ "$_profile" != "$_requested" ]; then
+    mc_msg "! $_requested blocked on $POLICY_BUILD"
+    mc_msg "! Using $_profile (max delta $POLICY_MAX_DELTA)"
+  fi
+  cfg_set THERMAL_OUTDOOR_REQUESTED_PROFILE "$_requested"
   cfg_set THERMAL_OUTDOOR_PROFILE "$_profile"
   cfg_set THERMAL_OUTDOOR_TARGET "$(profile_target "$_profile")"
   cfg_set THERMAL_OUTDOOR_RISK_ACK "$(profile_risk "$_profile")"
-  cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE install_options_single_pass_v1
+  cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE install_options_runtime_policy_v2
+  cfg_set THERMAL_OUTDOOR_MAX_ADMITTED_DELTA "$POLICY_MAX_DELTA"
+  cfg_set THERMAL_OUTDOOR_POLICY_EVIDENCE "$POLICY_EVIDENCE"
   cfg_set LAST_THERMAL_OUTDOOR_PROFILE "$_profile"
 }
 
@@ -196,6 +235,7 @@ print_summary() {
   mc_msg "Install choices"
   mc_msg "Polling: $(cfg_get THERMAL_POLLING_MODE)"
   mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
+  mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
   mc_msg "ZRAM: $(cfg_get LAST_ZRAM_100P)"
   mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
   mc_msg "Debug: $(cfg_get LAST_DEBUG_MODE)"
@@ -258,13 +298,16 @@ case "$current_polling" in stock) polling_index=1 ;; *) polling_index=0 ;; esac
 mc_cycle2 "Polling Mode" "Mod values" "Stock values" "$polling_index"
 [ "$MC_INDEX" = 1 ] && apply_polling stock || apply_polling mod
 
-current_profile="$(normalize_profile "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
+current_profile="$(cap_profile "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
+safe_label="$(profile_policy_label 1 'Outdoor Safe')"
+plus_label="$(profile_policy_label 2 'Outdoor Plus')"
+ext_label="$(profile_policy_label 3 'Outdoor Ext')"
 mc_cycle4 \
-  "Thermal Profile" \
+  "Thermal Profile max+$POLICY_MAX_DELTA" \
   "Stock" \
-  "Outdoor Safe" \
-  "Outdoor Plus" \
-  "Outdoor Ext" \
+  "$safe_label" \
+  "$plus_label" \
+  "$ext_label" \
   "$(profile_index "$current_profile")"
 apply_profile "$(profile_at "$MC_INDEX")"
 
