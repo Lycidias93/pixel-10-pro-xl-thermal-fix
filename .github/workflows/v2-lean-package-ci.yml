@@ -34,6 +34,7 @@ jobs:
           bash -n tests/test-validation-state-sot.sh
           bash -n tests/test-validation-state-runtime.sh
           bash -n tests/test-outdoor-delta-validation-runtime.sh
+          bash -n tests/test-canary-thermal-patch-hotfix.sh
           bash -n tests/test-release-notes-layout.sh
           bash -n tools/bootguard/bootguard-threshold-policy-guard.sh
           bash -n tools/ptune/ptune-install-state-observability-guard.sh
@@ -66,11 +67,12 @@ jobs:
           bash tests/test-validation-state-sot.sh
           bash tests/test-validation-state-runtime.sh
 
-      - name: Outdoor delta runtime matrix
+      - name: Canary-safe Outdoor delta runtime matrix
         shell: bash
         run: |
           set -euo pipefail
           bash tests/test-outdoor-delta-validation-runtime.sh
+          bash tests/test-canary-thermal-patch-hotfix.sh
 
       - name: Bootguard and pTune policy contracts
         shell: bash

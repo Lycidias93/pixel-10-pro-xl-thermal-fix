@@ -122,24 +122,28 @@ normalize_allowed() {
       }
       return line
     }
-    BEGIN { target = 0 }
+    function target_name(line) {
+      if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-HINT"([[:space:]]*[,}]|[[:space:]]*$)/) return "VIRTUAL-SKIN-HINT"
+      if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN"([[:space:]]*[,}]|[[:space:]]*$)/) return "VIRTUAL-SKIN"
+      return ""
+    }
+    BEGIN { target = "" }
     {
       line = $0
-      if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-HINT"/) {
-        target = 1
-      } else if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN"/) {
-        target = 1
+      name = target_name(line)
+      if (name != "") {
+        target = name
       } else if (line ~ /"Name"[[:space:]]*:/) {
-        target = 0
+        target = ""
       }
       line = normalize_poll(line)
-      if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
+      if (target != "" && line ~ /"HotThreshold"[[:space:]]*:/) {
         start = index(line, "[")
         finish = index(line, "]")
         if (start > 0 && finish > start) {
           line = substr(line, 1, start) "__HOTTHRESHOLD__" substr(line, finish)
         }
-        target = 0
+        target = ""
       }
       print line
     }
@@ -149,15 +153,36 @@ patch_one() {
   src="$1"
   dst="$2"
   awk -v delta="$DELTA" -v poll_mode="$POLLING_MODE" '
-    BEGIN { target = 0 }
+    function trim(value) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      return value
+    }
+    function target_name(line) {
+      if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-HINT"([[:space:]]*[,}]|[[:space:]]*$)/) return "VIRTUAL-SKIN-HINT"
+      if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN"([[:space:]]*[,}]|[[:space:]]*$)/) return "VIRTUAL-SKIN"
+      return ""
+    }
+    function is_numeric(value) {
+      return value ~ /^[+-]?[0-9]+([.][0-9]+)?$/
+    }
+    function decimal_places(value, dot) {
+      dot = index(value, ".")
+      return dot > 0 ? length(value) - dot : 0
+    }
+    function add_delta_preserving_scale(value, amount, places) {
+      places = decimal_places(value)
+      return sprintf("%.*f", places, (value + 0) + amount)
+    }
+    BEGIN { target = ""; bad = 0 }
     {
       line = $0
-      if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-HINT"/) {
-        target = 1
-      } else if (line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN"/) {
-        target = 1
+      name = target_name(line)
+      if (name != "") {
+        if (++seen[name] != 1) bad = 1
+        target = name
       } else if (line ~ /"Name"[[:space:]]*:/) {
-        target = 0
+        if (target != "") bad = 1
+        target = ""
       }
 
       if (poll_mode == "mod") {
@@ -168,29 +193,43 @@ patch_one() {
         }
       }
 
-      if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
+      if (target != "" && line ~ /"HotThreshold"[[:space:]]*:/) {
         start = index(line, "[")
         finish = index(line, "]")
-        if (start > 0 && finish > start && delta != 0) {
+        if (start < 1 || finish <= start) {
+          bad = 1
+        } else {
           prefix = substr(line, 1, start)
           suffix = substr(line, finish)
           content = substr(line, start + 1, finish - start - 1)
           n = split(content, elements, ",")
+          if (n != 7) bad = 1
           rebuilt = ""
           for (i = 1; i <= n; i++) {
-            elem = elements[i]
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", elem)
-            if (elem ~ /^[+-]?[0-9]+([.][0-9]+)?$/) {
-              elem = elem + delta
+            elem = trim(elements[i])
+            if (i == 7) {
+              if (!is_numeric(elem) || (elem + 0) > 55.0) bad = 1
+            } else if (elem == "\"NAN\"") {
+              # Sentinel remains byte-equivalent.
+            } else if (is_numeric(elem)) {
+              if (delta != 0) elem = add_delta_preserving_scale(elem, delta)
+            } else {
+              bad = 1
             }
             rebuilt = rebuilt elem
             if (i < n) rebuilt = rebuilt ", "
           }
           line = prefix rebuilt suffix
+          arrays[target]++
         }
-        target = 0
+        target = ""
       }
       print line
+    }
+    END {
+      if (target != "") bad = 1
+      for (name in seen) if (arrays[name] != 1) bad = 1
+      if (bad) exit 70
     }
   ' "$src" > "$dst"
 }
@@ -311,11 +350,14 @@ fi
 
 printf '%s\n' "file	source_sha256	output_sha256	source_polling_300000	replacements	output_polling_300000	output_polling_5000	allowed_diff" > "$PATCH_MANIFEST_TMP"
 printf '%s\n' '{' > "$REPORT_TMP"
-printf '%s\n' '  "schema": "pixel-thermal-dynamic-validation-v3",' >> "$REPORT_TMP"
+printf '%s\n' '  "schema": "pixel-thermal-dynamic-validation-v4",' >> "$REPORT_TMP"
 printf '  "device": "%s",\n' "$DEVICE" >> "$REPORT_TMP"
 printf '  "build_id": "%s",\n' "$BUILD_ID" >> "$REPORT_TMP"
 printf '  "polling_mode": "%s",\n' "$POLLING_MODE" >> "$REPORT_TMP"
 printf '  "outdoor_profile": "%s",\n' "$OUTDOOR_PROFILE" >> "$REPORT_TMP"
+printf '%s\n' '  "outdoor_target_contract": "exact_virtual_skin_pair_v2",' >> "$REPORT_TMP"
+printf '%s\n' '  "emergency_index_policy": "index6_stock_unchanged_max55",' >> "$REPORT_TMP"
+printf '%s\n' '  "numeric_format_policy": "preserve_decimal_scale",' >> "$REPORT_TMP"
 printf '%s\n' '  "files": {' >> "$REPORT_TMP"
 
 tab="$(printf '\t')"
@@ -331,24 +373,26 @@ while IFS="$tab" read -r file source_sha source_bytes source_polling; do
   [ -n "$file" ] || continue
   source_file="$CACHE_DIR/$file"
   output_file="$PATCH_STAGE/$file"
-  patch_one "$source_file" "$output_file"
-  thermal_json_tolerant_validate "$output_file" || fail 40 "output_structure_invalid_$file"
+  if ! patch_one "$source_file" "$output_file"; then
+    fail 40 "outdoor_target_contract_invalid_$file"
+  fi
+  thermal_json_tolerant_validate "$output_file" || fail 41 "output_structure_invalid_$file"
 
   output_sha="$(sha_file "$output_file")"
   output300000="$(count_polling_value "$output_file" 300000)"
   output5000="$(count_polling_value "$output_file" 5000)"
   output30000="$(count_polling_value "$output_file" 30000)"
   output_lower="$(count_lowercase_polling "$output_file")"
-  [ "$output30000" = 0 ] || fail 41 "output_30000_rejected_$file"
-  [ "$output_lower" = 0 ] || fail 42 "output_lowercase_polling_rejected_$file"
+  [ "$output30000" = 0 ] || fail 42 "output_30000_rejected_$file"
+  [ "$output_lower" = 0 ] || fail 43 "output_lowercase_polling_rejected_$file"
 
   if [ "$POLLING_MODE" = mod ]; then
-    [ "$output300000" = 0 ] || fail 43 "remaining_300000_$file"
-    [ "$output5000" = "$source_polling" ] || fail 44 "replacement_count_${file}_${output5000}_expected_${source_polling}"
+    [ "$output300000" = 0 ] || fail 44 "remaining_300000_$file"
+    [ "$output5000" = "$source_polling" ] || fail 45 "replacement_count_${file}_${output5000}_expected_${source_polling}"
     replacements="$source_polling"
   else
-    [ "$output300000" = "$source_polling" ] || fail 45 "stock_300000_changed_$file"
-    [ "$output5000" = 0 ] || fail 46 "stock_contains_5000_$file"
+    [ "$output300000" = "$source_polling" ] || fail 46 "stock_300000_changed_$file"
+    [ "$output5000" = 0 ] || fail 47 "stock_contains_5000_$file"
     replacements=0
   fi
 
@@ -356,7 +400,7 @@ while IFS="$tab" read -r file source_sha source_bytes source_polling; do
   norm_output="$GUARD_DIR/.norm-output.$$"
   normalize_allowed "$source_file" "$norm_source"
   normalize_allowed "$output_file" "$norm_output"
-  cmp -s "$norm_source" "$norm_output" || fail 47 "unallowed_byte_change_$file"
+  cmp -s "$norm_source" "$norm_output" || fail 48 "unallowed_byte_change_$file"
   rm -f "$norm_source" "$norm_output"
 
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
@@ -383,7 +427,7 @@ while IFS="$tab" read -r file source_sha source_bytes source_polling; do
 done < "$MANIFEST"
 
 for required in $REQUIRED_FILES; do
-  [ -s "$PATCH_STAGE/$required" ] || fail 48 "required_output_missing_$required"
+  [ -s "$PATCH_STAGE/$required" ] || fail 49 "required_output_missing_$required"
 done
 
 printf '%s\n' '  },' >> "$REPORT_TMP"
@@ -396,20 +440,20 @@ printf '    "output_polling_5000": %s\n' "$output_5000_total" >> "$REPORT_TMP"
 printf '%s\n' '  },' >> "$REPORT_TMP"
 printf '%s\n' '  "validation": "passed"' >> "$REPORT_TMP"
 printf '%s\n' '}' >> "$REPORT_TMP"
-thermal_json_tolerant_validate "$REPORT_TMP" || fail 49 validation_report_invalid
+thermal_json_tolerant_validate "$REPORT_TMP" || fail 50 validation_report_invalid
 
 if [ "$POLLING_MODE" = mod ]; then
-  [ "$replacement_total" = "$source_polling_total" ] || fail 50 total_replacement_mismatch
-  [ "$output_300000_total" = 0 ] || fail 51 total_remaining_300000
-  [ "$output_5000_total" = "$source_polling_total" ] || fail 52 total_5000_mismatch
+  [ "$replacement_total" = "$source_polling_total" ] || fail 51 total_replacement_mismatch
+  [ "$output_300000_total" = 0 ] || fail 52 total_remaining_300000
+  [ "$output_5000_total" = "$source_polling_total" ] || fail 53 total_5000_mismatch
 else
-  [ "$replacement_total" = 0 ] || fail 53 stock_replacements_nonzero
-  [ "$output_300000_total" = "$source_polling_total" ] || fail 54 stock_total_300000_changed
-  [ "$output_5000_total" = 0 ] || fail 55 stock_total_5000_nonzero
+  [ "$replacement_total" = 0 ] || fail 54 stock_replacements_nonzero
+  [ "$output_300000_total" = "$source_polling_total" ] || fail 55 stock_total_300000_changed
+  [ "$output_5000_total" = 0 ] || fail 56 stock_total_5000_nonzero
 fi
 
 if [ -d "$TARGET_DIR" ]; then mv "$TARGET_DIR" "$TARGET_OLD"; fi
-mv "$PATCH_STAGE" "$TARGET_DIR" || fail 56 target_atomic_promotion_failed
+mv "$PATCH_STAGE" "$TARGET_DIR" || fail 57 target_atomic_promotion_failed
 PROMOTED=1
 rm -rf "$TARGET_OLD"
 
@@ -426,6 +470,9 @@ printf '%s\n' "PATCH_THERMAL_FILES=$source_files"
 printf '%s\n' "PATCH_THERMAL_SOURCE_300000=$source_polling_total"
 printf '%s\n' "PATCH_THERMAL_REPLACEMENTS=$replacement_total"
 printf '%s\n' "PATCH_THERMAL_OUTPUT_5000=$output_5000_total"
+printf '%s\n' 'PATCH_THERMAL_TARGET_CONTRACT=exact_virtual_skin_pair_v2'
+printf '%s\n' 'PATCH_THERMAL_EMERGENCY_INDEX=index6_stock_unchanged_max55'
+printf '%s\n' 'PATCH_THERMAL_NUMERIC_FORMAT=preserve_decimal_scale'
 printf '%s\n' "PATCH_THERMAL_MANIFEST=$PATCH_MANIFEST"
 printf '%s\n' "PATCH_THERMAL_REPORT=$REPORT_MODULE"
 trap - EXIT HUP INT TERM

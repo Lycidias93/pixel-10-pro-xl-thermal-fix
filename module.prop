@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.3-dev.3
-versionCode=1016214
+version=2.0.0-alpha.3-dev.4
+versionCode=1016215
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 3 dev.3: responsive installer layout, compact validation output, single-pass choices, canonical validation state, and lean packaging.
+description=V2 Alpha 3 dev.4: Canary-safe exact Thermal targeting, fixed emergency ceiling, format-stable deltas, responsive UI, canonical validation, and lean packaging.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
