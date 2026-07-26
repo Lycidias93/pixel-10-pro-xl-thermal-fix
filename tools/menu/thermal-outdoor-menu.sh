@@ -8,7 +8,7 @@ mkdir -p "$(dirname "$CONFIG_FILE")" 2>/dev/null || true
 mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
 [ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" || exit 0
 
-msg() { if command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi; [ "$LOG" = "/dev/null" ] || echo "$*" >> "$LOG" 2>/dev/null || true; }
+msg() { if [ "$*" = "----------------------------------------" ]; then mc_rule; elif command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi; [ "$LOG" = "/dev/null" ] || echo "$*" >> "$LOG" 2>/dev/null || true; }
 cfg_get() { _k="$1"; [ -r "$CONFIG_FILE" ] || return 0; grep -E "^${_k}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${_k}=//" | tr -d "\r"; }
 cfg_set() { _k="$1"; _v="$2"; _tmp="${CONFIG_FILE}.tmp.$$"; touch "$CONFIG_FILE" 2>/dev/null || true; grep -v "^${_k}=" "$CONFIG_FILE" 2>/dev/null > "$_tmp" || true; printf "%s=%s\n" "$_k" "$_v" >> "$_tmp"; mv "$_tmp" "$CONFIG_FILE"; }
 
