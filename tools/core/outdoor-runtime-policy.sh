@@ -11,8 +11,7 @@ case "${0##*/}" in
     printf() {
       if [ "$#" -eq 2 ] && [ "$1" = '%s\n' ]; then
         case "$2" in
-          'file\tsha256\tbytes\tpolling_300000'|
-          'file\tsource_sha256\toutput_sha256\tsource_polling_300000\treplacements\toutput_polling_300000\toutput_polling_5000\tallowed_diff')
+          'file\tsha256\tbytes\tpolling_300000'|'file\tsource_sha256\toutput_sha256\tsource_polling_300000\treplacements\toutput_polling_300000\toutput_polling_5000\tallowed_diff')
             command printf '%b\n' "$2"
             return 0
           ;;
