@@ -49,9 +49,41 @@ thermal_install_overlay() {
     "$MODPATH/tools/core/validation-state.sh" \
     "$MODPATH/tools/core/patch-thermal-validated.sh" 2>/dev/null || true
 
-  sh "$MODPATH/tools/core/patch-thermal-validated.sh" \
+  patch_output="$MODPATH/guard/install-patch-output.$$"
+  mkdir -p "$MODPATH/guard" 2>/dev/null || true
+
+  if sh "$MODPATH/tools/core/patch-thermal-validated.sh" \
     "$THERMAL_POLLING_MODE" \
     "$THERMAL_OUTDOOR_PROFILE" \
-    "$MODPATH" ||
-    thermal_abort "! Dynamic patching or validation failed"
+    "$MODPATH" > "$patch_output" 2>&1; then
+    patch_source="$(sed -n 's/^PATCH_THERMAL_SOURCE_300000=//p' "$patch_output" | tail -n 1)"
+    patch_replacements="$(sed -n 's/^PATCH_THERMAL_REPLACEMENTS=//p' "$patch_output" | tail -n 1)"
+    patch_delta="$(sed -n 's/^PATCH_THERMAL_DELTA_EXPECTED=//p' "$patch_output" | tail -n 1)"
+    patch_files="$(sed -n 's/^PATCH_THERMAL_DELTA_FILES=//p' "$patch_output" | tail -n 1)"
+    patch_zones="$(sed -n 's/^PATCH_THERMAL_DELTA_TARGET_ZONES=//p' "$patch_output" | tail -n 1)"
+    patch_values="$(sed -n 's/^PATCH_THERMAL_DELTA_THRESHOLD_VALUES=//p' "$patch_output" | tail -n 1)"
+
+    [ -n "$patch_source" ] || patch_source=unknown
+    [ -n "$patch_replacements" ] || patch_replacements=unknown
+    [ -n "$patch_delta" ] || patch_delta=unknown
+    [ -n "$patch_files" ] || patch_files=unknown
+    [ -n "$patch_zones" ] || patch_zones=unknown
+    [ -n "$patch_values" ] || patch_values=unknown
+
+    ui_print "- Thermal validation: PASS"
+    ui_print "- Polling changes: $patch_replacements/$patch_source"
+    ui_print "- Outdoor delta: +${patch_delta} C"
+    ui_print "- Scope: $patch_files files, $patch_zones zones, $patch_values values"
+    ui_print "- Validation state: canonical"
+    rm -f "$patch_output" 2>/dev/null || true
+  else
+    patch_rc="$?"
+    ui_print "! Dynamic patching or validation failed"
+    ui_print "! Last validator lines:"
+    tail -n 12 "$patch_output" 2>/dev/null | while IFS= read -r patch_line; do
+      ui_print "! $patch_line"
+    done
+    rm -f "$patch_output" 2>/dev/null || true
+    thermal_abort "! Dynamic patching or validation failed (rc=$patch_rc)"
+  fi
 }

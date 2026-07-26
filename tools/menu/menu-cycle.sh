@@ -2,7 +2,41 @@
 MC_TIMEOUT_SECONDS="${MC_TIMEOUT_SECONDS:-30}"
 MC_DEBOUNCE_SECONDS="${MC_DEBOUNCE_SECONDS:-0.45}"
 
-mc_msg() { if command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi; }
+MC_MIN_WIDTH="${MC_MIN_WIDTH:-28}"
+MC_MAX_WIDTH="${MC_MAX_WIDTH:-52}"
+MC_DEFAULT_WIDTH="${MC_DEFAULT_WIDTH:-40}"
+
+mc_detect_width() {
+  _width="${MC_UI_COLUMNS:-${COLUMNS:-}}"
+  case "$_width" in ""|*[!0-9]*) _width="" ;; esac
+
+  if [ -z "$_width" ] && command -v stty >/dev/null 2>&1; then
+    _size="$(stty size </dev/tty 2>/dev/null || stty size 2>/dev/null || true)"
+    set -- $_size
+    [ "$#" -eq 2 ] && _width="$2"
+    case "$_width" in ""|*[!0-9]*) _width="" ;; esac
+  fi
+
+  [ -n "$_width" ] || _width="$MC_DEFAULT_WIDTH"
+  [ "$_width" -ge "$MC_MIN_WIDTH" ] 2>/dev/null || _width="$MC_MIN_WIDTH"
+  [ "$_width" -le "$MC_MAX_WIDTH" ] 2>/dev/null || _width="$MC_MAX_WIDTH"
+  printf '%s\n' "$_width"
+}
+
+MC_UI_WIDTH="$(mc_detect_width)"
+
+mc_msg() {
+  _text="$*"
+  if [ "$_text" = "----------------------------------------" ]; then
+    _text="$(printf '%*s' "$MC_UI_WIDTH" '' | tr ' ' '-')"
+  fi
+  if command -v ui_print >/dev/null 2>&1; then ui_print "$_text"; else echo "$_text"; fi
+}
+
+mc_rule() {
+  _rule="$(printf '%*s' "$MC_UI_WIDTH" '' | tr ' ' '-')"
+  mc_msg "$_rule"
+}
 
 mc_read_key() {
   if ! command -v getevent >/dev/null 2>&1; then echo timeout; return 0; fi
@@ -49,12 +83,12 @@ mc_desc() {
 mc_head() {
   _desc="$(mc_desc "$1")"
   mc_msg ""
-  mc_msg "----------------------------------------"
+  mc_rule
   mc_msg "$1"
   [ -n "$_desc" ] && mc_msg "$_desc"
-  mc_msg "----------------------------------------"
+  mc_rule
 }
-mc_foot() { mc_msg ""; mc_msg "Vol+  next"; mc_msg "Vol-  select"; mc_msg "30s   keep shown"; mc_msg "Power not used"; mc_msg "----------------------------------------"; }
+mc_foot() { mc_msg ""; mc_msg "Vol+  next"; mc_msg "Vol-  select"; mc_msg "30s   keep shown"; mc_msg "Power not used"; mc_rule; }
 
 mc_cycle2() {
   _title="$1"; _label0="$2"; _label1="$3"; _idx="${4:-0}"; _steps=0

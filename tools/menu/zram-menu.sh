@@ -9,7 +9,7 @@ ALT_DOWNLOAD="/storage/emulated/0/Download"
 [ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" || exit 0
 
 choose_download() { for d in "$DOWNLOAD" "$ALT_DOWNLOAD"; do [ -d "$d" ] && [ -w "$d" ] && { echo "$d"; return 0; }; done; echo "$ALT_DOWNLOAD"; }
-msg() { echo "$*"; if [ -n "${LOG:-}" ] && [ "$LOG" != "/dev/null" ]; then echo "$*" >> "$LOG" 2>/dev/null || true; fi; }
+msg() { if [ "$*" = "----------------------------------------" ]; then mc_rule; else echo "$*"; fi; if [ -n "${LOG:-}" ] && [ "$LOG" != "/dev/null" ]; then echo "$*" >> "$LOG" 2>/dev/null || true; fi; }
 cfg_set() { k="$1"; v="$2"; mkdir -p "$CONFIG_DIR" 2>/dev/null || true; touch "$CONFIG_FILE" 2>/dev/null || true; if grep -q "^${k}=" "$CONFIG_FILE" 2>/dev/null; then sed -i "s|^${k}=.*|${k}=${v}|" "$CONFIG_FILE" 2>/dev/null || true; else echo "${k}=${v}" >> "$CONFIG_FILE"; fi; chmod 0600 "$CONFIG_FILE" 2>/dev/null || true; }
 cfg_get() { k="$1"; [ -r "$CONFIG_FILE" ] || return 0; grep -E "^${k}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${k}=//" | tr -d '\r'; }
 
