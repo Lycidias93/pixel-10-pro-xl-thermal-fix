@@ -21,6 +21,7 @@ grep -Fq 'persistent_original_cache' "$collector"
 grep -Fq 'stock-source' "$collector"
 grep -Fq 'module_install_mode_reported' "$collector"
 grep -Fq 'RESULT: PIXEL_THERMAL_OUTDOOR_BOOT_DEBUG_DONE outcome=success workflow_exit_code=0' "$collector"
+bash "$repo_root/tests/test-outdoor-runtime-evidence.sh"
 
 "$repo_root/dev_tools/build-release-module.sh" "$out_a" > "$log_a"
 "$repo_root/dev_tools/build-release-module.sh" "$out_b" > "$log_b"
