@@ -1,4 +1,5 @@
 publish_script_rc=1
+publish_stage=draft_verify
 release_found=no
 tag_found=no
 release_url=unavailable
