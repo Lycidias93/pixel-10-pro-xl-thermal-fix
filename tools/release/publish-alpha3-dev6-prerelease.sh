@@ -2,7 +2,13 @@
 set -euo pipefail
 umask 077
 
-ARTIFACT_ID="${ARTIFACT_ID:-8655661598}"
+ARTIFACT_RUN_ID="${ARTIFACT_RUN_ID:-30273152148}"
+ARTIFACT_NAME="${ARTIFACT_NAME:-pixel-thermal-alpha3-next-de9d0e2626e29c2d702bcc9b0295081d6667f392}"
+STAGE_FILE="$RUNNER_TEMP/publish-stage.txt"
+stage() {
+  printf '%s\n' "$1" > "$STAGE_FILE"
+}
+
 created_release=0
 published_release=0
 cleanup() {
@@ -25,14 +31,13 @@ for name in "${required[@]}"; do
   test -n "${!name:-}"
 done
 
+stage preflight_auth
 test "$GITHUB_REPOSITORY" = "$REPOSITORY"
 gh auth status --hostname github.com >/dev/null
 test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
 git cat-file -e "$TARGET_COMMIT^{commit}"
 git cat-file -e "$NOTES_REF^{commit}"
 
-artifact_json="$RUNNER_TEMP/artifact.json"
-artifact_archive="$RUNNER_TEMP/dev6-ci-artifact.zip"
 artifact_dir="$RUNNER_TEMP/dev6-ci-artifact"
 asset_path="$RUNNER_TEMP/$ASSET_NAME"
 notes_file="$RUNNER_TEMP/release-notes.md"
@@ -41,24 +46,30 @@ release_body="$RUNNER_TEMP/release-body.md"
 downloaded_asset="$RUNNER_TEMP/public-$ASSET_NAME"
 proof_file="$RUNNER_TEMP/publication-proof.txt"
 tag_json="$RUNNER_TEMP/tag-ref.json"
+run_json="$RUNNER_TEMP/artifact-run.json"
 
-rm -rf "$artifact_json" "$artifact_archive" "$artifact_dir" "$asset_path" "$notes_file" "$release_json" "$release_body" "$downloaded_asset" "$proof_file" "$tag_json"
+rm -rf "$artifact_dir" "$asset_path" "$notes_file" "$release_json" "$release_body" "$downloaded_asset" "$proof_file" "$tag_json" "$run_json"
 mkdir -p "$artifact_dir"
 
-gh api "repos/$REPOSITORY/actions/artifacts/$ARTIFACT_ID" > "$artifact_json"
-test "$(jq -r .expired "$artifact_json")" = false
-test "$(jq -r .workflow_run.head_sha "$artifact_json")" = "$TARGET_COMMIT"
-gh api -H 'Accept: application/vnd.github+json' "repos/$REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$artifact_archive"
-unzip -q "$artifact_archive" -d "$artifact_dir"
+stage artifact_run_verify
+gh api "repos/$REPOSITORY/actions/runs/$ARTIFACT_RUN_ID" > "$run_json"
+test "$(jq -r .head_sha "$run_json")" = "$TARGET_COMMIT"
+test "$(jq -r .status "$run_json")" = completed
+test "$(jq -r .conclusion "$run_json")" = success
+
+stage artifact_download
+gh run download "$ARTIFACT_RUN_ID" --repo "$REPOSITORY" --name "$ARTIFACT_NAME" --dir "$artifact_dir"
 test -f "$artifact_dir/$ASSET_NAME"
 install -m 0600 "$artifact_dir/$ASSET_NAME" "$asset_path"
 
+stage notes_verify
 git show "$NOTES_REF:$NOTES_PATH" > "$notes_file"
 test -s "$notes_file"
 grep -Fq '# 2.0.0 Alpha 3 Dev 6' "$notes_file"
 grep -Fq "$ASSET_SHA256" "$notes_file"
 grep -Fq "$TARGET_COMMIT" "$notes_file"
 
+stage asset_verify
 test "$(sha256sum "$asset_path" | awk '{print $1}')" = "$ASSET_SHA256"
 test "$(wc -c < "$asset_path" | tr -d ' ')" = "$ASSET_BYTES"
 test "$(unzip -Z1 "$asset_path" | wc -l | tr -d ' ')" = "$ASSET_ENTRIES"
@@ -69,6 +80,7 @@ stable_before="$(git show "$NOTES_REF:update.json" | sha256sum | awk '{print $1}
 prerelease_before="$(git show "$NOTES_REF:update-prerelease.json" | jq -r .version)"
 test "$prerelease_before" = '2.0.0-alpha.3-dev.2'
 
+stage collision_check
 release_exists=0
 tag_exists=0
 if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json" 2>/dev/null; then
@@ -79,6 +91,7 @@ if gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$tag_json" 2>/dev/null; 
 fi
 
 if [[ "$release_exists" -eq 1 || "$tag_exists" -eq 1 ]]; then
+  stage existing_public_verify
   test "$release_exists" -eq 1
   test "$tag_exists" -eq 1
   test "$(jq -r .draft "$release_json")" = false
@@ -87,8 +100,11 @@ if [[ "$release_exists" -eq 1 || "$tag_exists" -eq 1 ]]; then
   test "$(jq -r .name "$release_json")" = "$RELEASE_TITLE"
   test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
 else
+  stage draft_create
   gh release create "$TAG_NAME" "$asset_path#$ASSET_NAME" --repo "$REPOSITORY" --target "$TARGET_COMMIT" --title "$RELEASE_TITLE" --notes-file "$notes_file" --prerelease --draft
   created_release=1
+
+  stage draft_verify
   gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json"
   test "$(jq -r .draft "$release_json")" = true
   test "$(jq -r .prerelease "$release_json")" = true
@@ -100,12 +116,14 @@ else
   gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$release_body"
   cmp -s "$notes_file" "$release_body"
 
+  stage publish
   release_id="$(jq -r .id "$release_json")"
   jq -n --arg name "$RELEASE_TITLE" --rawfile body "$notes_file" '{draft:false, prerelease:true, name:$name, body:$body}' > "$RUNNER_TEMP/publish.json"
   gh api --method PATCH "repos/$REPOSITORY/releases/$release_id" --input "$RUNNER_TEMP/publish.json" > "$release_json"
   published_release=1
 fi
 
+stage public_metadata_verify
 gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json"
 test "$(jq -r .draft "$release_json")" = false
 test "$(jq -r .prerelease "$release_json")" = true
@@ -118,18 +136,21 @@ test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
 gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$release_body"
 cmp -s "$notes_file" "$release_body"
 
+stage public_download_verify
 public_url="$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .browser_download_url' "$release_json")"
 test -n "$public_url"
 curl --fail --location --retry 3 --output "$downloaded_asset" "$public_url"
 test "$(sha256sum "$downloaded_asset" | awk '{print $1}')" = "$ASSET_SHA256"
 test "$(wc -c < "$downloaded_asset" | tr -d ' ')" = "$ASSET_BYTES"
 
+stage channel_boundary_verify
 git fetch origin v2 >/dev/null
 stable_after="$(git show origin/v2:update.json | sha256sum | awk '{print $1}')"
 test "$stable_after" = "$stable_before"
 prerelease_after="$(git show origin/v2:update-prerelease.json | jq -r .version)"
 test "$prerelease_after" = '2.0.0-alpha.3-dev.2'
 
+stage proof_write
 release_url="$(jq -r .html_url "$release_json")"
 {
   printf 'repository_full_name=%s\n' "$REPOSITORY"
@@ -152,4 +173,5 @@ release_url="$(jq -r .html_url "$release_json")"
   printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV6_PRERELEASE_PUBLISH_DONE outcome=success workflow_exit_code=0'
 } | tee "$proof_file"
 
+stage success
 trap - EXIT
