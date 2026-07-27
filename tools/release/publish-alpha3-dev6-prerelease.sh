@@ -46,6 +46,7 @@ grep -Fq '# 2.0.0 Alpha 3 Dev 6' "$notes_file"
 grep -Fq "$ASSET_SHA256" "$notes_file"
 grep -Fq "$TARGET_COMMIT" "$notes_file"
 
+chmod +x "$source_dir/dev_tools/build-release-module.sh" "$source_dir/dev_tools/verify-release-module.sh"
 bash "$source_dir/dev_tools/build-release-module.sh" "$asset_path"
 bash "$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
 
