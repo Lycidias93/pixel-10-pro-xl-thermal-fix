@@ -10,6 +10,7 @@ on:
       - tools/release/publish-alpha3-dev6-prerelease.sh
 
 permissions:
+  actions: read
   contents: write
 
 jobs:
