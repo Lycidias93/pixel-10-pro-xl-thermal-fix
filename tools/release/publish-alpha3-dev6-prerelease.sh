@@ -133,7 +133,7 @@ else
   test "$(jq -r .target_commitish "$release_json")" = "$TARGET_COMMIT"
   test "$(jq '[.assets[] | select(.name == env.ASSET_NAME)] | length' "$release_json")" = 1
   test "$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .size' "$release_json")" = "$ASSET_BYTES"
-  jq -r .body "$release_json" > "$release_body"
+  jq -j .body "$release_json" > "$release_body"
   cmp -s "$notes_file" "$release_body"
 
   stage publish
@@ -152,7 +152,7 @@ test "$(jq '[.assets[] | select(.name == env.ASSET_NAME)] | length' "$release_js
 test "$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .size' "$release_json")" = "$ASSET_BYTES"
 gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$tag_json"
 test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
-jq -r .body "$release_json" > "$release_body"
+jq -j .body "$release_json" > "$release_body"
 cmp -s "$notes_file" "$release_body"
 
 stage public_download_verify
