@@ -6,7 +6,7 @@ on:
       - v2
     paths:
       - .github/workflows/user-confirmed-alpha3-dev6-prerelease-retry.yml
-      - tools/release/publish-alpha3-dev6-prerelease-v2.sh
+      - tools/release/publish-alpha3-dev6-prerelease-v3.sh
 
 permissions:
   actions: read
@@ -46,8 +46,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x tools/release/publish-alpha3-dev6-prerelease-v2.sh
-          tools/release/publish-alpha3-dev6-prerelease-v2.sh
+          chmod +x tools/release/publish-alpha3-dev6-prerelease-v3.sh
+          tools/release/publish-alpha3-dev6-prerelease-v3.sh
 
       - name: Commit publication state
         if: always()
