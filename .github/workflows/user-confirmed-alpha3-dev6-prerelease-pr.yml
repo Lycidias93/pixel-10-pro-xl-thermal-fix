@@ -1,0 +1,70 @@
+name: User-confirmed Alpha 3 dev.6 prerelease PR trigger
+
+on:
+  pull_request:
+    branches:
+      - v2
+    paths:
+      - .github/workflows/user-confirmed-alpha3-dev6-prerelease-pr.yml
+      - tools/release/publish-alpha3-dev6-prerelease.sh
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.head_ref == 'repo-maintenance/release-v2-alpha3-dev6-user-go-20260727'
+    runs-on: ubuntu-24.04
+    env:
+      REPOSITORY: Lycidias93/pixel-10-pro-xl-thermal-fix
+      TARGET_COMMIT: fb9caca5ca7a1f147945a500afd586dd3cd0d4d6
+      TAG_NAME: v2.0.0-alpha.3-dev.6
+      RELEASE_TITLE: 2.0.0 Alpha 3 Dev 6
+      RELEASE_KIND: prerelease
+      ASSET_NAME: pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.6.zip
+      ASSET_SHA256: b6c7d14edc49ddded30094b984b66c0dac40d436360461bb55e5fd630148a0b9
+      ASSET_BYTES: '307127'
+      ASSET_ENTRIES: '50'
+      VERSION: 2.0.0-alpha.3-dev.6
+      VERSION_CODE: '1016217'
+      NOTES_REF: 902885c9088ffef8441dc3567431bb4c11c3154d
+      NOTES_PATH: release-notes/2.0.0-alpha.3-dev.6.md
+      POST_PUBLISH_PR: '140'
+      CONTROL_BRANCH: repo-maintenance/release-v2-alpha3-dev6-user-go-20260727
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact release control branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Publish and publicly verify exact prerelease
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tools/release/publish-alpha3-dev6-prerelease.sh
+          tools/release/publish-alpha3-dev6-prerelease.sh
+
+      - name: Upload publication proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-alpha3-dev6-publication-proof
+          path: ${{ runner.temp }}/publication-proof.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit publication proof to control branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-proof
+          install -m 0644 "$RUNNER_TEMP/publication-proof.txt" release-proof/alpha3-dev6-publication-proof.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add release-proof/alpha3-dev6-publication-proof.txt
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'Record Alpha 3 dev.6 publication proof'
+          git push origin "HEAD:$CONTROL_BRANCH"
