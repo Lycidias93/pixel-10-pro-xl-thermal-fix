@@ -46,9 +46,8 @@ grep -Fq '# 2.0.0 Alpha 3 Dev 6' "$notes_file"
 grep -Fq "$ASSET_SHA256" "$notes_file"
 grep -Fq "$TARGET_COMMIT" "$notes_file"
 
-chmod +x "$source_dir/dev_tools/build-release-module.sh" "$source_dir/dev_tools/verify-release-module.sh"
-"$source_dir/dev_tools/build-release-module.sh" "$asset_path"
-"$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
+bash "$source_dir/dev_tools/build-release-module.sh" "$asset_path"
+bash "$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
 
 test "$(sha256sum "$asset_path" | awk '{print $1}')" = "$ASSET_SHA256"
 test "$(wc -c < "$asset_path" | tr -d ' ')" = "$ASSET_BYTES"
