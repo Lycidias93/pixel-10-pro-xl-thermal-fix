@@ -45,11 +45,13 @@ The collector records:
 - pTune and ZRAM state;
 - an SHA-256 manifest for every collected file and the final archive.
 
-## Installer verbose-log assessment
+## Installer and packaged collector boundary
 
-The dev.6 installer autosave is still useful. It already captures package hash and size, battery and power state, device/build tuple, root/backend classification, selected profile state, pTune policy, install-state, and a filtered Thermal logcat. On install failure it also invokes the packaged full debug collector.
+The published dev.6 installer autosave remains useful. It captures package hash and size, battery and power state, device/build tuple, root/backend classification, selected profile state, pTune policy, install-state, and a filtered Thermal logcat.
 
-It should not be treated as a complete report by itself for Action-switch or postboot failures. The online collector imports the installer autosaves and adds the missing active/staged hashes, canonical validation files, Fix-5 runtime-core identity, previous-boot evidence, KernelSU logs, and transition labels. Therefore the published dev.6 ZIP does not need to be silently changed only for logging; any future packaged installer-log expansion belongs to a new version identity.
+It is not silently changed after publication. The next test identity, dev.7, expands the installer fields and ships `tools/bootguard/collect-debug-v3.sh`. Install failures invoke it automatically, while Action → Debug → Collect ZIP reaches it through the existing compatibility path. The packaged v3 collector adds caller/active/staged module views, Fix-5 runtime hashes, previous-boot evidence, KernelSU logs, installer autosaves and explicit scenario/profile labels. See `docs/packaged-debug-v3.md`.
+
+For reports from the currently public dev.6 package, the repo-only online collector remains the preferred complete handoff because it supplements the older packaged data without changing the released ZIP.
 
 ## Required handling
 
