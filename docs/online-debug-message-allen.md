@@ -1,16 +1,11 @@
-# Allen Chang online debug handoff
+# Online debug handoff
 
-Use after the online collector has been merged to `v2`.
+The original Allen-specific black-screen handoff is historical. The coordinated Fix-5 Thermal family logic was integrated into `2.0.0-alpha.3-dev.6`, and the current public prerelease has a broader collector for install, Action-switch, status, and boot failures.
 
-> Thanks, that is enough to narrow it down: `mustang`, July Canary `ZP11.260618.005`; Stock Thermal boots, while every non-stock profile reaches the end of the boot animation and then goes black.
->
-> You do not need to type anything while the screen is black. After reproducing it, recover to a successful Stock boot without deleting `/data/adb/pixel-10-pro-xl-thermal-fix`, then run the current online collector once from Termux.
->
-> Tell me two things before running it:
->
-> 1. Which profile failed: `outdoor-safe`, `outdoor-plus`, or `outdoor-extended`?
-> 2. Was the module installed cleanly or as an upgrade?
->
-> The generated ZIP already contains the three requested stock Thermal files, preferably from the Magisk mirror, plus the exact original cache, module overlays, active Vendor files, hash comparisons, previous-boot logcat when available, pstore/ramoops, boot reason, display/Thermal state, Magisk state, and crash markers.
->
-> Please send the ZIP and the approximate time the screen turned black. Until we understand it, stay on Stock Thermal; Polling and ZRAM can remain separate.
+Use `tools/debug/collect-thermal-prerelease-online.sh` and the instructions in `docs/prerelease-online-debug.md`.
+
+Suggested public handoff:
+
+> If the current Alpha 3 Dev 6 prerelease fails to install, shows red status, bootloops, hangs at the loading bar, or fails after changing profiles in Action, please stop further profile changes and recover to a working boot. Do not wipe the module data. Run the current online collector, review the generated README, and send the archive together with the approximate failure time and the profile transition you selected.
+
+The older `collect-outdoor-boot-failure-online.sh` is retained only for reconstructing the original pre-Fix-5 Canary incident.
