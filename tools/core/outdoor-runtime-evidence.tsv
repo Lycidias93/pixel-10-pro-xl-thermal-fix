@@ -1,3 +1,3 @@
 # device	android	build_id	max_proven_delta_c	evidence
 mustang	17	CP2A.260705.006	3	local_install_postboot_extended_pass_2026-07-26
-mustang	17	ZP11.260618.005	1	allen_clean_flash_safe_boots_plus_infinite_loading_2026-07-26
+mustang	17	ZP11.260618.005	3	allen_fix5_clean_flash_stock_safe_plus_extended_boot_2026-07-26
