@@ -22,6 +22,17 @@ thermal_battery_field() {
     | awk -F: -v pattern="$_pattern" '$1 ~ pattern {gsub(/[[:space:]]/,"",$2); print $2; exit}'
 }
 
+thermal_packaged_debug_collector() {
+  for _collector in \
+    "$MODPATH/tools/bootguard/collect-debug-v3.sh" \
+    "$MODPATH/tools/bootguard/collect-debug.sh"; do
+    [ -s "$_collector" ] || continue
+    printf '%s\n' "$_collector"
+    return 0
+  done
+  return 1
+}
+
 THERMAL_INSTALL_STARTED_EPOCH="$(date +%s 2>/dev/null || echo 0)"
 THERMAL_INSTALL_DEBUG_TS="$(date +%Y%m%d_%H%M%S 2>/dev/null || echo now)"
 THERMAL_INSTALL_DEBUG_DIR="$(thermal_choose_download_dir)"
@@ -106,6 +117,8 @@ thermal_save_install_debug() {
     echo "profile=${profile:-unset}"
     echo "profile_state=${profile_state:-unset}"
     echo "build_state=${build_state:-unset}"
+    echo "build_evidence=${build_evidence:-unset}"
+    echo "build_guard_mode=${build_guard_mode:-unset}"
     echo "android_guard=${android_guard:-unset}"
     echo "fingerprint_android_guard=${fingerprint_android_guard:-unset}"
     echo "incremental_guard=${incremental_guard:-unset}"
@@ -113,6 +126,11 @@ thermal_save_install_debug() {
     echo "profile_source_incremental=${profile_source_incremental:-unset}"
     echo "profile_dir=${profile_dir:-unset}"
     echo "active_dir=${active_dir:-unset}"
+    echo "thermal_polling_mode=$(config_get THERMAL_POLLING_MODE)"
+    echo "thermal_outdoor_profile=$(config_get THERMAL_OUTDOOR_PROFILE)"
+    echo "last_thermal_outdoor_profile=$(config_get LAST_THERMAL_OUTDOOR_PROFILE)"
+    echo "thermal_settings_mode=$(config_get THERMAL_SETTINGS_MODE)"
+    echo "dynamic_unverified_build=$(config_get DYNAMIC_UNVERIFIED_BUILD)"
     echo
     echo "== pTune guard =="
     echo "PTUNE_GUARD_MODE=${PTUNE_GUARD_MODE:-unset}"
@@ -141,6 +159,10 @@ thermal_save_install_debug() {
     echo "== install-state =="
     cat "$MODPATH/install-state.txt" 2>/dev/null || true
     echo
+    echo "== validation summaries =="
+    cat "$MODPATH/guard/outdoor-delta-validation.env" 2>/dev/null || true
+    cat "$MODPATH/validation_report.json" 2>/dev/null || true
+    echo
     echo "== su / magisk =="
     su -v 2>/dev/null || true
     su -V 2>/dev/null || true
@@ -157,8 +179,13 @@ thermal_save_install_debug() {
 }
 
 thermal_collect_debug_on_fail() {
-  [ -s "$MODPATH/tools/bootguard/collect-debug.sh" ] || return 0
-  MODDIR="$MODPATH" sh "$MODPATH/tools/bootguard/collect-debug.sh" > "$THERMAL_INSTALL_DEBUG_COLLECT_STDOUT" 2>&1 || true
+  collector="$(thermal_packaged_debug_collector 2>/dev/null || true)"
+  [ -n "$collector" ] || return 0
+  selected_profile="$(config_get THERMAL_OUTDOOR_PROFILE)"
+  [ -n "$selected_profile" ] || selected_profile=unknown
+  previous_profile="$(config_get LAST_THERMAL_OUTDOOR_PROFILE)"
+  [ -n "$previous_profile" ] || previous_profile=unknown
+  MODDIR="$MODPATH" sh "$collector" install-failure "$selected_profile" "$previous_profile" unknown > "$THERMAL_INSTALL_DEBUG_COLLECT_STDOUT" 2>&1 || true
   ui_print "Install-fail debug stdout:"
   ui_print "$(basename "$THERMAL_INSTALL_DEBUG_COLLECT_STDOUT")"
   ui_print "In Download folder"
