@@ -3,20 +3,21 @@ set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
 patcher="$repo_root/tools/core/patch-thermal.sh"
+fix5_core="$repo_root/tools/core/patch-thermal-fix5-core.sh"
 wrapper="$repo_root/tools/core/patch-thermal-validated.sh"
 verify="$repo_root/tools/core/verify-outdoor-delta.sh"
 supported="$repo_root/tools/core/supported-build.sh"
 state="$repo_root/tools/core/validation-state.sh"
 policy="$repo_root/tools/core/outdoor-runtime-policy.sh"
 
-for file in "$patcher" "$wrapper" "$verify" "$supported" "$state" "$policy"; do
+for file in "$patcher" "$fix5_core" "$wrapper" "$verify" "$supported" "$state" "$policy"; do
   bash -n "$file"
 done
 if grep -Fq '%.*f' "$patcher"; then
   printf '%s\n' 'FAIL android_awk_dynamic_precision_format_present'
   exit 1
 fi
-grep -Fq 'cellular-emergency' "$patcher"
+grep -Fq 'cellular-emergency' "$fix5_core"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT HUP INT TERM
@@ -59,7 +60,7 @@ prepare_case() {
   local name="$1"
   local case_dir="$work/$name"
   mkdir -p "$case_dir/module/tools/core" "$case_dir/module/system/vendor" "$case_dir/data"
-  cp -fp "$patcher" "$wrapper" "$verify" "$supported" "$state" "$policy" "$case_dir/module/tools/core/"
+  cp -fp "$patcher" "$fix5_core" "$wrapper" "$verify" "$supported" "$state" "$policy" "$case_dir/module/tools/core/"
   cp -fp "$repo_root/supported_versions.json" "$case_dir/module/"
   printf '%s\n' "$case_dir"
 }
