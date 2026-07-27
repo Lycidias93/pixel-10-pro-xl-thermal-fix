@@ -10,12 +10,16 @@ stage() {
 }
 
 created_release=0
+created_release_id=""
 published_release=0
 cleanup() {
   rc="$?"
   trap - EXIT
-  if [[ "$rc" -ne 0 && "$created_release" -eq 1 && "$published_release" -eq 0 ]]; then
-    gh release delete "$TAG_NAME" --repo "$REPOSITORY" --yes --cleanup-tag >/dev/null 2>&1 || true
+  if [[ "$rc" -ne 0 && "$created_release" -eq 1 && "$published_release" -eq 0 && -n "$created_release_id" ]]; then
+    gh api --method DELETE "repos/$REPOSITORY/releases/$created_release_id" >/dev/null 2>&1 || true
+    if gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" >/dev/null 2>&1; then
+      gh api --method DELETE "repos/$REPOSITORY/git/refs/tags/$TAG_NAME" >/dev/null 2>&1 || true
+    fi
     printf '%s\n' 'ROLLBACK prepublish_draft_and_tag_cleanup_attempted'
   fi
   exit "$rc"
@@ -42,14 +46,27 @@ artifact_dir="$RUNNER_TEMP/dev6-ci-artifact"
 asset_path="$RUNNER_TEMP/$ASSET_NAME"
 notes_file="$RUNNER_TEMP/release-notes.md"
 release_json="$RUNNER_TEMP/release.json"
+releases_json="$RUNNER_TEMP/releases.json"
 release_body="$RUNNER_TEMP/release-body.md"
 downloaded_asset="$RUNNER_TEMP/public-$ASSET_NAME"
 proof_file="$RUNNER_TEMP/publication-proof.txt"
 tag_json="$RUNNER_TEMP/tag-ref.json"
 run_json="$RUNNER_TEMP/artifact-run.json"
 
-rm -rf "$artifact_dir" "$asset_path" "$notes_file" "$release_json" "$release_body" "$downloaded_asset" "$proof_file" "$tag_json" "$run_json"
+rm -rf "$artifact_dir" "$asset_path" "$notes_file" "$release_json" "$releases_json" "$release_body" "$downloaded_asset" "$proof_file" "$tag_json" "$run_json"
 mkdir -p "$artifact_dir"
+
+fetch_release_from_list() {
+  gh api "repos/$REPOSITORY/releases?per_page=100" > "$releases_json"
+  count="$(jq --arg tag "$TAG_NAME" '[.[] | select(.tag_name == $tag)] | length' "$releases_json")"
+  test "$count" -le 1
+  if [[ "$count" -eq 1 ]]; then
+    jq --arg tag "$TAG_NAME" '.[] | select(.tag_name == $tag)' "$releases_json" > "$release_json"
+    return 0
+  fi
+  : > "$release_json"
+  return 1
+}
 
 stage artifact_run_verify
 gh api "repos/$REPOSITORY/actions/runs/$ARTIFACT_RUN_ID" > "$run_json"
@@ -83,7 +100,7 @@ test "$prerelease_before" = '2.0.0-alpha.3-dev.2'
 stage collision_check
 release_exists=0
 tag_exists=0
-if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json" 2>/dev/null; then
+if fetch_release_from_list; then
   release_exists=1
 fi
 if gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$tag_json" 2>/dev/null; then
@@ -105,7 +122,10 @@ else
   created_release=1
 
   stage draft_verify
-  gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json"
+  fetch_release_from_list
+  created_release_id="$(jq -r .id "$release_json")"
+  test -n "$created_release_id"
+  test "$created_release_id" != null
   test "$(jq -r .draft "$release_json")" = true
   test "$(jq -r .prerelease "$release_json")" = true
   test "$(jq -r .tag_name "$release_json")" = "$TAG_NAME"
@@ -113,13 +133,12 @@ else
   test "$(jq -r .target_commitish "$release_json")" = "$TARGET_COMMIT"
   test "$(jq '[.assets[] | select(.name == env.ASSET_NAME)] | length' "$release_json")" = 1
   test "$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .size' "$release_json")" = "$ASSET_BYTES"
-  gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$release_body"
+  jq -r .body "$release_json" > "$release_body"
   cmp -s "$notes_file" "$release_body"
 
   stage publish
-  release_id="$(jq -r .id "$release_json")"
   jq -n --arg name "$RELEASE_TITLE" --rawfile body "$notes_file" '{draft:false, prerelease:true, name:$name, body:$body}' > "$RUNNER_TEMP/publish.json"
-  gh api --method PATCH "repos/$REPOSITORY/releases/$release_id" --input "$RUNNER_TEMP/publish.json" > "$release_json"
+  gh api --method PATCH "repos/$REPOSITORY/releases/$created_release_id" --input "$RUNNER_TEMP/publish.json" > "$release_json"
   published_release=1
 fi
 
@@ -133,7 +152,7 @@ test "$(jq '[.assets[] | select(.name == env.ASSET_NAME)] | length' "$release_js
 test "$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .size' "$release_json")" = "$ASSET_BYTES"
 gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$tag_json"
 test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
-gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$release_body"
+jq -r .body "$release_json" > "$release_body"
 cmp -s "$notes_file" "$release_body"
 
 stage public_download_verify
