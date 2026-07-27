@@ -18,7 +18,7 @@ trap cleanup EXIT
 required=(
   REPOSITORY TARGET_COMMIT TAG_NAME RELEASE_TITLE RELEASE_KIND ASSET_NAME
   ASSET_SHA256 ASSET_BYTES ASSET_ENTRIES VERSION VERSION_CODE NOTES_REF
-  NOTES_PATH POST_PUBLISH_PR RUNNER_TEMP GITHUB_REPOSITORY
+  NOTES_PATH POST_PUBLISH_PR RUNNER_TEMP GITHUB_WORKSPACE GITHUB_REPOSITORY
 )
 for name in "${required[@]}"; do
   test -n "${!name:-}"
@@ -30,7 +30,7 @@ test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
 git cat-file -e "$TARGET_COMMIT^{commit}"
 git cat-file -e "$NOTES_REF^{commit}"
 
-source_dir="$RUNNER_TEMP/release-source"
+source_dir="$GITHUB_WORKSPACE/../release-source"
 asset_path="$RUNNER_TEMP/$ASSET_NAME"
 notes_file="$RUNNER_TEMP/release-notes.md"
 release_json="$RUNNER_TEMP/release.json"
