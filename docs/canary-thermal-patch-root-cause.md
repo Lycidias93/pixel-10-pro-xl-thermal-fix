@@ -51,7 +51,25 @@ The target inventory is derived independently from each build's three stock Ther
 
 ## Runtime evidence
 
-- `mustang / 17 / CP2A.260705.006`: Outdoor Extended postboot PASS
-- `mustang / 17 / ZP11.260618.005`: Fix 5 clean-flash Stock, Safe, Plus, and Extended boot confirmation
+### Mustang Stable dev.6 proof
 
-A new dev.6 package still requires fresh install and postboot verification before release or promotion.
+Fresh installed-runtime verification completed on 2026-07-27 for:
+
+- module: `2.0.0-alpha.3-dev.6 / 1016217`
+- package SHA-256: `b6c7d14edc49ddded30094b984b66c0dac40d436360461bb55e5fd630148a0b9`
+- device/build: `mustang / Android 17 / CP2A.260705.006 / 15641320`
+- selected state: Polling Mod, Outdoor Extended, ZRAM 100p, pTune installed-disabled
+- validated inventory: 3 files, 12 target zones, 12 threshold arrays, 84 values, delta `+3 C`
+- active state: all three `/vendor/etc` files hash-equal to the generated module overlays
+- Bootguard: pending absent, fail count 0, threshold 2, last-good present
+- ZRAM: active near total RAM size with `lz77eh`
+- Thermal service: responsive with no recent fatal Thermal pattern
+- verifier summary: `checks_failed=0`, `warnings=0`
+- exact result: `RESULT: CG_INSTALLED_RUNTIME_VERIFY_DONE outcome=success workflow_exit_code=0`
+
+### Mustang Canary Fix 5 proof
+
+- `mustang / Android 17 / ZP11.260618.005`
+- Fix 5 clean-flash confirmation for Stock, Outdoor Safe, Outdoor Plus, and Outdoor Extended
+
+Dev.6 is now postboot-proven on the Stable Mustang tuple. A fresh dev.6 install and postboot verification on the Canary tuple is still required before release or channel promotion.
