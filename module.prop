@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.3-dev.6
-versionCode=1016217
+version=2.0.0-alpha.3-dev.7
+versionCode=1016218
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 3 dev.6: Fix 5 downstream Thermal family alignment, dynamic inventory validation, transactional profile changes, responsive UI, and lean packaging.
+description=V2 Alpha 3 dev.7: Fix 5 Thermal alignment plus unified packaged and online diagnostics for install, Action, status and boot failures.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

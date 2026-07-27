@@ -9,6 +9,8 @@ log_b="$(mktemp)"
 legacy_collector="$repo_root/tools/debug/collect-outdoor-boot-failure-online.sh"
 prerelease_collector="$repo_root/tools/debug/collect-thermal-prerelease-online.sh"
 prerelease_launcher="$repo_root/tools/debug/collect-thermal-prerelease-online-menu.sh"
+packaged_entrypoint="$repo_root/tools/bootguard/collect-debug.sh"
+packaged_collector="$repo_root/tools/bootguard/collect-debug-v3.sh"
 install_debug="$repo_root/tools/debug/install-debug.sh"
 cleanup() {
   rm -f "$out_a" "$out_b" "$log_a" "$log_b"
@@ -51,6 +53,20 @@ if grep -Fq '/dev/tty' "$prerelease_launcher"; then
   exit 1
 fi
 
+sh -n "$packaged_entrypoint"
+sh -n "$packaged_collector"
+grep -Fq 'collect-debug-v3.sh' "$packaged_entrypoint"
+grep -Fq 'SCHEMA="pixel-thermal-packaged-debug-v3"' "$packaged_collector"
+grep -Fq 'module-caller' "$packaged_collector"
+grep -Fq 'module-active' "$packaged_collector"
+grep -Fq 'module-staged' "$packaged_collector"
+grep -Fq 'tools/core/patch-thermal-fix5-core.sh' "$packaged_collector"
+grep -Fq 'pixel_thermal_install_*.txt' "$packaged_collector"
+grep -Fq '/data/adb/ksud.log' "$packaged_collector"
+grep -Fq 'logcat -L -b all' "$packaged_collector"
+grep -Fq '/sys/fs/pstore' "$packaged_collector"
+grep -Fq 'RESULT: PIXEL_THERMAL_PACKAGED_DEBUG_DONE outcome=success workflow_exit_code=0' "$packaged_collector"
+
 sh -n "$install_debug"
 grep -Fq 'package_sha256=' "$install_debug"
 grep -Fq 'package_bytes=' "$install_debug"
@@ -58,9 +74,13 @@ grep -Fq 'battery_level=' "$install_debug"
 grep -Fq 'root_impl=' "$install_debug"
 grep -Fq 'mount_backend_hint=' "$install_debug"
 grep -Fq 'profile_state=' "$install_debug"
+grep -Fq 'build_evidence=' "$install_debug"
+grep -Fq 'thermal_outdoor_profile=' "$install_debug"
+grep -Fq '== validation summaries ==' "$install_debug"
 grep -Fq 'PTUNE_GUARD_MODE=' "$install_debug"
 grep -Fq '== install-state ==' "$install_debug"
 grep -Fq '== recent thermal logcat ==' "$install_debug"
+grep -Fq 'collect-debug-v3.sh' "$install_debug"
 grep -Fq 'thermal_collect_debug_on_fail' "$install_debug"
 
 bash "$repo_root/tests/test-outdoor-runtime-evidence.sh"
@@ -92,6 +112,10 @@ fi
 
 unzip -Z1 "$out_a" | grep -Fxq 'tools/core/outdoor-runtime-policy.sh'
 unzip -Z1 "$out_a" | grep -Fxq 'tools/debug/install-debug.sh'
+unzip -Z1 "$out_a" | grep -Fxq 'tools/bootguard/collect-debug.sh'
+unzip -Z1 "$out_a" | grep -Fxq 'tools/bootguard/collect-debug-v3.sh'
+unzip -p "$out_a" tools/bootguard/collect-debug.sh | grep -Fq 'collect-debug-v3.sh'
+unzip -p "$out_a" tools/bootguard/collect-debug-v3.sh | grep -Fq 'pixel-thermal-packaged-debug-v3'
 unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq 'outdoor_runtime_policy_missing'
 unzip -p "$out_a" tools/action-dashboard.sh | grep -Fq 'patch-thermal-validated.sh'
 
@@ -107,8 +131,10 @@ printf 'reproducible_sha256=%s\n' "$(sha256sum "$out_a" | awk '{print $1}')"
 printf '%s\n' 'PASS online_outdoor_collector_syntax_and_contract'
 printf '%s\n' 'PASS online_prerelease_collector_syntax_and_contract'
 printf '%s\n' 'PASS online_prerelease_launcher_internal_prompt_contract'
+printf '%s\n' 'PASS packaged_debug_collector_v3_contract'
 printf '%s\n' 'PASS installer_debug_evidence_contract'
 printf '%s\n' 'PASS online_collectors_repo_only'
+printf '%s\n' 'PASS packaged_collector_shipped'
 printf '%s\n' 'PASS runtime_policy_shipped_evidence_repo_only'
 printf '%s\n' 'PASS android_awk_portable_patcher_shipped'
 printf '%s\n' 'PASS release_builder_and_verifier_contract'
