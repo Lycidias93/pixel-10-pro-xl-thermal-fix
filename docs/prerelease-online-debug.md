@@ -12,20 +12,26 @@ The current public test line is:
 - SHA-256: `b6c7d14edc49ddded30094b984b66c0dac40d436360461bb55e5fd630148a0b9`
 - bytes: `307127`
 
-Use `tools/debug/collect-thermal-prerelease-online.sh` for new reports against this line. The previous `collect-outdoor-boot-failure-online.sh` remains available only for reconstructing the original pre-Fix-5 Canary incident.
+Use `tools/debug/collect-thermal-prerelease-online-menu.sh` for public interactive handoffs. It asks the four incident questions itself, downloads the immutable collector engine, verifies its Git blob, and starts it through root.
 
-The current collector is repo-only and is excluded from the flashable module ZIP.
+The engine remains `tools/debug/collect-thermal-prerelease-online.sh`. It can still be called directly with four explicit arguments for automated or developer-controlled collection. The previous `collect-outdoor-boot-failure-online.sh` remains available only for reconstructing the original pre-Fix-5 Canary incident.
 
-## What it records
+All online debug scripts are repo-only and excluded from the flashable module ZIP.
 
-The collector accepts four labels:
+## Interactive questions
+
+The launcher presents numbered choices for:
 
 1. scenario: `clean-install`, `action-switch`, `boot-failure`, `status-red`, `install-failure`, or `unknown`;
 2. selected profile: `stock`, `outdoor-safe`, `outdoor-plus`, `outdoor-extended`, or `unknown`;
 3. previous profile: the same set plus `none`;
 4. install mode: `clean`, `upgrade`, `dirty`, or `unknown`.
 
-It records:
+Pressing Enter accepts the displayed safe default. The launcher reads from normal stdin and does not force `/dev/tty`.
+
+## What it records
+
+The collector records:
 
 - the exact expected dev.6 release identity and any local copy of the public asset;
 - active and staged module version/versionCode;
