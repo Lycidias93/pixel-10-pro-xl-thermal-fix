@@ -26,18 +26,18 @@ Several independent intermediate defects obscured the root cause:
 
 ## Dev.6 target contract
 
-The patcher first extracts the complete `Name` string and then classifies it. This avoids accidental partial-name matching.
+The verified Fix 5 core intentionally treats the local `VIRTUAL-SKIN*` prefix as one coordinated downstream family. Unlike the earlier accidental broad match, this is now the explicit contract and is paired with an explicit ambient-trigger exclusion.
 
 Included when present in the local stock files:
 
-- every complete name beginning with `VIRTUAL-SKIN`
+- every sensor name beginning with `VIRTUAL-SKIN`
 - `cellular-emergency`
 
 Explicitly excluded:
 
 - `VIRTUAL-SKIN-OVER-35C-TRIGGER`
 
-The target inventory is derived independently from each build's three stock Thermal files. No fixed sensor, array, or value count is used. Every numeric target threshold receives the same selected delta, including the final source-defined value. `NAN`/`NaN` sentinels and the source decimal scale are preserved.
+The target inventory is derived independently from each build's three stock Thermal files. No fixed sensor, array, or value count is used. Every numeric target threshold receives the same selected delta, including the final source-defined value. `NAN`/`NaN` sentinels and the stock integer/one-decimal representation are retained.
 
 ## Preserved dev.5 safeguards
 
