@@ -6,6 +6,7 @@ on:
       - v2
     paths:
       - .github/workflows/user-confirmed-alpha3-dev6-prerelease-retry.yml
+      - tools/release/cleanup-alpha3-dev6-stale-drafts.sh
       - tools/release/publish-alpha3-dev6-prerelease-v3.sh
 
 permissions:
@@ -39,6 +40,13 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+
+      - name: Clean exact stale prerelease drafts
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tools/release/cleanup-alpha3-dev6-stale-drafts.sh
+          tools/release/cleanup-alpha3-dev6-stale-drafts.sh
 
       - name: Publish and create exact proof
         id: publish
