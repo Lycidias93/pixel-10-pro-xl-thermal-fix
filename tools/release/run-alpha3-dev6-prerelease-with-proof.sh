@@ -11,6 +11,7 @@ set +e
 bash tools/release/publish-alpha3-dev6-prerelease.sh
 publish_rc="$?"
 set -e
+publish_stage="$(cat "$RUNNER_TEMP/publish-stage.txt" 2>/dev/null || printf unknown)"
 
 release_json="$RUNNER_TEMP/post-release.json"
 tag_json="$RUNNER_TEMP/post-tag.json"
@@ -105,6 +106,7 @@ prerelease_channel_before_merge="$(git show origin/v2:update-prerelease.json | j
 
 {
   printf 'publish_script_rc=%s\n' "$publish_rc"
+  printf 'publish_stage=%s\n' "$publish_stage"
   printf 'release_found=%s\n' "$release_found"
   printf 'tag_found=%s\n' "$tag_found"
   printf 'release_url=%s\n' "$release_url"
