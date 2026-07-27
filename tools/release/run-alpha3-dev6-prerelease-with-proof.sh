@@ -63,7 +63,7 @@ if [[ "$release_found" = yes ]]; then
   [[ "$asset_bytes" = "$ASSET_BYTES" ]] || verify_rc=1
 
   git show "$NOTES_REF:$NOTES_PATH" > "$notes_file"
-  gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$body_file"
+  jq -j .body "$release_json" > "$body_file"
   if cmp -s "$notes_file" "$body_file"; then
     body_match=PASS
   else
