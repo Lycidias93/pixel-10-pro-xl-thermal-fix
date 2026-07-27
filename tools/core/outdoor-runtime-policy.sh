@@ -1,6 +1,8 @@
 #!/system/bin/sh
-# Runtime-evidence admission for non-stock Thermal profiles.
-# Stock is always admitted. Unknown device/build tuples fail closed at delta 0.
+# Runtime admission for non-stock Thermal profiles.
+# Stock is always admitted. Supported Pixel 10 / Android platform tuples may
+# request up to +3 C, but the local stock-derived materializer and validator
+# remain the final fail-closed authority. Exact build IDs are evidence only.
 
 # Android shell portability shim for the two legacy TSV header writes in
 # patch-thermal.sh. The contents API representation used literal backslash-t
@@ -42,15 +44,24 @@ thermal_outdoor_profile_for_delta() {
   esac
 }
 
+thermal_outdoor_platform_supported() {
+  _device="${1:-unknown}"
+  _android="${2:-unknown}"
+  case "$_device:$_android" in
+    mustang:17|blazer:17|frankel:17|rango:17) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 thermal_outdoor_max_delta() {
   _device="${1:-unknown}"
   _android="${2:-unknown}"
   _build="${3:-unknown}"
-  case "$_device:$_android:$_build" in
-    mustang:17:CP2A.260705.006) printf '%s\n' 3 ;;
-    mustang:17:ZP11.260618.005) printf '%s\n' 3 ;;
-    *) printf '%s\n' 0 ;;
-  esac
+  if thermal_outdoor_platform_supported "$_device" "$_android"; then
+    printf '%s\n' 3
+  else
+    printf '%s\n' 0
+  fi
 }
 
 thermal_outdoor_policy_evidence() {
@@ -60,7 +71,14 @@ thermal_outdoor_policy_evidence() {
   case "$_device:$_android:$_build" in
     mustang:17:CP2A.260705.006) printf '%s\n' dev6_postboot_extended_12zones_84values_pass_2026-07-27 ;;
     mustang:17:ZP11.260618.005) printf '%s\n' allen_fix5_clean_flash_all_profiles_boot_2026-07-26 ;;
-    *) printf '%s\n' stock_only_no_nonstock_runtime_evidence ;;
+    blazer:17:CP2A.260705.006) printf '%s\n' harish_fix5_extended_13zones_91values_pass_2026-07-26 ;;
+    *)
+      if thermal_outdoor_platform_supported "$_device" "$_android"; then
+        printf '%s\n' supported_platform_local_stock_validation_required
+      else
+        printf '%s\n' unsupported_platform_stock_only
+      fi
+    ;;
   esac
 }
 
