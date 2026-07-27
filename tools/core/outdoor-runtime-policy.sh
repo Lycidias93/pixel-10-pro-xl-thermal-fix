@@ -48,7 +48,7 @@ thermal_outdoor_max_delta() {
   _build="${3:-unknown}"
   case "$_device:$_android:$_build" in
     mustang:17:CP2A.260705.006) printf '%s\n' 3 ;;
-    mustang:17:ZP11.260618.005) printf '%s\n' 1 ;;
+    mustang:17:ZP11.260618.005) printf '%s\n' 3 ;;
     *) printf '%s\n' 0 ;;
   esac
 }
@@ -59,7 +59,7 @@ thermal_outdoor_policy_evidence() {
   _build="${3:-unknown}"
   case "$_device:$_android:$_build" in
     mustang:17:CP2A.260705.006) printf '%s\n' local_postboot_extended_pass_2026-07-26 ;;
-    mustang:17:ZP11.260618.005) printf '%s\n' allen_clean_flash_safe_boots_plus_hangs_2026-07-26 ;;
+    mustang:17:ZP11.260618.005) printf '%s\n' allen_fix5_clean_flash_all_profiles_boot_2026-07-26 ;;
     *) printf '%s\n' stock_only_no_nonstock_runtime_evidence ;;
   esac
 }

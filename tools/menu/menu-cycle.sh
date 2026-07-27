@@ -11,7 +11,7 @@ mc_detect_width() {
   case "$_width" in ""|*[!0-9]*) _width="" ;; esac
 
   if [ -z "$_width" ] && command -v stty >/dev/null 2>&1; then
-    _size="$(stty size </dev/tty 2>/dev/null || stty size 2>/dev/null || true)"
+    _size="$(stty size 2>/dev/null || true)"
     set -- $_size
     [ "$#" -eq 2 ] && _width="$2"
     case "$_width" in ""|*[!0-9]*) _width="" ;; esac

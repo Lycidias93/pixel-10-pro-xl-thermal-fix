@@ -1,45 +1,57 @@
-# Android 17 Canary Thermal patch root cause
+# Android 17 Canary Thermal patch root cause and Fix 5 reference
 
-## Affected tuple
+## Verified reference
 
-- Device: `mustang`
-- Android: `17`
-- Build: `ZP11.260618.005`
-- Initial behavior: Stock booted while all non-stock profiles failed after boot animation.
-- Refined evidence: a clean install with Outdoor Safe boots; Outdoor Plus remains on an infinite loading bar. Changing profiles through the old Action path can create a boot loop.
+The functional reference supplied after Allen Chang's final clean-flash testing is:
 
-## Confirmed implementation defects
+- file: `pixel-10-pro-xl-thermal-fix5.zip`
+- SHA-256: `252547739652cdc6c111cb7285b40d4dc215108f50c62c0d86b3598ccf663d66`
+- device/build: `mustang / Android 17 / ZP11.260618.005`
+- observed result: Stock, Outdoor Safe, Outdoor Plus, and Outdoor Extended install and boot.
 
-1. Prefix matching treated every sensor beginning with `VIRTUAL-SKIN` as an Outdoor target. New Canary sensors such as `VIRTUAL-SKIN-OVER-35C-TRIGGER` were unintentionally modified.
-2. The seventh `HotThreshold` entry (zero-based index 6) is the fixed hardware emergency shutdown ceiling. It must remain byte-equivalent to the stock value, normally `55.0` C.
-3. AWK arithmetic discarded decimal scale. The first dev.4 formatter then used `%.*f`, which Android's AWK rejected during flashing with `formats are not supported`.
-4. The old Action settings path invoked the raw patcher, wrote requested settings before independent validation, and ignored materialization failure. This made profile changes non-transactional.
+The ZIP is evidence, not a source branch to merge wholesale. Dev.6 ports its Thermal target semantics onto the newer transactional and fail-closed V2 implementation.
 
-## Current safety contract
+## Root cause
 
-- Only exact `Name` values `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` are Outdoor targets.
-- Prefix variants and all other virtual sensors remain byte-equivalent to stock except independently permitted `PollingDelay` changes.
-- The exact target pair must occur once each across the controlled Thermal files.
-- Target arrays must have exactly seven entries.
-- Entry 7 (zero-based index 6) is never changed and must not exceed `55.0` C in the stock source.
-- Numeric formatting uses fixed portable AWK formats selected by source scale; dynamic `%.*f` is forbidden.
-- Non-stock profiles are admitted only up to the maximum postboot-proven delta for the exact device/Android/build tuple.
-- `mustang/17/ZP11.260618.005` is currently capped at Outdoor Safe (`+1 C`). Plus and Extended fail closed.
-- Action profile and Polling changes use `patch-thermal-validated.sh`; configuration is committed only after successful materialization and independent validation.
+Older dynamic patching modified only `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT`. Android 17 Canary added and tightened a larger hierarchy of downstream virtual sensors. Selective deltas broke the relative threshold ordering between the master skin sensors and dependent CPU, SoC, charging, speaker, and cellular emergency sensors.
 
-## Isolation test
+Several independent intermediate defects obscured the root cause:
 
-Repo-generated manual overlays contain Allen's exact stock Thermal files with only the two target arrays modified. They omit Action, dynamic patching, Polling changes, ZRAM, and services. A manual Plus overlay is the decisive isolation test:
+1. A prefix regex matched names before their closing quote and unintentionally included new sensors.
+2. A later exact-pair hotfix excluded required downstream sensors.
+3. Android AWK rejected the dynamic `%.*f` formatter used by dev.4.
+4. Fixed expectations such as `2 zones / 14 values` or `11 / 77` did not match build-local sensor inventories.
+5. An intermediate support flag marked an otherwise supported local-validation build as unsupported.
+6. The old Action path committed settings before validated materialization and could leave a boot-looping profile active.
 
-- Plus fails: the build's Thermal semantics or accepted range is responsible.
-- Plus boots: the full module's orchestration/materialization path is responsible.
+## Dev.6 target contract
 
-## Source evidence
+The patcher first extracts the complete `Name` string and then classifies it. This avoids accidental partial-name matching.
 
-- `therm.rar`: `b2542ae9e98faacc453734dee25cea88c61dc95411ece7ca466841028d4fee06`
-- `thermal_info_config.json`: `9976306c6421447426f17464a12a3d058eee6e4c936e6a1db7dceb9280c0286d`
-- `thermal_info_config_charge.json`: `2d5d10a5ab2eae1443ea6200569c316cbf0109c407a16672386c0e0095bf8532`
-- `thermal_info_config_throttling.json`: `3f2989b45a484a3f669b97019790fe533aa7e4b954e8d7a29146cbf6542423de`
-- dev.2 install autosave: `ffa87f0a04fd232e76d149133b5651b3b9cd8f8a4d059ab7f9b8b96acbba1fc0`
+Included when present in the local stock files:
 
-The archive and install autosave were supplied directly by Allen Chang following Harish's collection instructions.
+- every complete name beginning with `VIRTUAL-SKIN`
+- `cellular-emergency`
+
+Explicitly excluded:
+
+- `VIRTUAL-SKIN-OVER-35C-TRIGGER`
+
+The target inventory is derived independently from each build's three stock Thermal files. No fixed sensor, array, or value count is used. Every numeric target threshold receives the same selected delta, including the final source-defined value. `NAN`/`NaN` sentinels and the source decimal scale are preserved.
+
+## Preserved dev.5 safeguards
+
+- Android-AWK portable fixed-precision formatting
+- atomic stock cache and overlay promotion
+- independent delta validation
+- canonical persistent validation state
+- transactional Action, OTA auto-switch, and pTune materialization
+- fail-closed rollback on any mismatch
+- runtime-evidence admission by exact device/Android/build tuple
+
+## Runtime evidence
+
+- `mustang / 17 / CP2A.260705.006`: Outdoor Extended postboot PASS
+- `mustang / 17 / ZP11.260618.005`: Fix 5 clean-flash Stock, Safe, Plus, and Extended boot confirmation
+
+A new dev.6 package still requires fresh install and postboot verification before release or promotion.
