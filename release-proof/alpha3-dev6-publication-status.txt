@@ -1,4 +1,4 @@
-publish_script_rc=126
+publish_script_rc=1
 release_found=no
 tag_found=no
 release_url=unavailable
