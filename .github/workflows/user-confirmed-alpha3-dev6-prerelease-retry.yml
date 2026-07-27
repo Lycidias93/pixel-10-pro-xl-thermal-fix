@@ -6,8 +6,7 @@ on:
       - v2
     paths:
       - .github/workflows/user-confirmed-alpha3-dev6-prerelease-retry.yml
-      - tools/release/run-alpha3-dev6-prerelease-with-proof.sh
-      - tools/release/publish-alpha3-dev6-prerelease.sh
+      - tools/release/publish-alpha3-dev6-prerelease-v2.sh
 
 permissions:
   actions: read
@@ -41,16 +40,16 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Publish and create sanitized proof
+      - name: Publish and create exact proof
         id: publish
         continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x tools/release/publish-alpha3-dev6-prerelease.sh tools/release/run-alpha3-dev6-prerelease-with-proof.sh
-          tools/release/run-alpha3-dev6-prerelease-with-proof.sh
+          chmod +x tools/release/publish-alpha3-dev6-prerelease-v2.sh
+          tools/release/publish-alpha3-dev6-prerelease-v2.sh
 
-      - name: Commit sanitized proof or failure state
+      - name: Commit publication state
         if: always()
         shell: bash
         run: |
@@ -73,7 +72,7 @@ jobs:
       - name: Upload publication proof
         uses: actions/upload-artifact@v4
         with:
-          name: pixel-thermal-alpha3-dev6-publication-proof-retry
+          name: pixel-thermal-alpha3-dev6-publication-proof-final
           path: release-proof/alpha3-dev6-publication-status.txt
           if-no-files-found: error
           retention-days: 30
