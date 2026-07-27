@@ -27,8 +27,8 @@ while [[ "$index" -lt "$count" ]]; do
   test "$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .size' "$draft_file")" = "$ASSET_BYTES"
   jq -j .body "$draft_file" > "$body_file"
   cmp -s "$notes_file" "$body_file"
-  gh api --method DELETE "repos/$REPOSITORY/releases/$id"
-  printf 'deleted_stale_draft_id=%s\n' "$id"
+  printf 'verified_stale_draft_id=%s target=%s\n' "$id" "$(jq -r .target_commitish "$draft_file")"
+  gh api --method DELETE "repos/$REPOSITORY/releases/$id" >/dev/null 2>&1 || true
   index=$((index + 1))
 done
 
@@ -37,6 +37,13 @@ if gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" >/dev/null 2>&1; then
   exit 1
 fi
 
-remaining="$(gh api "repos/$REPOSITORY/releases?per_page=100" | jq --arg tag "$TAG_NAME" '[.[] | select(.tag_name == $tag and .draft == true)] | length')"
+remaining=-1
+attempt=1
+while [[ "$attempt" -le 10 ]]; do
+  remaining="$(gh api "repos/$REPOSITORY/releases?per_page=100" | jq --arg tag "$TAG_NAME" '[.[] | select(.tag_name == $tag and .draft == true)] | length')"
+  [[ "$remaining" -eq 0 ]] && break
+  sleep 1
+  attempt=$((attempt + 1))
+done
 test "$remaining" -eq 0
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV6_STALE_DRAFT_CLEANUP_PASS'
