@@ -2,6 +2,7 @@
 set -euo pipefail
 umask 077
 
+ARTIFACT_ID="${ARTIFACT_ID:-8655661598}"
 created_release=0
 published_release=0
 cleanup() {
@@ -18,7 +19,7 @@ trap cleanup EXIT
 required=(
   REPOSITORY TARGET_COMMIT TAG_NAME RELEASE_TITLE RELEASE_KIND ASSET_NAME
   ASSET_SHA256 ASSET_BYTES ASSET_ENTRIES VERSION VERSION_CODE NOTES_REF
-  NOTES_PATH POST_PUBLISH_PR RUNNER_TEMP GITHUB_WORKSPACE GITHUB_REPOSITORY
+  NOTES_PATH POST_PUBLISH_PR RUNNER_TEMP GITHUB_REPOSITORY
 )
 for name in "${required[@]}"; do
   test -n "${!name:-}"
@@ -30,25 +31,33 @@ test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
 git cat-file -e "$TARGET_COMMIT^{commit}"
 git cat-file -e "$NOTES_REF^{commit}"
 
-source_dir="$GITHUB_WORKSPACE/../release-source"
+artifact_json="$RUNNER_TEMP/artifact.json"
+artifact_archive="$RUNNER_TEMP/dev6-ci-artifact.zip"
+artifact_dir="$RUNNER_TEMP/dev6-ci-artifact"
 asset_path="$RUNNER_TEMP/$ASSET_NAME"
 notes_file="$RUNNER_TEMP/release-notes.md"
 release_json="$RUNNER_TEMP/release.json"
 release_body="$RUNNER_TEMP/release-body.md"
 downloaded_asset="$RUNNER_TEMP/public-$ASSET_NAME"
 proof_file="$RUNNER_TEMP/publication-proof.txt"
+tag_json="$RUNNER_TEMP/tag-ref.json"
 
-rm -rf "$source_dir" "$asset_path" "$notes_file" "$release_json" "$release_body" "$downloaded_asset" "$proof_file"
-git worktree add --detach "$source_dir" "$TARGET_COMMIT" >/dev/null
+rm -rf "$artifact_json" "$artifact_archive" "$artifact_dir" "$asset_path" "$notes_file" "$release_json" "$release_body" "$downloaded_asset" "$proof_file" "$tag_json"
+mkdir -p "$artifact_dir"
+
+gh api "repos/$REPOSITORY/actions/artifacts/$ARTIFACT_ID" > "$artifact_json"
+test "$(jq -r .expired "$artifact_json")" = false
+test "$(jq -r .workflow_run.head_sha "$artifact_json")" = "$TARGET_COMMIT"
+gh api -H 'Accept: application/vnd.github+json' "repos/$REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$artifact_archive"
+unzip -q "$artifact_archive" -d "$artifact_dir"
+test -f "$artifact_dir/$ASSET_NAME"
+install -m 0600 "$artifact_dir/$ASSET_NAME" "$asset_path"
+
 git show "$NOTES_REF:$NOTES_PATH" > "$notes_file"
 test -s "$notes_file"
 grep -Fq '# 2.0.0 Alpha 3 Dev 6' "$notes_file"
 grep -Fq "$ASSET_SHA256" "$notes_file"
 grep -Fq "$TARGET_COMMIT" "$notes_file"
-
-chmod +x "$source_dir/dev_tools/build-release-module.sh" "$source_dir/dev_tools/verify-release-module.sh"
-bash "$source_dir/dev_tools/build-release-module.sh" "$asset_path"
-bash "$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
 
 test "$(sha256sum "$asset_path" | awk '{print $1}')" = "$ASSET_SHA256"
 test "$(wc -c < "$asset_path" | tr -d ' ')" = "$ASSET_BYTES"
@@ -65,7 +74,7 @@ tag_exists=0
 if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json" 2>/dev/null; then
   release_exists=1
 fi
-if gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$RUNNER_TEMP/tag-ref.json" 2>/dev/null; then
+if gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$tag_json" 2>/dev/null; then
   tag_exists=1
 fi
 
@@ -76,7 +85,7 @@ if [[ "$release_exists" -eq 1 || "$tag_exists" -eq 1 ]]; then
   test "$(jq -r .prerelease "$release_json")" = true
   test "$(jq -r .tag_name "$release_json")" = "$TAG_NAME"
   test "$(jq -r .name "$release_json")" = "$RELEASE_TITLE"
-  test "$(jq -r .object.sha "$RUNNER_TEMP/tag-ref.json")" = "$TARGET_COMMIT"
+  test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
 else
   gh release create "$TAG_NAME" "$asset_path#$ASSET_NAME" --repo "$REPOSITORY" --target "$TARGET_COMMIT" --title "$RELEASE_TITLE" --notes-file "$notes_file" --prerelease --draft
   created_release=1
@@ -90,8 +99,6 @@ else
   test "$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .size' "$release_json")" = "$ASSET_BYTES"
   gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$release_body"
   cmp -s "$notes_file" "$release_body"
-  gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$RUNNER_TEMP/tag-ref.json"
-  test "$(jq -r .object.sha "$RUNNER_TEMP/tag-ref.json")" = "$TARGET_COMMIT"
 
   release_id="$(jq -r .id "$release_json")"
   jq -n --arg name "$RELEASE_TITLE" --rawfile body "$notes_file" '{draft:false, prerelease:true, name:$name, body:$body}' > "$RUNNER_TEMP/publish.json"
@@ -106,8 +113,8 @@ test "$(jq -r .tag_name "$release_json")" = "$TAG_NAME"
 test "$(jq -r .name "$release_json")" = "$RELEASE_TITLE"
 test "$(jq '[.assets[] | select(.name == env.ASSET_NAME)] | length' "$release_json")" = 1
 test "$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .size' "$release_json")" = "$ASSET_BYTES"
-gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$RUNNER_TEMP/tag-ref.json"
-test "$(jq -r .object.sha "$RUNNER_TEMP/tag-ref.json")" = "$TARGET_COMMIT"
+gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$tag_json"
+test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
 gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$release_body"
 cmp -s "$notes_file" "$release_body"
 
