@@ -1,0 +1,19 @@
+publish_script_rc=126
+release_found=no
+tag_found=no
+release_url=unavailable
+release_draft=unavailable
+release_prerelease=unavailable
+release_name=unavailable
+release_tag=unavailable
+tag_sha=unavailable
+asset_count=0
+asset_bytes=unavailable
+body_match=unavailable
+public_download_sha256=unavailable
+public_download_bytes=unavailable
+stable_channel_match=PASS
+prerelease_channel_before_merge=2.0.0-alpha.3-dev.2
+post_publish_pr=140
+verification_rc=1
+RESULT: PIXEL_THERMAL_DEV6_PRERELEASE_PUBLISH_STOP outcome=failure workflow_exit_code=1
