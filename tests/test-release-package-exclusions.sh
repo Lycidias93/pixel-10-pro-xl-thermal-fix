@@ -8,6 +8,7 @@ log_a="$(mktemp)"
 log_b="$(mktemp)"
 legacy_collector="$repo_root/tools/debug/collect-outdoor-boot-failure-online.sh"
 prerelease_collector="$repo_root/tools/debug/collect-thermal-prerelease-online.sh"
+install_debug="$repo_root/tools/debug/install-debug.sh"
 cleanup() {
   rm -f "$out_a" "$out_b" "$log_a" "$log_b"
 }
@@ -36,6 +37,18 @@ grep -Fq '/data/adb/ksud.log' "$prerelease_collector"
 grep -Fq 'logcat -L -b all' "$prerelease_collector"
 grep -Fq 'RESULT: PIXEL_THERMAL_PRERELEASE_DEBUG_DONE outcome=success workflow_exit_code=0' "$prerelease_collector"
 
+sh -n "$install_debug"
+grep -Fq 'package_sha256=' "$install_debug"
+grep -Fq 'package_bytes=' "$install_debug"
+grep -Fq 'battery_level=' "$install_debug"
+grep -Fq 'root_impl=' "$install_debug"
+grep -Fq 'mount_backend_hint=' "$install_debug"
+grep -Fq 'profile_state=' "$install_debug"
+grep -Fq 'PTUNE_GUARD_MODE=' "$install_debug"
+grep -Fq '== install-state ==' "$install_debug"
+grep -Fq '== recent thermal logcat ==' "$install_debug"
+grep -Fq 'thermal_collect_debug_on_fail' "$install_debug"
+
 bash "$repo_root/tests/test-outdoor-runtime-evidence.sh"
 
 "$repo_root/dev_tools/build-release-module.sh" "$out_a" > "$log_a"
@@ -63,6 +76,7 @@ if unzip -Z1 "$out_a" | grep -Fxq 'tools/core/outdoor-runtime-evidence.tsv'; the
 fi
 
 unzip -Z1 "$out_a" | grep -Fxq 'tools/core/outdoor-runtime-policy.sh'
+unzip -Z1 "$out_a" | grep -Fxq 'tools/debug/install-debug.sh'
 unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq 'outdoor_runtime_policy_missing'
 unzip -p "$out_a" tools/action-dashboard.sh | grep -Fq 'patch-thermal-validated.sh'
 
@@ -77,6 +91,7 @@ grep -q 'RESULT: PIXEL_THERMAL_LEAN_PACKAGE_BUILD_PASS' "$log_b"
 printf 'reproducible_sha256=%s\n' "$(sha256sum "$out_a" | awk '{print $1}')"
 printf '%s\n' 'PASS online_outdoor_collector_syntax_and_contract'
 printf '%s\n' 'PASS online_prerelease_collector_syntax_and_contract'
+printf '%s\n' 'PASS installer_debug_evidence_contract'
 printf '%s\n' 'PASS online_collectors_repo_only'
 printf '%s\n' 'PASS runtime_policy_shipped_evidence_repo_only'
 printf '%s\n' 'PASS android_awk_portable_patcher_shipped'
