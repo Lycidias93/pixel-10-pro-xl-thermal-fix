@@ -152,7 +152,13 @@ if [[ "$release_exists" -eq 0 && "$tag_exists" -eq 0 ]]; then
   test -n "$CREATED_RELEASE_ID"
 
   STAGE=asset_upload
-  gh api --hostname uploads.github.com --method POST -H 'Content-Type: application/zip' --input "$asset_path" "repos/$REPOSITORY/releases/$CREATED_RELEASE_ID/assets?name=$ASSET_NAME" > "$asset_json"
+  upload_base="$(jq -r .upload_url "$release_json" | sed 's/{?name,label}$//')"
+  curl --fail --silent --show-error --request POST \
+    -H "Authorization: Bearer $GH_TOKEN" \
+    -H 'Accept: application/vnd.github+json' \
+    -H 'Content-Type: application/zip' \
+    --data-binary "@$asset_path" \
+    "$upload_base?name=$ASSET_NAME" > "$asset_json"
   test "$(jq -r .name "$asset_json")" = "$ASSET_NAME"
   test "$(jq -r .size "$asset_json")" = "$ASSET_BYTES"
 
