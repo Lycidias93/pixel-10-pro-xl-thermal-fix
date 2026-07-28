@@ -65,7 +65,7 @@ test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
 git cat-file -e "$TARGET_COMMIT^{commit}"
 git cat-file -e "$NOTES_REF^{commit}"
 
-source_dir="$RUNNER_TEMP/release-source"
+source_dir="${RUNNER_WORKSPACE:-${GITHUB_WORKSPACE%/*}}/pixel-thermal-dev8-release-source"
 asset_path="$RUNNER_TEMP/$ASSET_NAME"
 notes_file="$RUNNER_TEMP/release-notes.md"
 release_json="$RUNNER_TEMP/release.json"
@@ -82,6 +82,7 @@ grep -Fq '# 2.0.0 Alpha 3 Dev 8' "$notes_file"
 grep -Fq 'This public prerelease supersedes Dev.6 on the prerelease update channel.' "$notes_file"
 
 record 'phase=build_and_verify'
+chmod +x "$source_dir/dev_tools/build-release-module.sh" "$source_dir/dev_tools/verify-release-module.sh"
 bash "$source_dir/dev_tools/build-release-module.sh" "$asset_path"
 bash "$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
 
