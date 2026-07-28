@@ -17,5 +17,5 @@ phase=preflight
 phase=source_and_notes
 phase=build_and_verify
 outcome=failure
-workflow_exit_code=126
-RESULT: PIXEL_THERMAL_DEV8_PRERELEASE_PUBLISH_DONE outcome=failure workflow_exit_code=126
+workflow_exit_code=4
+RESULT: PIXEL_THERMAL_DEV8_PRERELEASE_PUBLISH_DONE outcome=failure workflow_exit_code=4
