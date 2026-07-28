@@ -3,6 +3,11 @@ ID="${ID:-pixel-10-pro-xl-thermal-fix}"
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 CONFIG_DIR="/data/adb/$ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
+ACTION_DASHBOARD_PERF="$MODDIR/guard/action-dashboard-performance.env"
+STATUS_DIRTY=1
+STATUS_REFRESH_COUNT=0
+STATUS_CACHED_PRINT_COUNT=0
+ACTION_MENU_RENDER_COUNT=0
 
 MENU_CYCLE_AVAILABLE=0
 [ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" && MENU_CYCLE_AVAILABLE=1
@@ -23,7 +28,9 @@ msg() {
 
 if [ "$MENU_CYCLE_AVAILABLE" != "1" ] || [ "$POLICY_AVAILABLE" != "1" ]; then
   msg "! Action menu unavailable"
-  if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
+  if [ -s "$MODDIR/tools/debug/status-cached-print.sh" ]; then
+    MODDIR="$MODDIR" sh "$MODDIR/tools/debug/status-cached-print.sh" || true
+  elif [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
     sh "$MODDIR/tools/debug/status-lib.sh" print || true
   fi
   exit 0
@@ -87,10 +94,20 @@ selected_variant_profile() {
   cfg_get THERMAL_OUTDOOR_PROFILE
 }
 
+mark_status_dirty() {
+  STATUS_DIRTY=1
+}
+
 refresh_status() {
   if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
     sh "$MODDIR/tools/debug/status-lib.sh" update >/dev/null 2>&1 || true
+    STATUS_REFRESH_COUNT=$((STATUS_REFRESH_COUNT + 1))
   fi
+  STATUS_DIRTY=0
+}
+
+ensure_status() {
+  [ "$STATUS_DIRTY" = 0 ] || refresh_status
 }
 
 show_status() {
@@ -98,10 +115,13 @@ show_status() {
   msg "----------------------------------------"
   msg "Pixel 10 Thermal & Memory Control"
   msg "----------------------------------------"
-  if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
+  if [ -s "$MODDIR/tools/debug/status-cached-print.sh" ]; then
+    MODDIR="$MODDIR" sh "$MODDIR/tools/debug/status-cached-print.sh"
+    STATUS_CACHED_PRINT_COUNT=$((STATUS_CACHED_PRINT_COUNT + 1))
+  elif [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
     sh "$MODDIR/tools/debug/status-lib.sh" print
   else
-    msg "! status-lib missing"
+    msg "! status helper missing"
   fi
   msg "----------------------------------------"
 }
@@ -303,6 +323,7 @@ ptune_status() {
 
 ptune_override_off() {
   cfg_set PTUNE_OVERRIDE_MENU off; cfg_set ALLOW_THERMAL_WITH_PTUNE 0; cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION none; cfg_set LAST_PTUNE_OVERRIDE 0
+  mark_status_dirty
   msg "pTune override: OFF"; msg "Reinstall or reflash required"
 }
 
@@ -314,19 +335,18 @@ ptune_override_on() {
   ui_menu3 "pTune Risk" "Keep OFF" "Enable risk" "Back" 0
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in
-    1) cfg_set PTUNE_OVERRIDE_MENU on; cfg_set ALLOW_THERMAL_WITH_PTUNE 1; cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION I_UNDERSTAND_BOOTLOOP_RISK; cfg_set LAST_PTUNE_OVERRIDE 1; msg "pTune override: ON"; msg "Reinstall or reflash required" ;;
+    1) cfg_set PTUNE_OVERRIDE_MENU on; cfg_set ALLOW_THERMAL_WITH_PTUNE 1; cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION I_UNDERSTAND_BOOTLOOP_RISK; cfg_set LAST_PTUNE_OVERRIDE 1; mark_status_dirty; msg "pTune override: ON"; msg "Reinstall or reflash required" ;;
     *) ptune_override_off ;;
   esac
 }
 
 update_channel_status() {
-    if [ ! -s "$MODDIR/tools/update-channel-switch.sh" ]; then msg "! Cannot switch update channel."; msg "Switch tool missing."; return 0; fi
-  if [ -s "$MODDIR/tools/update-channel-switch.sh" ]; then
-    sh "$MODDIR/tools/update-channel-switch.sh" status
-  else
+  if [ ! -s "$MODDIR/tools/update-channel-switch.sh" ]; then
     msg "Update Channel"
     msg "Switch tool missing"
+    return 0
   fi
+  sh "$MODDIR/tools/update-channel-switch.sh" status
 }
 
 update_channel_loop() {
@@ -367,9 +387,37 @@ advanced_loop() {
   done
 }
 
+toggle_debug_mode() {
+  _current="$(cfg_get DEBUG_MODE)"
+  [ -n "$_current" ] || _current="$(cfg_get debug_mode)"
+  if [ "$_current" = 1 ]; then
+    cfg_set DEBUG_MODE 0
+    cfg_set debug_mode 0
+    cfg_set LAST_DEBUG_MODE silent
+    msg "Debug logging: silent"
+  else
+    cfg_set DEBUG_MODE 1
+    cfg_set debug_mode 1
+    cfg_set LAST_DEBUG_MODE verbose
+    msg "Debug logging: verbose"
+  fi
+}
+
+write_dashboard_performance() {
+  mkdir -p "$MODDIR/guard" 2>/dev/null || true
+  {
+    printf '%s\n' 'schema=pixel-thermal-action-dashboard-performance-v1'
+    printf '%s\n' "status_refresh_count=$STATUS_REFRESH_COUNT"
+    printf '%s\n' "cached_status_print_count=$STATUS_CACHED_PRINT_COUNT"
+    printf '%s\n' "main_menu_render_count=$ACTION_MENU_RENDER_COUNT"
+    printf '%s\n' 'recursive_meta_backend_find=absent'
+    printf '%s\n' 'supported_manifest_validation_cache=enabled'
+  } > "$ACTION_DASHBOARD_PERF" 2>/dev/null || true
+}
+
 debug_loop() {
   while :; do
-    mc_cycle4 "Debug" "Status" "Collect ZIP" "Toggle Debug" "Back" 0
+    mc_cycle4 "Debug" "Status" "Collect ZIP" "Debug Logging" "Back" 0
     [ "$MC_REASON" = "timeout" ] && return 0
     case "$MC_INDEX" in
       0) refresh_status; show_status; sleep 2 ;;
@@ -382,12 +430,8 @@ debug_loop() {
         sleep 2
       ;;
       2)
-        if [ -s "$MODDIR/tools/debug/pixel_thermal_toggle_debug.sh" ]; then
-          sh "$MODDIR/tools/debug/pixel_thermal_toggle_debug.sh"
-        else
-          msg "Toggle helper missing"
-        fi
-        sleep 2
+        toggle_debug_mode
+        sleep 1
       ;;
       *) msg "Back."; return 0 ;;
     esac
@@ -396,8 +440,9 @@ debug_loop() {
 
 action_loop() {
   while :; do
-    refresh_status
+    ensure_status
     show_status
+    ACTION_MENU_RENDER_COUNT=$((ACTION_MENU_RENDER_COUNT + 1))
     mc_cycle4 "Action" "Settings" "Debug" "Advanced" "Exit" 0
     [ "$MC_REASON" = "timeout" ] && return 0
     case "$MC_INDEX" in
@@ -410,4 +455,5 @@ action_loop() {
 }
 
 action_loop
+write_dashboard_performance
 exit 0

@@ -101,9 +101,9 @@ INSTALLED_BUILD="none"
 platform_supported=0
 build_evidence=unsupported_platform
 if [ -r "$SUPPORTED_HELPER" ] &&
-   thermal_supported_platform_check "$SUPPORTED_JSON" "$CURRENT_DEVICE" "$CURRENT_ANDROID"; then
+   thermal_supported_probe "$SUPPORTED_JSON" "$CURRENT_DEVICE" "$CURRENT_ANDROID" "$CURRENT_BUILD"; then
   platform_supported=1
-  if thermal_exact_build_check "$SUPPORTED_JSON" "$CURRENT_DEVICE" "$CURRENT_ANDROID" "$CURRENT_BUILD"; then
+  if [ "$THERMAL_SUPPORTED_BUILD_OK" = 1 ]; then
     build_evidence=exact_verified
   else
     build_evidence=dynamic_unverified
