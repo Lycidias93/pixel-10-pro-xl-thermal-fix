@@ -57,6 +57,7 @@ record "notes_ref=$NOTES_REF"
 record "notes_path=$NOTES_PATH"
 record "post_publish_pr=$POST_PUBLISH_PR"
 
+record 'phase=preflight'
 test "$RELEASE_KIND" = prerelease
 test "$GITHUB_REPOSITORY" = "$REPOSITORY"
 gh auth status --hostname github.com >/dev/null
@@ -72,6 +73,7 @@ release_body="$RUNNER_TEMP/release-body.md"
 tag_json="$RUNNER_TEMP/tag.json"
 downloaded_asset="$RUNNER_TEMP/public-$ASSET_NAME"
 
+record 'phase=source_and_notes'
 rm -rf "$source_dir"
 git worktree add --detach "$source_dir" "$TARGET_COMMIT" >/dev/null
 git show "$NOTES_REF:$NOTES_PATH" > "$notes_file"
@@ -79,9 +81,9 @@ test -s "$notes_file"
 grep -Fq '# 2.0.0 Alpha 3 Dev 8' "$notes_file"
 grep -Fq 'This public prerelease supersedes Dev.6 on the prerelease update channel.' "$notes_file"
 
-chmod +x "$source_dir/dev_tools/build-release-module.sh" "$source_dir/dev_tools/verify-release-module.sh"
-"$source_dir/dev_tools/build-release-module.sh" "$asset_path"
-"$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
+record 'phase=build_and_verify'
+bash "$source_dir/dev_tools/build-release-module.sh" "$asset_path"
+bash "$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
 
 test "$(sha256sum "$asset_path" | awk '{print $1}')" = "$ASSET_SHA256"
 test "$(wc -c < "$asset_path" | tr -d ' ')" = "$ASSET_BYTES"
@@ -89,10 +91,12 @@ test "$(unzip -Z1 "$asset_path" | wc -l | tr -d ' ')" = "$ASSET_ENTRIES"
 test "$(unzip -p "$asset_path" module.prop | sed -n 's/^version=//p' | head -n 1)" = "$VERSION"
 test "$(unzip -p "$asset_path" module.prop | sed -n 's/^versionCode=//p' | head -n 1)" = "$VERSION_CODE"
 
+record 'phase=channel_boundary_preflight'
 stable_before="$(git show "$TARGET_COMMIT:update.json" | sha256sum | awk '{print $1}')"
 prerelease_before="$(git show "$TARGET_COMMIT:update-prerelease.json" | jq -r .version)"
 test "$prerelease_before" = '2.0.0-alpha.3-dev.6'
 
+record 'phase=collision_check'
 if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" >/dev/null 2>&1; then
   record 'collision=release_exists'
   exit 40
@@ -103,6 +107,7 @@ if gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" >/dev/null 2>&1; then
 fi
 record 'collision=absent'
 
+record 'phase=create_draft'
 gh release create "$TAG_NAME" "$asset_path#$ASSET_NAME" \
   --repo "$REPOSITORY" \
   --target "$TARGET_COMMIT" \
@@ -112,6 +117,7 @@ gh release create "$TAG_NAME" "$asset_path#$ASSET_NAME" \
   --draft
 created_release=1
 
+record 'phase=verify_draft'
 gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json"
 test "$(jq -r .draft "$release_json")" = true
 test "$(jq -r .prerelease "$release_json")" = true
@@ -126,6 +132,7 @@ gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > "$tag_json"
 test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
 record 'draft_verification=pass'
 
+record 'phase=publish'
 release_id="$(jq -r .id "$release_json")"
 jq -n --arg name "$RELEASE_TITLE" --rawfile body "$notes_file" \
   '{draft:false, prerelease:true, name:$name, body:$body}' > "$RUNNER_TEMP/publish.json"
@@ -133,6 +140,7 @@ gh api --method PATCH "repos/$REPOSITORY/releases/$release_id" \
   --input "$RUNNER_TEMP/publish.json" > "$release_json"
 published_release=1
 
+record 'phase=public_metadata_verify'
 gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > "$release_json"
 test "$(jq -r .draft "$release_json")" = false
 test "$(jq -r .prerelease "$release_json")" = true
@@ -145,6 +153,7 @@ test "$(jq -r .object.sha "$tag_json")" = "$TARGET_COMMIT"
 gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" --jq .body > "$release_body"
 cmp -s "$notes_file" "$release_body"
 
+record 'phase=public_download_verify'
 public_url="$(jq -r '.assets[] | select(.name == env.ASSET_NAME) | .browser_download_url' "$release_json")"
 test -n "$public_url"
 env -u GH_TOKEN -u GITHUB_TOKEN curl --fail --location --retry 3 --output "$downloaded_asset" "$public_url"
@@ -153,13 +162,13 @@ public_bytes="$(wc -c < "$downloaded_asset" | tr -d ' ')"
 test "$public_sha256" = "$ASSET_SHA256"
 test "$public_bytes" = "$ASSET_BYTES"
 
+record 'phase=channel_boundary_postverify'
 git fetch origin v2 >/dev/null
 stable_after="$(git show origin/v2:update.json | sha256sum | awk '{print $1}')"
 prerelease_after="$(git show origin/v2:update-prerelease.json | jq -r .version)"
 test "$stable_after" = "$stable_before"
 test "$prerelease_after" = '2.0.0-alpha.3-dev.6'
 
-record 'draft_verification=pass'
 record 'public_verification=pass'
 record "release_url=$(jq -r .html_url "$release_json")"
 record "tag_target=$(jq -r .object.sha "$tag_json")"
