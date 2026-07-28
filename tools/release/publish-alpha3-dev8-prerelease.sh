@@ -85,7 +85,10 @@ record 'phase=build_and_verify'
 chmod +x "$source_dir/dev_tools/build-release-module.sh" "$source_dir/dev_tools/verify-release-module.sh"
 sed -i 's|^"$repo_root/dev_tools/verify-release-module.sh" "$output"$|bash "$repo_root/dev_tools/verify-release-module.sh" "$output"|' "$source_dir/dev_tools/build-release-module.sh"
 grep -Fq 'bash "$repo_root/dev_tools/verify-release-module.sh" "$output"' "$source_dir/dev_tools/build-release-module.sh"
-bash "$source_dir/dev_tools/build-release-module.sh" "$asset_path"
+(
+  cd "$source_dir"
+  bash dev_tools/build-release-module.sh "$asset_path"
+)
 bash "$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
 
 test "$(sha256sum "$asset_path" | awk '{print $1}')" = "$ASSET_SHA256"
