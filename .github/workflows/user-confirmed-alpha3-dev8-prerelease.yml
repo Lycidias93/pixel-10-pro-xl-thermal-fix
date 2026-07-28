@@ -26,6 +26,11 @@ jobs:
       ASSET_SHA256: 383e1bc2f42c242911e13b39e47b311ad8ebe9548d824e0427644d1bb5b42ef2
       ASSET_BYTES: '308515'
       ASSET_ENTRIES: '51'
+      ARTIFACT_RUN_ID: '30336437383'
+      ARTIFACT_ID: '8679299595'
+      ARTIFACT_NAME: pixel-thermal-alpha3-next-b9bf657db7e5d5354acab5b66c2a69330f3463f6
+      ARTIFACT_DIGEST: sha256:3e2214715192c77fbb347c4a6514d76503f6947f3a58ed1ffd91e42f03bb5349
+      ARTIFACT_HEAD_SHA: f71e2d11a46713c32d352d60373041a11a956de4
       VERSION: 2.0.0-alpha.3-dev.8
       VERSION_CODE: '1016219'
       NOTES_REF: 6d6507f6816e7b4b0d397ddc65833f762f71c053
@@ -46,8 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x tools/release/publish-alpha3-dev8-prerelease.sh
-          tools/release/publish-alpha3-dev8-prerelease.sh
+          bash tools/release/publish-alpha3-dev8-prerelease.sh
 
       - name: Commit publication state
         if: always()
