@@ -1,0 +1,78 @@
+name: User-confirmed Alpha 3 dev.8 prerelease
+
+on:
+  pull_request:
+    branches:
+      - v2
+    paths:
+      - .github/workflows/user-confirmed-alpha3-dev8-prerelease.yml
+      - tools/release/publish-alpha3-dev8-prerelease.sh
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish-and-prove:
+    if: github.head_ref == 'repo-maintenance/release-v2-alpha3-dev8-user-go-20260728'
+    runs-on: ubuntu-24.04
+    env:
+      REPOSITORY: Lycidias93/pixel-10-pro-xl-thermal-fix
+      TARGET_COMMIT: 6d6507f6816e7b4b0d397ddc65833f762f71c053
+      TAG_NAME: v2.0.0-alpha.3-dev.8
+      RELEASE_TITLE: 2.0.0 Alpha 3 Dev 8
+      RELEASE_KIND: prerelease
+      ASSET_NAME: pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.8.zip
+      ASSET_SHA256: 383e1bc2f42c242911e13b39e47b311ad8ebe9548d824e0427644d1bb5b42ef2
+      ASSET_BYTES: '308515'
+      ASSET_ENTRIES: '51'
+      VERSION: 2.0.0-alpha.3-dev.8
+      VERSION_CODE: '1016219'
+      NOTES_REF: 6d6507f6816e7b4b0d397ddc65833f762f71c053
+      NOTES_PATH: release-notes/2.0.0-alpha.3-dev.8.md
+      POST_PUBLISH_PR: '147'
+      CONTROL_BRANCH: repo-maintenance/release-v2-alpha3-dev8-user-go-20260728
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact release control branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Draft-first publish and public proof
+        id: publish
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tools/release/publish-alpha3-dev8-prerelease.sh
+          tools/release/publish-alpha3-dev8-prerelease.sh
+
+      - name: Commit publication state
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s release-proof/alpha3-dev8-publication-status.txt
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add release-proof/alpha3-dev8-publication-status.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record Alpha 3 dev.8 publication state'
+            git push origin "HEAD:$CONTROL_BRANCH"
+          fi
+
+      - name: Enforce successful public proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'RESULT: PIXEL_THERMAL_DEV8_PRERELEASE_PUBLISH_DONE outcome=success workflow_exit_code=0' release-proof/alpha3-dev8-publication-status.txt
+
+      - name: Upload publication proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-alpha3-dev8-publication-proof
+          path: release-proof/alpha3-dev8-publication-status.txt
+          if-no-files-found: error
+          retention-days: 30
