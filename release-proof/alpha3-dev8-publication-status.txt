@@ -13,6 +13,9 @@ version_code=1016219
 notes_ref=6d6507f6816e7b4b0d397ddc65833f762f71c053
 notes_path=release-notes/2.0.0-alpha.3-dev.8.md
 post_publish_pr=147
+phase=preflight
+phase=source_and_notes
+phase=build_and_verify
 outcome=failure
 workflow_exit_code=126
 RESULT: PIXEL_THERMAL_DEV8_PRERELEASE_PUBLISH_DONE outcome=failure workflow_exit_code=126
