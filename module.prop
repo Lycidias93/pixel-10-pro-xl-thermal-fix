@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.3-dev.8
-versionCode=1016219
+version=2.0.0-alpha.3-dev.9
+versionCode=1016220
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 3 dev.8: Fix 5 local stock validation without exact-build outdoor-profile gating, plus unified diagnostics.
+description=V2 Alpha 3 dev.9: Harish Action performance pass with cached status, shallow backend probing and deduplicated supported-build validation.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
