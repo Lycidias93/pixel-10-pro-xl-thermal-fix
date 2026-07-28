@@ -36,50 +36,146 @@ thermal_json_tolerant_validate() {
   ' "$_file"
 }
 
+# The supported-version manifest is immutable for the lifetime of each helper
+# process. Cache its structural validation so platform/build probes do not
+# repeat the character-by-character JSON scan, wc and grep sequence.
+THERMAL_SUPPORTED_VALIDATE_CACHE_FILE=
+THERMAL_SUPPORTED_VALIDATE_CACHE_SIZE=
+THERMAL_SUPPORTED_VALIDATE_CACHE_RESULT=1
+THERMAL_SUPPORTED_PROBE_CACHE_KEY=
+THERMAL_SUPPORTED_DEVICE_OK=0
+THERMAL_SUPPORTED_ANDROID_OK=0
+THERMAL_SUPPORTED_BUILD_OK=0
+
 thermal_supported_validate_file() {
   _file="$1"
   [ -s "$_file" ] || return 1
   _size="$(wc -c < "$_file" 2>/dev/null | tr -d ' ')"
   case "$_size" in ''|*[!0-9]*) return 1 ;; esac
-  [ "$_size" -ge 100 ] 2>/dev/null || return 1
-  [ "$_size" -le 262144 ] 2>/dev/null || return 1
-  thermal_json_tolerant_validate "$_file" || return 1
-  grep -q '"supported_devices"[[:space:]]*:' "$_file" || return 1
-  grep -q '"supported_android_versions"[[:space:]]*:' "$_file" || return 1
-  grep -q '"verified_builds"[[:space:]]*:' "$_file" || return 1
-  return 0
+
+  if [ "$_file" = "$THERMAL_SUPPORTED_VALIDATE_CACHE_FILE" ] &&
+     [ "$_size" = "$THERMAL_SUPPORTED_VALIDATE_CACHE_SIZE" ]; then
+    return "$THERMAL_SUPPORTED_VALIDATE_CACHE_RESULT"
+  fi
+
+  _result=0
+  [ "$_size" -ge 100 ] 2>/dev/null || _result=1
+  [ "$_size" -le 262144 ] 2>/dev/null || _result=1
+  if [ "$_result" -eq 0 ]; then
+    thermal_json_tolerant_validate "$_file" || _result=1
+  fi
+  if [ "$_result" -eq 0 ]; then
+    grep -q '"supported_devices"[[:space:]]*:' "$_file" || _result=1
+    grep -q '"supported_android_versions"[[:space:]]*:' "$_file" || _result=1
+    grep -q '"verified_builds"[[:space:]]*:' "$_file" || _result=1
+  fi
+
+  THERMAL_SUPPORTED_VALIDATE_CACHE_FILE="$_file"
+  THERMAL_SUPPORTED_VALIDATE_CACHE_SIZE="$_size"
+  THERMAL_SUPPORTED_VALIDATE_CACHE_RESULT="$_result"
+  return "$_result"
+}
+
+thermal_supported_probe() {
+  _file="$1"
+  _device="$2"
+  _android="$3"
+  _build="${4:-unknown}"
+  _key="$_file|$_device|$_android|$_build"
+
+  if [ "$_key" = "$THERMAL_SUPPORTED_PROBE_CACHE_KEY" ]; then
+    [ "$THERMAL_SUPPORTED_DEVICE_OK" = 1 ] &&
+      [ "$THERMAL_SUPPORTED_ANDROID_OK" = 1 ]
+    return
+  fi
+
+  THERMAL_SUPPORTED_DEVICE_OK=0
+  THERMAL_SUPPORTED_ANDROID_OK=0
+  THERMAL_SUPPORTED_BUILD_OK=0
+  thermal_supported_validate_file "$_file" || {
+    THERMAL_SUPPORTED_PROBE_CACHE_KEY="$_key"
+    return 1
+  }
+
+  _probe="$(awk -v dev="$_device" -v android="$_android" -v bid="$_build" '
+    index($0, "\"supported_devices\"") && index($0, "{") {
+      in_devices=1
+      next
+    }
+    in_devices {
+      if (index($0, "}") > 0) {
+        in_devices=0
+      } else if (index($0, "\"" dev "\"") > 0 && index($0, ":") > 0) {
+        device_ok=1
+      }
+      next
+    }
+
+    index($0, "\"supported_android_versions\"") && index($0, "[") {
+      in_android_list=1
+    }
+    in_android_list {
+      if (index($0, "\"" android "\"") > 0) android_ok=1
+      if (index($0, "]") > 0) in_android_list=0
+      next
+    }
+
+    index($0, "\"verified_builds\"") && index($0, "{") {
+      in_verified=1
+      next
+    }
+    in_verified && !in_verified_device &&
+      index($0, "\"" dev "\"") && index($0, "{") {
+        in_verified_device=1
+        next
+      }
+    in_verified_device && !in_verified_android &&
+      index($0, "\"" android "\"") && index($0, "[") {
+        in_verified_android=1
+        next
+      }
+    in_verified_android {
+      if (index($0, "\"" bid "\"") > 0) build_ok=1
+      if (index($0, "]") > 0) in_verified_android=0
+      next
+    }
+    in_verified_device && !in_verified_android && index($0, "}") {
+      in_verified_device=0
+    }
+    END {
+      printf "%d:%d:%d\n", device_ok + 0, android_ok + 0, build_ok + 0
+    }
+  ' "$_file" 2>/dev/null)" || _probe="0:0:0"
+
+  THERMAL_SUPPORTED_DEVICE_OK="${_probe%%:*}"
+  _rest="${_probe#*:}"
+  THERMAL_SUPPORTED_ANDROID_OK="${_rest%%:*}"
+  THERMAL_SUPPORTED_BUILD_OK="${_rest##*:}"
+  THERMAL_SUPPORTED_PROBE_CACHE_KEY="$_key"
+
+  [ "$THERMAL_SUPPORTED_DEVICE_OK" = 1 ] &&
+    [ "$THERMAL_SUPPORTED_ANDROID_OK" = 1 ]
 }
 
 thermal_supported_device_check() {
   _file="$1"
   _device="$2"
-  thermal_supported_validate_file "$_file" || return 1
-  awk -v dev="$_device" '
-    index($0, "\"supported_devices\"") && index($0, "{") { in_devices=1; next }
-    in_devices && index($0, "}") { exit(found ? 0 : 1) }
-    in_devices && index($0, "\"" dev "\"") && index($0, ":") { found=1; exit 0 }
-    END { if (!found) exit 1 }
-  ' "$_file"
+  thermal_supported_probe "$_file" "$_device" "__none__" "__none__" || true
+  [ "$THERMAL_SUPPORTED_DEVICE_OK" = 1 ]
 }
 
 thermal_supported_android_check() {
   _file="$1"
   _android="$2"
-  thermal_supported_validate_file "$_file" || return 1
-  awk -v android="$_android" '
-    index($0, "\"supported_android_versions\"") && index($0, "[") { in_android=1 }
-    in_android && index($0, "\"" android "\"") { found=1; exit 0 }
-    in_android && index($0, "]") { exit(found ? 0 : 1) }
-    END { if (!found) exit 1 }
-  ' "$_file"
+  thermal_supported_probe "$_file" "__none__" "$_android" "__none__" || true
+  [ "$THERMAL_SUPPORTED_ANDROID_OK" = 1 ]
 }
 
 thermal_supported_platform_check() {
   _file="$1"
   _device="$2"
   _android="$3"
-  thermal_supported_device_check "$_file" "$_device" &&
-    thermal_supported_android_check "$_file" "$_android"
+  thermal_supported_probe "$_file" "$_device" "$_android" "__none__"
 }
 
 thermal_exact_build_check() {
@@ -87,17 +183,8 @@ thermal_exact_build_check() {
   _device="$2"
   _android="$3"
   _build="$4"
-  thermal_supported_validate_file "$_file" || return 1
-  awk -v dev="$_device" -v android="$_android" -v bid="$_build" '
-    index($0, "\"verified_builds\"") && index($0, "{") { in_verified=1; next }
-    !in_verified { next }
-    index($0, "\"" dev "\"") && index($0, "{") { in_device=1; next }
-    in_device && index($0, "\"" android "\"") && index($0, "[") { in_android=1; next }
-    in_android && index($0, "\"" bid "\"") { found=1; exit 0 }
-    in_android && index($0, "]") { in_android=0; next }
-    in_device && !in_android && index($0, "}") { in_device=0; next }
-    END { if (!found) exit 1 }
-  ' "$_file"
+  thermal_supported_probe "$_file" "$_device" "$_android" "$_build" || return 1
+  [ "$THERMAL_SUPPORTED_BUILD_OK" = 1 ]
 }
 
 # Backward-compatible activation API. In Dynamic V2, "supported" means the
@@ -108,11 +195,11 @@ thermal_supported_check() {
   _android="$3"
   _build="${4:-unknown}"
   THERMAL_BUILD_EVIDENCE=unverified
-  if ! thermal_supported_platform_check "$_file" "$_device" "$_android"; then
+  if ! thermal_supported_probe "$_file" "$_device" "$_android" "$_build"; then
     THERMAL_BUILD_EVIDENCE=unsupported_platform
     return 1
   fi
-  if thermal_exact_build_check "$_file" "$_device" "$_android" "$_build"; then
+  if [ "$THERMAL_SUPPORTED_BUILD_OK" = 1 ]; then
     THERMAL_BUILD_EVIDENCE=verified
   fi
   return 0
@@ -123,9 +210,9 @@ thermal_build_evidence_state() {
   _device="$2"
   _android="$3"
   _build="$4"
-  if ! thermal_supported_platform_check "$_file" "$_device" "$_android"; then
+  if ! thermal_supported_probe "$_file" "$_device" "$_android" "$_build"; then
     printf '%s\n' unsupported_platform
-  elif thermal_exact_build_check "$_file" "$_device" "$_android" "$_build"; then
+  elif [ "$THERMAL_SUPPORTED_BUILD_OK" = 1 ]; then
     printf '%s\n' exact_verified
   else
     printf '%s\n' dynamic_unverified
