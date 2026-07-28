@@ -486,11 +486,7 @@ fi
 meta_backend=no
 meta_backend_kind=none
 meta_backend_version=unknown
-probe_files="$(find "$ADB_ROOT" /debug_ramdisk /sbin -maxdepth 5 \( -iname '*mountify*' -o -iname '*metamodule*' -o -iname '*meta-module*' \) 2>/dev/null | head -20)"
-if [ -n "$probe_files" ]; then
-  meta_backend=yes
-  case "$probe_files" in *mountify*) meta_backend_kind=mountify ;; *) meta_backend_kind=metamodule ;; esac
-fi
+meta_backend_probe_mode=module_prop_shallow
 for p in "$ADB_ROOT"/modules/*/module.prop "$ADB_ROOT"/modules_update/*/module.prop; do
   [ -f "$p" ] || continue
   if grep -Eiq '^(id|name)=.*(mountify|metamodule|meta module|meta-module)' "$p"; then
@@ -643,6 +639,7 @@ fi
   printf '%s\n' "META_BACKEND_PRESENT=$meta_backend"
   printf '%s\n' "META_BACKEND_KIND=$meta_backend_kind"
   printf '%s\n' "META_BACKEND_VERSION=$meta_backend_version"
+  printf '%s\n' "META_BACKEND_PROBE_MODE=$meta_backend_probe_mode"
   printf '%s\n' "METAMODULE_INSTALLED=$meta_backend"
   printf '%s\n' "VENDOR_OVERLAY_BACKEND_WARN=$warn"
   printf '%s\n' "SAFE_TO_REBOOT=$safe"
