@@ -5,6 +5,7 @@ CONFIG_DIR="/data/adb/$ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 ACTION_DASHBOARD_PERF="$MODDIR/guard/action-dashboard-performance.env"
 STATUS_DIRTY=1
+STATUS_SHOWN=0
 STATUS_REFRESH_COUNT=0
 STATUS_CACHED_PRINT_COUNT=0
 ACTION_MENU_RENDER_COUNT=0
@@ -440,8 +441,11 @@ debug_loop() {
 
 action_loop() {
   while :; do
-    ensure_status
-    show_status
+    if [ "$STATUS_DIRTY" = 1 ] || [ "$STATUS_SHOWN" = 0 ]; then
+      ensure_status
+      show_status
+      STATUS_SHOWN=1
+    fi
     ACTION_MENU_RENDER_COUNT=$((ACTION_MENU_RENDER_COUNT + 1))
     mc_cycle4 "Action" "Settings" "Debug" "Advanced" "Exit" 0
     [ "$MC_REASON" = "timeout" ] && return 0
