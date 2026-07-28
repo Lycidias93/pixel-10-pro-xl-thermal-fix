@@ -83,6 +83,8 @@ grep -Fq 'This public prerelease supersedes Dev.6 on the prerelease update chann
 
 record 'phase=build_and_verify'
 chmod +x "$source_dir/dev_tools/build-release-module.sh" "$source_dir/dev_tools/verify-release-module.sh"
+sed -i 's|^"$repo_root/dev_tools/verify-release-module.sh" "$output"$|bash "$repo_root/dev_tools/verify-release-module.sh" "$output"|' "$source_dir/dev_tools/build-release-module.sh"
+grep -Fq 'bash "$repo_root/dev_tools/verify-release-module.sh" "$output"' "$source_dir/dev_tools/build-release-module.sh"
 bash "$source_dir/dev_tools/build-release-module.sh" "$asset_path"
 bash "$source_dir/dev_tools/verify-release-module.sh" "$asset_path"
 
