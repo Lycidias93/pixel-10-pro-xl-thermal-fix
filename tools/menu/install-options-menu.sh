@@ -200,12 +200,21 @@ apply_zram() {
   case "$1" in
     0|disabled)
       cfg_set ENABLE_ZRAM_100P 0
+      cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_RESTART_MMD 0
       cfg_set ZRAM_RISK_ACK disabled_by_user
       cfg_set LAST_ZRAM_100P disabled
     ;;
+    enabled_standard)
+      cfg_set ENABLE_ZRAM_100P 1
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_RESTART_MMD 1
+      cfg_set ZRAM_RISK_ACK explicit_user_enable
+      cfg_set LAST_ZRAM_100P enabled_standard
+    ;;
     *)
       cfg_set ENABLE_ZRAM_100P 1
+      cfg_set ZRAM_EMERALD_OC 1
       cfg_set ZRAM_RESTART_MMD 1
       cfg_set ZRAM_RISK_ACK explicit_user_enable
       cfg_set LAST_ZRAM_100P enabled
@@ -312,9 +321,19 @@ mc_cycle4 \
 apply_profile "$(profile_at "$MC_INDEX")"
 
 current_zram="$(cfg_get ENABLE_ZRAM_100P)"
-case "$current_zram" in 0) zram_index=0 ;; *) zram_index=1 ;; esac
-mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
-[ "$MC_INDEX" = 0 ] && apply_zram disabled || apply_zram enabled
+current_oc="$(cfg_get ZRAM_EMERALD_OC)"
+[ -n "$current_oc" ] || current_oc=1
+case "$current_zram:$current_oc" in
+  0:*) zram_index=0 ;;
+  1:0) zram_index=1 ;;
+  *) zram_index=2 ;;
+esac
+mc_cycle3 "ZRAM 100% Options" "Disabled" "Standard (No OC)" "Enabled + 1.066GHz OC" "$zram_index"
+case "$MC_INDEX" in
+  0) apply_zram disabled ;;
+  1) apply_zram enabled_standard ;;
+  *) apply_zram enabled ;;
+esac
 
 current_ptune="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"
 current_ack="$(cfg_get RISK_ACK_PTUNE_THERMAL_COLLISION)"

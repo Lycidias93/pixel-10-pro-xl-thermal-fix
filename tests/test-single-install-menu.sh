@@ -7,7 +7,7 @@ cd "$repo_root"
 grep -q 'install-options-menu.sh' customize.sh
 grep -q 'mc_cycle2 "Polling Mode"' tools/menu/install-options-menu.sh
 grep -q '"Thermal Profile max+' tools/menu/install-options-menu.sh
-grep -q 'mc_cycle2 "ZRAM 100%"' tools/menu/install-options-menu.sh
+grep -q 'mc_cycle3 "ZRAM 100% Options"' tools/menu/install-options-menu.sh
 grep -q 'INSTALL_MENU_PROCESS_COUNT 1' tools/menu/install-options-menu.sh
 grep -q 'outdoor-runtime-policy.sh' tools/menu/install-options-menu.sh
 

@@ -53,15 +53,20 @@ if [ -d /sys/kernel/mm/transparent_hugepage ]; then
   echo within_size > /sys/kernel/mm/transparent_hugepage/shmem_enabled 2>/dev/null || true
 fi
 
-for eh_dir in /sys/class/devfreq/*eh* /sys/devices/platform/*.eh/devfreq/*; do
-  if [ -d "$eh_dir" ] && [ -w "$eh_dir/min_freq" ] && [ -r "$eh_dir/max_freq" ]; then
-    max_f="$(cat "$eh_dir/max_freq" 2>/dev/null)"
-    if [ -n "$max_f" ]; then
-      echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
-      [ "$DEBUG" = "1" ] && log "set $eh_dir/min_freq=$max_f"
+ZRAM_EMERALD_OC="${ZRAM_EMERALD_OC:-${zram_emerald_oc:-1}}"
+if [ "$ZRAM_EMERALD_OC" = "1" ]; then
+  for eh_dir in /sys/class/devfreq/*eh* /sys/devices/platform/*.eh/devfreq/*; do
+    if [ -d "$eh_dir" ] && [ -w "$eh_dir/min_freq" ] && [ -r "$eh_dir/max_freq" ]; then
+      max_f="$(cat "$eh_dir/max_freq" 2>/dev/null)"
+      if [ -n "$max_f" ]; then
+        echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
+        [ "$DEBUG" = "1" ] && log "set $eh_dir/min_freq=$max_f"
+      fi
     fi
-  fi
-done
+  done
+else
+  [ "$DEBUG" = "1" ] && log "emerald_hill_oc=disabled_by_user"
+fi
 
 if [ "$RESTART" = "1" ] && [ "$MODE" != "boot_early" ]; then
   log "mmd_restart=requested"

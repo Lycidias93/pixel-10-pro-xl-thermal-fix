@@ -61,7 +61,7 @@ fi
 # BOOTGUARD_V2_SUCCESS_END
 
 # Deep sleep Emerald Hill 1.066 GHz (max_freq) wakeup guard (screen-on, non-blocking 60s check)
-if [ "${ENABLE_ZRAM_100P:-0}" = "1" ]; then
+if [ "${ENABLE_ZRAM_100P:-0}" = "1" ] && [ "${ZRAM_EMERALD_OC:-1}" = "1" ]; then
   (
     EH_LOG="$G/eh_reapply.log"
     echo "=== EH Reapply Log Start: $(date -Is 2>/dev/null || date) ===" > "$EH_LOG"

@@ -99,14 +99,16 @@ main() {
     echo always > /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || true
     echo within_size > /sys/kernel/mm/transparent_hugepage/shmem_enabled 2>/dev/null || true
   fi
-  for eh_dir in /sys/class/devfreq/*eh* /sys/devices/platform/*.eh/devfreq/*; do
-    if [ -d "$eh_dir" ] && [ -w "$eh_dir/min_freq" ] && [ -r "$eh_dir/max_freq" ]; then
-      max_f="$(cat "$eh_dir/max_freq" 2>/dev/null)"
-      if [ -n "$max_f" ]; then
-        echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
+  if [ "${ZRAM_EMERALD_OC:-1}" = "1" ]; then
+    for eh_dir in /sys/class/devfreq/*eh* /sys/devices/platform/*.eh/devfreq/*; do
+      if [ -d "$eh_dir" ] && [ -w "$eh_dir/min_freq" ] && [ -r "$eh_dir/max_freq" ]; then
+        max_f="$(cat "$eh_dir/max_freq" 2>/dev/null)"
+        if [ -n "$max_f" ]; then
+          echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
+        fi
       fi
-    fi
-  done
+    done
+  fi
   echo "target_kB=$target_kb"
   echo "target_bytes=$target_bytes"
   echo
