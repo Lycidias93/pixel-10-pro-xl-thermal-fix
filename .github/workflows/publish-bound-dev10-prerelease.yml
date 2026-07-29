@@ -1,0 +1,111 @@
+name: Publish bound Dev.10 prerelease
+
+on:
+  push:
+    branches:
+      - v2
+    paths:
+      - release-control/v2.0.0-alpha.3-dev.10.json
+      - .github/workflows/publish-bound-dev10-prerelease.yml
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: publish-bound-dev10-prerelease
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CONTROL_FILE: release-control/v2.0.0-alpha.3-dev.10.json
+    steps:
+      - name: Checkout publication commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install verification tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq unzip
+
+      - name: Verify coordinates and publish draft-first prerelease
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="$(jq -r '.repository' "$CONTROL_FILE")"
+          TARGET="$(jq -r '.target_commit_sha' "$CONTROL_FILE")"
+          TAG="$(jq -r '.tag_name' "$CONTROL_FILE")"
+          TITLE="$(jq -r '.release_title' "$CONTROL_FILE")"
+          KIND="$(jq -r '.release_kind' "$CONTROL_FILE")"
+          ASSET_NAME="$(jq -r '.asset_name' "$CONTROL_FILE")"
+          EXPECTED_SHA="$(jq -r '.asset_sha256' "$CONTROL_FILE")"
+          EXPECTED_BYTES="$(jq -r '.asset_bytes' "$CONTROL_FILE")"
+          ARTIFACT_ID="$(jq -r '.artifact_id' "$CONTROL_FILE")"
+          VERSION="$(jq -r '.version' "$CONTROL_FILE")"
+          VERSION_CODE="$(jq -r '.version_code' "$CONTROL_FILE")"
+          NOTES_PATH="$(jq -r '.release_notes_path' "$CONTROL_FILE")"
+          test "$REPO" = "${GITHUB_REPOSITORY}"
+          test "$KIND" = prerelease
+          test "$(jq -r '.runtime_checks_failed' "$CONTROL_FILE")" = 0
+          test "$(jq -r '.runtime_warnings' "$CONTROL_FILE")" = 0
+          git cat-file -e "$TARGET^{commit}"
+          test "$(git rev-parse "$TARGET")" = "$TARGET"
+          test -n "$(git show "$TARGET:$NOTES_PATH")"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "STOP tag_collision=$TAG"
+            exit 1
+          fi
+          if gh api "repos/$REPO/releases/tags/$TAG" >/dev/null 2>&1; then
+            echo "STOP release_collision=$TAG"
+            exit 1
+          fi
+          mkdir -p release-work/artifact
+          curl -fsSL --retry 4 --retry-delay 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" -o release-work/artifact.zip
+          unzip -q release-work/artifact.zip -d release-work/artifact
+          ASSET_PATH="release-work/artifact/$ASSET_NAME"
+          test -f "$ASSET_PATH"
+          test "$(sha256sum "$ASSET_PATH" | awk '{print $1}')" = "$EXPECTED_SHA"
+          test "$(stat -c %s "$ASSET_PATH")" = "$EXPECTED_BYTES"
+          unzip -p "$ASSET_PATH" module.prop > release-work/module.prop
+          grep -Fx "version=$VERSION" release-work/module.prop
+          grep -Fx "versionCode=$VERSION_CODE" release-work/module.prop
+          git show "$TARGET:$NOTES_PATH" > release-work/release-notes.md
+          CREATED=0
+          PUBLISHED=0
+          cleanup() {
+            rc=$?
+            if [ "$rc" -ne 0 ] && [ "$CREATED" = 1 ] && [ "$PUBLISHED" = 0 ]; then
+              gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag >/dev/null 2>&1 || true
+            fi
+            exit "$rc"
+          }
+          trap cleanup EXIT
+          gh release create "$TAG" "$ASSET_PATH" --repo "$REPO" --target "$TARGET" --title "$TITLE" --notes-file release-work/release-notes.md --prerelease --draft
+          CREATED=1
+          gh release view "$TAG" --repo "$REPO" --json tagName,name,isDraft,isPrerelease,targetCommitish,assets > release-work/draft.json
+          test "$(jq -r '.tagName' release-work/draft.json)" = "$TAG"
+          test "$(jq -r '.name' release-work/draft.json)" = "$TITLE"
+          test "$(jq -r '.isDraft' release-work/draft.json)" = true
+          test "$(jq -r '.isPrerelease' release-work/draft.json)" = true
+          test "$(jq -r '.targetCommitish' release-work/draft.json)" = "$TARGET"
+          test "$(jq -r --arg asset "$ASSET_NAME" '.assets[] | select(.name == $asset) | .size' release-work/draft.json)" = "$EXPECTED_BYTES"
+          gh release edit "$TAG" --repo "$REPO" --draft=false --prerelease --title "$TITLE" --notes-file release-work/release-notes.md
+          PUBLISHED=1
+          trap - EXIT
+          gh release view "$TAG" --repo "$REPO" --json tagName,name,isDraft,isPrerelease,targetCommitish,assets,url > release-work/public.json
+          test "$(jq -r '.isDraft' release-work/public.json)" = false
+          test "$(jq -r '.isPrerelease' release-work/public.json)" = true
+          test "$(jq -r '.targetCommitish' release-work/public.json)" = "$TARGET"
+          test "$(jq -r --arg asset "$ASSET_NAME" '.assets[] | select(.name == $asset) | .size' release-work/public.json)" = "$EXPECTED_BYTES"
+          curl -fsSL --retry 4 --retry-delay 2 "https://github.com/$REPO/releases/download/$TAG/$ASSET_NAME" -o release-work/public-asset.zip
+          test "$(sha256sum release-work/public-asset.zip | awk '{print $1}')" = "$EXPECTED_SHA"
+          test "$(stat -c %s release-work/public-asset.zip)" = "$EXPECTED_BYTES"
+          echo "release_url=$(jq -r '.url' release-work/public.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "tag=$TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "target_commit_sha=$TARGET" >> "$GITHUB_STEP_SUMMARY"
+          echo "asset_name=$ASSET_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "asset_sha256=$EXPECTED_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "RESULT: PIXEL_THERMAL_DEV10_PRERELEASE_PUBLICATION_PASS"
