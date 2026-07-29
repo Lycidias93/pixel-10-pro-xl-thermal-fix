@@ -1,21 +1,25 @@
 name: vNext OTA hardening maintenance
 
 on:
-  push:
+  pull_request:
     branches:
-      - repo-maintenance/v2-ota-transition-bootguard-vnext-20260730
-    paths:
-      - .github/vnext-ota-hardening-control.json
+      - v2
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: vnext-ota-hardening-maintenance
+  group: vnext-ota-hardening-maintenance-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
   apply:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout maintenance branch
