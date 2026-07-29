@@ -46,12 +46,22 @@ prop_set persist.device_config.vendor_system_native_boot.zram_size 100p
 prop_set persist.vendor.boot.zram.size 100p
 prop_set ro.lmk.swap_free_low_percentage 1
 
-# Hardware-accelerated swappiness and memory tuning
+# Hardware-accelerated swappiness, THP, and Emerald Hill 1 GHz clock boost
 sysctl -w vm.swappiness=100 2>/dev/null || prop_set vm.swappiness 100
 if [ -d /sys/kernel/mm/transparent_hugepage ]; then
   echo always > /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || true
   echo within_size > /sys/kernel/mm/transparent_hugepage/shmem_enabled 2>/dev/null || true
 fi
+
+for eh_dir in /sys/class/devfreq/*eh* /sys/devices/platform/*.eh/devfreq/*; do
+  if [ -d "$eh_dir" ] && [ -w "$eh_dir/min_freq" ] && [ -r "$eh_dir/max_freq" ]; then
+    max_f="$(cat "$eh_dir/max_freq" 2>/dev/null)"
+    if [ -n "$max_f" ]; then
+      echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
+      [ "$DEBUG" = "1" ] && log "set $eh_dir/min_freq=$max_f"
+    fi
+  fi
+done
 
 if [ "$RESTART" = "1" ] && [ "$MODE" != "boot_early" ]; then
   log "mmd_restart=requested"

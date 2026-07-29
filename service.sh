@@ -60,4 +60,26 @@ if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
 fi
 # BOOTGUARD_V2_SUCCESS_END
 
+# Deep sleep Emerald Hill 1.066 GHz (max_freq) wakeup guard (screen-on, non-blocking 60s check)
+if [ "${ENABLE_ZRAM_100P:-0}" = "1" ]; then
+  (
+    while :; do
+      sleep 60
+      # Only run check when screen is active (brightness > 0)
+      bright=$(cat /sys/class/backlight/*/brightness 2>/dev/null | head -n1 || echo 1)
+      if [ "${bright:-0}" -gt 0 ]; then
+        for eh_dir in /sys/class/devfreq/*eh* /sys/devices/platform/*.eh/devfreq/*; do
+          if [ -d "$eh_dir" ] && [ -w "$eh_dir/min_freq" ] && [ -r "$eh_dir/max_freq" ]; then
+            max_f="$(cat "$eh_dir/max_freq" 2>/dev/null)"
+            cur_min="$(cat "$eh_dir/min_freq" 2>/dev/null || echo 0)"
+            if [ -n "$max_f" ] && [ "$cur_min" != "$max_f" ]; then
+              echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
+            fi
+          fi
+        done
+      fi
+    done
+  ) &
+fi
+
 exit 0
