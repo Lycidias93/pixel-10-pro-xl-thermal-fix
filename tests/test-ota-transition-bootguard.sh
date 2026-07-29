@@ -35,8 +35,8 @@ for file in thermal_info_config.json thermal_info_config_charge.json thermal_inf
   printf '%s\n' old-overlay > "$mod/system/vendor/etc/$file"
 done
 printf '%s\n' keep > "$mod/system/vendor/etc/unrelated.conf"
-mkdir -p "$data/originals/mustang/BUILD.NEW_/vendor/etc"
-printf '%s\n' current-cache > "$data/originals/mustang/BUILD.NEW_/vendor/etc/cache"
+mkdir -p "$data/originals/mustang/BUILD.NEW/vendor/etc"
+printf '%s\n' current-cache > "$data/originals/mustang/BUILD.NEW/vendor/etc/cache"
 printf '%s\n' old-cache > "$data/originals/mustang/BUILD.OLD/vendor/etc/cache"
 mkdir -p "$data/validation"
 printf '%s\n' stale > "$data/validation/state.env"
@@ -52,7 +52,7 @@ grep -Fq 'phase=prepared' "$guard/platform-transition.env"
 grep -Fq 'THERMAL_DISABLED=1' "$cfg"
 [[ -f "$mod/system/vendor/etc/unrelated.conf" ]]
 [[ ! -e "$mod/system/vendor/etc/thermal_info_config.json" ]]
-[[ ! -e "$data/originals/mustang/BUILD.NEW_/vendor/etc/cache" ]]
+[[ ! -e "$data/originals/mustang/BUILD.NEW/vendor/etc/cache" ]]
 [[ -e "$data/originals/mustang/BUILD.OLD/vendor/etc/cache" ]]
 [[ ! -e "$data/validation" ]]
 
