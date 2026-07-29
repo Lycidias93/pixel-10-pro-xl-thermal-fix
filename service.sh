@@ -63,6 +63,9 @@ fi
 # Deep sleep Emerald Hill 1.066 GHz (max_freq) wakeup guard (screen-on, non-blocking 60s check)
 if [ "${ENABLE_ZRAM_100P:-0}" = "1" ]; then
   (
+    EH_LOG="$G/eh_reapply.log"
+    echo "=== EH Reapply Log Start: $(date -Is 2>/dev/null || date) ===" > "$EH_LOG"
+    count=0
     while :; do
       sleep 60
       # Only run check when screen is active (brightness > 0)
@@ -74,6 +77,8 @@ if [ "${ENABLE_ZRAM_100P:-0}" = "1" ]; then
             cur_min="$(cat "$eh_dir/min_freq" 2>/dev/null || echo 0)"
             if [ -n "$max_f" ] && [ "$cur_min" != "$max_f" ]; then
               echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
+              count=$((count + 1))
+              echo "$(date -Is 2>/dev/null || date) EH_REAPPLY count=$count prev_min=$cur_min restored_target=$max_f" >> "$EH_LOG"
             fi
           fi
         done
