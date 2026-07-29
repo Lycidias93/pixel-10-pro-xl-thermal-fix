@@ -35,7 +35,6 @@ prop_set() {
   [ "$DEBUG" = "1" ] && log "set $key=$val"
 }
 
-# In-memory only: no original/backup state is needed.
 prop_set mm.zram.maintenance.first_delay_seconds "$BIGMAX"
 prop_set mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
 prop_set mmd.zram.writeback.max_idle_seconds "$BIGMAX"
@@ -45,6 +44,14 @@ prop_set mmd.zram.size 100%
 prop_set vendor.zram.size 100p
 prop_set persist.device_config.vendor_system_native_boot.zram_size 100p
 prop_set persist.vendor.boot.zram.size 100p
+prop_set ro.lmk.swap_free_low_percentage 1
+
+# Hardware-accelerated swappiness and memory tuning
+sysctl -w vm.swappiness=100 2>/dev/null || prop_set vm.swappiness 100
+if [ -d /sys/kernel/mm/transparent_hugepage ]; then
+  echo always > /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || true
+  echo within_size > /sys/kernel/mm/transparent_hugepage/shmem_enabled 2>/dev/null || true
+fi
 
 if [ "$RESTART" = "1" ] && [ "$MODE" != "boot_early" ]; then
   log "mmd_restart=requested"

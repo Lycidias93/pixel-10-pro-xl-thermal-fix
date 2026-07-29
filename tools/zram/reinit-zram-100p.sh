@@ -93,6 +93,12 @@ main() {
   setprop vendor.zram.size 100p
   setprop persist.device_config.vendor_system_native_boot.zram_size 100p
   setprop persist.vendor.boot.zram.size 100p
+  setprop ro.lmk.swap_free_low_percentage 1
+  sysctl -w vm.swappiness=100 2>/dev/null || setprop vm.swappiness 100
+  if [ -d /sys/kernel/mm/transparent_hugepage ]; then
+    echo always > /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || true
+    echo within_size > /sys/kernel/mm/transparent_hugepage/shmem_enabled 2>/dev/null || true
+  fi
   echo "target_kB=$target_kb"
   echo "target_bytes=$target_bytes"
   echo
