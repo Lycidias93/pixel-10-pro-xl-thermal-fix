@@ -1,0 +1,55 @@
+name: vNext OTA hardening maintenance
+
+on:
+  push:
+    branches:
+      - repo-maintenance/v2-ota-transition-bootguard-vnext-20260730
+    paths:
+      - .github/vnext-ota-hardening-control.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vnext-ota-hardening-maintenance
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout maintenance branch
+        uses: actions/checkout@v5
+        with:
+          ref: repo-maintenance/v2-ota-transition-bootguard-vnext-20260730
+          fetch-depth: 0
+
+      - name: Apply exact source transformations
+        run: python3 .github/scripts/apply-vnext-ota-hardening.py
+
+      - name: Validate transformed sources
+        run: |
+          set -euo pipefail
+          git diff --check
+          bash -n post-fs-data.sh
+          bash -n service.sh
+          bash -n tools/core/platform-transition.sh
+          bash -n tools/core/auto-profile-switch.sh
+          bash -n tools/bootguard/bootguard-lib.sh
+          bash -n tools/bootguard/compat-check.sh
+          bash -n tools/debug/status-lib.sh
+          bash tests/test-action-thermal-transaction.sh
+          bash tools/bootguard/bootguard-threshold-policy-guard.sh
+
+      - name: Commit generated source changes
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'generated_changes=no'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/bootguard/compat-check.sh tools/debug/status-lib.sh tools/bootguard/bootguard-threshold-policy-guard.sh tests/test-action-thermal-transaction.sh
+          git commit -m 'Complete Dev.11 OTA and Bootguard source integration'
+          git push origin HEAD:repo-maintenance/v2-ota-transition-bootguard-vnext-20260730
