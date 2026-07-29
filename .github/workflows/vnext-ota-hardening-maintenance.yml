@@ -42,6 +42,7 @@ jobs:
           bash -n tools/bootguard/bootguard-lib.sh
           bash -n tools/bootguard/compat-check.sh
           bash -n tools/debug/status-lib.sh
+          bash -x tests/test-ota-transition-bootguard.sh
           bash tests/test-action-thermal-transaction.sh
           bash tools/bootguard/bootguard-threshold-policy-guard.sh
 
