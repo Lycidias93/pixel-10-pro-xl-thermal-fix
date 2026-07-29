@@ -11,6 +11,7 @@ on:
 permissions:
   actions: read
   contents: write
+  statuses: write
 
 concurrency:
   group: publish-bound-dev10-prerelease
@@ -109,3 +110,11 @@ jobs:
           echo "asset_name=$ASSET_NAME" >> "$GITHUB_STEP_SUMMARY"
           echo "asset_sha256=$EXPECTED_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo "RESULT: PIXEL_THERMAL_DEV10_PRERELEASE_PUBLICATION_PASS"
+
+      - name: Report publication success
+        if: ${{ success() }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" -f state=success -f context=release/dev10-prerelease -f description="Dev.10 public asset hash verified" -f target_url="https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.10"
+
+      - name: Report publication failure
+        if: ${{ failure() }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" -f state=failure -f context=release/dev10-prerelease -f description="Dev.10 publication stopped before completion" -f target_url="https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/actions"
