@@ -236,9 +236,15 @@ status_collect() {
     ;;
   esac
 
+  zram_oc="$(cfg_get ZRAM_EMERALD_OC)"
+  [ -n "$zram_oc" ] || zram_oc=1
   if [ "$zram_enabled" = 1 ]; then
-    zram_value=100p
-    [ "$zram_runtime_active" = yes ] || zram_value=100p-pending
+    if [ "$zram_oc" = 1 ]; then
+      zram_value="100p (1.066GHz EH OC)"
+    else
+      zram_value="100p (Standard)"
+    fi
+    [ "$zram_runtime_active" = yes ] || zram_value="${zram_value}-pending"
   else
     zram_value=off
   fi

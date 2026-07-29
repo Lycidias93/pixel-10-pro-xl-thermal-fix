@@ -283,27 +283,30 @@ set_thermal() {
 
 set_zram() {
   cur_z="$(cfg_get ENABLE_ZRAM_100P)"
-  cur_oc="$(cfg_get ZRAM_EMERALD_OC)"
-  [ -n "$cur_oc" ] || cur_oc=1
-  case "$cur_z:$cur_oc" in
-    1:1) idx=0 ;;
-    1:0) idx=1 ;;
-    *) idx=2 ;;
-  esac
-  ui_menu4 "ZRAM Options" "ZRAM 100p + EH OC" "ZRAM 100p Standard" "Disable ZRAM" "Back" "$idx"
+  case "$cur_z" in 1) idx=0 ;; *) idx=1 ;; esac
+  ui_menu3 "ZRAM 100%" "Enable 100p" "Disable" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in
     0)
-      cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled
-      msg "- ZRAM: enabled (1.066GHz EH OC)"
+      cur_oc="$(cfg_get ZRAM_EMERALD_OC)"
+      [ -n "$cur_oc" ] || cur_oc=1
+      case "$cur_oc" in 0) oc_idx=1 ;; *) oc_idx=0 ;; esac
+      ui_menu3 "Emerald Hill OC" "Enable 1.066GHz" "Disable (Standard)" "Back" "$oc_idx"
+      [ "$UI_REASON" = "timeout" ] && return 0
+      case "$UI_INDEX" in
+        0)
+          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled
+          msg "- ZRAM: enabled (1.066GHz EH OC)"
+        ;;
+        1)
+          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled_standard
+          msg "- ZRAM: enabled (Standard / No OC)"
+        ;;
+        *) msg "Back."; return 0 ;;
+      esac
       if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then msg "- Applying runtime props"; MODDIR="$MODDIR" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1 || true; fi
     ;;
     1)
-      cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled_standard
-      msg "- ZRAM: enabled (Standard / No OC)"
-      if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then msg "- Applying runtime props"; MODDIR="$MODDIR" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1 || true; fi
-    ;;
-    2)
       cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled
       msg "- ZRAM: disabled"; msg "- Reboot recommended"
     ;;
