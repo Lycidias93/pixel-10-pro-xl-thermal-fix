@@ -9,7 +9,7 @@ def replace_once(path: str, old: str, new: str) -> None:
     text = target.read_text(encoding="utf-8")
     count = text.count(old)
     if count != 1:
-        raise SystemExit(f"FAIL replace_once path={path} count={count}")
+        raise SystemExit(f"FAIL replace_once path={path} old={old[:48]!r} count={count}")
     target.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
@@ -18,7 +18,7 @@ def replace_all(path: str, old: str, new: str, minimum: int = 1) -> None:
     text = target.read_text(encoding="utf-8")
     count = text.count(old)
     if count < minimum:
-        raise SystemExit(f"FAIL replace_all path={path} count={count} minimum={minimum}")
+        raise SystemExit(f"FAIL replace_all path={path} old={old!r} count={count} minimum={minimum}")
     target.write_text(text.replace(old, new), encoding="utf-8")
 
 
@@ -26,21 +26,13 @@ compat = "tools/bootguard/compat-check.sh"
 replace_all(compat, "exact_supported", "platform_supported")
 replace_once(
     compat,
-    '''platform_supported=no
-if [ -r "$SUPPORTED_HELPER" ] &&
-   [ -r "$SUPPORTED_JSON" ] &&
-   command -v thermal_supported_check >/dev/null 2>&1 &&
-   thermal_supported_check "$SUPPORTED_JSON" "$DEVICE" "$ANDROID" "$BUILD_ID"; then
-  platform_supported=yes
-fi
-''',
-    '''platform_supported=no
-build_evidence=unsupported_platform
-if [ -r "$SUPPORTED_HELPER" ] &&
-   [ -r "$SUPPORTED_JSON" ] &&
-   command -v thermal_supported_check >/dev/null 2>&1 &&
-   thermal_supported_check "$SUPPORTED_JSON" "$DEVICE" "$ANDROID" "$BUILD_ID"; then
-  platform_supported=yes
+    "platform_supported=no\n",
+    "platform_supported=no\nbuild_evidence=unsupported_platform\n",
+)
+replace_once(
+    compat,
+    "  platform_supported=yes\nfi\n",
+    '''  platform_supported=yes
   if command -v thermal_build_evidence_state >/dev/null 2>&1; then
     build_evidence="$(thermal_build_evidence_state "$SUPPORTED_JSON" "$DEVICE" "$ANDROID" "$BUILD_ID")"
   else
