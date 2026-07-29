@@ -79,20 +79,20 @@ fi
 )
 replace_once(
     compat,
-    '''  printf '%s\n' "EXACT_BUILD_SUPPORTED=$platform_supported"
+    r'''  printf '%s\n' "EXACT_BUILD_SUPPORTED=$platform_supported"
   printf '%s\n' "DYNAMIC_CONTROLLED_FILES=3"
 ''',
-    '''  printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
+    r'''  printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
   printf '%s\n' "BUILD_EVIDENCE=$build_evidence"
   printf '%s\n' "DYNAMIC_CONTROLLED_FILES=3"
 ''',
 )
 replace_once(
     compat,
-    '''  printf '%s\n' "BUILD_GUARD_MODE=$build_guard_mode"
+    r'''  printf '%s\n' "BUILD_GUARD_MODE=$build_guard_mode"
   printf '%s\n' "PROFILE_STALE_AFTER_OTA=$profile_stale_after_ota"
 ''',
-    '''  printf '%s\n' "BUILD_GUARD_MODE=$build_guard_mode"
+    r'''  printf '%s\n' "BUILD_GUARD_MODE=$build_guard_mode"
   printf '%s\n' "PLATFORM_TRANSITION_PENDING=$transition_pending"
   printf '%s\n' "PLATFORM_TRANSITION_PHASE=$transition_phase"
   printf '%s\n' "PLATFORM_TRANSITION_REASON=$transition_reason"
@@ -136,10 +136,10 @@ replace_once(
 )
 replace_once(
     status,
-    '''    printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
+    r'''    printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
     printf '%s\n' "SOURCE_MANIFEST_VALID=$source_manifest_valid"
 ''',
-    '''    printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
+    r'''    printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
     printf '%s\n' "BUILD_EVIDENCE=$build_evidence"
     printf '%s\n' "PLATFORM_TRANSITION_PENDING=$transition_pending"
     printf '%s\n' "PLATFORM_TRANSITION_PHASE=$transition_phase"
@@ -153,10 +153,10 @@ replace_once(
     threshold_guard,
     '''grep -Fq 'threshold_minimum=$(threshold_minimum)' "$TARGET" && pass 'status_observability' || err 'status_observability_missing'
 ''',
-    '''grep -Fq 'threshold_minimum=$(threshold_minimum)' "$TARGET" && pass 'status_observability' || err 'status_observability_missing'
+    r'''grep -Fq 'threshold_minimum=$(threshold_minimum)' "$TARGET" && pass 'status_observability' || err 'status_observability_missing'
 grep -Fq 'effective_pending_threshold()' "$TARGET" && pass 'effective_pending_threshold_helper' || err 'effective_pending_threshold_helper_missing'
 grep -Fq 'pending_transition()' "$TARGET" && pass 'transition_pending_helper' || err 'transition_pending_helper_missing'
-grep -Fq "printf '%s\\n' 1" "$TARGET" && pass 'ota_transition_threshold_one' || err 'ota_transition_threshold_one_missing'
+grep -Fq "printf '%s\n' 1" "$TARGET" && pass 'ota_transition_threshold_one' || err 'ota_transition_threshold_one_missing'
 grep -Fq 'success-verify)' "$TARGET" && pass 'verified_success_entrypoint' || err 'verified_success_entrypoint_missing'
 grep -Fq 'thermalservice_unresponsive_second_probe' "$TARGET" && pass 'thermalservice_double_probe' || err 'thermalservice_double_probe_missing'
 ''',
@@ -165,10 +165,10 @@ grep -Fq 'thermalservice_unresponsive_second_probe' "$TARGET" && pass 'thermalse
 transaction_test = "tests/test-action-thermal-transaction.sh"
 replace_once(
     transaction_test,
-    '''printf '%s\n' 'PASS duplicate_update_channel_status_call_absent'
+    r'''printf '%s\n' 'PASS duplicate_update_channel_status_call_absent'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_ACTION_TRANSACTION_TEST_PASS'
 ''',
-    '''printf '%s\n' 'PASS duplicate_update_channel_status_call_absent'
+    r'''printf '%s\n' 'PASS duplicate_update_channel_status_call_absent'
 bash "$repo_root/tests/test-ota-transition-bootguard.sh"
 printf '%s\n' 'RESULT: PIXEL_THERMAL_ACTION_TRANSACTION_TEST_PASS'
 ''',
