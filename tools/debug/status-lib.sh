@@ -39,7 +39,11 @@ status_collect() {
   tmp="$MODDIR/guard/manager-status.compat.$$"
   compat_dump > "$tmp" 2>/dev/null || true
 
-  exact_supported="$(kv_get EXACT_BUILD_SUPPORTED "$tmp")"
+  platform_supported="$(kv_get PLATFORM_SUPPORTED "$tmp")"
+  build_evidence="$(kv_get BUILD_EVIDENCE "$tmp")"
+  transition_pending="$(kv_get PLATFORM_TRANSITION_PENDING "$tmp")"
+  transition_phase="$(kv_get PLATFORM_TRANSITION_PHASE "$tmp")"
+  transition_reason="$(kv_get PLATFORM_TRANSITION_REASON "$tmp")"
   source_manifest_valid="$(kv_get DYNAMIC_SOURCE_MANIFEST_VALID "$tmp")"
   source_cache_valid="$(kv_get DYNAMIC_SOURCE_CACHE_VALID "$tmp")"
   patch_manifest_valid="$(kv_get DYNAMIC_PATCH_MANIFEST_VALID "$tmp")"
@@ -60,7 +64,11 @@ status_collect() {
   active_300000="$(kv_get ACTIVE_POLLING_300000 "$tmp")"
   active_5000="$(kv_get ACTIVE_POLLING_5000 "$tmp")"
 
-  [ -n "$exact_supported" ] || exact_supported=unknown
+  [ -n "$platform_supported" ] || platform_supported=unknown
+  [ -n "$build_evidence" ] || build_evidence=unknown
+  [ -n "$transition_pending" ] || transition_pending=no
+  [ -n "$transition_phase" ] || transition_phase=absent
+  [ -n "$transition_reason" ] || transition_reason=none
   [ -n "$materialization_valid" ] || materialization_valid=unknown
   [ -n "$overlay_ready" ] || overlay_ready=unknown
   [ -n "$active_match" ] || active_match=unknown
@@ -82,10 +90,10 @@ status_collect() {
 
   source_icon="$BAD"
   source_state=invalid
-  if [ "$exact_supported" = no ] && [ "$thermal_disabled" = 1 ]; then
+  if [ "$platform_supported" = no ] && [ "$thermal_disabled" = 1 ]; then
     source_icon="$WARN"
-    source_state=unsupported_build_thermal_disabled
-  elif [ "$exact_supported" = yes ] &&
+    source_state=unsupported_platform_thermal_disabled
+  elif [ "$platform_supported" = yes ] &&
        [ "$source_manifest_valid" = yes ] &&
        [ "$source_cache_valid" = yes ] &&
        [ "$patch_manifest_valid" = yes ] &&
@@ -99,7 +107,7 @@ status_collect() {
   polling_value="$polling_mode"
   if [ "$thermal_disabled" = 1 ]; then
     polling_icon="$BAD"
-    polling_state=disabled_by_build_guard
+    polling_state=disabled_by_platform_guard
     polling_value=disabled
   elif [ "$materialization_valid" != yes ]; then
     polling_icon="$BAD"
@@ -142,7 +150,7 @@ status_collect() {
   thermal_value="$thermal_profile"
   if [ "$thermal_disabled" = 1 ]; then
     thermal_icon="$BAD"
-    thermal_state=disabled_by_build_guard
+    thermal_state=disabled_by_platform_guard
   elif [ "$materialization_valid" != yes ]; then
     thermal_icon="$BAD"
     thermal_state=dynamic_materialization_invalid
@@ -252,7 +260,11 @@ status_collect() {
   {
     printf '%s\n' "SOURCE_ICON=$source_icon"
     printf '%s\n' "SOURCE_STATE=$source_state"
-    printf '%s\n' "EXACT_BUILD_SUPPORTED=$exact_supported"
+    printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
+    printf '%s\n' "BUILD_EVIDENCE=$build_evidence"
+    printf '%s\n' "PLATFORM_TRANSITION_PENDING=$transition_pending"
+    printf '%s\n' "PLATFORM_TRANSITION_PHASE=$transition_phase"
+    printf '%s\n' "PLATFORM_TRANSITION_REASON=$transition_reason"
     printf '%s\n' "SOURCE_MANIFEST_VALID=$source_manifest_valid"
     printf '%s\n' "SOURCE_CACHE_VALID=$source_cache_valid"
     printf '%s\n' "PATCH_MANIFEST_VALID=$patch_manifest_valid"

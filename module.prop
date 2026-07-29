@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.3-dev.10
-versionCode=1016221
+version=2.0.0-alpha.3-dev.11
+versionCode=1016222
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 3 dev.10: Harish Action UI render fix on top of cached status, shallow backend probing and deduplicated build validation.
+description=V2 Alpha 3 dev.11: OTA tuple quarantine, current-build rematerialization, verified Bootguard v3 success and dynamic platform terminology.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

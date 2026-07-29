@@ -119,4 +119,5 @@ printf '%s\n' 'PASS compat_backend_probe_is_shallow'
 printf '%s\n' 'PASS supported_manifest_validation_is_cached'
 printf '%s\n' 'PASS obsolete_action_toggle_collector_call_absent'
 printf '%s\n' 'PASS duplicate_update_channel_status_call_absent'
+bash "$repo_root/tests/test-ota-transition-bootguard.sh"
 printf '%s\n' 'RESULT: PIXEL_THERMAL_ACTION_TRANSACTION_TEST_PASS'

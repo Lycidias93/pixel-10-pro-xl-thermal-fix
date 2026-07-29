@@ -148,12 +148,18 @@ if ! command -v thermal_json_tolerant_validate >/dev/null 2>&1; then
   }
 fi
 
-exact_supported=no
+platform_supported=no
+build_evidence=unsupported_platform
 if [ -r "$SUPPORTED_HELPER" ] &&
    [ -r "$SUPPORTED_JSON" ] &&
    command -v thermal_supported_check >/dev/null 2>&1 &&
    thermal_supported_check "$SUPPORTED_JSON" "$DEVICE" "$ANDROID" "$BUILD_ID"; then
-  exact_supported=yes
+  platform_supported=yes
+  if command -v thermal_build_evidence_state >/dev/null 2>&1; then
+    build_evidence="$(thermal_build_evidence_state "$SUPPORTED_JSON" "$DEVICE" "$ANDROID" "$BUILD_ID")"
+  else
+    build_evidence=dynamic_unverified
+  fi
 fi
 
 source_manifest_valid=yes
@@ -369,7 +375,7 @@ if [ "$overlay_inventory_valid" = yes ] &&
 fi
 
 materialization_valid=no
-if [ "$exact_supported" = yes ] &&
+if [ "$platform_supported" = yes ] &&
    [ "$source_manifest_valid" = yes ] &&
    [ "$source_cache_valid" = yes ] &&
    [ "$patch_manifest_valid" = yes ] &&
@@ -511,12 +517,20 @@ build_guard_mode=unknown
 auto_reason=none
 reinstall_required=no
 profile_stale_after_ota=no
+transition_pending=no
+transition_phase=absent
+transition_reason=none
 [ -r "$GUARD_DIR/auto_profile_switch_state" ] && auto_state="$(head -n 1 "$GUARD_DIR/auto_profile_switch_state" 2>/dev/null)"
 [ -r "$GUARD_DIR/selected_profile" ] && selected_profile="$(head -n 1 "$GUARD_DIR/selected_profile" 2>/dev/null)"
 [ -r "$M/install-state.txt" ] && build_guard_mode="$(grep -E '^build_guard_mode=' "$M/install-state.txt" 2>/dev/null | tail -n 1 | sed 's/^build_guard_mode=//' | tr -d '\r')"
 [ -r "$GUARD_DIR/auto_profile_switch_reason" ] && auto_reason="$(head -n 1 "$GUARD_DIR/auto_profile_switch_reason" 2>/dev/null)"
 [ -r "$GUARD_DIR/reinstall_required" ] && reinstall_required="$(sed 's/^REINSTALL_REQUIRED=//' "$GUARD_DIR/reinstall_required" 2>/dev/null | head -n 1)"
 [ -r "$GUARD_DIR/profile_stale_after_ota" ] && profile_stale_after_ota="$(sed 's/^PROFILE_STALE_AFTER_OTA=//' "$GUARD_DIR/profile_stale_after_ota" 2>/dev/null | head -n 1)"
+if [ -r "$GUARD_DIR/platform-transition.env" ]; then
+  transition_pending="$(grep -E '^transition_pending=' "$GUARD_DIR/platform-transition.env" 2>/dev/null | tail -n 1 | sed 's/^transition_pending=//')"
+  transition_phase="$(grep -E '^phase=' "$GUARD_DIR/platform-transition.env" 2>/dev/null | tail -n 1 | sed 's/^phase=//')"
+  transition_reason="$(grep -E '^reason=' "$GUARD_DIR/platform-transition.env" 2>/dev/null | tail -n 1 | sed 's/^reason=//')"
+fi
 [ -n "$build_guard_mode" ] || build_guard_mode=unknown
 
 warn=no
@@ -550,23 +564,23 @@ elif [ "$pt_en" = yes ] && [ "$override" != yes ]; then
   exp=thermal_skip_mount_required
   safe=no
   reason=ptune_active_or_staged
-elif [ "$exact_supported" != yes ]; then
-  exp=thermal_disabled_unsupported_build
+elif [ "$platform_supported" != yes ]; then
+  exp=thermal_disabled_unsupported_platform
   if [ "$thermal_cfg_disabled" = 1 ] && [ "$thermal_overlay_count" = 0 ]; then
     safe=yes
-    reason=unsupported_build_thermal_disabled
+    reason=unsupported_platform_thermal_disabled
   else
     safe=no
-    reason=unsupported_build_overlay_not_disabled
+    reason=unsupported_platform_overlay_not_disabled
   fi
 elif [ "$thermal_cfg_disabled" = 1 ]; then
-  exp=thermal_disabled_by_guard
+  exp=thermal_disabled_by_platform_guard
   if [ "$thermal_overlay_count" = 0 ]; then
     safe=yes
-    reason=supported_build_thermal_disabled_overlay_absent
+    reason=supported_platform_thermal_disabled_overlay_absent
   else
     safe=no
-    reason=supported_build_disabled_but_overlay_present
+    reason=supported_platform_disabled_but_overlay_present
   fi
 elif [ "$materialization_valid" != yes ]; then
   safe=no
@@ -587,7 +601,8 @@ fi
   printf '%s\n' "ANDROID=$ANDROID"
   printf '%s\n' "BUILD_ID=$BUILD_ID"
   printf '%s\n' "BUILD_SLUG=$BUILD_SLUG"
-  printf '%s\n' "EXACT_BUILD_SUPPORTED=$exact_supported"
+  printf '%s\n' "PLATFORM_SUPPORTED=$platform_supported"
+  printf '%s\n' "BUILD_EVIDENCE=$build_evidence"
   printf '%s\n' "DYNAMIC_CONTROLLED_FILES=3"
   printf '%s\n' "DYNAMIC_SOURCE_CACHE=$CACHE_DIR"
   printf '%s\n' "DYNAMIC_SOURCE_MANIFEST=$SOURCE_MANIFEST"
@@ -629,6 +644,9 @@ fi
   printf '%s\n' "AUTO_SELECTED_PROFILE=$selected_profile"
   printf '%s\n' "AUTO_SWITCH_REASON=$auto_reason"
   printf '%s\n' "BUILD_GUARD_MODE=$build_guard_mode"
+  printf '%s\n' "PLATFORM_TRANSITION_PENDING=$transition_pending"
+  printf '%s\n' "PLATFORM_TRANSITION_PHASE=$transition_phase"
+  printf '%s\n' "PLATFORM_TRANSITION_REASON=$transition_reason"
   printf '%s\n' "PROFILE_STALE_AFTER_OTA=$profile_stale_after_ota"
   printf '%s\n' "REINSTALL_REQUIRED=$reinstall_required"
   printf '%s\n' "MODULE_OVERLAY_READY=$module_overlay_ready"
