@@ -6,11 +6,12 @@ L="$G/bootguard.log"
 H="$MODDIR/health.log"
 CONFIG_FILE="/data/adb/$ID/config.env"
 NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
+ZRAM_APPLY="$MODDIR/tools/zram/apply-zram-100p.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 mkdir -p "$G"
 
 printf 'timestamp_start=%s\n' "$(date +%s 2>/dev/null || echo unknown)" > "$H"
-printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_deferred_v4' >> "$H"
+printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_deferred_v5' >> "$H"
 
 [ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >> "$H" 2>&1 || true
 if [ -f "$CONFIG_FILE" ]; then
@@ -22,8 +23,8 @@ fi
 # completed Android boot and the active Thermal runtime.
 if [ "${ENABLE_ZRAM_100P:-0}" = 1 ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
   printf '%s SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip eh=deferred\n' "$(date -Is 2>/dev/null || date)" >> "$L"
-  if [ -r "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
-    sh "$MODDIR/tools/zram/apply-zram-100p.sh" boot_early >> "$H" 2>&1 ||
+  if [ -r "$ZRAM_APPLY" ]; then
+    sh "$ZRAM_APPLY" boot_early >> "$H" 2>&1 ||
       printf '%s\n' 'SERVICE_ZRAM result=apply_failed_nonfatal' >> "$H"
   else
     printf '%s\n' 'SERVICE_ZRAM result=apply_script_absent' >> "$H"
@@ -66,6 +67,20 @@ if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
     printf '%s\n' 'BOOTGUARD_RUNTIME_VERIFICATION=pass' >> "$H"
   else
     printf '%s\n' 'BOOTGUARD_RUNTIME_VERIFICATION=deferred_pending_preserved' >> "$H"
+  fi
+fi
+
+# Android may rewrite selected LMK/ZRAM properties after early service startup.
+# Reapply the runtime-only property set exactly once after verified boot. This
+# mode never restarts mmd and deliberately leaves EH activation to the guarded
+# block below.
+if [ "$bootguard_verified" = 1 ] &&
+   [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
+   [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
+  if [ -r "$ZRAM_APPLY" ] && sh "$ZRAM_APPLY" boot_verified >> "$H" 2>&1; then
+    printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=properties_reapplied_no_mmd_restart' >> "$H"
+  else
+    printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=reapply_failed_nonfatal' >> "$H"
   fi
 fi
 

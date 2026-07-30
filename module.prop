@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.3-dev.12
-versionCode=1016223
+version=2.0.0-alpha.3-dev.13
+versionCode=1016224
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 3 dev.12: Dev.11 OTA and Bootguard v3 plus adaptive lz77eh ZRAM tuning and an optional fail-closed Emerald Hill max-frequency lock.
+description=V2 Alpha 3 dev.13: Dev.12 plus verified Pixel eh_freq admission, one-shot post-Bootguard ZRAM property reapply, and complete post-OTA runtime state observability.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

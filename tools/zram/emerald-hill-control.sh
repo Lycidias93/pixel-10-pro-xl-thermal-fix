@@ -32,7 +32,7 @@ is_eh_node() {
   label="${dir##*/} $(cat "$dir/name" 2>/dev/null || true)"
   lower="$(printf '%s' "$label" | tr 'A-Z' 'a-z')"
   case "$lower" in
-    *emerald*|*lz77*|eh|eh.*|*.eh|*.eh.*|*eh-devfreq*) return 0 ;;
+    *emerald*|*lz77*|eh|eh.*|*.eh|*.eh.*|eh_freq|eh_freq\ *|eh-freq|eh-freq\ *|*eh-devfreq*) return 0 ;;
     *) return 1 ;;
   esac
 }

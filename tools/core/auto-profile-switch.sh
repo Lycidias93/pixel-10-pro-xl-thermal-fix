@@ -60,6 +60,16 @@ write_state(){
   profile_state="$2"
   platform_supported="$3"
   build_evidence="$4"
+  state_polling="$(getcfg THERMAL_POLLING_MODE)"
+  state_outdoor="$(getcfg THERMAL_OUTDOOR_PROFILE)"
+  state_zram_enabled="$(getcfg ENABLE_ZRAM_100P)"
+  [ -n "$state_polling" ] || state_polling=mod
+  [ -n "$state_outdoor" ] || state_outdoor=stock
+  [ -n "$state_zram_enabled" ] || state_zram_enabled=0
+  state_zram_materialized=no
+  if [ "$state_zram_enabled" = 1 ] && [ -s "$MODDIR/system/vendor/etc/fstab.zram.100p" ]; then
+    state_zram_materialized=yes
+  fi
   {
     printf '%s\n' "module_id=$ID"
     printf '%s\n' "module_version=$(grep -E '^version=' "$MODDIR/module.prop" 2>/dev/null | head -n 1 | sed 's/^version=//')"
@@ -72,6 +82,7 @@ write_state(){
     printf '%s\n' "fingerprint=$FINGERPRINT"
     printf '%s\n' "profile=$profile"
     printf '%s\n' "profile_state=$profile_state"
+    printf '%s\n' "profile_state_contract=dynamic_local_validation_v1"
     printf '%s\n' "platform_supported=$platform_supported"
     printf '%s\n' "build_evidence=$build_evidence"
     printf '%s\n' "build_state=dynamic_${DEVICE}_${BUILD_ID}_${INCREMENTAL}"
@@ -84,6 +95,11 @@ write_state(){
     printf '%s\n' "auto_profile_switch_at=$(date -Is 2>/dev/null || date)"
     printf '%s\n' "profile_materialized=$([ "$profile_state" = dynamic_local_validated ] && printf yes || printf no)"
     printf '%s\n' "expected_thermal_files=$([ "$profile_state" = dynamic_local_validated ] && printf dynamic_validated || printf absent)"
+    printf '%s\n' "thermal_polling_effective=$state_polling"
+    printf '%s\n' "thermal_outdoor_profile=$state_outdoor"
+    printf '%s\n' "zram_fstab_materialized=$state_zram_materialized"
+    printf '%s\n' "zram_enabled=$state_zram_enabled"
+    printf '%s\n' 'runtime_selection_source=config.env'
   } > "$STATE"
 }
 
