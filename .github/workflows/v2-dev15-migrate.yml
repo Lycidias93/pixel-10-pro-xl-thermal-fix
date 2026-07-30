@@ -24,6 +24,9 @@ jobs:
       - name: Apply guarded Dev.15 migration
         run: python3 dev_tools/migrate-dev15.py
 
+      - name: Align preserved EH regression
+        run: python3 dev_tools/fix-dev15-regression.py
+
       - name: Verify defaults, routes and helper transactions
         shell: bash
         run: |
@@ -51,7 +54,7 @@ jobs:
         run: |
           set -euo pipefail
           git checkout -- .github/workflows
-          rm -f dev_tools/migrate-dev15.py
+          rm -f dev_tools/migrate-dev15.py dev_tools/fix-dev15-regression.py
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
