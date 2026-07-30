@@ -1,0 +1,35 @@
+name: V2 Dev.13 runtime regression
+
+on:
+  pull_request:
+    branches:
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dev13-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dev.13 shell and runtime fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tests/test-dev13-postboot-runtime.sh
+          bash -n tools/zram/emerald-hill-control.sh
+          bash -n tools/zram/apply-zram-100p.sh
+          bash -n tools/core/auto-profile-switch.sh
+          bash -n service.sh
+          bash tests/test-dev13-postboot-runtime.sh
+
+      - name: Preserve Dev.12 regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-zram-eh-dev12.sh
