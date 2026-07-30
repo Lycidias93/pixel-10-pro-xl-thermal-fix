@@ -145,6 +145,24 @@ ui_menu3() {
   UI_INDEX="$_idx"; UI_REASON="max_steps"; UI_STEPS="$_steps"; return 0
 }
 
+ui_menu4() {
+  _title="$1"; _label0="$2"; _label1="$3"; _label2="$4"; _label3="$5"; _idx="${6:-0}"; _steps=0
+  case "$_idx" in 0|1|2|3) ;; *) _idx=0 ;; esac
+  mc_head "$_title"; mc_msg "1 $_label0"; mc_msg "2 $_label1"; mc_msg "3 $_label2"; mc_msg "4 $_label3"; mc_foot
+  while [ "$_steps" -le 14 ]; do
+    _pos=$(( _idx + 1 ))
+    case "$_idx" in 0) _label="$_label0" ;; 1) _label="$_label1" ;; 2) _label="$_label2" ;; *) _label="$_label3" ;; esac
+    mc_msg "Current $_pos/4: $_label"
+    _key="$(mc_read_key)"
+    case "$_key" in
+      up) _idx=$(( (_idx + 1) % 4 )); _steps=$(( _steps + 1 )) ;;
+      down) UI_INDEX="$_idx"; UI_REASON="volume_down"; UI_STEPS="$_steps"; return 0 ;;
+      timeout) UI_INDEX="$_idx"; UI_REASON="timeout"; UI_STEPS="$_steps"; return 0 ;;
+    esac
+  done
+  UI_INDEX="$_idx"; UI_REASON="max_steps"; UI_STEPS="$_steps"; return 0
+}
+
 ui_menu5() {
   _title="$1"; _label0="$2"; _label1="$3"; _label2="$4"; _label3="$5"; _label4="$6"; _idx="${7:-0}"; _steps=0
   case "$_idx" in 0|1|2|3|4) ;; *) _idx=0 ;; esac
@@ -264,17 +282,32 @@ set_thermal() {
 }
 
 set_zram() {
-  cur="$(cfg_get ENABLE_ZRAM_100P)"; case "$cur" in 1) idx=0 ;; *) idx=1 ;; esac
+  cur_z="$(cfg_get ENABLE_ZRAM_100P)"
+  case "$cur_z" in 1) idx=0 ;; *) idx=1 ;; esac
   ui_menu3 "ZRAM 100%" "Enable 100p" "Disable" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in
     0)
-      cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled
-      msg "- ZRAM: enabled"
+      cur_oc="$(cfg_get ZRAM_EMERALD_OC)"
+      [ -n "$cur_oc" ] || cur_oc=1
+      case "$cur_oc" in 0) oc_idx=1 ;; *) oc_idx=0 ;; esac
+      ui_menu3 "Emerald Hill OC" "Enable 1.066GHz" "Disable (Standard)" "Back" "$oc_idx"
+      [ "$UI_REASON" = "timeout" ] && return 0
+      case "$UI_INDEX" in
+        0)
+          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled
+          msg "- ZRAM: enabled (1.066GHz EH OC)"
+        ;;
+        1)
+          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled_standard
+          msg "- ZRAM: enabled (Standard / No OC)"
+        ;;
+        *) msg "Back."; return 0 ;;
+      esac
       if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then msg "- Applying runtime props"; MODDIR="$MODDIR" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1 || true; fi
     ;;
     1)
-      cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled
+      cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled
       msg "- ZRAM: disabled"; msg "- Reboot recommended"
     ;;
     *) msg "Back."; return 0 ;;

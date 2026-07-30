@@ -9,6 +9,7 @@ SUPPORTED_HELPER="$MODDIR/tools/core/supported-build.sh"
 SUPPORTED_JSON="$MODDIR/supported_versions.json"
 INSTALL_STATE="$MODDIR/install-state.txt"
 ACTION_PERF="$MODDIR/guard/action-performance.env"
+ZRAM_NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 
 now_ms() {
   awk '{printf "%d\n", $1 * 1000}' /proc/uptime 2>/dev/null || printf '%s\n' 0
@@ -82,6 +83,13 @@ write_action_performance() {
   } > "$ACTION_PERF" 2>/dev/null || true
   msg "- Action prep: ${startup_ms} ms"
 }
+
+# Normalize legacy/missing performance state before any menu can render a
+# default. This prevents an old generic ZRAM-enabled state from becoming an
+# implicit Emerald Hill max-frequency lock.
+if [ -r "$ZRAM_NORMALIZE" ]; then
+  ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_NORMALIZE" >/dev/null 2>&1 || true
+fi
 
 [ -r "$SUPPORTED_HELPER" ] || {
   msg "! supported-build helper missing"

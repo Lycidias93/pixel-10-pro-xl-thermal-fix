@@ -37,11 +37,13 @@ jobs:
           bash -n tests/test-canary-thermal-patch-hotfix.sh
           bash -n tests/test-action-thermal-transaction.sh
           bash -n tests/test-outdoor-runtime-evidence.sh
+          bash -n tests/test-zram-eh-dev12.sh
           bash -n tests/test-release-notes-layout.sh
           bash -n tools/bootguard/bootguard-threshold-policy-guard.sh
           bash -n tools/ptune/ptune-install-state-observability-guard.sh
           bash -n action.sh
           bash -n customize.sh
+          bash -n service.sh
           bash -n tools/action-dashboard.sh
           bash -n tools/core/supported-build.sh
           bash -n tools/core/validation-state.sh
@@ -50,6 +52,10 @@ jobs:
           bash -n tools/core/install-thermal-overlay.sh
           bash -n tools/menu/install-options-menu.sh
           bash -n tools/zram/install-zram.sh
+          bash -n tools/zram/config-normalize.sh
+          bash -n tools/zram/emerald-hill-control.sh
+          bash -n tools/zram/apply-zram-100p.sh
+          bash -n tools/zram/reinit-zram-100p.sh
           bash -n tools/install-finalize.sh
 
       - name: Dynamic unknown-build admission
@@ -88,6 +94,12 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-action-thermal-transaction.sh
+
+      - name: ZRAM and Emerald Hill fail-closed policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-zram-eh-dev12.sh
 
       - name: Outdoor runtime evidence policy
         shell: bash
