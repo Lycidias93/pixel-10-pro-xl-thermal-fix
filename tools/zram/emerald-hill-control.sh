@@ -104,7 +104,7 @@ apply_lock() {
   [ -r "$CONFIG_FILE" ] && . "$CONFIG_FILE" 2>/dev/null || true
 
   if [ "${ENABLE_ZRAM_100P:-0}" != 1 ] ||
-     [ "${ZRAM_EMERAL_OC:-${ZRAM_EMERALD_OC:-0}}" != 1 ] ||
+     [ "${ZRAM_EMERALD_OC:-0}" != 1 ] ||
      [ "${LAST_ZRAM_100P:-}" != enabled ] ||
      [ "${ZRAM_RISK_ACK:-}" != explicit_user_enable ]; then
     status_write adaptive not_explicitly_authorized 0 none
