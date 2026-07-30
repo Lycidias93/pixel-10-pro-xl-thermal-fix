@@ -58,13 +58,18 @@ prop_set() {
   [ "$DEBUG" = 1 ] && log "set $key=$val"
 }
 
+prop_read() {
+  getprop "$1" 2>/dev/null || true
+}
+
 case "$SWAPPINESS" in
   ''|*[!0-9]*) SWAPPINESS=100 ;;
   *) [ "$SWAPPINESS" -le 200 ] 2>/dev/null || SWAPPINESS=100 ;;
 esac
 case "$THP_MODE" in stock|always|madvise|never) ;; *) THP_MODE=stock ;; esac
 
-# In-memory only: no property backup is needed.
+# In-memory only: no property backup is needed. service.sh repeats this once
+# after Bootguard verification because Android may rewrite early LMK properties.
 prop_set mm.zram.maintenance.first_delay_seconds "$BIGMAX"
 prop_set mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
 prop_set mmd.zram.writeback.max_idle_seconds "$BIGMAX"
@@ -75,6 +80,13 @@ prop_set vendor.zram.size 100p
 prop_set persist.device_config.vendor_system_native_boot.zram_size 100p
 prop_set persist.vendor.boot.zram.size 100p
 prop_set ro.lmk.swap_free_low_percentage 1
+
+lmk_swap_low_actual="$(prop_read ro.lmk.swap_free_low_percentage)"
+if [ "$lmk_swap_low_actual" = 1 ]; then
+  log 'ZRAM_LMK_SWAP_LOW result=active actual=1'
+else
+  log "ZRAM_LMK_SWAP_LOW result=readback_unavailable_nonfatal actual=${lmk_swap_low_actual:-unset}"
+fi
 
 sysctl -w "vm.swappiness=$SWAPPINESS" >/dev/null 2>&1 || prop_set vm.swappiness "$SWAPPINESS"
 
@@ -87,7 +99,7 @@ if [ "$THP_MODE" != stock ] && [ -d /sys/kernel/mm/transparent_hugepage ]; then
   esac
 fi
 
-if [ "$RESTART" = 1 ] && [ "$MODE" != boot_early ]; then
+if [ "$RESTART" = 1 ] && [ "$MODE" != boot_early ] && [ "$MODE" != boot_verified ]; then
   log 'mmd_restart=requested'
   stop mmd 2>/dev/null || setprop ctl.stop mmd 2>/dev/null || true
   start mmd 2>/dev/null || setprop ctl.start mmd 2>/dev/null || true
@@ -98,6 +110,8 @@ fi
 eh_state=adaptive
 if [ "$MODE" = boot_early ]; then
   eh_state=deferred_until_verified_boot
+elif [ "$MODE" = boot_verified ]; then
+  eh_state=deferred_to_service_post_bootguard
 elif [ -r "$EH_CONTROL" ]; then
   if [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
      [ "${LAST_ZRAM_100P:-}" = enabled ] &&
@@ -128,5 +142,5 @@ if [ "$DEBUG" = 1 ] || [ "$MODE" != boot_early ]; then
   done
 fi
 
-log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=outside_boot_early swappiness=$SWAPPINESS thp=$THP_MODE eh_state=$eh_state backup_state=runtime_only"
+log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=manual_only swappiness=$SWAPPINESS thp=$THP_MODE eh_state=$eh_state lmk_swap_low=${lmk_swap_low_actual:-unset} backup_state=runtime_only"
 exit 0
