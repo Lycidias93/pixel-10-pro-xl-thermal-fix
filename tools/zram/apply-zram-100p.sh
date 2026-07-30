@@ -1,24 +1,47 @@
 #!/system/bin/sh
 # Pixel 10 Thermal & Memory Control - ZRAM 100% apply helper.
-# In-memory resetprop-rs -n props; mmd restart only outside boot_early.
+# Standard lz77eh hardware acceleration remains independent of the optional
+# Emerald Hill max-frequency lock.
+set -eu
 
-CONFIG_FILE="/data/adb/pixel-10-pro-xl-thermal-fix/config.env"
-[ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE" 2>/dev/null || true
-
+ID="pixel-10-pro-xl-thermal-fix"
+CONFIG_FILE="${ZRAM_CONFIG_FILE:-/data/adb/$ID/config.env}"
 MODE="${1:-manual}"
-MODDIR="${MODDIR:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
+MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 RESET="$MODDIR/tools/resetprop-rs"
-DEBUG="${DEBUG_MODE:-${debug_mode:-0}}"
-RESTART="${ZRAM_RESTART_MMD:-1}"
+NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
+EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 BIGMAX="2147483647"
 
-log() { echo "$*"; }
+[ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >/dev/null 2>&1 || true
+[ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE" 2>/dev/null || true
+
+DEBUG="${DEBUG_MODE:-${debug_mode:-0}}"
+RESTART="${ZRAM_RESTART_MMD:-1}"
+SWAPPINESS="${ZRAM_SWAPPINESS:-100}"
+THP_MODE="${ZRAM_THP_MODE:-stock}"
+
+log() { printf '%s\n' "$*"; }
+
+cfg_set() {
+  key="$1"
+  value="$2"
+  mkdir -p "${CONFIG_FILE%/*}" 2>/dev/null || true
+  touch "$CONFIG_FILE" 2>/dev/null || true
+  tmp="$CONFIG_FILE.tmp.$$"
+  grep -v "^${key}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
+  printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  chmod 0600 "$tmp" 2>/dev/null || true
+  mv "$tmp" "$CONFIG_FILE"
+}
 
 log "=== Apply ZRAM Start ==="
 log "time=$(date -Is 2>/dev/null || date)"
 log "mode=$MODE"
 log "debug=$DEBUG"
 log "restart_mmd=$RESTART"
+log "swappiness=$SWAPPINESS"
+log "thp_mode=$THP_MODE"
 
 if [ ! -x "$RESET" ]; then
   log "RESULT: ZRAM_APPLY_FAIL reason=resetprop_rs_missing_or_not_executable path=$RESET"
@@ -32,9 +55,16 @@ prop_set() {
     log "RESULT: ZRAM_APPLY_FAIL reason=resetprop_failed key=$key"
     exit 3
   }
-  [ "$DEBUG" = "1" ] && log "set $key=$val"
+  [ "$DEBUG" = 1 ] && log "set $key=$val"
 }
 
+case "$SWAPPINESS" in
+  ''|*[!0-9]*) SWAPPINESS=100 ;;
+  *) [ "$SWAPPINESS" -le 200 ] 2>/dev/null || SWAPPINESS=100 ;;
+esac
+case "$THP_MODE" in stock|always|madvise|never) ;; *) THP_MODE=stock ;; esac
+
+# In-memory only: no property backup is needed.
 prop_set mm.zram.maintenance.first_delay_seconds "$BIGMAX"
 prop_set mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
 prop_set mmd.zram.writeback.max_idle_seconds "$BIGMAX"
@@ -46,44 +76,57 @@ prop_set persist.device_config.vendor_system_native_boot.zram_size 100p
 prop_set persist.vendor.boot.zram.size 100p
 prop_set ro.lmk.swap_free_low_percentage 1
 
-# Hardware-accelerated swappiness, THP, and Emerald Hill 1 GHz clock boost
-sysctl -w vm.swappiness=100 2>/dev/null || prop_set vm.swappiness 100
-if [ -d /sys/kernel/mm/transparent_hugepage ]; then
-  echo always > /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || true
-  echo within_size > /sys/kernel/mm/transparent_hugepage/shmem_enabled 2>/dev/null || true
+sysctl -w "vm.swappiness=$SWAPPINESS" >/dev/null 2>&1 || prop_set vm.swappiness "$SWAPPINESS"
+
+if [ "$THP_MODE" != stock ] && [ -d /sys/kernel/mm/transparent_hugepage ]; then
+  printf '%s\n' "$THP_MODE" > /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null || true
+  case "$THP_MODE" in
+    always|madvise|never)
+      printf '%s\n' "$THP_MODE" > /sys/kernel/mm/transparent_hugepage/shmem_enabled 2>/dev/null || true
+    ;;
+  esac
 fi
 
-ZRAM_EMERALD_OC="${ZRAM_EMERALD_OC:-${zram_emerald_oc:-1}}"
-if [ "$ZRAM_EMERALD_OC" = "1" ]; then
-  for eh_dir in /sys/class/devfreq/*eh* /sys/devices/platform/*.eh/devfreq/*; do
-    if [ -d "$eh_dir" ] && [ -w "$eh_dir/min_freq" ] && [ -r "$eh_dir/max_freq" ]; then
-      max_f="$(cat "$eh_dir/max_freq" 2>/dev/null)"
-      if [ -n "$max_f" ]; then
-        echo "$max_f" > "$eh_dir/min_freq" 2>/dev/null || true
-        [ "$DEBUG" = "1" ] && log "set $eh_dir/min_freq=$max_f"
-      fi
-    fi
-  done
-else
-  [ "$DEBUG" = "1" ] && log "emerald_hill_oc=disabled_by_user"
-fi
-
-if [ "$RESTART" = "1" ] && [ "$MODE" != "boot_early" ]; then
-  log "mmd_restart=requested"
+if [ "$RESTART" = 1 ] && [ "$MODE" != boot_early ]; then
+  log 'mmd_restart=requested'
   stop mmd 2>/dev/null || setprop ctl.stop mmd 2>/dev/null || true
   start mmd 2>/dev/null || setprop ctl.start mmd 2>/dev/null || true
 else
   log "mmd_restart=skipped mode=$MODE"
 fi
 
-if [ "$DEBUG" = "1" ] || [ "$MODE" != "boot_early" ]; then
-  log "== active swaps =="
+eh_state=adaptive
+if [ "$MODE" = boot_early ]; then
+  eh_state=deferred_until_verified_boot
+elif [ -r "$EH_CONTROL" ]; then
+  if [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
+     [ "${LAST_ZRAM_100P:-}" = enabled ] &&
+     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
+    if MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" apply; then
+      eh_state=max_frequency_lock_active
+    else
+      # Preserve working lz77eh ZRAM and downgrade only the optional lock.
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set LAST_ZRAM_100P enabled_standard
+      MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+      eh_state=max_frequency_lock_failed_fallback_adaptive
+      log 'ZRAM_EH_FALLBACK=adaptive'
+    fi
+  else
+    MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+  fi
+else
+  eh_state=helper_missing_adaptive
+fi
+
+if [ "$DEBUG" = 1 ] || [ "$MODE" != boot_early ]; then
+  log '== active swaps =='
   cat /proc/swaps 2>/dev/null || true
-  log "== zram info =="
+  log '== zram info =='
   for f in disksize comp_algorithm mm_stat; do
     [ -r "/sys/block/zram0/$f" ] && log "zram0/$f: $(cat "/sys/block/zram0/$f")"
   done
 fi
 
-log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=outside_boot_early resetprop=resetprop-rs_-n backup_state=none"
+log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=outside_boot_early swappiness=$SWAPPINESS thp=$THP_MODE eh_state=$eh_state backup_state=runtime_only"
 exit 0
