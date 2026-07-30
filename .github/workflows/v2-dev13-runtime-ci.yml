@@ -45,10 +45,11 @@ jobs:
           bash tools/ptune/ptune-install-state-observability-guard.sh
           git diff --check
 
-      - name: Commit verified Dev.14 implementation
+      - name: Commit verified non-workflow Dev.14 implementation
         shell: bash
         run: |
           set -euo pipefail
+          git checkout -- .github/workflows
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
@@ -58,4 +59,4 @@ jobs:
           fi
           git commit -m "feat: implement dev14 EH safety corrections"
           git push origin "HEAD:repo-maintenance/v2-dev14-eh-dedupe-safe-defaults-20260730"
-          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV14_MIGRATION_PUSHED'
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV14_MIGRATION_PUSHED scope=non_workflow'
