@@ -21,7 +21,8 @@ config="$tmp/data/config.env"
 printf '%s\n' \
   'ENABLE_ZRAM_100P=1' \
   'ZRAM_RISK_ACK=explicit_user_enable' \
-  'LAST_ZRAM_100P=enabled' \
+  'ZRAM_EH_RISK_ACK=explicit_user_enable_max_lock' \
+  'LAST_ZRAM_100P=enabled_max_lock' \
   'ZRAM_EMERALD_OC=1' \
   'ZRAM_EH_TARGET_FREQ=max' \
   'ZRAM_THP_MODE=stock' \
@@ -41,7 +42,7 @@ sh "$control" apply > "$tmp/apply.log"
 grep -Fq 'RESULT: ZRAM_EH_APPLY_DONE' "$tmp/apply.log"
 [[ "$(cat "$tmp/devfreq/17000000.eh/min_freq")" = 1066000000 ]]
 grep -Fq 'state=active' "$tmp/state/status.env"
-grep -Fq $'17000000.eh\t200000000\t1066000000\t1066000000' "$tmp/state/baseline.tsv"
+grep -Fq $'\t200000000\t1066000000\t1066000000' "$tmp/state/baseline.tsv"
 
 MODDIR="$repo_root" \
 ZRAM_CONFIG_FILE="$config" \
@@ -74,8 +75,8 @@ fi
 grep -Fq 'success-verify' "$service"
 grep -Fq 'bootguard_verified' "$service"
 grep -Fq 'ZRAM_EMERALD_OC' "$action"
-grep -Fq 'Emerald Hill OC' "$install_menu"
-grep -Fq 'max_frequency_lock_failed_fallback_adaptive' "$apply"
+grep -Fq 'Emerald Hill mode' "$install_menu"
+grep -Fq 'max_lock_failed_fallback_adaptive' "$apply"
 
 printf '%s\n' 'PASS zram_eh_fake_devfreq_apply_restore'
 printf '%s\n' 'PASS zram_eh_default_off_and_explicit_choice_gate'

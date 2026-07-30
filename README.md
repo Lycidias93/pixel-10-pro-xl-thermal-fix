@@ -10,8 +10,8 @@
 |---|---|---|
 | Stable | `1.5.1-universal.1` / `1016108` | Public stable channel; unchanged |
 | Public Alpha prerelease | `2.0.0-alpha.3-dev.10` / `1016221` | Latest public Alpha; Mustang install, postboot, Thermal, ZRAM and Action verification PASS |
-| Current `v2` source | `2.0.0-alpha.3-dev.13` / `1016224` | Private development build; **not approved for release** |
-| Next test build | `2.0.0-alpha.3-dev.14` | Planned corrective build after the dev.13 live findings |
+| Current `v2` source | `2.0.0-alpha.3-dev.14` / `1016225` | Private corrective test build; device verification required |
+| Previous private build | `2.0.0-alpha.3-dev.13` / `1016224` | Superseded after the live EH alias/restore and LMK-observability findings |
 
 The public prerelease is bound to tag `v2.0.0-alpha.3-dev.10`, asset `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.10.zip`, SHA-256 `49b58b8393090d057ba4ff80006615fc4805a74c92ee19d41d44200e7fe4f83a`, and size `310221` bytes.
 
@@ -39,21 +39,21 @@ Live verification also found two issues that block publication:
 
 For that reason, dev.13 is **not a release candidate**. The optional Emerald Hill maximum-frequency lock is not the everyday default. The normal adaptive hardware-accelerated ZRAM path remains the intended daily configuration.
 
-## Dev.14 corrective scope
+## Dev.14 corrective implementation
 
-The next test build is intended to include:
+Dev.14 implements:
 
 - physical Emerald Hill node deduplication across sysfs aliases;
 - one authoritative baseline per physical device;
-- migration-safe and readback-verified restore behavior;
+- migration-safe and readback-verified restore behavior, including old dev.13 duplicate baselines;
 - adaptive Emerald Hill operation as the safe default;
-- ZRAM 100p and `lz77eh` independent from the optional frequency lock;
-- real Fresh choices that start from safe defaults;
-- clear separation of ZRAM and pTune risk acknowledgements;
-- honest LMK observability without an unverified override claim;
-- improved EH status data and regression fixtures for alias paths.
+- ZRAM 100p and `lz77eh` independent from the optional maximum-frequency minimum lock;
+- Fresh choices that start from Stock Polling, Stock Thermal, ZRAM disabled, EH disabled and pTune override off;
+- separate pTune, ZRAM and EH risk acknowledgements;
+- stock LMK policy without an unverified override claim;
+- EH status schema v2 and regression fixtures for physical alias paths.
 
-Dev.14 still requires CI, exact package construction, installation, reboot, and fresh on-device verification before any release decision.
+Dev.14 still requires exact package construction, installation, reboot, and fresh on-device verification before any release decision.
 
 ## Dynamic V2 admission model
 
@@ -262,11 +262,11 @@ The exact public dev.10 package passed installation and postboot verification on
 
 ### Current private evidence boundary
 
-Dev.13 extended the verified Mustang path to OTA rematerialization state and exact `eh_freq` admission, but the live alias/restore and LMK-observability findings prevent release. These findings supersede the earlier expectation that one visible `eh_freq` basename necessarily meant one physical node.
+Dev.13 extended the verified Mustang path to OTA rematerialization state and exact `eh_freq` admission, but the live alias/restore and LMK-observability findings prevented release. Dev.14 contains the corrective implementation; its repository tests do not replace fresh Mustang installation and post-reboot proof.
 
 ### Remaining evidence work
 
-- dev.14 exact package CI and Mustang post-reboot verification;
+- dev.14 exact Mustang installation and post-reboot verification;
 - Blazer exact normalized evidence hardening;
 - Frankel and rango runtime evidence;
 - external `dynamic_unverified` install/postboot proof on a supported unlisted build;

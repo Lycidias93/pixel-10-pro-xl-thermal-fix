@@ -11,7 +11,8 @@ EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 mkdir -p "$G"
 
 printf 'timestamp_start=%s\n' "$(date +%s 2>/dev/null || echo unknown)" > "$H"
-printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_deferred_v5' >> "$H"
+printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_deferred_v6' >> "$H"
+printf '%s\n' 'lmk_swap_low_policy=stock_unmodified' >> "$H"
 
 [ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >> "$H" 2>&1 || true
 if [ -f "$CONFIG_FILE" ]; then
@@ -19,10 +20,10 @@ if [ -f "$CONFIG_FILE" ]; then
 fi
 
 # Standard lz77eh ZRAM properties may be prepared early. The optional Emerald
-# Hill max-frequency lock is deliberately deferred until Bootguard verifies the
-# completed Android boot and the active Thermal runtime.
+# Hill maximum-frequency minimum lock is deferred until Bootguard verifies the
+# completed Android boot and active Thermal runtime.
 if [ "${ENABLE_ZRAM_100P:-0}" = 1 ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
-  printf '%s SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip eh=deferred\n' "$(date -Is 2>/dev/null || date)" >> "$L"
+  printf '%s SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip eh=deferred lmk=stock\n' "$(date -Is 2>/dev/null || date)" >> "$L"
   if [ -r "$ZRAM_APPLY" ]; then
     sh "$ZRAM_APPLY" boot_early >> "$H" 2>&1 ||
       printf '%s\n' 'SERVICE_ZRAM result=apply_failed_nonfatal' >> "$H"
@@ -39,8 +40,6 @@ while [ "$(getprop sys.boot_completed 2>/dev/null)" != 1 ]; do
   sleep 1
 done
 
-# late_start is non-blocking. Give Android and the thermal service time to settle
-# before clearing the boot attempt. Bootguard performs two thermalservice probes.
 sleep "${BOOTGUARD_SUCCESS_SETTLE_SECONDS:-30}"
 
 {
@@ -70,37 +69,37 @@ if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
   fi
 fi
 
-# Android may rewrite selected LMK/ZRAM properties after early service startup.
-# Reapply the runtime-only property set exactly once after verified boot. This
-# mode never restarts mmd and deliberately leaves EH activation to the guarded
-# block below.
+# Android may rewrite selected ZRAM properties after early service startup.
+# Reapply exactly once after verified boot. LMKD remains stock and this mode
+# never restarts mmd.
 if [ "$bootguard_verified" = 1 ] &&
    [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
    [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
   if [ -r "$ZRAM_APPLY" ] && sh "$ZRAM_APPLY" boot_verified >> "$H" 2>&1; then
-    printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=properties_reapplied_no_mmd_restart' >> "$H"
+    printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=zram_properties_reapplied_no_mmd_restart lmk_policy=stock_unmodified' >> "$H"
   else
     printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=reapply_failed_nonfatal' >> "$H"
   fi
 fi
 
-# Performance locking is a post-verification enhancement, never a boot
-# prerequisite. Any failure falls back to adaptive devfreq and remains nonfatal.
+# The lock is a post-verification enhancement, never a boot prerequisite.
+# Any failure restores adaptive devfreq and remains nonfatal.
 if [ -r "$EH_CONTROL" ]; then
   if [ "$bootguard_verified" = 1 ] &&
      [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
      [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
-     [ "${LAST_ZRAM_100P:-}" = enabled ] &&
-     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
+     [ "${LAST_ZRAM_100P:-}" = enabled_max_lock ] &&
+     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ] &&
+     [ "${ZRAM_EH_RISK_ACK:-}" = explicit_user_enable_max_lock ]; then
     if MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" apply >> "$H" 2>&1; then
-      printf '%s\n' 'SERVICE_ZRAM_EH result=max_frequency_lock_active' >> "$H"
+      printf '%s\n' 'SERVICE_ZRAM_EH result=max_frequency_minimum_lock_active' >> "$H"
     else
       MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >> "$H" 2>&1 || true
       printf '%s\n' 'SERVICE_ZRAM_EH result=apply_failed_adaptive_fallback' >> "$H"
     fi
   else
     MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >> "$H" 2>&1 || true
-    printf '%s\n' "SERVICE_ZRAM_EH result=adaptive bootguard_verified=$bootguard_verified requested=${ZRAM_EMERALD_OC:-0}" >> "$H"
+    printf '%s\n' "SERVICE_ZRAM_EH result=adaptive bootguard_verified=$bootguard_verified requested=${ZRAM_EMERALD_OC:-0} eh_ack=${ZRAM_EH_RISK_ACK:-none}" >> "$H"
   fi
 fi
 

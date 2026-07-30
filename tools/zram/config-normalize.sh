@@ -1,6 +1,6 @@
 #!/system/bin/sh
-# Normalize Dev.12 ZRAM performance settings and migrate legacy enabled state
-# to the safe adaptive hardware-acceleration mode.
+# Normalize Dev.14 ZRAM settings and migrate every legacy Emerald Hill lock
+# state to the safe adaptive hardware-acceleration default.
 set -eu
 
 ID="${ID:-pixel-10-pro-xl-thermal-fix}"
@@ -26,40 +26,60 @@ cfg_set() {
 enabled="$(cfg_get ENABLE_ZRAM_100P)"
 oc="$(cfg_get ZRAM_EMERALD_OC)"
 last="$(cfg_get LAST_ZRAM_100P)"
+eh_ack="$(cfg_get ZRAM_EH_RISK_ACK)"
+migrated=none
 
-case "$oc" in
-  0|1) ;;
-  *)
-    cfg_set ZRAM_EMERALD_OC 0
-    oc=0
-  ;;
-esac
+case "$enabled" in 0|1) ;; *) enabled='' ;; esac
+case "$oc" in 0|1) ;; *) oc=0; cfg_set ZRAM_EMERALD_OC 0 ;; esac
+case "$eh_ack" in explicit_user_enable_max_lock|none|disabled_by_user) ;; *) eh_ack=none; cfg_set ZRAM_EH_RISK_ACK none ;; esac
+
+# Dev.13 used LAST_ZRAM_100P=enabled without a dedicated EH acknowledgement.
+# It is always migrated to adaptive so an old duplicate baseline cannot relock.
+if [ "$last" = enabled ]; then
+  last=enabled_standard
+  oc=0
+  eh_ack=none
+  cfg_set LAST_ZRAM_100P enabled_standard
+  cfg_set ZRAM_EMERALD_OC 0
+  cfg_set ZRAM_EH_RISK_ACK none
+  migrated=legacy_enabled_to_adaptive
+fi
 
 case "$last" in
-  disabled|enabled_standard|enabled) ;;
+  disabled|enabled_standard|enabled_max_lock) ;;
   *)
     case "$enabled" in
-      1)
-        cfg_set LAST_ZRAM_100P enabled_standard
-        last=enabled_standard
-      ;;
-      0)
-        cfg_set LAST_ZRAM_100P disabled
-        last=disabled
-      ;;
+      1) last=enabled_standard; cfg_set LAST_ZRAM_100P enabled_standard ;;
+      0) last=disabled; cfg_set LAST_ZRAM_100P disabled ;;
       *) last='' ;;
     esac
   ;;
 esac
 
-# A max-frequency lock is valid only when the dedicated menu choice was saved.
-# Legacy/missing state is downgraded to adaptive hardware acceleration.
-if [ "$oc" = 1 ] && [ "$last" != enabled ]; then
-  cfg_set ZRAM_EMERALD_OC 0
-  oc=0
+if [ "$oc" = 1 ]; then
+  if [ "$last" != enabled_max_lock ] || [ "$eh_ack" != explicit_user_enable_max_lock ]; then
+    oc=0
+    eh_ack=none
+    [ "$enabled" = 1 ] && last=enabled_standard
+    cfg_set ZRAM_EMERALD_OC 0
+    cfg_set ZRAM_EH_RISK_ACK none
+    [ "$enabled" = 1 ] && cfg_set LAST_ZRAM_100P enabled_standard
+    migrated=unauthorized_lock_to_adaptive
+  fi
+else
+  if [ "$last" = enabled_max_lock ]; then
+    last=enabled_standard
+    cfg_set LAST_ZRAM_100P enabled_standard
+    migrated=inconsistent_choice_to_adaptive
+  fi
+  if [ "$eh_ack" = explicit_user_enable_max_lock ]; then
+    eh_ack=none
+    cfg_set ZRAM_EH_RISK_ACK none
+  fi
 fi
 
 case "$(cfg_get ZRAM_EH_TARGET_FREQ)" in
+  max) ;;
   ''|*[!0-9]*) cfg_set ZRAM_EH_TARGET_FREQ max ;;
 esac
 
@@ -78,5 +98,5 @@ case "$swappiness" in
   ;;
 esac
 
-printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE oc=$oc last=${last:-unset} target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS)"
+printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE oc=$oc last=${last:-unset} eh_ack=${eh_ack:-none} migrated=$migrated target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS)"
 exit 0

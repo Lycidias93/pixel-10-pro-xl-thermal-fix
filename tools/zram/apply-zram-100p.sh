@@ -1,7 +1,7 @@
 #!/system/bin/sh
 # Pixel 10 Thermal & Memory Control - ZRAM 100% apply helper.
-# Standard lz77eh hardware acceleration remains independent of the optional
-# Emerald Hill max-frequency lock.
+# lz77eh hardware acceleration remains independent from the optional
+# Emerald Hill maximum-frequency minimum lock.
 set -eu
 
 ID="pixel-10-pro-xl-thermal-fix"
@@ -58,18 +58,15 @@ prop_set() {
   [ "$DEBUG" = 1 ] && log "set $key=$val"
 }
 
-prop_read() {
-  getprop "$1" 2>/dev/null || true
-}
-
 case "$SWAPPINESS" in
   ''|*[!0-9]*) SWAPPINESS=100 ;;
   *) [ "$SWAPPINESS" -le 200 ] 2>/dev/null || SWAPPINESS=100 ;;
 esac
 case "$THP_MODE" in stock|always|madvise|never) ;; *) THP_MODE=stock ;; esac
 
-# In-memory only: no property backup is needed. service.sh repeats this once
-# after Bootguard verification because Android may rewrite early LMK properties.
+# Runtime-only ZRAM properties. LMKD policy remains owned by the platform because
+# a late ro.lmk override is not proven to be consumed without an explicit LMKD
+# property reload.
 prop_set mm.zram.maintenance.first_delay_seconds "$BIGMAX"
 prop_set mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
 prop_set mmd.zram.writeback.max_idle_seconds "$BIGMAX"
@@ -79,14 +76,8 @@ prop_set mmd.zram.size 100%
 prop_set vendor.zram.size 100p
 prop_set persist.device_config.vendor_system_native_boot.zram_size 100p
 prop_set persist.vendor.boot.zram.size 100p
-prop_set ro.lmk.swap_free_low_percentage 1
-
-lmk_swap_low_actual="$(prop_read ro.lmk.swap_free_low_percentage)"
-if [ "$lmk_swap_low_actual" = 1 ]; then
-  log 'ZRAM_LMK_SWAP_LOW result=active actual=1'
-else
-  log "ZRAM_LMK_SWAP_LOW result=readback_unavailable_nonfatal actual=${lmk_swap_low_actual:-unset}"
-fi
+lmk_swap_low_actual="$(getprop ro.lmk.swap_free_low_percentage 2>/dev/null || true)"
+log "ZRAM_LMK_SWAP_LOW policy=stock_unmodified actual=${lmk_swap_low_actual:-unset}"
 
 sysctl -w "vm.swappiness=$SWAPPINESS" >/dev/null 2>&1 || prop_set vm.swappiness "$SWAPPINESS"
 
@@ -114,16 +105,17 @@ elif [ "$MODE" = boot_verified ]; then
   eh_state=deferred_to_service_post_bootguard
 elif [ -r "$EH_CONTROL" ]; then
   if [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
-     [ "${LAST_ZRAM_100P:-}" = enabled ] &&
-     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
+     [ "${LAST_ZRAM_100P:-}" = enabled_max_lock ] &&
+     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ] &&
+     [ "${ZRAM_EH_RISK_ACK:-}" = explicit_user_enable_max_lock ]; then
     if MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" apply; then
-      eh_state=max_frequency_lock_active
+      eh_state=max_frequency_minimum_lock_active
     else
-      # Preserve working lz77eh ZRAM and downgrade only the optional lock.
       cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_EH_RISK_ACK none
       cfg_set LAST_ZRAM_100P enabled_standard
       MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
-      eh_state=max_frequency_lock_failed_fallback_adaptive
+      eh_state=max_lock_failed_fallback_adaptive
       log 'ZRAM_EH_FALLBACK=adaptive'
     fi
   else
@@ -142,5 +134,5 @@ if [ "$DEBUG" = 1 ] || [ "$MODE" != boot_early ]; then
   done
 fi
 
-log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=manual_only swappiness=$SWAPPINESS thp=$THP_MODE eh_state=$eh_state lmk_swap_low=${lmk_swap_low_actual:-unset} backup_state=runtime_only"
+log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=manual_only swappiness=$SWAPPINESS thp=$THP_MODE eh_state=$eh_state lmk_swap_low_policy=stock_unmodified lmk_swap_low_actual=${lmk_swap_low_actual:-unset} backup_state=runtime_only"
 exit 0
