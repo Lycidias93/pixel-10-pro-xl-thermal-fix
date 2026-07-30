@@ -93,6 +93,13 @@ config_set() {
   chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
 }
 
+ZRAM_NORMALIZE="$MODPATH/tools/zram/config-normalize.sh"
+if [ -s "$ZRAM_NORMALIZE" ]; then
+  chmod 0755 "$ZRAM_NORMALIZE" 2>/dev/null || true
+  ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_NORMALIZE" >/dev/null 2>&1 ||
+    ui_print "! ZRAM config normalization failed; optional EH lock remains unavailable"
+fi
+
 if [ -s "$MODPATH/tools/menu/install-options-menu.sh" ]; then
   chmod 0755 "$MODPATH/tools/menu/menu-cycle.sh" "$MODPATH/tools/menu/install-options-menu.sh" 2>/dev/null || true
   MODULE_ID="$MODULE_ID" MODDIR="$MODPATH" sh "$MODPATH/tools/menu/install-options-menu.sh" install ||
@@ -100,6 +107,10 @@ if [ -s "$MODPATH/tools/menu/install-options-menu.sh" ]; then
 else
   ui_print "! Options menu missing"
   ui_print "! Using current/defaults"
+fi
+
+if [ -s "$ZRAM_NORMALIZE" ]; then
+  ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_NORMALIZE" >/dev/null 2>&1 || true
 fi
 
 if [ -s "$MODPATH/tools/ptune/ptune-guard.sh" ]; then
