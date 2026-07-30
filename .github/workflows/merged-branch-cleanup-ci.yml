@@ -27,7 +27,8 @@ jobs:
           test -s .github/workflows/merged-branch-cleanup.yml
           grep -q 'pull_request_target:' .github/workflows/merged-branch-cleanup.yml
           grep -q 'contents: write' .github/workflows/merged-branch-cleanup.yml
-          grep -q 'ref: ${{ github.event.repository.default_branch }}' .github/workflows/merged-branch-cleanup.yml
+          grep -q 'ref:' .github/workflows/merged-branch-cleanup.yml
+          grep -q 'event.repository.default_branch' .github/workflows/merged-branch-cleanup.yml
 
       - name: Run cleanup regression tests
         run: |
