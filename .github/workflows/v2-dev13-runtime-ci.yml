@@ -21,6 +21,9 @@ jobs:
           ref: repo-maintenance/v2-dev14-eh-dedupe-safe-defaults-20260730
           fetch-depth: 0
 
+      - name: Correct optional migration anchor
+        run: python3 dev_tools/fix-dev14-migration.py
+
       - name: Apply guarded Dev.14 migration
         run: python3 dev_tools/migrate-dev14.py
 
