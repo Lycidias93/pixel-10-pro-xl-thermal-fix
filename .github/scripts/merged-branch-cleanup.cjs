@@ -160,7 +160,7 @@ async function cleanup({ github, context, core }) {
   }
 
   let candidateNames = null;
-  if (context.eventName === 'pull_request') {
+  if (context.eventName === 'pull_request' || context.eventName === 'pull_request_target') {
     const pull = context.payload.pull_request;
     if (!pull || !pull.merged) {
       candidateNames = new Set();
