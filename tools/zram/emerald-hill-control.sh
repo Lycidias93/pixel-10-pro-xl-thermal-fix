@@ -32,7 +32,7 @@ is_eh_node() {
   label="${dir##*/} $(cat "$dir/name" 2>/dev/null || true)"
   lower="$(printf '%s' "$label" | tr 'A-Z' 'a-z')"
   case "$lower" in
-    *emerald*|*lz77*|eh|eh.*|*.eh|*.eh.*|*eh-devfreq*) return 0 ;;
+    *emerald*|*lz77*|eh|eh.*|*.eh|*.eh.*|eh_freq|eh_freq\ *|eh-freq|eh-freq\ *|*eh-devfreq*) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -104,7 +104,7 @@ apply_lock() {
   [ -r "$CONFIG_FILE" ] && . "$CONFIG_FILE" 2>/dev/null || true
 
   if [ "${ENABLE_ZRAM_100P:-0}" != 1 ] ||
-     [ "${ZRAM_EMERALD_OC:-0}" != 1 ] ||
+     [ "${ZRAM_EMERAL_OC:-${ZRAM_EMERALD_OC:-0}}" != 1 ] ||
      [ "${LAST_ZRAM_100P:-}" != enabled ] ||
      [ "${ZRAM_RISK_ACK:-}" != explicit_user_enable ]; then
     status_write adaptive not_explicitly_authorized 0 none
