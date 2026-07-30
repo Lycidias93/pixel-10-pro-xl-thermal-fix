@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# One-shot guard correction; removed by the successful migration.
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
