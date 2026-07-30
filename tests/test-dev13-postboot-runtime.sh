@@ -79,6 +79,11 @@ for field in \
   grep -Fq "$field" "$auto_switch"
 done
 
+grep -Fq 'AUTO_SWITCH_STATE_REFRESH reason=runtime_state_contract_drift' "$auto_switch"
+grep -Fq 'state_refresh=$state_refresh' "$auto_switch"
+grep -Fq 'getstate module_version' "$auto_switch"
+grep -Fq 'getstate zram_fstab_materialized' "$auto_switch"
+
 if grep -Fq 'dynamic_stock_validated_exact_verified' "$auto_switch"; then
   printf '%s\n' 'FAIL stale_exact_profile_state_reintroduced'
   exit 1
@@ -98,5 +103,6 @@ grep -Fq 'versionCode=1016224' "$module_prop"
 printf '%s\n' 'PASS dev13_real_eh_freq_match_and_decoy_rejection'
 printf '%s\n' 'PASS dev13_post_bootguard_property_reapply_without_mmd_restart'
 printf '%s\n' 'PASS dev13_post_ota_state_observability'
+printf '%s\n' 'PASS dev13_current_profile_state_refresh_is_conditional'
 printf '%s\n' 'PASS dev13_no_stale_exact_build_contract'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV13_POSTBOOT_RUNTIME_TEST_PASS'
