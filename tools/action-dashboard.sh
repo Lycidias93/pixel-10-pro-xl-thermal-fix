@@ -289,25 +289,25 @@ set_zram() {
   case "$UI_INDEX" in
     0)
       cur_oc="$(cfg_get ZRAM_EMERALD_OC)"
-      [ -n "$cur_oc" ] || cur_oc=1
-      case "$cur_oc" in 0) oc_idx=1 ;; *) oc_idx=0 ;; esac
-      ui_menu3 "Emerald Hill OC" "Enable 1.066GHz" "Disable (Standard)" "Back" "$oc_idx"
+      [ -n "$cur_oc" ] || cur_oc=0
+      case "$cur_oc" in 1) oc_idx=1 ;; *) oc_idx=0 ;; esac
+      ui_menu3 "Emerald Hill mode" "Adaptive (recommended)" "Max lock (more power/heat)" "Back" "$oc_idx"
       [ "$UI_REASON" = "timeout" ] && return 0
       case "$UI_INDEX" in
         0)
-          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled
-          msg "- ZRAM: enabled (1.066GHz EH OC)"
+          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set ZRAM_EH_RISK_ACK none; cfg_set LAST_ZRAM_100P enabled_standard
+          msg "- ZRAM: enabled (adaptive EH)"
         ;;
         1)
-          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set LAST_ZRAM_100P enabled_standard
-          msg "- ZRAM: enabled (Standard / No OC)"
+          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set ZRAM_EH_RISK_ACK explicit_user_enable_max_lock; cfg_set LAST_ZRAM_100P enabled_max_lock
+          msg "- ZRAM: enabled (EH max lock; more power/heat)"
         ;;
         *) msg "Back."; return 0 ;;
       esac
       if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then msg "- Applying runtime props"; MODDIR="$MODDIR" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1 || true; fi
     ;;
     1)
-      cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled
+      cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set ZRAM_EH_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled
       msg "- ZRAM: disabled"; msg "- Reboot recommended"
     ;;
     *) msg "Back."; return 0 ;;

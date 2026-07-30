@@ -1,3 +1,14 @@
+# 2.0.0-alpha.3-dev.14
+
+Private corrective test build; no tag, release asset, or update-channel change.
+
+- Deduplicates physical Emerald Hill devfreq aliases and records one baseline per device.
+- Restores legacy dev.13 duplicate baselines using the first true original minimum.
+- Makes adaptive Emerald Hill behavior the safe default and gates the optional maximum-frequency minimum lock separately.
+- Removes the unverified late LMK swap-low override and records stock platform policy.
+- Makes Fresh installer choices genuinely safe and separates pTune, ZRAM, and EH risk evidence.
+- Adds dev.14 regression CI and status schema v2.
+
 # V2 Alpha post-release validation status
 
 - Records Blazer / Android 17 stable community runtime PASS confirmed by Harish / Codecity001.

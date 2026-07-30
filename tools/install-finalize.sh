@@ -48,7 +48,10 @@ thermal_finalize_install() {
       "$ACTIVE_MODPATH/guard/conflict_ptune_path" \
       "$ACTIVE_MODPATH/guard/guard_override" \
       "$ACTIVE_MODPATH/guard/guard_override_source" \
-      "$ACTIVE_MODPATH/guard/risk_ack" 2>/dev/null || true
+      "$ACTIVE_MODPATH/guard/risk_ack" \
+      "$ACTIVE_MODPATH/guard/ptune_risk_ack" \
+      "$ACTIVE_MODPATH/guard/zram_risk_ack" \
+      "$ACTIVE_MODPATH/guard/zram_eh_risk_ack" 2>/dev/null || true
   fi
 
   mkdir -p "$MODPATH/guard"
@@ -60,15 +63,22 @@ thermal_finalize_install() {
     "$MODPATH/guard/conflict_ptune_path" \
     "$MODPATH/guard/guard_override" \
     "$MODPATH/guard/guard_override_source" \
-    "$MODPATH/guard/risk_ack"
+    "$MODPATH/guard/risk_ack" \
+    "$MODPATH/guard/ptune_risk_ack" \
+    "$MODPATH/guard/zram_risk_ack" \
+    "$MODPATH/guard/zram_eh_risk_ack"
 
   if [ "$PTUNE_INSTALL_OVERRIDE_ACTIVE" = "1" ]; then
     printf '%s\n' "allow_thermal_with_ptune" > "$MODPATH/guard/guard_override"
     printf '%s\n' "$CONFIG_FILE" > "$MODPATH/guard/guard_override_source"
-    printf '%s\n' "explicit_user_override" > "$MODPATH/guard/risk_ack"
+    printf '%s\n' "explicit_user_override" > "$MODPATH/guard/ptune_risk_ack"
     printf '%s\n' "$PTUNE_INSTALL_CONFLICT_PATH" > "$MODPATH/guard/conflict_ptune_path"
     printf '%s\n' "$PTUNE_INSTALL_CONFLICT_MODE" > "$MODPATH/guard/conflict_guard_mode"
   fi
+
+  printf '%s\n' "${PTUNE_RISK_ACK_STATE:-unset}" > "$MODPATH/guard/ptune_risk_ack"
+  printf '%s\n' "$(config_get ZRAM_RISK_ACK)" > "$MODPATH/guard/zram_risk_ack"
+  printf '%s\n' "$(config_get ZRAM_EH_RISK_ACK)" > "$MODPATH/guard/zram_eh_risk_ack"
 
   [ -s "$MODPATH/tools/bootguard/collect-debug.sh" ] && chmod 0755 "$MODPATH/tools/bootguard/collect-debug.sh" || true
   [ -s "$MODPATH/tools/debug/pixel_thermal_toggle_debug.sh" ] && chmod 0755 "$MODPATH/tools/debug/pixel_thermal_toggle_debug.sh" || true
@@ -107,7 +117,9 @@ thermal_finalize_install() {
     printf '%s\n' "config_ptune_guard_mode=$PTUNE_GUARD_MODE"
     printf '%s\n' "config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}"
     printf '%s\n' "config_override_allowed=$PTUNE_OVERRIDE_ALLOWED"
-    printf '%s\n' "risk_ack=$PTUNE_RISK_ACK_STATE"
+    printf '%s\n' "ptune_risk_ack=$PTUNE_RISK_ACK_STATE"
+    printf '%s\n' "zram_risk_ack=$(config_get ZRAM_RISK_ACK)"
+    printf '%s\n' "zram_eh_risk_ack=$(config_get ZRAM_EH_RISK_ACK)"
     printf '%s\n' "ptune_state=$PTUNE_INSTALL_STATE"
     printf '%s\n' "ptune_installed_path=${PTUNE_INSTALLED_PATH:-none}"
     printf '%s\n' "ptune_active_path=${PTUNE_ACTIVE_PATH:-none}"

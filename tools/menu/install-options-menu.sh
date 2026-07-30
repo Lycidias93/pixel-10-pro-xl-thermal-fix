@@ -203,21 +203,24 @@ apply_zram() {
       cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_RESTART_MMD 0
       cfg_set ZRAM_RISK_ACK disabled_by_user
+      cfg_set ZRAM_EH_RISK_ACK disabled_by_user
       cfg_set LAST_ZRAM_100P disabled
     ;;
-    enabled_standard)
-      cfg_set ENABLE_ZRAM_100P 1
-      cfg_set ZRAM_EMERALD_OC 0
-      cfg_set ZRAM_RESTART_MMD 1
-      cfg_set ZRAM_RISK_ACK explicit_user_enable
-      cfg_set LAST_ZRAM_100P enabled_standard
-    ;;
-    *)
+    enabled_max_lock)
       cfg_set ENABLE_ZRAM_100P 1
       cfg_set ZRAM_EMERALD_OC 1
       cfg_set ZRAM_RESTART_MMD 1
       cfg_set ZRAM_RISK_ACK explicit_user_enable
-      cfg_set LAST_ZRAM_100P enabled
+      cfg_set ZRAM_EH_RISK_ACK explicit_user_enable_max_lock
+      cfg_set LAST_ZRAM_100P enabled_max_lock
+    ;;
+    *)
+      cfg_set ENABLE_ZRAM_100P 1
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_RESTART_MMD 1
+      cfg_set ZRAM_RISK_ACK explicit_user_enable
+      cfg_set ZRAM_EH_RISK_ACK none
+      cfg_set LAST_ZRAM_100P enabled_standard
     ;;
   esac
 }
@@ -241,17 +244,10 @@ mark_single_pass_complete() {
 
 zram_summary_label() {
   _z="$(cfg_get LAST_ZRAM_100P)"
-  _oc="$(cfg_get ZRAM_EMERALD_OC)"
   case "$_z" in
     disabled) printf '%s\n' 'disabled' ;;
-    enabled_standard) printf '%s\n' 'enabled (Standard / No OC)' ;;
-    *)
-      if [ "$_oc" = "0" ]; then
-        printf '%s\n' 'enabled (Standard / No OC)'
-      else
-        printf '%s\n' 'enabled (1.066GHz EH OC)'
-      fi
-    ;;
+    enabled_max_lock) printf '%s\n' 'enabled (EH max lock; more power/heat)' ;;
+    *) printf '%s\n' 'enabled (adaptive; recommended)' ;;
   esac
 }
 
@@ -318,12 +314,12 @@ fi
 cfg_set THERMAL_SETTINGS_MODE fresh
 record_ptune_presence
 
-current_polling="$(cfg_get THERMAL_POLLING_MODE)"
-case "$current_polling" in stock) polling_index=1 ;; *) polling_index=0 ;; esac
+current_polling=stock
+polling_index=1
 mc_cycle2 "Polling Mode" "Mod values" "Stock values" "$polling_index"
 [ "$MC_INDEX" = 1 ] && apply_polling stock || apply_polling mod
 
-current_profile="$(cap_profile "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
+current_profile=stock
 safe_label="$(profile_policy_label 1 'Outdoor Safe')"
 plus_label="$(profile_policy_label 2 'Outdoor Plus')"
 ext_label="$(profile_policy_label 3 'Outdoor Ext')"
@@ -333,36 +329,32 @@ mc_cycle4 \
   "$safe_label" \
   "$plus_label" \
   "$ext_label" \
-  "$(profile_index "$current_profile")"
+  0
 apply_profile "$(profile_at "$MC_INDEX")"
 
-current_zram="$(cfg_get ENABLE_ZRAM_100P)"
-case "$current_zram" in 0) zram_index=0 ;; *) zram_index=1 ;; esac
+current_zram=0
+zram_index=0
 mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
 if [ "$MC_INDEX" = 0 ]; then
   apply_zram disabled
 else
-  current_oc="$(cfg_get ZRAM_EMERALD_OC)"
-  case "$current_oc" in 0) oc_index=0 ;; *) oc_index=1 ;; esac
-  mc_cycle2 "Emerald Hill OC" "Disabled" "Enabled" "$oc_index"
+  oc_index=0
+  mc_cycle2 "Emerald Hill mode" "Adaptive (recommended)" "Max lock (more power/heat)" "$oc_index"
   if [ "$MC_INDEX" = 0 ]; then
     apply_zram enabled_standard
   else
-    apply_zram enabled
+    apply_zram enabled_max_lock
   fi
 fi
 
-current_ptune="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"
-current_ack="$(cfg_get RISK_ACK_PTUNE_THERMAL_COLLISION)"
-case "$current_ptune:$current_ack" in
-  1:I_UNDERSTAND_BOOTLOOP_RISK) ptune_index=0 ;;
-  *) ptune_index=1 ;;
-esac
+current_ptune=0
+current_ack=none
+ptune_index=1
 mc_cycle2 "pTune Override" "Override ON" "Override OFF" "$ptune_index"
 [ "$MC_INDEX" = 0 ] && apply_ptune 1 || apply_ptune 0
 
-current_debug="$(cfg_get DEBUG_MODE)"
-case "$current_debug" in 0) debug_index=0 ;; *) debug_index=1 ;; esac
+current_debug=0
+debug_index=0
 mc_cycle2 "Debug Logging" "Silent" "Verbose" "$debug_index"
 [ "$MC_INDEX" = 0 ] && apply_debug 0 || apply_debug 1
 
