@@ -38,13 +38,17 @@ esac
 case "$last" in
   disabled|enabled_standard|enabled) ;;
   *)
-    if [ "$enabled" = 1 ]; then
-      cfg_set LAST_ZRAM_100P enabled_standard
-      last=enabled_standard
-    else
-      cfg_set LAST_ZRAM_100P disabled
-      last=disabled
-    fi
+    case "$enabled" in
+      1)
+        cfg_set LAST_ZRAM_100P enabled_standard
+        last=enabled_standard
+      ;;
+      0)
+        cfg_set LAST_ZRAM_100P disabled
+        last=disabled
+      ;;
+      *) last='' ;;
+    esac
   ;;
 esac
 
@@ -74,5 +78,5 @@ case "$swappiness" in
   ;;
 esac
 
-printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE oc=$oc last=$(cfg_get LAST_ZRAM_100P) target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS)"
+printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE oc=$oc last=${last:-unset} target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS)"
 exit 0
