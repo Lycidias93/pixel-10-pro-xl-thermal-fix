@@ -63,8 +63,8 @@ mc_desc() {
     "Thermal") echo "Choose Stock, Safe, Plus, or Extended." ;;
     "Thermal Profile") echo "Stock, Safe, Plus, or Extended." ;;
     "ZRAM 100%") echo "Enable or disable 100 percent ZRAM." ;;
-    "Emerald Hill OC") echo "Enable 1.066GHz hardware ZRAM boost." ;;
-    "ZRAM 100% Options") echo "Disabled, Standard, or 1.066GHz OC." ;;
+    "Emerald Hill mode") echo "Adaptive daily mode or maximum-frequency minimum lock." ;;
+    "ZRAM 100% Options") echo "Disabled, adaptive, or maximum lock." ;;
     "Debug") echo "Create evidence and bootguard reports." ;;
     "Debug Logging") echo "Minimal or full debug evidence." ;;
     "Bootguard Status") echo "Show bootguard and last-good state." ;;

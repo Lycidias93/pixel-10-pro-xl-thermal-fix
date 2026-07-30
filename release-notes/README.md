@@ -4,6 +4,7 @@ Release notes are repository documentation and are never included in the flashab
 
 ## V2 alpha line
 
+- [2.0.0-alpha.3-dev.15](2.0.0-alpha.3-dev.15.md) — private menu/defaults corrective build with transactional ZRAM layout changes and full route-matrix verification.
 - [2.0.0-alpha.3-dev.14](2.0.0-alpha.3-dev.14.md) — private corrective test build with physical EH alias deduplication, migration-safe restore, adaptive defaults, stock LMK policy, and distinct risk observability.
 - [2.0.0-alpha.3-dev.6](2.0.0-alpha.3-dev.6.md) — Fix 5 downstream Thermal-family alignment with dynamic inventory validation, transactional profile changes, exact Stable Mustang postboot proof, and an explicit Canary dev.6 evidence boundary.
 - [2.0.0-alpha.3-dev.2](2.0.0-alpha.3-dev.2.md) — public lean development prerelease with single-pass install choices, canonical validation state, local dynamic build admission, exact Mustang runtime proof, and public asset hash verification.

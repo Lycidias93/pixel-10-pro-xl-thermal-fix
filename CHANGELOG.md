@@ -1,3 +1,11 @@
+# 2.0.0-alpha.3-dev.15
+
+- Makes Polling Mod, adaptive ZRAM 100p and verbose logging the Fresh install defaults.
+- Adds complete installer/Action menu route verification including Back and timeout behavior.
+- Makes ZRAM layout changes transactional across Action, install and standalone helpers.
+- Preserves unrelated config when disabling pTune override.
+- Removes stale LMK/EH behavior from the manual reinit and fallback menu paths.
+
 # 2.0.0-alpha.3-dev.14
 
 Private corrective test build; no tag, release asset, or update-channel change.

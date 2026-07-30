@@ -3,7 +3,7 @@ set -eu
 
 MODDIR=${0%/*}
 ID="pixel-10-pro-xl-thermal-fix"
-CONFIG_DIR="/data/adb/$ID"
+CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 SUPPORTED_HELPER="$MODDIR/tools/core/supported-build.sh"
 SUPPORTED_JSON="$MODDIR/supported_versions.json"
