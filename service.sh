@@ -5,16 +5,23 @@ G="$MODDIR/guard"
 L="$G/bootguard.log"
 H="$MODDIR/health.log"
 CONFIG_FILE="/data/adb/$ID/config.env"
+NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
+EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 mkdir -p "$G"
 
 printf 'timestamp_start=%s\n' "$(date +%s 2>/dev/null || echo unknown)" > "$H"
-printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_boot_early_v3' >> "$H"
+printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_deferred_v4' >> "$H"
 
+[ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >> "$H" 2>&1 || true
 if [ -f "$CONFIG_FILE" ]; then
   . "$CONFIG_FILE" 2>/dev/null || true
 fi
+
+# Standard lz77eh ZRAM properties may be prepared early. The optional Emerald
+# Hill max-frequency lock is deliberately deferred until Bootguard verifies the
+# completed Android boot and the active Thermal runtime.
 if [ "${ENABLE_ZRAM_100P:-0}" = 1 ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
-  printf '%s SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip\n' "$(date -Is 2>/dev/null || date)" >> "$L"
+  printf '%s SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip eh=deferred\n' "$(date -Is 2>/dev/null || date)" >> "$L"
   if [ -r "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
     sh "$MODDIR/tools/zram/apply-zram-100p.sh" boot_early >> "$H" 2>&1 ||
       printf '%s\n' 'SERVICE_ZRAM result=apply_failed_nonfatal' >> "$H"
@@ -52,12 +59,38 @@ if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
   sh "$MODDIR/tools/debug/status-lib.sh" update >> "$H" 2>&1 || true
 fi
 
+bootguard_verified=0
 if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
   if MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" success-verify >> "$H" 2>&1; then
+    bootguard_verified=1
     printf '%s\n' 'BOOTGUARD_RUNTIME_VERIFICATION=pass' >> "$H"
   else
     printf '%s\n' 'BOOTGUARD_RUNTIME_VERIFICATION=deferred_pending_preserved' >> "$H"
   fi
+fi
+
+# Performance locking is a post-verification enhancement, never a boot
+# prerequisite. Any failure falls back to adaptive devfreq and remains nonfatal.
+if [ -r "$EH_CONTROL" ]; then
+  if [ "$bootguard_verified" = 1 ] &&
+     [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
+     [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
+     [ "${LAST_ZRAM_100P:-}" = enabled ] &&
+     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
+    if MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" apply >> "$H" 2>&1; then
+      printf '%s\n' 'SERVICE_ZRAM_EH result=max_frequency_lock_active' >> "$H"
+    else
+      MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >> "$H" 2>&1 || true
+      printf '%s\n' 'SERVICE_ZRAM_EH result=apply_failed_adaptive_fallback' >> "$H"
+    fi
+  else
+    MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >> "$H" 2>&1 || true
+    printf '%s\n' "SERVICE_ZRAM_EH result=adaptive bootguard_verified=$bootguard_verified requested=${ZRAM_EMERALD_OC:-0}" >> "$H"
+  fi
+fi
+
+if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
+  sh "$MODDIR/tools/debug/status-lib.sh" update >> "$H" 2>&1 || true
 fi
 
 exit 0

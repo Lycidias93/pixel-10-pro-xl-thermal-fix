@@ -1,2 +1,0 @@
-Dev.12 integration branch for merging the v2-perf-derived working branch onto current v2.
-No release, tag, update-channel or runtime publication is performed by this marker.

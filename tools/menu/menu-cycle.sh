@@ -63,6 +63,8 @@ mc_desc() {
     "Thermal") echo "Choose Stock, Safe, Plus, or Extended." ;;
     "Thermal Profile") echo "Stock, Safe, Plus, or Extended." ;;
     "ZRAM 100%") echo "Enable or disable 100 percent ZRAM." ;;
+    "Emerald Hill OC") echo "Enable 1.066GHz hardware ZRAM boost." ;;
+    "ZRAM 100% Options") echo "Disabled, Standard, or 1.066GHz OC." ;;
     "Debug") echo "Create evidence and bootguard reports." ;;
     "Debug Logging") echo "Minimal or full debug evidence." ;;
     "Bootguard Status") echo "Show bootguard and last-good state." ;;
@@ -99,6 +101,24 @@ mc_cycle2() {
     _key="$(mc_read_key)"
     case "$_key" in
       up) if [ "$_idx" = "1" ]; then _idx=0; else _idx=1; fi; _steps=$(( _steps + 1 )) ;;
+      down) MC_INDEX="$_idx"; MC_REASON="volume_down"; MC_STEPS="$_steps"; return 0 ;;
+      timeout) MC_INDEX="$_idx"; MC_REASON="timeout"; MC_STEPS="$_steps"; return 0 ;;
+    esac
+  done
+  MC_INDEX="$_idx"; MC_REASON="max_steps"; MC_STEPS="$_steps"; return 0
+}
+
+mc_cycle3() {
+  _title="$1"; _label0="$2"; _label1="$3"; _label2="$4"; _idx="${5:-0}"; _steps=0
+  case "$_idx" in 0|1|2) ;; *) _idx=0 ;; esac
+  mc_head "$_title"; mc_msg "1 $_label0"; mc_msg "2 $_label1"; mc_msg "3 $_label2"; mc_foot
+  while [ "$_steps" -le 10 ]; do
+    _pos=$(( _idx + 1 ))
+    case "$_idx" in 0) _label="$_label0" ;; 1) _label="$_label1" ;; *) _label="$_label2" ;; esac
+    mc_msg "Current $_pos/3: $_label"
+    _key="$(mc_read_key)"
+    case "$_key" in
+      up) _idx=$(( (_idx + 1) % 3 )); _steps=$(( _steps + 1 )) ;;
       down) MC_INDEX="$_idx"; MC_REASON="volume_down"; MC_STEPS="$_steps"; return 0 ;;
       timeout) MC_INDEX="$_idx"; MC_REASON="timeout"; MC_STEPS="$_steps"; return 0 ;;
     esac

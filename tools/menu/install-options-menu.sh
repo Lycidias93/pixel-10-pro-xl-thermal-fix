@@ -200,12 +200,21 @@ apply_zram() {
   case "$1" in
     0|disabled)
       cfg_set ENABLE_ZRAM_100P 0
+      cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_RESTART_MMD 0
       cfg_set ZRAM_RISK_ACK disabled_by_user
       cfg_set LAST_ZRAM_100P disabled
     ;;
+    enabled_standard)
+      cfg_set ENABLE_ZRAM_100P 1
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_RESTART_MMD 1
+      cfg_set ZRAM_RISK_ACK explicit_user_enable
+      cfg_set LAST_ZRAM_100P enabled_standard
+    ;;
     *)
       cfg_set ENABLE_ZRAM_100P 1
+      cfg_set ZRAM_EMERALD_OC 1
       cfg_set ZRAM_RESTART_MMD 1
       cfg_set ZRAM_RISK_ACK explicit_user_enable
       cfg_set LAST_ZRAM_100P enabled
@@ -230,13 +239,29 @@ mark_single_pass_complete() {
   cfg_set INSTALL_OPTIONS_CONFIRMED 1
 }
 
+zram_summary_label() {
+  _z="$(cfg_get LAST_ZRAM_100P)"
+  _oc="$(cfg_get ZRAM_EMERALD_OC)"
+  case "$_z" in
+    disabled) printf '%s\n' 'disabled' ;;
+    enabled_standard) printf '%s\n' 'enabled (Standard / No OC)' ;;
+    *)
+      if [ "$_oc" = "0" ]; then
+        printf '%s\n' 'enabled (Standard / No OC)'
+      else
+        printf '%s\n' 'enabled (1.066GHz EH OC)'
+      fi
+    ;;
+  esac
+}
+
 print_summary() {
   mc_msg ""
   mc_msg "Install choices"
   mc_msg "Polling: $(cfg_get THERMAL_POLLING_MODE)"
   mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
   mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
-  mc_msg "ZRAM: $(cfg_get LAST_ZRAM_100P)"
+  mc_msg "ZRAM: $(zram_summary_label)"
   mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
   mc_msg "Debug: $(cfg_get LAST_DEBUG_MODE)"
   mc_msg "Single menu process: yes"
@@ -314,7 +339,18 @@ apply_profile "$(profile_at "$MC_INDEX")"
 current_zram="$(cfg_get ENABLE_ZRAM_100P)"
 case "$current_zram" in 0) zram_index=0 ;; *) zram_index=1 ;; esac
 mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
-[ "$MC_INDEX" = 0 ] && apply_zram disabled || apply_zram enabled
+if [ "$MC_INDEX" = 0 ]; then
+  apply_zram disabled
+else
+  current_oc="$(cfg_get ZRAM_EMERALD_OC)"
+  case "$current_oc" in 0) oc_index=0 ;; *) oc_index=1 ;; esac
+  mc_cycle2 "Emerald Hill OC" "Disabled" "Enabled" "$oc_index"
+  if [ "$MC_INDEX" = 0 ]; then
+    apply_zram enabled_standard
+  else
+    apply_zram enabled
+  fi
+fi
 
 current_ptune="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"
 current_ack="$(cfg_get RISK_ACK_PTUNE_THERMAL_COLLISION)"
