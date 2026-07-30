@@ -130,8 +130,16 @@ BUILD_EVIDENCE="$(thermal_build_evidence_state "$SUPPORTED_JSON" "$DEVICE" "$AND
 PROFILE="dynamic/${DEVICE}/android${ANDROID}"
 POLLING="$(getcfg THERMAL_POLLING_MODE)"
 OUTDOOR="$(getcfg THERMAL_OUTDOOR_PROFILE)"
+ZRAM_ENABLED="$(getcfg ENABLE_ZRAM_100P)"
 [ -n "$POLLING" ] || POLLING=mod
 [ -n "$OUTDOOR" ] || OUTDOOR=stock
+[ -n "$ZRAM_ENABLED" ] || ZRAM_ENABLED=0
+ZRAM_MATERIALIZED=no
+if [ "$ZRAM_ENABLED" = 1 ] && [ -s "$MODDIR/system/vendor/etc/fstab.zram.100p" ]; then
+  ZRAM_MATERIALIZED=yes
+fi
+MODULE_VERSION="$(grep -E '^version=' "$MODDIR/module.prop" 2>/dev/null | head -n 1 | sed 's/^version=//')"
+MODULE_VERSION_CODE="$(grep -E '^versionCode=' "$MODDIR/module.prop" 2>/dev/null | head -n 1 | sed 's/^versionCode=//')"
 
 same_tuple=yes
 [ "$(getstate device)" = "$DEVICE" ] || same_tuple=no
@@ -162,9 +170,25 @@ for required in thermal_info_config.json thermal_info_config_charge.json thermal
 done
 
 if [ "$NEED" -eq 0 ]; then
+  state_refresh=0
+  [ "$(getstate module_version)" = "$MODULE_VERSION" ] || state_refresh=1
+  [ "$(getstate module_version_code)" = "$MODULE_VERSION_CODE" ] || state_refresh=1
+  [ "$(getstate profile_state)" = dynamic_local_validated ] || state_refresh=1
+  [ "$(getstate profile_state_contract)" = dynamic_local_validation_v1 ] || state_refresh=1
+  [ "$(getstate platform_supported)" = yes ] || state_refresh=1
+  [ "$(getstate build_evidence)" = "$BUILD_EVIDENCE" ] || state_refresh=1
+  [ "$(getstate thermal_polling_effective)" = "$POLLING" ] || state_refresh=1
+  [ "$(getstate thermal_outdoor_profile)" = "$OUTDOOR" ] || state_refresh=1
+  [ "$(getstate zram_enabled)" = "$ZRAM_ENABLED" ] || state_refresh=1
+  [ "$(getstate zram_fstab_materialized)" = "$ZRAM_MATERIALIZED" ] || state_refresh=1
+  [ "$(getstate runtime_selection_source)" = config.env ] || state_refresh=1
+  if [ "$state_refresh" -eq 1 ]; then
+    write_state "$PROFILE" dynamic_local_validated yes "$BUILD_EVIDENCE"
+    log "AUTO_SWITCH_STATE_REFRESH reason=runtime_state_contract_drift profile=$PROFILE build=$BUILD_ID evidence=$BUILD_EVIDENCE"
+  fi
   printf '%s\n' current_profile_valid > "$G/auto_profile_switch_state"
   printf '%s\n' "$PROFILE" > "$G/selected_profile"
-  log "AUTO_SWITCH_PASS reason=current_profile_valid profile=$PROFILE build=$BUILD_ID evidence=$BUILD_EVIDENCE"
+  log "AUTO_SWITCH_PASS reason=current_profile_valid profile=$PROFILE build=$BUILD_ID evidence=$BUILD_EVIDENCE state_refresh=$state_refresh"
   exit 0
 fi
 
