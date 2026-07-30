@@ -1,0 +1,63 @@
+name: Merged branch cleanup
+
+on:
+  pull_request_target:
+    types:
+      - closed
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/merged-branch-cleanup.yml
+      - .github/scripts/merged-branch-cleanup.cjs
+      - tests/test-merged-branch-cleanup.cjs
+      - docs/BRANCH_CLEANUP.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: merged-branch-cleanup-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BRANCH_CLEANUP_RECEIPT: branch-cleanup-receipt.json
+      BRANCH_CLEANUP_PROTECTED_EXACT: main,v2
+      BRANCH_CLEANUP_PROTECTED_PREFIXES: release/,hotfix/,stable/,support/,long-lived/
+    steps:
+      - name: Check out trusted default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate cleanup engine
+        run: |
+          node --check .github/scripts/merged-branch-cleanup.cjs
+          node --check tests/test-merged-branch-cleanup.cjs
+          node tests/test-merged-branch-cleanup.cjs
+
+      - name: Delete verified merged branches
+        id: cleanup
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const cleanup = require('./.github/scripts/merged-branch-cleanup.cjs');
+            await cleanup({ github, context, core });
+
+      - name: Upload cleanup receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-branch-cleanup-${{ github.run_id }}
+          path: branch-cleanup-receipt.json
+          if-no-files-found: warn
+          retention-days: 30
