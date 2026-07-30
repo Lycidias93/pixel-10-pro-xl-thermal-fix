@@ -18,15 +18,14 @@ printf '%s\n' '200000000 400000000 800000000 1066000000' > "$tmp/devfreq/1700000
 printf '%s\n' emerald-hill > "$tmp/devfreq/17000000.eh/name"
 
 config="$tmp/data/config.env"
-cat > "$config" <<'EOF'
-ENABLE_ZRAM_100P=1
-ZRAM_RISK_ACK=explicit_user_enable
-LAST_ZRAM_100P=enabled
-ZRAM_EMERALD_OC=1
-ZRAM_EH_TARGET_FREQ=max
-ZRAM_THP_MODE=stock
-ZRAM_SWAPPINESS=100
-EOF
+printf '%s\n' \
+  'ENABLE_ZRAM_100P=1' \
+  'ZRAM_RISK_ACK=explicit_user_enable' \
+  'LAST_ZRAM_100P=enabled' \
+  'ZRAM_EMERALD_OC=1' \
+  'ZRAM_EH_TARGET_FREQ=max' \
+  'ZRAM_THP_MODE=stock' \
+  'ZRAM_SWAPPINESS=100' > "$config"
 
 bash -n "$normalize"
 bash -n "$control"
