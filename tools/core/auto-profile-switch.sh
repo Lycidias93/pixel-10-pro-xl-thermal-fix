@@ -1,10 +1,11 @@
 #!/system/bin/sh
-ID="pixel-10-pro-xl-thermal-fix"
+ID="${ID:-pixel-10-pro-xl-thermal-fix}"
 MODDIR="${MODDIR:-$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)}"
 G="$MODDIR/guard"
 L="$G/auto-profile-switch.log"
-STATE="$MODDIR/install-state.txt"
-CFG="/data/adb/$ID/config.env"
+STATE="${THERMAL_INSTALL_STATE_FILE:-$MODDIR/install-state.txt}"
+DATA_ROOT="${THERMAL_DATA_ROOT:-/data/adb/$ID}"
+CFG="${THERMAL_CONFIG_FILE:-$DATA_ROOT/config.env}"
 SUPPORTED_JSON="$MODDIR/supported_versions.json"
 SUPPORTED_HELPER="$MODDIR/tools/core/supported-build.sh"
 VALIDATED_PATCHER="$MODDIR/tools/core/patch-thermal-validated.sh"
@@ -55,52 +56,108 @@ FINGERPRINT="${THERMAL_FINGERPRINT:-$(prop ro.build.fingerprint)}"
 [ -n "$INCREMENTAL" ] || INCREMENTAL=unknown
 [ -n "$FINGERPRINT" ] || FINGERPRINT=unknown
 
+state_set(){
+  aps_key="$1"
+  aps_value="$2"
+  mkdir -p "${STATE%/*}" 2>/dev/null || true
+  touch "$STATE" 2>/dev/null || true
+  aps_tmp="$STATE.tmp.$$"
+  grep -v "^${aps_key}=" "$STATE" 2>/dev/null > "$aps_tmp" || true
+  printf '%s=%s
+' "$aps_key" "$aps_value" >> "$aps_tmp"
+  chmod 0644 "$aps_tmp" 2>/dev/null || true
+  mv "$aps_tmp" "$STATE"
+}
+state_profile_state_for_runtime(){
+  aps_runtime="$1"
+  aps_evidence="$2"
+  case "$aps_runtime:$aps_evidence" in
+    dynamic_local_validated:exact_verified) printf '%s
+' dynamic_stock_validated_exact_verified ;;
+    *) printf '%s
+' "$aps_runtime" ;;
+  esac
+}
 write_state(){
-  profile="$1"
-  profile_state="$2"
-  platform_supported="$3"
-  build_evidence="$4"
-  state_polling="$(getcfg THERMAL_POLLING_MODE)"
-  state_outdoor="$(getcfg THERMAL_OUTDOOR_PROFILE)"
-  state_zram_enabled="$(getcfg ENABLE_ZRAM_100P)"
-  [ -n "$state_polling" ] || state_polling=mod
-  [ -n "$state_outdoor" ] || state_outdoor=stock
-  [ -n "$state_zram_enabled" ] || state_zram_enabled=0
-  state_zram_materialized=no
-  if [ "$state_zram_enabled" = 1 ] && [ -s "$MODDIR/system/vendor/etc/fstab.zram.100p" ]; then
-    state_zram_materialized=yes
+  aps_profile="$1"
+  aps_runtime_state="$2"
+  aps_platform_supported="$3"
+  aps_build_evidence="$4"
+  aps_polling="$(getcfg THERMAL_POLLING_MODE)"
+  aps_outdoor="$(getcfg THERMAL_OUTDOOR_PROFILE)"
+  aps_settings_mode="$(getcfg THERMAL_SETTINGS_MODE)"
+  aps_last_outdoor="$(getcfg LAST_THERMAL_OUTDOOR_PROFILE)"
+  aps_last_polling="$(getcfg LAST_THERMAL_POLLING_MODE)"
+  aps_ptune_menu="$(getcfg PTUNE_OVERRIDE_MENU)"
+  aps_last_ptune="$(getcfg LAST_PTUNE_OVERRIDE)"
+  aps_zram_enabled="$(getcfg ENABLE_ZRAM_100P)"
+  aps_zram_ack="$(getcfg ZRAM_RISK_ACK)"
+  aps_zram_eh_ack="$(getcfg ZRAM_EH_RISK_ACK)"
+  aps_debug_mode="$(getcfg DEBUG_MODE)"
+  aps_last_debug="$(getcfg LAST_DEBUG_MODE)"
+  aps_ptune_ack="$(cat "$G/ptune_risk_ack" 2>/dev/null || true)"
+  [ -n "$aps_polling" ] || aps_polling=mod
+  [ -n "$aps_outdoor" ] || aps_outdoor=stock
+  [ -n "$aps_settings_mode" ] || aps_settings_mode=unknown
+  [ -n "$aps_last_outdoor" ] || aps_last_outdoor="$aps_outdoor"
+  [ -n "$aps_last_polling" ] || aps_last_polling="$aps_polling"
+  [ -n "$aps_ptune_menu" ] || aps_ptune_menu=off
+  [ -n "$aps_last_ptune" ] || aps_last_ptune=0
+  [ -n "$aps_zram_enabled" ] || aps_zram_enabled=0
+  [ -n "$aps_zram_ack" ] || aps_zram_ack=unset
+  [ -n "$aps_zram_eh_ack" ] || aps_zram_eh_ack=unset
+  [ -n "$aps_debug_mode" ] || aps_debug_mode=0
+  [ -n "$aps_last_debug" ] || aps_last_debug=silent
+  [ -n "$aps_ptune_ack" ] || aps_ptune_ack=not_present
+  aps_zram_materialized=no
+  if [ "$aps_zram_enabled" = 1 ] && [ -s "$MODDIR/system/vendor/etc/fstab.zram.100p" ]; then
+    aps_zram_materialized=yes
   fi
-  {
-    printf '%s\n' "module_id=$ID"
-    printf '%s\n' "module_version=$(grep -E '^version=' "$MODDIR/module.prop" 2>/dev/null | head -n 1 | sed 's/^version=//')"
-    printf '%s\n' "module_version_code=$(grep -E '^versionCode=' "$MODDIR/module.prop" 2>/dev/null | head -n 1 | sed 's/^versionCode=//')"
-    printf '%s\n' "device=$DEVICE"
-    printf '%s\n' "android=$ANDROID"
-    printf '%s\n' "android_sdk=$SDK"
-    printf '%s\n' "build_id=$BUILD_ID"
-    printf '%s\n' "incremental=$INCREMENTAL"
-    printf '%s\n' "fingerprint=$FINGERPRINT"
-    printf '%s\n' "profile=$profile"
-    printf '%s\n' "profile_state=$profile_state"
-    printf '%s\n' "profile_state_contract=dynamic_local_validation_v1"
-    printf '%s\n' "platform_supported=$platform_supported"
-    printf '%s\n' "build_evidence=$build_evidence"
-    printf '%s\n' "build_state=dynamic_${DEVICE}_${BUILD_ID}_${INCREMENTAL}"
-    printf '%s\n' "build_guard_mode=dynamic_local_validation"
-    printf '%s\n' "profile_source_build=$BUILD_ID"
-    printf '%s\n' "profile_source_incremental=$INCREMENTAL"
-    printf '%s\n' "profile_source_fingerprint=$FINGERPRINT"
-    printf '%s\n' "auto_profile_switch=yes"
-    printf '%s\n' "auto_profile_switch_state=$profile_state"
-    printf '%s\n' "auto_profile_switch_at=$(date -Is 2>/dev/null || date)"
-    printf '%s\n' "profile_materialized=$([ "$profile_state" = dynamic_local_validated ] && printf yes || printf no)"
-    printf '%s\n' "expected_thermal_files=$([ "$profile_state" = dynamic_local_validated ] && printf dynamic_validated || printf absent)"
-    printf '%s\n' "thermal_polling_effective=$state_polling"
-    printf '%s\n' "thermal_outdoor_profile=$state_outdoor"
-    printf '%s\n' "zram_fstab_materialized=$state_zram_materialized"
-    printf '%s\n' "zram_enabled=$state_zram_enabled"
-    printf '%s\n' 'runtime_selection_source=config.env'
-  } > "$STATE"
+  aps_profile_state="$(state_profile_state_for_runtime "$aps_runtime_state" "$aps_build_evidence")"
+
+  state_set install_state_schema pixel-thermal-install-state-v2
+  state_set install_state_owner install-finalize-preserved-by-auto-profile-switch
+  state_set module_id "$ID"
+  state_set module_version "$(grep -E '^version=' "$MODDIR/module.prop" 2>/dev/null | head -n 1 | sed 's/^version=//')"
+  state_set module_version_code "$(grep -E '^versionCode=' "$MODDIR/module.prop" 2>/dev/null | head -n 1 | sed 's/^versionCode=//')"
+  state_set device "$DEVICE"
+  state_set android "$ANDROID"
+  state_set android_sdk "$SDK"
+  state_set build_id "$BUILD_ID"
+  state_set incremental "$INCREMENTAL"
+  state_set fingerprint "$FINGERPRINT"
+  state_set profile "$aps_profile"
+  state_set profile_state "$aps_profile_state"
+  state_set profile_state_contract dynamic_stock_derived_validation_v2
+  state_set runtime_profile_state "$aps_runtime_state"
+  state_set runtime_profile_state_contract dynamic_local_validation_v1
+  state_set platform_supported "$aps_platform_supported"
+  state_set build_evidence "$aps_build_evidence"
+  state_set build_state "dynamic_${DEVICE}_${BUILD_ID}_${INCREMENTAL}"
+  state_set build_guard_mode dynamic_local_validation
+  state_set profile_source_build "$BUILD_ID"
+  state_set profile_source_incremental "$INCREMENTAL"
+  state_set profile_source_fingerprint "$FINGERPRINT"
+  state_set auto_profile_switch yes
+  state_set auto_profile_switch_state "$aps_runtime_state"
+  state_set auto_profile_switch_at "$(date -Is 2>/dev/null || date)"
+  state_set profile_materialized "$([ "$aps_runtime_state" = dynamic_local_validated ] && printf yes || printf no)"
+  state_set expected_thermal_files "$([ "$aps_runtime_state" = dynamic_local_validated ] && printf dynamic_validated || printf absent)"
+  state_set thermal_polling_effective "$aps_polling"
+  state_set thermal_outdoor_profile "$aps_outdoor"
+  state_set thermal_settings_mode "$aps_settings_mode"
+  state_set last_thermal_outdoor_profile "$aps_last_outdoor"
+  state_set last_thermal_polling_mode "$aps_last_polling"
+  state_set ptune_override_menu "$aps_ptune_menu"
+  state_set last_ptune_override "$aps_last_ptune"
+  state_set ptune_risk_ack "$aps_ptune_ack"
+  state_set zram_fstab_materialized "$aps_zram_materialized"
+  state_set zram_enabled "$aps_zram_enabled"
+  state_set zram_risk_ack "$aps_zram_ack"
+  state_set zram_eh_risk_ack "$aps_zram_eh_ack"
+  state_set debug_mode "$aps_debug_mode"
+  state_set last_debug_mode "$aps_last_debug"
+  state_set runtime_selection_source config.env
 }
 
 if [ ! -r "$SUPPORTED_HELPER" ]; then
@@ -173,14 +230,22 @@ if [ "$NEED" -eq 0 ]; then
   state_refresh=0
   [ "$(getstate module_version)" = "$MODULE_VERSION" ] || state_refresh=1
   [ "$(getstate module_version_code)" = "$MODULE_VERSION_CODE" ] || state_refresh=1
-  [ "$(getstate profile_state)" = dynamic_local_validated ] || state_refresh=1
-  [ "$(getstate profile_state_contract)" = dynamic_local_validation_v1 ] || state_refresh=1
+  expected_profile_state="$(state_profile_state_for_runtime dynamic_local_validated "$BUILD_EVIDENCE")"
+  [ "$(getstate profile_state)" = "$expected_profile_state" ] || state_refresh=1
+  [ "$(getstate profile_state_contract)" = dynamic_stock_derived_validation_v2 ] || state_refresh=1
+  [ "$(getstate runtime_profile_state)" = dynamic_local_validated ] || state_refresh=1
+  [ "$(getstate runtime_profile_state_contract)" = dynamic_local_validation_v1 ] || state_refresh=1
   [ "$(getstate platform_supported)" = yes ] || state_refresh=1
   [ "$(getstate build_evidence)" = "$BUILD_EVIDENCE" ] || state_refresh=1
   [ "$(getstate thermal_polling_effective)" = "$POLLING" ] || state_refresh=1
   [ "$(getstate thermal_outdoor_profile)" = "$OUTDOOR" ] || state_refresh=1
+  [ "$(getstate thermal_settings_mode)" = "$(getcfg THERMAL_SETTINGS_MODE)" ] || state_refresh=1
   [ "$(getstate zram_enabled)" = "$ZRAM_ENABLED" ] || state_refresh=1
   [ "$(getstate zram_fstab_materialized)" = "$ZRAM_MATERIALIZED" ] || state_refresh=1
+  [ "$(getstate zram_risk_ack)" = "$(getcfg ZRAM_RISK_ACK)" ] || state_refresh=1
+  [ "$(getstate zram_eh_risk_ack)" = "$(getcfg ZRAM_EH_RISK_ACK)" ] || state_refresh=1
+  [ "$(getstate debug_mode)" = "$(getcfg DEBUG_MODE)" ] || state_refresh=1
+  [ "$(getstate last_debug_mode)" = "$(getcfg LAST_DEBUG_MODE)" ] || state_refresh=1
   [ "$(getstate runtime_selection_source)" = config.env ] || state_refresh=1
   if [ "$state_refresh" -eq 1 ]; then
     write_state "$PROFILE" dynamic_local_validated yes "$BUILD_EVIDENCE"

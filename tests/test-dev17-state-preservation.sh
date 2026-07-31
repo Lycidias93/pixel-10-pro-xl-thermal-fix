@@ -47,6 +47,7 @@ printf '%s\n' not_present > "$mod/guard/ptune_risk_ack"
 for file in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
   printf '%s\n' validated > "$mod/system/vendor/etc/$file"
 done
+printf '%s\n' zram > "$mod/system/vendor/etc/fstab.zram.100p"
 
 printf '%s\n' \
   'install_state_schema=pixel-thermal-install-state-v2' \
