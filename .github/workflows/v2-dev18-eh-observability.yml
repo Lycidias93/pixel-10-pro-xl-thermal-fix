@@ -1,0 +1,28 @@
+name: V2 Dev.18 EH observability regression
+
+on:
+  pull_request:
+    branches:
+      - main
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dev18-eh-observability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dev.18 shell and runtime fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tests/test-dev18-eh-observability.sh
+          bash -n tools/zram/emerald-hill-control.sh
+          bash -n tools/action-dashboard.sh
+          bash tests/test-dev18-eh-observability.sh
