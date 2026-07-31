@@ -1,3 +1,17 @@
+# 2.0.0-alpha.3-dev.19
+
+Unreleased Dynamic V2 vNext source; no tag, release asset, or update-channel change.
+
+- Adds an opt-in early `ro.lmk.swap_free_low_percentage=1` A/B test in `post-fs-data`.
+- Requires ZRAM 100p plus an explicit LMKD experimental acknowledgement.
+- Refuses late mutation when LMKD is already running.
+- Records early timing/readback evidence and a post-boot memory, swap, PSI, service, and boot-ID snapshot.
+- Explicitly labels LMKD evidence as indirect timing proof, not direct consumption proof.
+- Adds installer, Action, status, install-state, and packaged-debug observability for the test.
+- Rewrites the README around Dynamic V2 as the active architecture.
+- Removes static V1 profile payloads from the current tree while retaining tags, releases, and Git history.
+- Audits and removes obsolete branches, retaining only `main` and `v2` as long-lived branches.
+
 # 2.0.0-alpha.3-dev.18
 
 Unreleased V2 source hardening and `main` promotion preparation; no tag, release asset, or update-channel change.

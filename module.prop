@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.3-dev.18
-versionCode=1016229
+version=2.0.0-alpha.3-dev.19
+versionCode=1016230
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 3 dev.18 source: clearer experimental Emerald Hill max-lock UX, persistent bounded EH event evidence, and V2-to-main promotion readiness.
+description=V2 Alpha 3 dev.19 source: guarded early-LMKD A/B testing, Dynamic V2-first documentation, and removal of static V1 profile payloads.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

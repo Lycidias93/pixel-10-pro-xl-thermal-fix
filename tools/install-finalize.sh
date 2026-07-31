@@ -86,6 +86,8 @@ thermal_finalize_install() {
   [ -s "$MODPATH/tools/ptune/collect-ptune-evidence.sh" ] && chmod 0755 "$MODPATH/tools/ptune/collect-ptune-evidence.sh" || true
   [ -s "$MODPATH/tools/ptune/enable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/enable-ptune-override.sh" || true
   [ -s "$MODPATH/tools/ptune/disable-ptune-override.sh" ] && chmod 0755 "$MODPATH/tools/ptune/disable-ptune-override.sh" || true
+  [ -s "$MODPATH/tools/lmkd/early-swap-low-test.sh" ] && chmod 0755 "$MODPATH/tools/lmkd/early-swap-low-test.sh" || true
+  [ -s "$MODPATH/tools/lmkd/verify-early-swap-low-test.sh" ] && chmod 0755 "$MODPATH/tools/lmkd/verify-early-swap-low-test.sh" || true
   [ -s "$MODPATH/tools/resetprop-rs" ] && chmod 0755 "$MODPATH/tools/resetprop-rs" || true
 
   validation_dir="$CONFIG_DIR/validation"
@@ -123,6 +125,10 @@ thermal_finalize_install() {
     printf '%s\n' "ptune_risk_ack=$PTUNE_RISK_ACK_STATE"
     printf '%s\n' "zram_risk_ack=$(config_get ZRAM_RISK_ACK)"
     printf '%s\n' "zram_eh_risk_ack=$(config_get ZRAM_EH_RISK_ACK)"
+    printf '%s\n' "lmkd_early_swap_low_test=$(config_get LMKD_EARLY_SWAP_LOW_TEST)"
+    printf '%s\n' "lmkd_early_swap_low_risk_ack=$(config_get LMKD_EARLY_SWAP_LOW_RISK_ACK)"
+    printf '%s\n' "lmkd_test_evidence_dir=$CONFIG_DIR/lmkd-test"
+    printf '%s\n' "lmkd_consumption_claim=indirect_timing_only"
     printf '%s\n' "ptune_state=$PTUNE_INSTALL_STATE"
     printf '%s\n' "ptune_installed_path=${PTUNE_INSTALLED_PATH:-none}"
     printf '%s\n' "ptune_active_path=${PTUNE_ACTIVE_PATH:-none}"

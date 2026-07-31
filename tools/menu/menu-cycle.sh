@@ -67,6 +67,8 @@ mc_desc() {
     "ZRAM 100% Options") echo "Disabled, adaptive, or maximum lock." ;;
     "Debug") echo "Create evidence and bootguard reports." ;;
     "EH Event Log") echo "Show bounded apply and restore evidence." ;;
+    "LMKD early test") echo "Guarded reboot-only experimental early property test." ;;
+    "LMKD Evidence") echo "Show early timing and post-boot LMKD snapshots." ;;
     "Debug Logging") echo "Minimal or full debug evidence." ;;
     "Bootguard Status") echo "Show bootguard and last-good state." ;;
     "Boot Crash Archive") echo "Create boot crash evidence archive." ;;
@@ -74,7 +76,7 @@ mc_desc() {
     "pTune Override ON") echo "Allow explicit pTune coexistence risk." ;;
     "Bootguard") echo "Show bootguard and last-good state." ;;
     "Clear Counters") echo "Reset bootguard counters only." ;;
-    "Advanced") echo "Emerald Hill, pTune, and update-channel tools." ;;
+    "Advanced") echo "Emerald Hill, LMKD, pTune, and update-channel tools." ;;
     "Update Channel") echo "Stable or test update path only." ;;
     "pTune Override") echo "Allow module beside pTune." ;;
     "pTune Risk") echo "Explicit pTune coexistence risk." ;;

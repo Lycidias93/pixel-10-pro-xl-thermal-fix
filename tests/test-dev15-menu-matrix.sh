@@ -36,6 +36,7 @@ for route in \
   'ZRAM 100%" "Disabled" "Enabled"' \
   'Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock (heat/battery)"' \
   'pTune Override" "Override ON" "Override OFF"' \
+  'LMKD early test" "Disabled (stock)" "EXPERIMENTAL 1%"' \
   'Debug Logging" "Silent" "Verbose"'; do
   grep -Fq "$route" "$install_menu" || fail "installer_route_missing=$route"
 done
@@ -48,8 +49,8 @@ for route in \
   'ui_menu5 "Thermal max+' \
   'ui_menu3 "ZRAM 100%" "Enable 100p (adaptive EH)" "Disable" "Back"' \
   'ui_menu3 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock" "Back"' \
-  'ui_menu5 "Debug" "Status" "Collect ZIP" "EH Event Log" "Debug Logging" "Back"' \
-  'ui_menu5 "Advanced" "Emerald Hill mode" "pTune Status" "pTune Override" "Update Channel" "Back"' \
+  'ui_menu6 "Debug" "Status" "Collect ZIP" "EH Event Log" "LMKD Evidence" "Debug Logging" "Back"' \
+  'ui_menu6 "Advanced" "Emerald Hill mode" "LMKD early test" "pTune Status" "pTune Override" "Update Channel" "Back"' \
   'ui_menu3 "pTune Risk" "Keep OFF" "Enable risk" "Back"' \
   'ui_menu3 "Update Channel" "Use Stable" "Use Test" "Back"'; do
   grep -Fq "$route" "$action" || fail "action_route_missing=$route"
@@ -105,9 +106,9 @@ pass reinit_uses_stock_lmk_and_current_eh_contract
 if grep -Fq 'Emerald Hill OC' "$cycle" "$install_menu" "$action"; then
   fail stale_oc_menu_wording
 fi
-grep -Fq 'version=2.0.0-alpha.3-dev.18' "$module_prop"
-grep -Fq 'versionCode=1016229' "$module_prop"
-pass dev18_metadata_and_current_wording
+grep -Fq 'version=2.0.0-alpha.3-dev.19' "$module_prop"
+grep -Fq 'versionCode=1016230' "$module_prop"
+pass dev19_metadata_and_current_wording
 
 printf '%s\n' 'ROUTE installer: remember/use-last/fresh'
 printf '%s\n' 'ROUTE installer: polling mod/stock'
@@ -117,7 +118,7 @@ printf '%s\n' 'ROUTE installer: ptune on/off'
 printf '%s\n' 'ROUTE installer: debug silent/verbose'
 printf '%s\n' 'ROUTE action: settings/debug/advanced/exit'
 printf '%s\n' 'ROUTE action settings: polling/thermal/zram/back'
-printf '%s\n' 'ROUTE action debug: status/collect/eh-log/toggle/back'
+printf '%s\n' 'ROUTE action debug: status/collect/eh-log/lmkd-evidence/toggle/back'
 printf '%s\n' 'ROUTE action advanced: eh-mode/ptune-status/ptune-override/update-channel/back'
 printf '%s\n' 'ROUTE action leafs: back/timeout preserve state'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV15_MENU_MATRIX_PASS'

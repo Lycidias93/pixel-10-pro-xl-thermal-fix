@@ -73,8 +73,8 @@ if grep -Fq '_src="$1"; _dst="$2"' "$collector"; then
 fi
 pass collector_copy_helpers_do_not_overwrite_outer_destination
 
-grep -Fq 'version=2.0.0-alpha.3-dev.18' "$module_prop"
-grep -Fq 'versionCode=1016229' "$module_prop"
-pass dev18_metadata_preserves_dev16_regression
+grep -Fq 'version=2.0.0-alpha.3-dev.19' "$module_prop"
+grep -Fq 'versionCode=1016230' "$module_prop"
+pass dev19_metadata_preserves_dev16_regression
 
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV16_INSTALL_REGRESSION_PASS'

@@ -61,6 +61,8 @@ has_remembered() {
     LAST_PTUNE_OVERRIDE \
     LAST_DEBUG_MODE \
     LAST_ZRAM_100P \
+    LAST_LMKD_EARLY_SWAP_LOW_TEST \
+    LMKD_EARLY_SWAP_LOW_TEST \
     THERMAL_OUTDOOR_PROFILE \
     THERMAL_POLLING_MODE \
     ENABLE_ZRAM_100P; do
@@ -225,6 +227,21 @@ apply_zram() {
   esac
 }
 
+apply_lmkd_test() {
+  case "$1" in
+    1|enabled)
+      cfg_set LMKD_EARLY_SWAP_LOW_TEST 1
+      cfg_set LMKD_EARLY_SWAP_LOW_RISK_ACK explicit_user_test
+      cfg_set LAST_LMKD_EARLY_SWAP_LOW_TEST enabled
+    ;;
+    *)
+      cfg_set LMKD_EARLY_SWAP_LOW_TEST 0
+      cfg_set LMKD_EARLY_SWAP_LOW_RISK_ACK none
+      cfg_set LAST_LMKD_EARLY_SWAP_LOW_TEST disabled
+    ;;
+  esac
+}
+
 record_ptune_presence() {
   _ptune_path="$(ptune_present 2>/dev/null || true)"
   if [ -n "$_ptune_path" ]; then
@@ -258,6 +275,7 @@ print_summary() {
   mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
   mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
   mc_msg "ZRAM: $(zram_summary_label)"
+  mc_msg "LMKD early test: $(cfg_get LAST_LMKD_EARLY_SWAP_LOW_TEST)"
   mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
   mc_msg "Debug: $(cfg_get LAST_DEBUG_MODE)"
   mc_msg "Single menu process: yes"
@@ -288,6 +306,10 @@ apply_last_settings() {
   _zram="$(cfg_get LAST_ZRAM_100P)"
   [ -n "$_zram" ] || _zram="$(cfg_get ENABLE_ZRAM_100P)"
   apply_zram "$_zram"
+
+  _lmkd="$(cfg_get LAST_LMKD_EARLY_SWAP_LOW_TEST)"
+  [ -n "$_lmkd" ] || _lmkd=disabled
+  apply_lmkd_test "$_lmkd"
 
   mark_single_pass_complete
   mc_msg ""
@@ -346,6 +368,10 @@ else
     apply_zram enabled_max_lock
   fi
 fi
+
+lmkd_index=0
+mc_cycle2 "LMKD early test" "Disabled (stock)" "EXPERIMENTAL 1%" "$lmkd_index"
+[ "$MC_INDEX" = 1 ] && apply_lmkd_test 1 || apply_lmkd_test 0
 
 current_ptune=0
 current_ack=none
