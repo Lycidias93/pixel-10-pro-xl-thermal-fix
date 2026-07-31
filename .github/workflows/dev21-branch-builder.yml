@@ -18,6 +18,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
           fetch-depth: 0
+      - name: Normalize builder guard
+        run: python3 .github/scripts/dev21-builder-guard-fix.py
       - name: Build and test Dev.21 source
         run: python3 .github/scripts/dev21-branch-builder.py
       - name: Commit generated Dev.21 source
