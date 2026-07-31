@@ -122,10 +122,9 @@ unzip -p "$out_a" tools/bootguard/collect-debug.sh | grep -Fq 'collect-debug-v3.
 unzip -p "$out_a" tools/bootguard/collect-debug-v3.sh | grep -Fq 'pixel-thermal-packaged-debug-v3'
 unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq 'outdoor_runtime_policy_missing'
 unzip -p "$out_a" tools/action-dashboard.sh | grep -Fq 'patch-thermal-validated.sh'
-unzip -p "$out_a" post-fs-data.sh | grep -Fq 'tools/lmkd/early-swap-low-test.sh'
-unzip -p "$out_a" service.sh | grep -Fq 'tools/lmkd/verify-early-swap-low-test.sh'
-unzip -p "$out_a" tools/lmkd/early-swap-low-test.sh | grep -Fq 'ro.lmk.swap_free_low_percentage'
-unzip -p "$out_a" tools/lmkd/verify-early-swap-low-test.sh | grep -Fq 'indirect_timing_only'
+unzip -p "$out_a" tools/zram/apply-zram-100p.sh | grep -F 'ro.lmk.swap_free_low_percentage' >/dev/null
+unzip -p "$out_a" tools/zram/apply-zram-100p.sh | grep -F 'lmkd.reinit' >/dev/null
+unzip -p "$out_a" tools/zram/apply-zram-100p.sh | grep -F 'ctl.restart lmkd' >/dev/null
 
 if unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq '%.*f'; then
   printf '%s\n' 'FAIL android_awk_unsupported_dynamic_precision_shipped'
