@@ -29,6 +29,12 @@ grep -Eq '^state_signature=[0-9a-f]{64}$' "$mod/guard/last_good.env"
 MODDIR="$mod" CONFIG_FILE="$state/config.env" GUARD_DIR="$mod/guard" sh "$bootguard" arm-if-needed
 [[ "$(sed -n 's/^mode=//p' "$mod/guard/verification-mode.env")" == fast ]]
 [[ ! -e "$mod/guard/pending_boot" ]]
+printf '%s\n' 'transition_pending=yes' 'phase=prepared' 'reason=test_transition' > "$mod/guard/platform-transition.env"
+MODDIR="$mod" CONFIG_FILE="$state/config.env" GUARD_DIR="$mod/guard" sh "$bootguard" arm-if-needed
+[[ "$(sed -n 's/^mode=//p' "$mod/guard/verification-mode.env")" == full ]]
+[[ "$(sed -n 's/^reason=//p' "$mod/guard/verification-mode.env")" == platform_transition_pending ]]
+rm -f "$mod/guard/platform-transition.env"
+MODDIR="$mod" CONFIG_FILE="$state/config.env" GUARD_DIR="$mod/guard" sh "$bootguard" success
 printf '%s\n' 'THERMAL_POLLING_MODE=stock' 'THERMAL_OUTDOOR_PROFILE=stock' 'THERMAL_DISABLED=0' > "$state/config.env"
 MODDIR="$mod" CONFIG_FILE="$state/config.env" GUARD_DIR="$mod/guard" sh "$bootguard" arm-if-needed
 [[ "$(sed -n 's/^mode=//p' "$mod/guard/verification-mode.env")" == full ]]
@@ -49,6 +55,7 @@ grep -Fq 'versionCode=1016232' "$module_prop"
 
 printf '%s\n' 'PASS dev21_first_or_changed_boot_requires_full_verification'
 printf '%s\n' 'PASS dev21_unchanged_boot_uses_fast_path_without_pending_boot'
+printf '%s\n' 'PASS dev21_platform_transition_forces_full_verification'
 printf '%s\n' 'PASS dev21_config_change_rearms_full_bootguard'
 printf '%s\n' 'PASS dev21_fast_badges_avoid_full_compat_scan'
 printf '%s\n' 'PASS dev21_magisk_resetprop_writer_is_evidenced'

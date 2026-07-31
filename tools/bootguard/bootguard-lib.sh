@@ -145,7 +145,7 @@ needs_full_verify() {
     VERIFY_REASON=debug_or_canary
     return 0
   fi
-  if [ "$(pending_transition)" = yes ]; then
+  if [ "$(kv_get transition_pending "$TRANSITION")" = yes ]; then
     VERIFY_REASON=platform_transition_pending
     return 0
   fi
