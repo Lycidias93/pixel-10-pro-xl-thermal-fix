@@ -27,6 +27,7 @@ jobs:
           sed -i 's/LMKD_SWAP_LOW_ORIGINAL_VALUE=10/LMKD_SWAP_LOW_ORIGINAL_VALUE=100p/' /tmp/dev20_builder.py
           sed -i 's/grep -Fxq 10 "$tmp\/property"/grep -Fxq 100p "$tmp\/property"/' /tmp/dev20_builder.py
           sed -i 's/| grep -Fq /| grep -F /g' /tmp/dev20_builder.py
+          sed -i "s/\['bash', 'tests\/test-release-package-exclusions.sh'\]/['bash', '-x', 'tests\/test-release-package-exclusions.sh']/" /tmp/dev20_builder.py
           python3 -m py_compile /tmp/dev20_builder.py
           python3 /tmp/dev20_builder.py
       - name: Commit durable Dev.20 changes
