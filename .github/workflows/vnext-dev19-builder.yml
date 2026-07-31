@@ -30,7 +30,7 @@ jobs:
       - name: Validate source and regressions
         shell: bash
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           git diff --check
           python3 -m py_compile .github/scripts/vnext-dev19-builder.py
           bash -n post-fs-data.sh
