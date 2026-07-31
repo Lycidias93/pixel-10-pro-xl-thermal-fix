@@ -6,6 +6,9 @@ CONFIG_FILE="$CONFIG_DIR/config.env"
 ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 EH_EVENT_LOG="$CONFIG_DIR/zram-eh/events.log"
+LMKD_EARLY="$MODDIR/tools/lmkd/early-swap-low-test.sh"
+LMKD_EARLY_EVIDENCE="$CONFIG_DIR/lmkd-test/early-swap-low.env"
+LMKD_POST_EVIDENCE="$CONFIG_DIR/lmkd-test/postboot.env"
 PTUNE_ROOTS="${PTUNE_MODULE_ROOTS:-/data/adb/modules/ptune /data/adb/modules_update/ptune}"
 ACTION_DASHBOARD_PERF="$MODDIR/guard/action-dashboard-performance.env"
 STATUS_DIRTY=1
@@ -167,17 +170,17 @@ ui_menu4() {
   UI_INDEX="$_idx"; UI_REASON="max_steps"; UI_STEPS="$_steps"; return 0
 }
 
-ui_menu5() {
-  _title="$1"; _label0="$2"; _label1="$3"; _label2="$4"; _label3="$5"; _label4="$6"; _idx="${7:-0}"; _steps=0
-  case "$_idx" in 0|1|2|3|4) ;; *) _idx=0 ;; esac
-  mc_head "$_title"; mc_msg "1 $_label0"; mc_msg "2 $_label1"; mc_msg "3 $_label2"; mc_msg "4 $_label3"; mc_msg "5 $_label4"; mc_foot
-  while [ "$_steps" -le 15 ]; do
+ui_menu6() {
+  _title="$1"; _label0="$2"; _label1="$3"; _label2="$4"; _label3="$5"; _label4="$6"; _label5="$7"; _idx="${8:-0}"; _steps=0
+  case "$_idx" in 0|1|2|3|4|5) ;; *) _idx=0 ;; esac
+  mc_head "$_title"; mc_msg "1 $_label0"; mc_msg "2 $_label1"; mc_msg "3 $_label2"; mc_msg "4 $_label3"; mc_msg "5 $_label4"; mc_msg "6 $_label5"; mc_foot
+  while [ "$_steps" -le 18 ]; do
     _pos=$(( _idx + 1 ))
-    case "$_idx" in 0) _label="$_label0" ;; 1) _label="$_label1" ;; 2) _label="$_label2" ;; 3) _label="$_label3" ;; *) _label="$_label4" ;; esac
-    mc_msg "Current $_pos/5: $_label"
+    case "$_idx" in 0) _label="$_label0" ;; 1) _label="$_label1" ;; 2) _label="$_label2" ;; 3) _label="$_label3" ;; 4) _label="$_label4" ;; *) _label="$_label5" ;; esac
+    mc_msg "Current $_pos/6: $_label"
     _key="$(mc_read_key)"
     case "$_key" in
-      up) _idx=$(( (_idx + 1) % 5 )); _steps=$(( _steps + 1 )) ;;
+      up) _idx=$(( (_idx + 1) % 6 )); _steps=$(( _steps + 1 )) ;;
       down) UI_INDEX="$_idx"; UI_REASON="volume_down"; UI_STEPS="$_steps"; return 0 ;;
       timeout) UI_INDEX="$_idx"; UI_REASON="timeout"; UI_STEPS="$_steps"; return 0 ;;
     esac
@@ -504,18 +507,73 @@ update_channel_loop() {
   done
 }
 
+show_lmkd_evidence() {
+  msg ""
+  msg "LMKD early-test evidence"
+  msg "----------------------------------------"
+  if [ -r "$LMKD_EARLY_EVIDENCE" ]; then
+    cat "$LMKD_EARLY_EVIDENCE" 2>/dev/null || true
+  else
+    msg "No early evidence recorded yet."
+  fi
+  if [ -r "$LMKD_POST_EVIDENCE" ]; then
+    msg ""
+    msg "Post-boot snapshot"
+    cat "$LMKD_POST_EVIDENCE" 2>/dev/null || true
+  else
+    msg "No post-boot snapshot recorded yet."
+  fi
+  msg "----------------------------------------"
+}
+
+set_lmkd_early_test() {
+  cur="$(cfg_get LMKD_EARLY_SWAP_LOW_TEST)"
+  case "$cur" in 1) idx=1 ;; *) idx=0 ;; esac
+  ui_menu3 "LMKD early test" "Disabled (stock)" "EXPERIMENTAL 1%" "Back" "$idx"
+  [ "$UI_REASON" = "timeout" ] && return 0
+  case "$UI_INDEX" in
+    0)
+      cfg_set LMKD_EARLY_SWAP_LOW_TEST 0
+      cfg_set LMKD_EARLY_SWAP_LOW_RISK_ACK none
+      cfg_set LAST_LMKD_EARLY_SWAP_LOW_TEST disabled
+      msg "- LMKD early test: disabled"
+      msg "- Next boot uses stock policy"
+    ;;
+    1)
+      if [ "$(cfg_get ENABLE_ZRAM_100P)" != 1 ]; then
+        msg "! Enable ZRAM 100% before this experiment."
+        sleep 2
+        return 0
+      fi
+      cfg_set LMKD_EARLY_SWAP_LOW_TEST 1
+      cfg_set LMKD_EARLY_SWAP_LOW_RISK_ACK explicit_user_test
+      cfg_set LAST_LMKD_EARLY_SWAP_LOW_TEST enabled
+      msg "! EXPERIMENTAL early LMKD property test enabled."
+      msg "! Evidence is indirect timing/readback only."
+    ;;
+    *) msg "Back."; return 0 ;;
+  esac
+  printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+  mark_status_dirty
+  refresh_status
+  show_status
+  msg "- Reboot required"
+  msg "Back to Advanced."
+}
+
 advanced_loop() {
   while :; do
-    ui_menu5 "Advanced" "Emerald Hill mode" "pTune Status" "pTune Override" "Update Channel" "Back" 0
+    ui_menu6 "Advanced" "Emerald Hill mode" "LMKD early test" "pTune Status" "pTune Override" "Update Channel" "Back" 0
     [ "$UI_REASON" = "timeout" ] && return 0
     case "$UI_INDEX" in
       0) set_emerald_hill ;;
-      1) ptune_status; sleep 2 ;;
-      2)
+      1) set_lmkd_early_test ;;
+      2) ptune_status; sleep 2 ;;
+      3)
         if [ "$(cfg_get ALLOW_THERMAL_WITH_PTUNE)" = 1 ]; then ptune_override_off; else ptune_override_on; fi
         sleep 2
       ;;
-      3) update_channel_loop ;;
+      4) update_channel_loop ;;
       *) msg "Back."; return 0 ;;
     esac
   done
@@ -552,7 +610,7 @@ write_dashboard_performance() {
 
 debug_loop() {
   while :; do
-    ui_menu5 "Debug" "Status" "Collect ZIP" "EH Event Log" "Debug Logging" "Back" 0
+    ui_menu6 "Debug" "Status" "Collect ZIP" "EH Event Log" "LMKD Evidence" "Debug Logging" "Back" 0
     [ "$UI_REASON" = "timeout" ] && return 0
     case "$UI_INDEX" in
       0) refresh_status; show_status; sleep 2 ;;
@@ -565,7 +623,8 @@ debug_loop() {
         sleep 2
       ;;
       2) show_eh_event_log; sleep 2 ;;
-      3) toggle_debug_mode; sleep 1 ;;
+      3) show_lmkd_evidence; sleep 2 ;;
+      4) toggle_debug_mode; sleep 1 ;;
       *) msg "Back."; return 0 ;;
     esac
   done

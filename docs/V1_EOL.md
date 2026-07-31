@@ -1,27 +1,22 @@
-# V1 static profile line — end of active maintenance
+# V1 static profile line — end of life
 
-The Dynamic V2 source line supersedes the static V1 profile model.
+Dynamic V2 is the active source architecture.
 
-## Effective state
+## Current-tree policy
 
-- `main` is the canonical Dynamic V2 source branch after the controlled promotion.
-- `v2` remains protected during the transition and as a rollback/reference branch.
-- Stable `update.json` remains on the last verified stable package until a separate explicit stable release decision.
-- The public prerelease channel remains on the last published and verified prerelease until a separate release GO.
+Static profile payloads have been removed from the current `main` tree because V2 does not consume them for admission, materialization, validation, or packaging.
 
-## Static profile policy
+The removal does not delete history:
 
-Files under `deprecated/profiles/` are retained as historical evidence only.
+- V1 tags remain available;
+- published V1 release assets remain available;
+- Git history retains the former profile snapshots;
+- the stable update channel remains on its published package until a separate explicit release decision.
 
-They are no longer:
+## Active model
 
-- extracted for every monthly firmware;
-- maintained as the activation source of truth;
-- required for supported-build admission;
-- packaged as the active Thermal source.
-
-Dynamic V2 instead reads and validates the device's own three controlled stock Thermal files, creates a local constrained overlay, and verifies the active result.
+Dynamic V2 reads the device's own three controlled stock Thermal files, validates their structure, creates a constrained local overlay, and verifies the active runtime result.
 
 ## Rollback
 
-Historical tags and release assets remain available. Promotion of source branches does not delete old releases or change an update channel.
+Source-tree cleanup does not remove historical packages. Reverting the V2 source promotion or installing a historical release remains possible through normal Git and release history.

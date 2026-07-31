@@ -64,9 +64,8 @@ case "$SWAPPINESS" in
 esac
 case "$THP_MODE" in stock|always|madvise|never) ;; *) THP_MODE=stock ;; esac
 
-# Runtime-only ZRAM properties. LMKD policy remains owned by the platform because
-# a late ro.lmk override is not proven to be consumed without an explicit LMKD
-# property reload.
+# Runtime-only ZRAM properties. This helper never writes the LMKD property.
+# The optional experiment is restricted to post-fs-data and records separate evidence.
 prop_set mm.zram.maintenance.first_delay_seconds "$BIGMAX"
 prop_set mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
 prop_set mmd.zram.writeback.max_idle_seconds "$BIGMAX"
@@ -77,7 +76,11 @@ prop_set vendor.zram.size 100p
 prop_set persist.device_config.vendor_system_native_boot.zram_size 100p
 prop_set persist.vendor.boot.zram.size 100p
 lmk_swap_low_actual="$(getprop ro.lmk.swap_free_low_percentage 2>/dev/null || true)"
-log "ZRAM_LMK_SWAP_LOW policy=stock_unmodified actual=${lmk_swap_low_actual:-unset}"
+lmk_swap_low_policy=stock_unmodified
+if [ "${LMKD_EARLY_SWAP_LOW_TEST:-0}" = 1 ] && [ "${LMKD_EARLY_SWAP_LOW_RISK_ACK:-}" = explicit_user_test ]; then
+  lmk_swap_low_policy=experimental_early_post_fs_data_test
+fi
+log "ZRAM_LMK_SWAP_LOW policy=$lmk_swap_low_policy actual=${lmk_swap_low_actual:-unset} late_write=absent"
 
 sysctl -w "vm.swappiness=$SWAPPINESS" >/dev/null 2>&1 || prop_set vm.swappiness "$SWAPPINESS"
 
@@ -134,5 +137,5 @@ if [ "$DEBUG" = 1 ] || [ "$MODE" != boot_early ]; then
   done
 fi
 
-log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=manual_only swappiness=$SWAPPINESS thp=$THP_MODE eh_state=$eh_state lmk_swap_low_policy=stock_unmodified lmk_swap_low_actual=${lmk_swap_low_actual:-unset} backup_state=runtime_only"
+log "RESULT: ZRAM_APPLY_DONE mode=$MODE restart_policy=manual_only swappiness=$SWAPPINESS thp=$THP_MODE eh_state=$eh_state lmk_swap_low_policy=$lmk_swap_low_policy lmk_swap_low_actual=${lmk_swap_low_actual:-unset} backup_state=runtime_only"
 exit 0

@@ -57,8 +57,8 @@ grep -Fq 'restore_events=1' "$tmp/state/status.env"
 [[ "$(cat "$tmp/physical/eh-device/min_freq")" = 200000000 ]]
 
 grep -Fq 'Experimental max lock is under Advanced' "$dashboard"
-grep -Fq 'ui_menu5 "Advanced" "Emerald Hill mode"' "$dashboard"
-grep -Fq 'ui_menu5 "Debug" "Status" "Collect ZIP" "EH Event Log"' "$dashboard"
+grep -Fq 'ui_menu6 "Advanced" "Emerald Hill mode"' "$dashboard"
+grep -Fq 'ui_menu6 "Debug" "Status" "Collect ZIP" "EH Event Log"' "$dashboard"
 grep -Fq 'EXPERIMENTAL max lock' "$dashboard"
 grep -Fq 'Adaptive (daily default)' "$dashboard"
 
@@ -66,16 +66,13 @@ if grep -Fq 'while :; do' "$service"; then
   printf '%s\n' 'FAIL dev18_unbounded_service_watcher_present'
   exit 1
 fi
-if grep -Fq 'ro.lmk.swap_free_low_percentage' "$post_fs"; then
-  printf '%s\n' 'FAIL dev18_unverified_early_lmk_override_present'
-  exit 1
-fi
+grep -Fq 'LMKD_EARLY="$MODDIR/tools/lmkd/early-swap-low-test.sh"' "$post_fs"
 
-grep -Fq 'version=2.0.0-alpha.3-dev.18' "$module_prop"
-grep -Fq 'versionCode=1016229' "$module_prop"
+grep -Fq 'version=2.0.0-alpha.3-dev.19' "$module_prop"
+grep -Fq 'versionCode=1016230' "$module_prop"
 
 printf '%s\n' 'PASS dev18_eh_apply_restore_event_log'
 printf '%s\n' 'PASS dev18_eh_advanced_ux'
 printf '%s\n' 'PASS dev18_no_unbounded_watcher'
-printf '%s\n' 'PASS dev18_stock_lmk_default_preserved'
+printf '%s\n' 'PASS dev18_stock_default_preserved_by_explicit_lmk_gate'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV18_EH_OBSERVABILITY_TEST_PASS'

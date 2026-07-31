@@ -81,7 +81,7 @@ sha_or_missing() { [ -s "$1" ] && sha_file "$1" || printf '%s\n' missing; }
 bytes_or_missing() { [ -s "$1" ] && wc -c < "$1" 2>/dev/null | tr -d ' ' || printf '%s\n' missing; }
 prop_value() { [ -r "$1" ] && sed -n "s/^$2=//p" "$1" | head -n 1; }
 filter_boot_log() {
-  grep -i -E 'pixel-thermal|pixel-10-pro-xl-thermal-fix|thermal|thermalservice|thermal-service|hal_thermal|android.hardware.thermal|bootanim|bootanimation|surfaceflinger|displaypower|displaymanager|hwcomposer|composer|system_server|zygote|watchdog|fatal signal|fatal exception|tombstone|avc: denied|magisk|kernelsu|ksud|sukisu|apatch|mountify|metamodule|overlayfs|magic.?mount|skip_mount|bootguard|black.?screen|loading.?bar' 2>/dev/null || true
+  grep -i -E 'pixel-thermal|pixel-10-pro-xl-thermal-fix|thermal|thermalservice|thermal-service|hal_thermal|android.hardware.thermal|bootanim|bootanimation|surfaceflinger|displaypower|displaymanager|hwcomposer|composer|system_server|zygote|watchdog|fatal signal|fatal exception|tombstone|avc: denied|magisk|kernelsu|ksud|sukisu|apatch|mountify|metamodule|overlayfs|magic.?mount|skip_mount|bootguard|black.?screen|loading.?bar|lmkd|lowmemorykiller|swap_free_low_percentage' 2>/dev/null || true
 }
 
 MODULE_PROP="$CALLER_MODDIR/module.prop"
@@ -136,13 +136,14 @@ for _entry in "caller:$CALLER_MODDIR" "active:$ACTIVE_MOD" "staged:$STAGED_MOD";
   case "$_view" in caller) _dst="$COLLECT/module-caller" ;; active) _dst="$COLLECT/module-active" ;; *) _dst="$COLLECT/module-staged" ;; esac
   for _file in module.prop install-state.txt health.log supported_versions.json; do copy_if_readable "$_mod/$_file" "$_dst/$_file"; done
   for _file in guard/last_good.env guard/pending_boot.env guard/action-performance.env guard/manager-status.env guard/manager-status.txt guard/outdoor-delta-validation.env guard/patch-manifest.tsv validation_report.json; do copy_if_readable "$_mod/$_file" "$_dst/$_file"; done
-  for _file in action.sh tools/action-dashboard.sh tools/core/patch-thermal.sh tools/core/patch-thermal-fix5-core.sh tools/core/patch-thermal-validated.sh tools/core/verify-outdoor-delta.sh tools/core/outdoor-runtime-policy.sh tools/core/validation-state.sh tools/debug/install-debug.sh tools/bootguard/collect-debug-v3.sh; do copy_if_readable "$_mod/$_file" "$_dst/runtime-core/$_file"; done
+  for _file in action.sh tools/action-dashboard.sh tools/lmkd/early-swap-low-test.sh tools/lmkd/verify-early-swap-low-test.sh tools/core/patch-thermal.sh tools/core/patch-thermal-fix5-core.sh tools/core/patch-thermal-validated.sh tools/core/verify-outdoor-delta.sh tools/core/outdoor-runtime-policy.sh tools/core/validation-state.sh tools/debug/install-debug.sh tools/bootguard/collect-debug-v3.sh; do copy_if_readable "$_mod/$_file" "$_dst/runtime-core/$_file"; done
   for _flag in disable skip_mount remove; do [ -e "$_mod/$_flag" ] && printf '%s\n' present > "$_dst/flag-$_flag.txt" || printf '%s\n' absent > "$_dst/flag-$_flag.txt"; done
   copy_tree_files "$_mod/system/vendor/etc" "$_dst/overlay"
 done
 
 copy_if_readable "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env"
 copy_tree_files "$DATA_ROOT/validation" "$COLLECT/persistent/validation"
+copy_tree_files "$DATA_ROOT/lmkd-test" "$COLLECT/persistent/lmkd-test"
 find "$DATA_ROOT/originals" -type f \( -name source-manifest.tsv -o -name thermal_info_config.json -o -name thermal_info_config_charge.json -o -name thermal_info_config_throttling.json \) -print 2>/dev/null | while IFS= read -r _file; do
   _rel="${_file#$DATA_ROOT/}"; copy_if_readable "$_file" "$COLLECT/persistent/$_rel"
 done
@@ -171,7 +172,7 @@ done
   printf '%s\n' 'module_view\tpath\tbytes\tsha256'
   for _entry in "caller:$CALLER_MODDIR" "active:$ACTIVE_MOD" "staged:$STAGED_MOD"; do
     _view="${_entry%%:*}"; _mod="${_entry#*:}"
-    for _file in module.prop action.sh tools/action-dashboard.sh tools/core/patch-thermal.sh tools/core/patch-thermal-fix5-core.sh tools/core/patch-thermal-validated.sh tools/core/verify-outdoor-delta.sh tools/core/outdoor-runtime-policy.sh tools/debug/install-debug.sh tools/bootguard/collect-debug-v3.sh; do
+    for _file in module.prop action.sh tools/action-dashboard.sh tools/lmkd/early-swap-low-test.sh tools/lmkd/verify-early-swap-low-test.sh tools/core/patch-thermal.sh tools/core/patch-thermal-fix5-core.sh tools/core/patch-thermal-validated.sh tools/core/verify-outdoor-delta.sh tools/core/outdoor-runtime-policy.sh tools/debug/install-debug.sh tools/bootguard/collect-debug-v3.sh; do
       _path="$_mod/$_file"
       printf '%s\t%s\t%s\t%s\n' "$_view" "$_file" "$(bytes_or_missing "$_path")" "$(sha_or_missing "$_path")"
     done

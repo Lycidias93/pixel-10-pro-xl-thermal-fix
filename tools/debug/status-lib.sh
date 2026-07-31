@@ -251,11 +251,45 @@ status_collect() {
     zram_value=off
   fi
 
+  lmk_test_enabled="$(cfg_get LMKD_EARLY_SWAP_LOW_TEST)"
+  lmk_test_ack="$(cfg_get LMKD_EARLY_SWAP_LOW_RISK_ACK)"
+  [ -n "$lmk_test_enabled" ] || lmk_test_enabled=0
+  [ -n "$lmk_test_ack" ] || lmk_test_ack=none
+  lmk_early_file="$DATA_ROOT/lmkd-test/early-swap-low.env"
+  lmk_post_file="$DATA_ROOT/lmkd-test/postboot.env"
+  lmk_apply_state="$(kv_get apply_state "$lmk_early_file")"
+  lmk_timing_state="$(kv_get timing_state "$lmk_early_file")"
+  lmk_property_after="$(kv_get property_after "$lmk_early_file")"
+  lmk_test_ready="$(kv_get test_ready "$lmk_post_file")"
+  lmk_consumption_proof="$(kv_get consumption_proof "$lmk_post_file")"
+  [ -n "$lmk_consumption_proof" ] || lmk_consumption_proof=not_claimed
+  lmk_icon="$OFF"
+  lmk_state=stock_disabled
+  lmk_value=stock
+  if [ "$lmk_test_enabled" = 1 ] && [ "$lmk_test_ack" = explicit_user_test ]; then
+    lmk_icon="$WARN"
+    lmk_state=experimental_reboot_or_evidence_pending
+    lmk_value=test-pending
+    if [ "$lmk_test_ready" = yes ]; then
+      lmk_icon="$OK"
+      lmk_state=early_timing_postboot_readback_verified
+      lmk_value=test-active
+    elif [ "$lmk_apply_state" = late_refused ]; then
+      lmk_icon="$BAD"
+      lmk_state=late_write_refused
+      lmk_value=test-refused
+    elif [ "$lmk_apply_state" = failed ]; then
+      lmk_icon="$BAD"
+      lmk_state=early_apply_failed
+      lmk_value=test-failed
+    fi
+  fi
+
   case "$thermal_value" in
     outdoor-extended) thermal_value=outdoor-ext ;;
   esac
 
-  desc="description=P:$polling_icon $polling_value | T:$thermal_icon $thermal_value | Z:$zram_icon $zram_value | Action: settings/debug"
+  desc="description=P:$polling_icon $polling_value | T:$thermal_icon $thermal_value | Z:$zram_icon $zram_value | L:$lmk_icon $lmk_value | Action: settings/debug"
 
   {
     printf '%s\n' "SOURCE_ICON=$source_icon"
@@ -304,6 +338,16 @@ status_collect() {
     printf '%s\n' "POLLING_VALUE=$polling_value"
     printf '%s\n' "THERMAL_VALUE=$thermal_value"
     printf '%s\n' "ZRAM_VALUE=$zram_value"
+    printf '%s\n' "LMKD_TEST_ICON=$lmk_icon"
+    printf '%s\n' "LMKD_TEST_STATE=$lmk_state"
+    printf '%s\n' "LMKD_TEST_ENABLED=$lmk_test_enabled"
+    printf '%s\n' "LMKD_TEST_ACK=$lmk_test_ack"
+    printf '%s\n' "LMKD_TEST_APPLY_STATE=${lmk_apply_state:-missing}"
+    printf '%s\n' "LMKD_TEST_TIMING_STATE=${lmk_timing_state:-missing}"
+    printf '%s\n' "LMKD_TEST_PROPERTY_AFTER=${lmk_property_after:-unset}"
+    printf '%s\n' "LMKD_TEST_READY=${lmk_test_ready:-no}"
+    printf '%s\n' "LMKD_TEST_CONSUMPTION_PROOF=$lmk_consumption_proof"
+    printf '%s\n' "LMKD_TEST_VALUE=$lmk_value"
     printf '%s\n' "MANAGER_DESCRIPTION=$desc"
   } > "$STATUS_FILE" 2>/dev/null || true
 
@@ -313,6 +357,7 @@ status_collect() {
     printf '%s\n' "Polling: $polling_icon  $polling_state"
     printf '%s\n' "Thermal: $thermal_icon  $thermal_state"
     printf '%s\n' "ZRAM:    $zram_icon  $zram_state"
+    printf '%s\n' "LMKD:    $lmk_icon  $lmk_state"
     printf '%s\n' ""
     printf '%s\n' "profile=$thermal_profile"
     printf '%s\n' "source_polling_300000=$source_polling"

@@ -8,15 +8,21 @@ CONFIG_FILE="/data/adb/$ID/config.env"
 NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 ZRAM_APPLY="$MODDIR/tools/zram/apply-zram-100p.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
+LMKD_VERIFY="$MODDIR/tools/lmkd/verify-early-swap-low-test.sh"
 mkdir -p "$G"
 
 printf 'timestamp_start=%s\n' "$(date +%s 2>/dev/null || echo unknown)" > "$H"
 printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_deferred_v6' >> "$H"
-printf '%s\n' 'lmk_swap_low_policy=stock_unmodified' >> "$H"
+printf '%s\n' 'lmk_swap_low_policy=resolved_after_config' >> "$H"
 
 [ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >> "$H" 2>&1 || true
 if [ -f "$CONFIG_FILE" ]; then
   . "$CONFIG_FILE" 2>/dev/null || true
+fi
+if [ "${LMKD_EARLY_SWAP_LOW_TEST:-0}" = 1 ] && [ "${LMKD_EARLY_SWAP_LOW_RISK_ACK:-}" = explicit_user_test ]; then
+  printf "%s\n" "lmk_swap_low_policy=experimental_early_post_fs_data_test" >> "$H"
+else
+  printf "%s\n" "lmk_swap_low_policy=stock_unmodified" >> "$H"
 fi
 
 # Standard lz77eh ZRAM properties may be prepared early. The optional Emerald
@@ -69,14 +75,19 @@ if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
   fi
 fi
 
+if [ -r "$LMKD_VERIFY" ]; then
+  MODDIR="$MODDIR" LMKD_CONFIG_FILE="$CONFIG_FILE" sh "$LMKD_VERIFY" >> "$H" 2>&1 ||
+    printf '%s\n' 'SERVICE_LMKD_TEST result=postboot_evidence_warning_nonfatal' >> "$H"
+fi
+
 # Android may rewrite selected ZRAM properties after early service startup.
-# Reapply exactly once after verified boot. LMKD remains stock and this mode
-# never restarts mmd.
+# Reapply exactly once after verified boot. This path never mutates the LMKD
+# property; the optional experiment is restricted to post-fs-data.
 if [ "$bootguard_verified" = 1 ] &&
    [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
    [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
   if [ -r "$ZRAM_APPLY" ] && sh "$ZRAM_APPLY" boot_verified >> "$H" 2>&1; then
-    printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=zram_properties_reapplied_no_mmd_restart lmk_policy=stock_unmodified' >> "$H"
+    printf '%s\n' "SERVICE_ZRAM_POST_BOOT result=zram_properties_reapplied_no_mmd_restart lmk_policy=${LMKD_EARLY_SWAP_LOW_TEST:-0}" >> "$H"
   else
     printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=reapply_failed_nonfatal' >> "$H"
   fi

@@ -7,6 +7,7 @@ L="$G/bootguard.log"
 BOOTGUARD="$MODDIR/tools/bootguard/bootguard-lib.sh"
 TRANSITION="$MODDIR/tools/core/platform-transition.sh"
 AUTO_SWITCH="$MODDIR/tools/core/auto-profile-switch.sh"
+LMKD_EARLY="$MODDIR/tools/lmkd/early-swap-low-test.sh"
 mkdir -p "$G"
 
 log(){ printf '%s %s\n' "$(date -Is 2>/dev/null || date)" "$*" >> "$L"; }
@@ -28,6 +29,15 @@ if [ -s "$BOOTGUARD" ]; then
 fi
 [ -e "$MODDIR/remove" ] && { log "GUARD_BLOCK reason=remove_present source=user_marker action=no_change"; exit 0; }
 [ -e "$MODDIR/disable" ] && { log "GUARD_BLOCK reason=bootguard_or_user_disable action=no_mount"; exit 0; }
+
+# The LMKD experiment is fail-closed, opt-in, and early-only. It never blocks
+# Thermal mounting or Bootguard when its evidence helper fails.
+if [ -r "$LMKD_EARLY" ]; then
+  MODDIR="$MODDIR" LMKD_CONFIG_FILE="$CFG" sh "$LMKD_EARLY" apply >> "$L" 2>&1 ||
+    log "LMKD_EARLY_TEST_WARN reason=helper_nonzero action=continue_stock_or_recorded_state"
+else
+  log "LMKD_EARLY_TEST_WARN reason=helper_missing action=continue_stock"
+fi
 
 # post-fs-data runs before Magisk module mounts. Quarantine any stale thermal
 # overlay and force a stock recapture whenever the platform tuple changed.
