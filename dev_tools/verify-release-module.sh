@@ -24,8 +24,6 @@ required=(
   tools/core/outdoor-runtime-policy.sh
   tools/core/patch-thermal-validated.sh
   tools/bootguard/compat-check.sh
-  tools/lmkd/early-swap-low-test.sh
-  tools/lmkd/verify-early-swap-low-test.sh
 )
 for path in "${required[@]}"; do
   grep -Fxq "$path" "$entries_file" || {
@@ -35,10 +33,7 @@ for path in "${required[@]}"; do
 done
 
 banned_regex='(^|/)(deprecated|scratch|dev_tools|docs|tests|test|fixtures|evidence|release|release-notes|dist)/|(^|/)\.git|(^|/)RELEASE_NOTES_|(^|/)(README|CHANGELOG|CREDITS|VERIFY_[^/]*)\.md$|(^|/)tools/(v2-public-alpha2-policy-guard|verify-v2-alpha2-candidate|outdoor-delta-validation-guard)\.sh$|(^|/)tools/bootguard/bootguard-threshold-policy-guard\.sh$|(^|/)tools/ptune/ptune-install-state-observability-guard\.sh$|\.zip$|(^|/)(test-[^/]*|[^/]*-test|[^/]*-fixture|[^/]*-fixtures)\.sh$'
-if grep -E "$banned_regex" "$entries_file" \
-  | grep -Fvx \
-      -e 'tools/lmkd/early-swap-low-test.sh' \
-      -e 'tools/lmkd/verify-early-swap-low-test.sh'; then
+if grep -E "$banned_regex" "$entries_file"; then
   printf '%s\n' 'FAIL banned_release_entry_present'
   exit 4
 fi
@@ -65,7 +60,6 @@ zero_entries="$(unzip -l "$zip_path" | awk 'NR>3 && $1 == 0 && $4 !~ /\/$/ {n++}
 
 printf 'PASS zip_integrity\n'
 printf 'PASS required_runtime_entries\n'
-printf 'PASS lmkd_runtime_helpers_packaged\n'
 printf 'PASS banned_repo_only_entries_absent\n'
 printf 'PASS release_entry_budget entries=%s max=60\n' "$entry_count"
 printf 'PASS release_size_budget bytes=%s max=450000\n' "$zip_bytes"

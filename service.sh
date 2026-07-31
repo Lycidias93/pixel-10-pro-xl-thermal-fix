@@ -8,21 +8,22 @@ CONFIG_FILE="/data/adb/$ID/config.env"
 NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 ZRAM_APPLY="$MODDIR/tools/zram/apply-zram-100p.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
-LMKD_VERIFY="$MODDIR/tools/lmkd/verify-early-swap-low-test.sh"
 mkdir -p "$G"
 
 printf 'timestamp_start=%s\n' "$(date +%s 2>/dev/null || echo unknown)" > "$H"
-printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_deferred_v6' >> "$H"
+printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_lmkd_reload_v7' >> "$H"
 printf '%s\n' 'lmk_swap_low_policy=resolved_after_config' >> "$H"
 
 [ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >> "$H" 2>&1 || true
 if [ -f "$CONFIG_FILE" ]; then
   . "$CONFIG_FILE" 2>/dev/null || true
 fi
-if [ "${LMKD_EARLY_SWAP_LOW_TEST:-0}" = 1 ] && [ "${LMKD_EARLY_SWAP_LOW_RISK_ACK:-}" = explicit_user_test ]; then
-  printf "%s\n" "lmk_swap_low_policy=experimental_early_post_fs_data_test" >> "$H"
+if [ "${LMKD_SWAP_LOW_RELOAD:-0}" = 1 ] && [ "${LMKD_SWAP_LOW_RISK_ACK:-}" = explicit_user_reload ]; then
+  printf "%s
+" "lmk_swap_low_policy=experimental_reload_1pct" >> "$H"
 else
-  printf "%s\n" "lmk_swap_low_policy=stock_unmodified" >> "$H"
+  printf "%s
+" "lmk_swap_low_policy=stock_unmodified" >> "$H"
 fi
 
 # Standard lz77eh ZRAM properties may be prepared early. The optional Emerald
@@ -61,10 +62,6 @@ sleep "${BOOTGUARD_SUCCESS_SETTLE_SECONDS:-30}"
   printf '%s\n' health_log_complete=yes
 } >> "$H" 2>&1
 
-if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
-  sh "$MODDIR/tools/debug/status-lib.sh" update >> "$H" 2>&1 || true
-fi
-
 bootguard_verified=0
 if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
   if MODDIR="$MODDIR" CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/bootguard/bootguard-lib.sh" success-verify >> "$H" 2>&1; then
@@ -75,10 +72,6 @@ if [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
   fi
 fi
 
-if [ -r "$LMKD_VERIFY" ]; then
-  MODDIR="$MODDIR" LMKD_CONFIG_FILE="$CONFIG_FILE" sh "$LMKD_VERIFY" >> "$H" 2>&1 ||
-    printf '%s\n' 'SERVICE_LMKD_TEST result=postboot_evidence_warning_nonfatal' >> "$H"
-fi
 
 # Android may rewrite selected ZRAM properties after early service startup.
 # Reapply exactly once after verified boot. This path never mutates the LMKD
@@ -87,7 +80,7 @@ if [ "$bootguard_verified" = 1 ] &&
    [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
    [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
   if [ -r "$ZRAM_APPLY" ] && sh "$ZRAM_APPLY" boot_verified >> "$H" 2>&1; then
-    printf '%s\n' "SERVICE_ZRAM_POST_BOOT result=zram_properties_reapplied_no_mmd_restart lmk_policy=${LMKD_EARLY_SWAP_LOW_TEST:-0}" >> "$H"
+    printf '%s\n' "SERVICE_ZRAM_POST_BOOT result=zram_properties_reapplied_no_mmd_restart lmk_policy=${LMKD_SWAP_LOW_RELOAD:-0}" >> "$H"
   else
     printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=reapply_failed_nonfatal' >> "$H"
   fi
@@ -114,8 +107,27 @@ if [ -r "$EH_CONTROL" ]; then
   fi
 fi
 
-if [ -s "$MODDIR/tools/debug/status-lib.sh" ]; then
-  sh "$MODDIR/tools/debug/status-lib.sh" update >> "$H" 2>&1 || true
-fi
+update_manager_badges() {
+  status_lib="$MODDIR/tools/debug/status-lib.sh"
+  [ -s "$status_lib" ] || return 1
+  attempt=1
+  while [ "$attempt" -le 3 ]; do
+    sh "$status_lib" update >> "$H" 2>&1 || true
+    desc="$(sed -n 's/^description=//p' "$MODDIR/module.prop" 2>/dev/null | tail -n 1)"
+    case "$desc" in
+      P:*' | T:'*' | Z:'*' | L:'*)
+        printf '%s
+' "MANAGER_BADGES result=verified attempt=$attempt description=$desc" >> "$H"
+        return 0
+      ;;
+    esac
+    sleep 2
+    attempt=$((attempt + 1))
+  done
+  printf '%s
+' 'MANAGER_BADGES result=failed reason=dynamic_description_readback_missing' >> "$H"
+  return 1
+}
 
+update_manager_badges || true
 exit 0

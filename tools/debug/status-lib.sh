@@ -251,37 +251,30 @@ status_collect() {
     zram_value=off
   fi
 
-  lmk_test_enabled="$(cfg_get LMKD_EARLY_SWAP_LOW_TEST)"
-  lmk_test_ack="$(cfg_get LMKD_EARLY_SWAP_LOW_RISK_ACK)"
+  lmk_test_enabled="$(cfg_get LMKD_SWAP_LOW_RELOAD)"
+  lmk_test_ack="$(cfg_get LMKD_SWAP_LOW_RISK_ACK)"
   [ -n "$lmk_test_enabled" ] || lmk_test_enabled=0
   [ -n "$lmk_test_ack" ] || lmk_test_ack=none
-  lmk_early_file="$DATA_ROOT/lmkd-test/early-swap-low.env"
-  lmk_post_file="$DATA_ROOT/lmkd-test/postboot.env"
-  lmk_apply_state="$(kv_get apply_state "$lmk_early_file")"
-  lmk_timing_state="$(kv_get timing_state "$lmk_early_file")"
-  lmk_property_after="$(kv_get property_after "$lmk_early_file")"
-  lmk_test_ready="$(kv_get test_ready "$lmk_post_file")"
-  lmk_consumption_proof="$(kv_get consumption_proof "$lmk_post_file")"
-  [ -n "$lmk_consumption_proof" ] || lmk_consumption_proof=not_claimed
+  lmk_state_file="$DATA_ROOT/lmkd-reload.env"
+  lmk_reload_result="$(kv_get reload_result "$lmk_state_file")"
+  lmk_reload_method="$(kv_get reload_method "$lmk_state_file")"
+  lmk_property_after="$(kv_get property_after "$lmk_state_file")"
+  lmk_service_after="$(kv_get lmkd_service_after "$lmk_state_file")"
   lmk_icon="$OFF"
   lmk_state=stock_disabled
   lmk_value=stock
-  if [ "$lmk_test_enabled" = 1 ] && [ "$lmk_test_ack" = explicit_user_test ]; then
+  if [ "$lmk_test_enabled" = 1 ] && [ "$lmk_test_ack" = explicit_user_reload ]; then
     lmk_icon="$WARN"
-    lmk_state=experimental_reboot_or_evidence_pending
-    lmk_value=test-pending
-    if [ "$lmk_test_ready" = yes ]; then
+    lmk_state=reload_pending
+    lmk_value=reload-pending
+    if [ "$lmk_reload_result" = success ] && [ "$lmk_property_after" = 1 ] && [ "$lmk_service_after" = running ]; then
       lmk_icon="$OK"
-      lmk_state=early_timing_postboot_readback_verified
-      lmk_value=test-active
-    elif [ "$lmk_apply_state" = late_refused ]; then
+      lmk_state="reload_verified_${lmk_reload_method:-unknown}"
+      lmk_value=1pct-active
+    elif [ "$lmk_reload_result" = failed ]; then
       lmk_icon="$BAD"
-      lmk_state=late_write_refused
-      lmk_value=test-refused
-    elif [ "$lmk_apply_state" = failed ]; then
-      lmk_icon="$BAD"
-      lmk_state=early_apply_failed
-      lmk_value=test-failed
+      lmk_state=reload_failed
+      lmk_value=reload-failed
     fi
   fi
 

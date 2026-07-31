@@ -54,8 +54,6 @@ jobs:
           bash -n tools/core/outdoor-runtime-policy.sh
           bash -n tools/core/patch-thermal-validated.sh
           bash -n tools/core/install-thermal-overlay.sh
-          bash -n tools/lmkd/early-swap-low-test.sh
-          bash -n tools/lmkd/verify-early-swap-low-test.sh
           bash -n tools/menu/install-options-menu.sh
           bash -n tools/zram/install-zram.sh
           bash -n tools/zram/config-normalize.sh
@@ -107,7 +105,7 @@ jobs:
           set -euo pipefail
           bash tests/test-zram-eh-dev12.sh
 
-      - name: Dev.19 guarded early LMKD policy
+      - name: Dev.20 consolidated LMKD reload policy
         shell: bash
         run: |
           set -euo pipefail

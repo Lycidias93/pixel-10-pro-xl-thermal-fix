@@ -10,7 +10,7 @@ Dynamic V2 is the active source architecture on `main`.
 
 | Lane | Version | State |
 |---|---|---|
-| Current source | `2.0.0-alpha.3-dev.19` / `1016230` | Unreleased vNext source with guarded LMKD early-boot test |
+| Current source | `2.0.0-alpha.3-dev.20` / `1016231` | Unreleased vNext source with consolidated LMKD reload and badge reliability fix |
 | Public Alpha | `2.0.0-alpha.3-dev.17` / `1016228` | Latest published and Mustang-verified prerelease |
 | Stable update channel | `1.5.1-universal.1` / `1016108` | Legacy public stable package; unchanged |
 
@@ -56,27 +56,28 @@ ZRAM 100p is optional and requires explicit selection. The daily V2 path uses:
 
 The optional Emerald Hill maximum-frequency minimum lock is separate, experimental, and can increase heat and battery use. Apply and restore events are recorded with boot ID, caller, physical node, original minimum, target, readback, and alias count. No permanent screen-on or periodic reapply watcher is used.
 
-## vNext LMKD early-boot test
+## vNext LMKD 1% reload experiment
 
-Dev.19 adds a controlled A/B test for Harish / Codecity001's proposal to expose:
+Dev.20 replaces the ineffective post-fs-data experiment with one consolidated function inside `tools/zram/apply-zram-100p.sh`.
+
+When explicitly enabled with ZRAM 100p, the module sets:
 
 ```text
 ro.lmk.swap_free_low_percentage=1
 ```
 
-before LMKD starts.
+It then prefers Android's targeted `lmkd.reinit` contract. If that trigger is unavailable or does not acknowledge, it falls back to a verified `ctl.restart lmkd` / stop-start cycle. The same path works during boot and when toggled from Magisk Action.
 
 Safety contract:
 
 - disabled by default;
-- requires ZRAM 100p and an explicit experimental acknowledgement;
-- applies only from `post-fs-data.sh`;
-- refuses a late write when `lmkd` is already running;
-- records property value before and after, LMKD PID timing, boot ID, uptime, and readback;
-- performs a post-boot verification snapshot with LMKD service state, memory, swap, PSI, and boot-ID continuity;
-- labels the result `indirect_timing_only` and never claims direct proof that LMKD consumed the property.
+- requires ZRAM 100p and explicit acknowledgement;
+- no separate LMKD runtime helper scripts;
+- records property readback, reload method, service state and PID evidence;
+- remembers the original property for a controlled runtime restore;
+- does not claim a direct internal-value probe beyond the AOSP reinit/start contract.
 
-Changing the test in Magisk Action requires a reboot. Disabling it returns the next boot to stock LMKD policy.
+Dev.20 also verifies the final P/T/Z/L manager description after boot and retries the write when readback is still static.
 
 ## Installation
 
@@ -94,7 +95,7 @@ The single install flow controls:
 - Thermal Profile;
 - ZRAM 100p;
 - Emerald Hill mode;
-- experimental LMKD early test;
+- experimental LMKD 1% reload;
 - pTune override;
 - debug logging.
 

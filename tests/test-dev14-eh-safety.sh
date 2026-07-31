@@ -79,11 +79,14 @@ grep -Fq 'ZRAM_EMERALD_OC=0' "$config"
 grep -Fq 'LAST_ZRAM_100P=enabled_standard' "$config"
 grep -Fq 'ZRAM_EH_RISK_ACK=none' "$config"
 
-if grep -Fq 'prop_set ro.lmk.swap_free_low_percentage' "$apply"; then
-  printf '%s\n' 'FAIL dev14_lmk_override_reintroduced'
-  exit 1
-fi
-grep -Fq 'lmk_swap_low_policy=stock_unmodified' "$apply"
+# Dev.20 may write the LMKD property only behind the explicit ZRAM-linked
+# reload gate. Stock remains the default when either flag is absent.
+grep -Fq 'LMKD_RELOAD="${LMKD_SWAP_LOW_RELOAD:-0}"' "$apply"
+grep -Fq 'LMKD_ACK="${LMKD_SWAP_LOW_RISK_ACK:-none}"' "$apply"
+grep -Fq 'if [ "$LMKD_RELOAD" != 1 ] || [ "$LMKD_ACK" != explicit_user_reload ]; then' "$apply"
+grep -Fq 'ro.lmk.swap_free_low_percentage 1' "$apply"
+grep -Fq 'lmkd.reinit' "$apply"
+grep -Fq 'ctl.restart lmkd' "$apply"
 grep -Fq 'lmk_swap_low_policy=stock_unmodified' "$service"
 
 grep -Fq 'polling_index=0' "$install_menu"
@@ -107,13 +110,13 @@ if grep -Fq 'while :; do' "$service"; then
   exit 1
 fi
 
-grep -Fq 'version=2.0.0-alpha.3-dev.19' "$module_prop"
-grep -Fq 'versionCode=1016230' "$module_prop"
+grep -Fq 'version=2.0.0-alpha.3-dev.20' "$module_prop"
+grep -Fq 'versionCode=1016231' "$module_prop"
 
 printf '%s\n' 'PASS dev14_physical_eh_alias_deduplication'
 printf '%s\n' 'PASS dev14_migration_safe_duplicate_baseline_restore'
 printf '%s\n' 'PASS dev14_legacy_lock_migrates_to_adaptive'
-printf '%s\n' 'PASS dev14_stock_lmk_policy'
+printf '%s\n' 'PASS dev20_opt_in_lmk_reload_preserves_stock_default'
 printf '%s\n' 'PASS dev15_daily_fresh_defaults'
 printf '%s\n' 'PASS dev14_distinct_risk_observability'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV14_EH_SAFETY_TEST_PASS'

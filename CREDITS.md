@@ -25,6 +25,7 @@ Reference threads provided by user:
   - PR #70 ZRAM application rework with `resetprop-rs`, `boot_early` service timing, script cleanup, debug-gating feedback and Pixel test iteration;
   - later integration, testing and menu/Action UX work around the pTune/Joshua-derived ZRAM and Emerald Hill path in `v2-perf` and Dev.12;
   - profile-layout refactor concept and mockup reference used by the manager/menu work.
+  - Dev.20 LMKD live-reload validation: moving the 1-percent property into the ZRAM apply path, reloading LMKD after the write for boot and Action use, and consolidating the feature into fewer runtime scripts.
 - **JoshuaDoes / pTune**: original source and inspiration for the Emerald Hill devfreq control adopted by this module, including adaptive operation and the optional maximum-frequency minimum lock. JoshuaDoes also provided ZRAM 100-percent technical input covering the `mmd` restart path (`stop mmd && start mmd`), early timing after Magisk mounts the vendor overlay, in-memory `resetprop -n`, `sys.boot_completed` timing and root-detection-safe property handling. These pTune/Joshua concepts formed the ZRAM and Emerald Hill foundation later safety-adapted through Dev.17.
 - **Lycidias93**: Mustang CP2A.260705.006 installation, reboot, active-vendor, PollingDelay, Magisk, Bootguard, ZRAM, Emerald Hill and install-state runtime verification, plus the fail-closed integration, regression coverage and release binding.
 

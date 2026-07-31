@@ -1,151 +1,73 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
-early="$root/tools/lmkd/early-swap-low-test.sh"
-verify="$root/tools/lmkd/verify-early-swap-low-test.sh"
+apply="$root/tools/zram/apply-zram-100p.sh"
 post_fs="$root/post-fs-data.sh"
 service="$root/service.sh"
 action="$root/tools/action-dashboard.sh"
-install_menu="$root/tools/menu/install-options-menu.sh"
+menu="$root/tools/menu/install-options-menu.sh"
+status="$root/tools/debug/status-lib.sh"
 module_prop="$root/module.prop"
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/mod/tools" "$tmp/state" "$tmp/bin"
-printf '%s\n' test-boot-id > "$tmp/boot_id"
-printf '%s\n' '12.34 56.78' > "$tmp/uptime"
-printf '%s\n' \
-  'MemTotal:       16000000 kB' \
-  'MemAvailable:    8000000 kB' \
-  'SwapTotal:      16000000 kB' \
-  'SwapFree:       12000000 kB' > "$tmp/meminfo"
-printf '%s\n' \
-  'some avg10=0.10 avg60=0.20 avg300=0.30 total=10' \
-  'full avg10=0.00 avg60=0.00 avg300=0.00 total=0' > "$tmp/psi"
-: > "$tmp/property"
-: > "$tmp/pid"
+mkdir -p "$tmp/mod/tools/zram" "$tmp/mod/tools" "$tmp/state" "$tmp/bin"
+printf '%s\n' test-boot > "$tmp/boot_id"
+printf '%s\n' '12.00 34.00' > "$tmp/uptime"
+printf '%s\n' 1 > "$tmp/property"
+printf '%s\n' running > "$tmp/service"
+printf '%s\n' 100 > "$tmp/pid"
+: > "$tmp/reinit"
+printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'case "${1:-}" in' '  ro.lmk.swap_free_low_percentage) cat "$PROP_FILE" ;;' '  init.svc.lmkd) cat "$SERVICE_FILE" ;;' '  lmkd.reinit) cat "$REINIT_FILE" ;;' '  *) printf "\\n" ;;' 'esac' > "$tmp/bin/getprop"
+printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'key="${1:-}"; value="${2:-}"' 'case "$key" in' '  lmkd.reinit) printf "%s\\n" "$value" > "$REINIT_FILE"; : > "$REINIT_FILE" ;;' '  ctl.restart) printf "%s\\n" 200 > "$PID_FILE"; printf "%s\\n" running > "$SERVICE_FILE" ;;' 'esac' > "$tmp/bin/setprop"
+printf '%s\n' '#!/usr/bin/env bash' 'cat "$PID_FILE"' > "$tmp/bin/pidof"
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$tmp/bin/stop"
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$tmp/bin/start"
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$tmp/bin/sleep"
+printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'case "$1" in' '  -n) printf "%s\\n" "$3" > "$PROP_FILE" ;;' '  -d) : > "$PROP_FILE" ;;' '  *) exit 2 ;;' 'esac' > "$tmp/mod/tools/resetprop-rs"
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$tmp/mod/tools/zram/config-normalize.sh"
+chmod +x "$tmp/bin/"* "$tmp/mod/tools/resetprop-rs" "$tmp/mod/tools/zram/config-normalize.sh"
 
-printf '%s\n' \
-  '#!/usr/bin/env bash' \
-  'set -euo pipefail' \
-  'key="${1:-}"' \
-  'case "$key" in' \
-  '  ro.lmk.swap_free_low_percentage) cat "$LMKD_TEST_PROPERTY_FILE" ;;' \
-  '  init.svc.lmkd) printf "%s\\n" running ;;' \
-  '  *) printf "%s\\n" "" ;;' \
-  'esac' > "$tmp/bin/getprop"
-printf '%s\n' \
-  '#!/usr/bin/env bash' \
-  'set -euo pipefail' \
-  'cat "$LMKD_TEST_PID_FILE"' > "$tmp/bin/pidof"
-printf '%s\n' \
-  '#!/usr/bin/env bash' \
-  'set -euo pipefail' \
-  'test "$1" = -n' \
-  'test "$2" = ro.lmk.swap_free_low_percentage' \
-  'test "$3" = 1' \
-  'printf "%s\\n" 1 > "$LMKD_TEST_PROPERTY_FILE"' > "$tmp/mod/tools/resetprop-rs"
-chmod +x "$tmp/bin/getprop" "$tmp/bin/pidof" "$tmp/mod/tools/resetprop-rs"
-
-run_early() {
-  MODDIR="$tmp/mod" \
-  LMKD_CONFIG_FILE="$tmp/config.env" \
-  LMKD_TEST_STATE_DIR="$tmp/state" \
-  LMKD_GETPROP_BIN="$tmp/bin/getprop" \
-  LMKD_PIDOF_BIN="$tmp/bin/pidof" \
-  LMKD_BOOT_ID_FILE="$tmp/boot_id" \
-  LMKD_UPTIME_FILE="$tmp/uptime" \
-  LMKD_TEST_PROPERTY_FILE="$tmp/property" \
-  LMKD_TEST_PID_FILE="$tmp/pid" \
-  sh "$early" apply
+run_apply() {
+  MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config.env" \
+  LMKD_GETPROP_BIN="$tmp/bin/getprop" LMKD_SETPROP_BIN="$tmp/bin/setprop" \
+  LMKD_PIDOF_BIN="$tmp/bin/pidof" LMKD_STOP_BIN="$tmp/bin/stop" LMKD_START_BIN="$tmp/bin/start" LMKD_SLEEP_BIN="$tmp/bin/sleep" \
+  LMKD_BOOT_ID_FILE="$tmp/boot_id" LMKD_UPTIME_FILE="$tmp/uptime" \
+  PROP_FILE="$tmp/property" SERVICE_FILE="$tmp/service" REINIT_FILE="$tmp/reinit" PID_FILE="$tmp/pid" \
+  sh "$apply" "$1"
 }
 
-run_verify() {
-  LMKD_CONFIG_FILE="$tmp/config.env" \
-  LMKD_TEST_STATE_DIR="$tmp/state" \
-  LMKD_GETPROP_BIN="$tmp/bin/getprop" \
-  LMKD_PIDOF_BIN="$tmp/bin/pidof" \
-  LMKD_BOOT_ID_FILE="$tmp/boot_id" \
-  LMKD_MEMINFO_FILE="$tmp/meminfo" \
-  LMKD_PSI_FILE="$tmp/psi" \
-  LMKD_TEST_PROPERTY_FILE="$tmp/property" \
-  LMKD_TEST_PID_FILE="$tmp/pid" \
-  sh "$verify"
-}
+bash -n "$apply"; bash -n "$post_fs"; bash -n "$service"; bash -n "$action"; bash -n "$menu"; bash -n "$status"
+printf '%s\n' 'ENABLE_ZRAM_100P=1' 'ZRAM_RISK_ACK=explicit_user_enable' 'LMKD_SWAP_LOW_RELOAD=1' 'LMKD_SWAP_LOW_RISK_ACK=explicit_user_reload' 'ZRAM_RESTART_MMD=0' > "$tmp/config.env"
+printf '%s\n' 10 > "$tmp/property"
+run_apply manual > "$tmp/apply.log"
+grep -Fq 'LMKD_RELOAD result=success method=aosp_reinit' "$tmp/apply.log"
+grep -Fxq 'reload_result=success' "$tmp/lmkd-reload.env"
+grep -Fxq 'reload_method=aosp_reinit' "$tmp/lmkd-reload.env"
+grep -Fxq 'property_after=1' "$tmp/lmkd-reload.env"
+grep -Fxq 'LMKD_SWAP_LOW_ORIGINAL_VALUE=100p' "$tmp/config.env"
 
-bash -n "$early"
-bash -n "$verify"
-bash -n "$post_fs"
-bash -n "$service"
-bash -n "$action"
-bash -n "$install_menu"
+printf '%s\n' 'ENABLE_ZRAM_100P=1' 'ZRAM_RISK_ACK=explicit_user_enable' 'LMKD_SWAP_LOW_RELOAD=0' 'LMKD_SWAP_LOW_RISK_ACK=none' 'LMKD_SWAP_LOW_ORIGINAL_VALUE=100p' 'ZRAM_RESTART_MMD=0' > "$tmp/config.env"
+run_apply lmkd_restore > "$tmp/restore.log"
+grep -Fxq 100p "$tmp/property"
+grep -Fq 'RESULT: ZRAM_APPLY_DONE mode=lmkd_restore' "$tmp/restore.log"
 
-printf '%s\n' \
-  'ENABLE_ZRAM_100P=1' \
-  'LMKD_EARLY_SWAP_LOW_TEST=0' \
-  'LMKD_EARLY_SWAP_LOW_RISK_ACK=none' > "$tmp/config.env"
-run_early > "$tmp/disabled.log"
-grep -Fq 'RESULT: LMKD_EARLY_SWAP_LOW_TEST_SKIPPED reason=disabled' "$tmp/disabled.log"
-grep -Fxq 'apply_state=disabled' "$tmp/state/early-swap-low.env"
-[[ ! -s "$tmp/property" ]]
+! grep -Fq 'tools/lmkd/' "$post_fs"
+! grep -Fq 'tools/lmkd/' "$service"
+grep -Fq 'update_manager_badges' "$service"
+grep -Fq 'dynamic_description_readback_missing' "$service"
+grep -Fq 'LMKD 1% reload' "$action"
+grep -Fq 'LMKD Reload Evidence' "$action"
+grep -Fq 'LMKD 1% reload' "$menu"
+grep -Fq 'LMKD_SWAP_LOW_RELOAD' "$status"
+grep -Fq 'version=2.0.0-alpha.3-dev.20' "$module_prop"
+grep -Fq 'versionCode=1016231' "$module_prop"
+[[ ! -e "$root/tools/lmkd/early-swap-low-test.sh" ]]
+[[ ! -e "$root/tools/lmkd/verify-early-swap-low-test.sh" ]]
 
-printf '%s\n' \
-  'ENABLE_ZRAM_100P=1' \
-  'LMKD_EARLY_SWAP_LOW_TEST=1' \
-  'LMKD_EARLY_SWAP_LOW_RISK_ACK=explicit_user_test' > "$tmp/config.env"
-run_early > "$tmp/apply.log"
-grep -Fq 'RESULT: LMKD_EARLY_SWAP_LOW_TEST_APPLY_PASS timing=before_lmkd readback=1 evidence=indirect_timing_only' "$tmp/apply.log"
-grep -Fxq 'apply_state=applied_before_lmkd' "$tmp/state/early-swap-low.env"
-grep -Fxq 'timing_state=before_lmkd' "$tmp/state/early-swap-low.env"
-grep -Fxq 'property_after=1' "$tmp/state/early-swap-low.env"
-grep -Fxq 'consumption_proof=not_claimed' "$tmp/state/early-swap-low.env"
-
-printf '%s\n' 4321 > "$tmp/pid"
-run_verify > "$tmp/verify.log"
-grep -Fq 'RESULT: LMKD_EARLY_SWAP_LOW_POSTBOOT_VERIFY_DONE outcome=success evidence=indirect_timing_only' "$tmp/verify.log"
-grep -Fxq 'test_ready=yes' "$tmp/state/postboot.env"
-grep -Fxq 'direct_lmkd_consumption_claim=no' "$tmp/state/postboot.env"
-grep -Fxq 'consumption_proof=indirect_timing_only' "$tmp/state/postboot.env"
-
-: > "$tmp/property"
-printf '%s\n' 777 > "$tmp/pid"
-run_early > "$tmp/late.log"
-grep -Fq 'RESULT: LMKD_EARLY_SWAP_LOW_TEST_REFUSED reason=lmkd_already_running pid=777' "$tmp/late.log"
-grep -Fxq 'apply_state=late_refused' "$tmp/state/early-swap-low.env"
-[[ ! -s "$tmp/property" ]]
-
-: > "$tmp/pid"
-printf '%s\n' \
-  'ENABLE_ZRAM_100P=1' \
-  'LMKD_EARLY_SWAP_LOW_TEST=1' \
-  'LMKD_EARLY_SWAP_LOW_RISK_ACK=none' > "$tmp/config.env"
-run_early > "$tmp/noack.log"
-grep -Fq 'RESULT: LMKD_EARLY_SWAP_LOW_TEST_REFUSED reason=explicit_ack_required' "$tmp/noack.log"
-
-printf '%s\n' \
-  'ENABLE_ZRAM_100P=0' \
-  'LMKD_EARLY_SWAP_LOW_TEST=1' \
-  'LMKD_EARLY_SWAP_LOW_RISK_ACK=explicit_user_test' > "$tmp/config.env"
-run_early > "$tmp/nozram.log"
-grep -Fq 'RESULT: LMKD_EARLY_SWAP_LOW_TEST_REFUSED reason=zram_100p_required' "$tmp/nozram.log"
-
-grep -Fq 'LMKD_EARLY="$MODDIR/tools/lmkd/early-swap-low-test.sh"' "$post_fs"
-grep -Fq 'late_mutation_not_allowed' "$early"
-if grep -Fq 'resetprop-rs -n ro.lmk.swap_free_low_percentage' "$service" "$root/tools/zram/apply-zram-100p.sh"; then
-  printf '%s\n' 'FAIL late_lmkd_write_present'
-  exit 1
-fi
-grep -Fq 'LMKD early test' "$action"
-grep -Fq 'LMKD Evidence' "$action"
-grep -Fq 'EXPERIMENTAL 1%' "$install_menu"
-grep -Fq 'version=2.0.0-alpha.3-dev.19' "$module_prop"
-grep -Fq 'versionCode=1016230' "$module_prop"
-
-printf '%s\n' 'PASS dev19_default_disabled'
-printf '%s\n' 'PASS dev19_before_lmkd_apply_and_readback'
-printf '%s\n' 'PASS dev19_postboot_indirect_evidence_boundary'
-printf '%s\n' 'PASS dev19_late_write_refused'
-printf '%s\n' 'PASS dev19_ack_and_zram_fail_closed'
-printf '%s\n' 'PASS dev19_installer_action_status_wiring'
-printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV19_LMKD_TEST_PASS'
+printf '%s\n' 'PASS dev20_lmkd_consolidated_in_zram_script'
+printf '%s\n' 'PASS dev20_aosp_reinit_first_with_restart_fallback'
+printf '%s\n' 'PASS dev20_runtime_restore_path'
+printf '%s\n' 'PASS dev20_legacy_helpers_removed'
+printf '%s\n' 'PASS dev20_manager_badge_retry_readback'
+printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV20_LMKD_RELOAD_PASS'

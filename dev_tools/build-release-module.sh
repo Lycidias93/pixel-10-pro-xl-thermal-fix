@@ -23,7 +23,6 @@ trap cleanup EXIT HUP INT TERM
 
 exclude_path() {
   case "$1" in
-    tools/lmkd/early-swap-low-test.sh|tools/lmkd/verify-early-swap-low-test.sh) return 1 ;;
     .git*|.github/*|.workflow-baseline|.gitattributes) return 0 ;;
     deprecated/*|scratch/*|dev_tools/*|docs/*|tests/*|test/*|fixtures/*|evidence/*|release/*|release-notes/*|dist/*) return 0 ;;
     RELEASE_NOTES_*|README.md|CHANGELOG.md|CREDITS.md|VERIFY_*.md|WORKFLOW_*.md|LICENSE|*.zip) return 0 ;;
@@ -61,8 +60,6 @@ required=(
   tools/core/outdoor-runtime-policy.sh
   tools/core/patch-thermal-validated.sh
   tools/bootguard/compat-check.sh
-  tools/lmkd/early-swap-low-test.sh
-  tools/lmkd/verify-early-swap-low-test.sh
 )
 for path in "${required[@]}"; do
   [[ -s "$stage/$path" ]] || {
