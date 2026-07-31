@@ -1,5 +1,7 @@
 # 2.0.0-alpha.3-dev.17
 
+Public Alpha prerelease with the cumulative changes since public dev.10. Exact asset: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.17.zip`, SHA-256 `3ce56a95fe9d4c2eedcdcad95e985f73296f17bc3afd22eba35c2598416c1662`, 324527 bytes.
+
 - Preserves complete install-time evidence while merging current boot/runtime state.
 - Separates canonical `profile_state` from `runtime_profile_state` instead of replacing one contract with the other.
 - Keeps intentional Thermal choices such as Outdoor Extended valid in post-reboot verification.
