@@ -169,7 +169,12 @@ See [V1 EOL](docs/V1_EOL.md).
 - `main`: canonical Dynamic V2 source;
 - `v2`: retained protected rollback/reference branch;
 - short-lived `repo-maintenance/*` branches: deleted after verified merge;
+- exploratory test branches may contain iterative/debug commits, but proven non-trivial features are rebuilt from the latest target branch on a fresh integration branch;
+- the final integration branch should contain approximately one to four logical commits;
+- all required CI and hardware-dependent verification must run again on the exact cleaned integration head before merge;
 - obsolete V1, prerelease, release-work, and experimental branches: removed once verified as superseded and free of open PRs.
+
+See [Development and integration workflow](docs/DEVELOPMENT_WORKFLOW.md).
 
 ## Evidence boundaries
 
@@ -177,6 +182,7 @@ A repository test does not replace device proof. A PASS on Mustang does not auto
 
 ## Documentation
 
+- [Development and integration workflow](docs/DEVELOPMENT_WORKFLOW.md)
 - [V2 Alpha validation plan](docs/v2-alpha-validation-plan.md)
 - [Release notes](release-notes/README.md)
 - [Changelog](CHANGELOG.md)
