@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
 control="$repo_root/tools/zram/emerald-hill-control.sh"
+apply="$repo_root/tools/zram/apply-zram-100p.sh"
 dashboard="$repo_root/tools/action-dashboard.sh"
 service="$repo_root/service.sh"
 post_fs="$repo_root/post-fs-data.sh"
@@ -28,6 +29,7 @@ printf '%s\n' \
   'ZRAM_EH_TARGET_FREQ=max' > "$config"
 
 bash -n "$control"
+bash -n "$apply"
 bash -n "$dashboard"
 
 MODDIR="$repo_root" \
@@ -66,7 +68,14 @@ if grep -Fq 'while :; do' "$service"; then
   printf '%s\n' 'FAIL dev18_unbounded_service_watcher_present'
   exit 1
 fi
-grep -Fq 'LMKD_EARLY="$MODDIR/tools/lmkd/early-swap-low-test.sh"' "$post_fs"
+if grep -Fq 'tools/lmkd/' "$post_fs" "$service"; then
+  printf '%s\n' 'FAIL dev18_obsolete_lmkd_helper_wiring_present'
+  exit 1
+fi
+grep -Fq 'LMKD_SWAP_LOW_RELOAD' "$apply"
+grep -Fq 'explicit_user_reload' "$apply"
+grep -Fq 'lmkd.reinit' "$apply"
+grep -Fq 'update_manager_badges' "$service"
 
 grep -Fq 'version=2.0.0-alpha.3-dev.20' "$module_prop"
 grep -Fq 'versionCode=1016231' "$module_prop"
@@ -74,5 +83,6 @@ grep -Fq 'versionCode=1016231' "$module_prop"
 printf '%s\n' 'PASS dev18_eh_apply_restore_event_log'
 printf '%s\n' 'PASS dev18_eh_advanced_ux'
 printf '%s\n' 'PASS dev18_no_unbounded_watcher'
-printf '%s\n' 'PASS dev18_stock_default_preserved_by_explicit_lmk_gate'
+printf '%s\n' 'PASS dev20_lmkd_consolidation_preserves_eh_contract'
+printf '%s\n' 'PASS dev20_manager_badge_refresh_wired'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV18_EH_OBSERVABILITY_TEST_PASS'
