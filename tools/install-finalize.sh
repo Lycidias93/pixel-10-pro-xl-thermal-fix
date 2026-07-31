@@ -51,7 +51,8 @@ thermal_finalize_install() {
       "$ACTIVE_MODPATH/guard/risk_ack" \
       "$ACTIVE_MODPATH/guard/ptune_risk_ack" \
       "$ACTIVE_MODPATH/guard/zram_risk_ack" \
-      "$ACTIVE_MODPATH/guard/zram_eh_risk_ack" 2>/dev/null || true
+      "$ACTIVE_MODPATH/guard/zram_eh_risk_ack" \
+      "/data/adb/$MODULE_ID/lmkd-reload.env" 2>/dev/null || true
   fi
 
   mkdir -p "$MODPATH/guard"

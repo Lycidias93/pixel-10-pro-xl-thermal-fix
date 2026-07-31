@@ -178,9 +178,10 @@ apply_lmkd_policy() {
   fi
 
   remember_original_lmkd_value "$before"
-  if ! "$RESET" -n ro.lmk.swap_free_low_percentage 1; then
-    write_lmkd_state failed property_write "$before" "$(prop_get ro.lmk.swap_free_low_percentage)" "$(lmkd_pid)" "$(lmkd_pid)" "$(lmkd_service)" "$(lmkd_service)" resetprop_failed
-    return 1
+  if command -v resetprop >/dev/null 2>&1; then
+    resetprop ro.lmk.swap_free_low_percentage 1 2>/dev/null || "$RESET" ro.lmk.swap_free_low_percentage 1 2>/dev/null || true
+  else
+    "$RESET" ro.lmk.swap_free_low_percentage 1 2>/dev/null || true
   fi
   after="$(prop_get ro.lmk.swap_free_low_percentage)"
   [ "$after" = 1 ] || {
