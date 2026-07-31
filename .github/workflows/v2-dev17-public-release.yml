@@ -46,6 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p dist
           test "$GITHUB_REPOSITORY" = "$REPOSITORY"
           test -r "$NOTES_PATH"
           git cat-file -e "$TARGET_COMMIT^{commit}"
@@ -62,15 +63,27 @@ jobs:
             .changelog == ("https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/" + $tag)
           ' update-prerelease.json >/dev/null
           git diff --exit-code "$TARGET_COMMIT" -- update.json
+
+          tag_exists=no
+          release_exists=no
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
-            printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV17_RELEASE_STOP reason=tag_collision'
-            exit 1
+            tag_exists=yes
           fi
-          if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" >/dev/null 2>&1; then
-            printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV17_RELEASE_STOP reason=release_collision'
-            exit 1
+          if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > dist/existing-release.json 2>/dev/null; then
+            release_exists=yes
           fi
-          printf '%s\n' 'PASS release_preflight_no_collision'
+          test "$tag_exists" = "$release_exists"
+          if [ "$release_exists" = yes ]; then
+            test "$(jq -r '.draft' dist/existing-release.json)" = false
+            test "$(jq -r '.prerelease' dist/existing-release.json)" = true
+            test "$(jq -r '.tag_name' dist/existing-release.json)" = "$TAG_NAME"
+            test "$(jq -r '.name' dist/existing-release.json)" = "$RELEASE_TITLE"
+            gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > dist/existing-tag.json
+            test "$(jq -r '.object.sha' dist/existing-tag.json)" = "$TARGET_COMMIT"
+            printf '%s\n' 'PASS exact_public_release_present_for_idempotent_verify'
+          else
+            printf '%s\n' 'PASS release_preflight_no_collision'
+          fi
 
       - name: Rebuild exact verified asset from target commit
         shell: bash
@@ -98,16 +111,17 @@ jobs:
           git worktree remove --force "$source_dir"
           printf '%s\n' 'PASS exact_target_asset_rebuilt'
 
-      - name: Create draft, upload, publish, and verify publicly
+      - name: Create if absent and verify public release
         shell: bash
         run: |
           set -euo pipefail
           release_id=''
           published=no
+          created_in_this_run=no
           cleanup_release() {
             cleanup_status=$?
             trap - EXIT
-            if [ "$cleanup_status" -ne 0 ] && [ "$published" = no ] && [ -n "$release_id" ]; then
+            if [ "$cleanup_status" -ne 0 ] && [ "$published" = no ] && [ "$created_in_this_run" = yes ] && [ -n "$release_id" ]; then
               gh api --method DELETE "repos/$REPOSITORY/releases/$release_id" >/dev/null 2>&1 || true
               gh api --method DELETE "repos/$REPOSITORY/git/refs/tags/$TAG_NAME" >/dev/null 2>&1 || true
             fi
@@ -115,35 +129,41 @@ jobs:
           }
           trap cleanup_release EXIT
 
-          jq -n \
-            --arg tag "$TAG_NAME" \
-            --arg target "$TARGET_COMMIT" \
-            --arg title "$RELEASE_TITLE" \
-            --rawfile body "$NOTES_PATH" \
-            '{tag_name:$tag,target_commitish:$target,name:$title,body:$body,draft:true,prerelease:true}' \
-            > dist/release-create.json
-          gh api --method POST "repos/$REPOSITORY/releases" --input dist/release-create.json > dist/release-created.json
-          release_id="$(jq -r '.id' dist/release-created.json)"
-          test -n "$release_id"
-          test "$(jq -r '.draft' dist/release-created.json)" = true
-          test "$(jq -r '.prerelease' dist/release-created.json)" = true
+          if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" > dist/release-public.json 2>/dev/null; then
+            release_id="$(jq -r '.id' dist/release-public.json)"
+            published=yes
+          else
+            jq -n \
+              --arg tag "$TAG_NAME" \
+              --arg target "$TARGET_COMMIT" \
+              --arg title "$RELEASE_TITLE" \
+              --rawfile body "$NOTES_PATH" \
+              '{tag_name:$tag,target_commitish:$target,name:$title,body:$body,draft:true,prerelease:true}' \
+              > dist/release-create.json
+            gh api --method POST "repos/$REPOSITORY/releases" --input dist/release-create.json > dist/release-created.json
+            release_id="$(jq -r '.id' dist/release-created.json)"
+            created_in_this_run=yes
+            test -n "$release_id"
+            test "$(jq -r '.draft' dist/release-created.json)" = true
+            test "$(jq -r '.prerelease' dist/release-created.json)" = true
 
-          gh release upload "$TAG_NAME" "dist/$ASSET_NAME" --repo "$REPOSITORY"
-          gh api "repos/$REPOSITORY/releases/$release_id" > dist/release-draft.json
-          gh api "repos/$REPOSITORY/releases/$release_id/assets" > dist/release-assets-draft.json
-          test "$(jq -r '.draft' dist/release-draft.json)" = true
-          test "$(jq -r '.prerelease' dist/release-draft.json)" = true
-          test "$(jq -r 'length' dist/release-assets-draft.json)" = 1
-          test "$(jq -r '.[0].name' dist/release-assets-draft.json)" = "$ASSET_NAME"
-          test "$(jq -r '.[0].size' dist/release-assets-draft.json)" = "$ASSET_BYTES"
+            gh release upload "$TAG_NAME" "dist/$ASSET_NAME" --repo "$REPOSITORY"
+            gh api "repos/$REPOSITORY/releases/$release_id" > dist/release-draft.json
+            gh api "repos/$REPOSITORY/releases/$release_id/assets" > dist/release-assets-draft.json
+            test "$(jq -r '.draft' dist/release-draft.json)" = true
+            test "$(jq -r '.prerelease' dist/release-draft.json)" = true
+            test "$(jq -r 'length' dist/release-assets-draft.json)" = 1
+            test "$(jq -r '.[0].name' dist/release-assets-draft.json)" = "$ASSET_NAME"
+            test "$(jq -r '.[0].size' dist/release-assets-draft.json)" = "$ASSET_BYTES"
 
-          jq -n '{draft:false,prerelease:true}' > dist/release-publish.json
-          gh api --method PATCH "repos/$REPOSITORY/releases/$release_id" --input dist/release-publish.json > dist/release-published.json
-          test "$(jq -r '.draft' dist/release-published.json)" = false
-          test "$(jq -r '.prerelease' dist/release-published.json)" = true
-          published=yes
+            jq -n '{draft:false,prerelease:true}' > dist/release-publish.json
+            gh api --method PATCH "repos/$REPOSITORY/releases/$release_id" --input dist/release-publish.json > dist/release-published.json
+            test "$(jq -r '.draft' dist/release-published.json)" = false
+            test "$(jq -r '.prerelease' dist/release-published.json)" = true
+            published=yes
+            gh api "repos/$REPOSITORY/releases/$release_id" > dist/release-public.json
+          fi
 
-          gh api "repos/$REPOSITORY/releases/$release_id" > dist/release-public.json
           gh api "repos/$REPOSITORY/releases/$release_id/assets" > dist/release-assets-public.json
           gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > dist/tag-public.json
           test "$(jq -r '.tag_name' dist/release-public.json)" = "$TAG_NAME"
@@ -151,13 +171,13 @@ jobs:
           test "$(jq -r '.draft' dist/release-public.json)" = false
           test "$(jq -r '.prerelease' dist/release-public.json)" = true
           test "$(jq -r '.object.sha' dist/tag-public.json)" = "$TARGET_COMMIT"
-          jq -r '.body' dist/release-public.json > dist/release-body-public.md
+          jq -j '.body' dist/release-public.json > dist/release-body-public.md
           cmp -s "$NOTES_PATH" dist/release-body-public.md
           test "$(jq -r 'length' dist/release-assets-public.json)" = 1
           test "$(jq -r '.[0].name' dist/release-assets-public.json)" = "$ASSET_NAME"
           test "$(jq -r '.[0].size' dist/release-assets-public.json)" = "$ASSET_BYTES"
           public_url="$(jq -r '.[0].browser_download_url' dist/release-assets-public.json)"
-          curl --fail --location --silent --show-error --retry 3 "$public_url" --output dist/public-download.zip
+          curl --fail --location --silent --show-error --retry 6 --retry-delay 2 --retry-all-errors "$public_url" --output dist/public-download.zip
           test "$(sha256sum dist/public-download.zip | awk '{print $1}')" = "$ASSET_SHA256"
           test "$(wc -c < dist/public-download.zip | tr -d '[:space:]')" = "$ASSET_BYTES"
           printf 'release_url=%s\n' "$(jq -r '.html_url' dist/release-public.json)" >> dist/release-binding.env
