@@ -44,6 +44,13 @@ jobs:
           bash tests/test-dev14-eh-safety.sh
           bash tests/test-dev18-eh-observability.sh
 
+      - name: Restore connector-managed workflow boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout HEAD -- .github/scripts/dev18-branch-builder.py .github/workflows
+          rm -f .github/workflows/v2-dev18-eh-observability.yml
+
       - name: Commit durable Dev.18 changes
         shell: bash
         run: |
