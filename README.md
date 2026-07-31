@@ -10,8 +10,8 @@
 |---|---|---|
 | Stable | `1.5.1-universal.1` / `1016108` | Public stable channel; unchanged |
 | Public Alpha prerelease | `2.0.0-alpha.3-dev.10` / `1016221` | Latest public Alpha; Mustang install, postboot, Thermal, ZRAM and Action verification PASS |
-| Current `v2` source | `2.0.0-alpha.3-dev.16` / `1016227` | Private Magisk-staging/debug-collector corrective test build; device verification required |
-| Previous private build | `2.0.0-alpha.3-dev.15` / `1016226` | Mustang install reached validated Thermal output but failed at an unnecessary ZRAM fstab replacement |
+| Current `v2` source | `2.0.0-alpha.3-dev.17` / `1016228` | Private install-state preservation and choice-aware verification build; device verification required |
+| Previous private build | `2.0.0-alpha.3-dev.16` / `1016227` | Mustang install and core runtime passed; superseded because boot-time state refresh truncated install observability |
 
 The public prerelease is bound to tag `v2.0.0-alpha.3-dev.10`, asset `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.10.zip`, SHA-256 `49b58b8393090d057ba4ff80006615fc4805a74c92ee19d41d44200e7fe4f83a`, and size `310221` bytes.
 

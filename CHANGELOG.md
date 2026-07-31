@@ -1,3 +1,12 @@
+# 2.0.0-alpha.3-dev.17
+
+- Preserves complete install-time evidence while merging current boot/runtime state.
+- Separates canonical `profile_state` from `runtime_profile_state` instead of replacing one contract with the other.
+- Keeps intentional Thermal choices such as Outdoor Extended valid in post-reboot verification.
+- Preserves pTune, ZRAM, Emerald Hill and debug observability across auto-profile refreshes.
+- Makes unchanged subsequent boots idempotent.
+- Adds a cumulative next-public-prerelease changelog covering every private change since public dev.10.
+
 # 2.0.0-alpha.3-dev.16
 
 - Keeps dev.15 daily install defaults and the complete installer/Action route matrix.
