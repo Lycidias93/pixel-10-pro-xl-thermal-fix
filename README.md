@@ -10,14 +10,25 @@
 |---|---|---|
 | Stable | `1.5.1-universal.1` / `1016108` | Public stable channel; unchanged |
 | Public Alpha prerelease | `2.0.0-alpha.3-dev.17` / `1016228` | Latest public Alpha; exact Mustang install, postboot, Thermal, ZRAM, Emerald Hill, Bootguard, and install-state verification PASS |
-| Current `v2` source | `2.0.0-alpha.3-dev.17` / `1016228` | Source of the current public Alpha tag; cumulative changes since dev.10 |
+| Current V2 source | `2.0.0-alpha.3-dev.18` / `1016229` | Unreleased source hardening for EH UX/evidence and `main` promotion; no tag or channel change |
 | Previous public Alpha | `2.0.0-alpha.3-dev.10` / `1016221` | Superseded public Action-responsiveness prerelease |
 
 The public prerelease is bound to tag `v2.0.0-alpha.3-dev.17`, asset `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.17.zip`, SHA-256 `3ce56a95fe9d4c2eedcdcad95e985f73296f17bc3afd22eba35c2598416c1662`, and size `324527` bytes.
 
 Stable `update.json` remains unchanged. `update-prerelease.json` points to dev.17. Development commits never publish a tag, asset, or update-channel change by themselves.
 
+`main` is being promoted to the Dynamic V2 source line. Static V1 profile snapshots remain only under `deprecated/profiles/` as historical rollback and research evidence; they are no longer an active extraction or maintenance contract.
+
 Living status and evidence boundaries: [V2 Alpha validation plan](docs/v2-alpha-validation-plan.md).
+
+## Dev.18 source hardening
+
+- keeps adaptive Emerald Hill as the daily default;
+- moves the optional maximum-frequency minimum lock into Advanced and labels it experimental;
+- records bounded persistent apply/restore evidence with boot ID, caller, node, original minimum, observed maximum, target and readback;
+- exposes the recent EH event log from Debug;
+- preserves the one-shot post-Bootguard model and does not add an unbounded screen-on watcher;
+- keeps stock LMK policy. The proposed early `ro.lmk.swap_free_low_percentage=1` path is documented for future controlled validation but is not enabled without device proof.
 
 ## Dev.13 live-verification result
 

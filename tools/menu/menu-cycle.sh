@@ -63,9 +63,10 @@ mc_desc() {
     "Thermal") echo "Choose Stock, Safe, Plus, or Extended." ;;
     "Thermal Profile") echo "Stock, Safe, Plus, or Extended." ;;
     "ZRAM 100%") echo "Enable or disable 100 percent ZRAM." ;;
-    "Emerald Hill mode") echo "Adaptive daily mode or maximum-frequency minimum lock." ;;
+    "Emerald Hill mode") echo "Adaptive daily mode or EXPERIMENTAL max lock." ;;
     "ZRAM 100% Options") echo "Disabled, adaptive, or maximum lock." ;;
     "Debug") echo "Create evidence and bootguard reports." ;;
+    "EH Event Log") echo "Show bounded apply and restore evidence." ;;
     "Debug Logging") echo "Minimal or full debug evidence." ;;
     "Bootguard Status") echo "Show bootguard and last-good state." ;;
     "Boot Crash Archive") echo "Create boot crash evidence archive." ;;
@@ -73,7 +74,7 @@ mc_desc() {
     "pTune Override ON") echo "Allow explicit pTune coexistence risk." ;;
     "Bootguard") echo "Show bootguard and last-good state." ;;
     "Clear Counters") echo "Reset bootguard counters only." ;;
-    "Advanced") echo "pTune and update-channel tools." ;;
+    "Advanced") echo "Emerald Hill, pTune, and update-channel tools." ;;
     "Update Channel") echo "Stable or test update path only." ;;
     "pTune Override") echo "Allow module beside pTune." ;;
     "pTune Risk") echo "Explicit pTune coexistence risk." ;;

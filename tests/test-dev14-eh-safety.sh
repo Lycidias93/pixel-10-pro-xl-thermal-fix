@@ -91,8 +91,8 @@ grep -Fq 'current_profile=stock' "$install_menu"
 grep -Fq 'zram_index=1' "$install_menu"
 grep -Fq 'ptune_index=1' "$install_menu"
 grep -Fq 'debug_index=1' "$install_menu"
-grep -Fq 'Max lock (more power/heat)' "$install_menu"
-grep -Fq 'Adaptive (recommended)' "$action_dashboard"
+grep -Fq 'EXPERIMENTAL max lock (heat/battery)' "$install_menu"
+grep -Fq 'Adaptive (daily default)' "$action_dashboard"
 
 grep -Fq 'ptune_risk_ack=' "$install_finalize"
 grep -Fq 'zram_risk_ack=' "$install_finalize"
@@ -107,8 +107,8 @@ if grep -Fq 'while :; do' "$service"; then
   exit 1
 fi
 
-grep -Fq 'version=2.0.0-alpha.3-dev.17' "$module_prop"
-grep -Fq 'versionCode=1016228' "$module_prop"
+grep -Fq 'version=2.0.0-alpha.3-dev.18' "$module_prop"
+grep -Fq 'versionCode=1016229' "$module_prop"
 
 printf '%s\n' 'PASS dev14_physical_eh_alias_deduplication'
 printf '%s\n' 'PASS dev14_migration_safe_duplicate_baseline_restore'
