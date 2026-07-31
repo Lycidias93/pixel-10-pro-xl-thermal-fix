@@ -22,13 +22,17 @@ jobs:
           fetch-depth: 0
 
       - name: Apply guarded Dev.17 migration
-        run: python3 dev_tools/migrate-dev17.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 dev_tools/migrate-dev17.py
+          python3 dev_tools/migrate-dev17-fix.py
 
       - name: Verify state preservation and cumulative release draft
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m py_compile dev_tools/migrate-dev17.py
+          python3 -m py_compile dev_tools/migrate-dev17.py dev_tools/migrate-dev17-fix.py
           bash -n tools/core/auto-profile-switch.sh
           bash -n tools/install-finalize.sh
           bash -n tests/test-dev17-state-preservation.sh
@@ -48,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           git checkout -- .github/workflows
-          rm -f dev_tools/migrate-dev17.py
+          rm -f dev_tools/migrate-dev17.py dev_tools/migrate-dev17-fix.py
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
