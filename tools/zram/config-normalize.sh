@@ -98,5 +98,32 @@ case "$swappiness" in
   ;;
 esac
 
-printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE oc=$oc last=${last:-unset} eh_ack=${eh_ack:-none} migrated=$migrated target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS)"
+
+# Dev.20 consolidates LMKD handling into apply-zram-100p.sh. Migrate the old
+# early-test choice once, then disable the obsolete keys and evidence path.
+lmkd_reload="$(cfg_get LMKD_SWAP_LOW_RELOAD)"
+lmkd_reload_ack="$(cfg_get LMKD_SWAP_LOW_RISK_ACK)"
+old_lmkd_enabled="$(cfg_get LMKD_EARLY_SWAP_LOW_TEST)"
+old_lmkd_ack="$(cfg_get LMKD_EARLY_SWAP_LOW_RISK_ACK)"
+if [ -z "$lmkd_reload" ]; then
+  if [ "$old_lmkd_enabled" = 1 ] && [ "$old_lmkd_ack" = explicit_user_test ]; then
+    lmkd_reload=1
+    lmkd_reload_ack=explicit_user_reload
+    cfg_set LAST_LMKD_SWAP_LOW_RELOAD enabled
+  else
+    lmkd_reload=0
+    lmkd_reload_ack=none
+    cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+  fi
+  cfg_set LMKD_SWAP_LOW_RELOAD "$lmkd_reload"
+  cfg_set LMKD_SWAP_LOW_RISK_ACK "$lmkd_reload_ack"
+fi
+case "$lmkd_reload" in 0|1) ;; *) lmkd_reload=0; cfg_set LMKD_SWAP_LOW_RELOAD 0 ;; esac
+case "$lmkd_reload_ack" in explicit_user_reload|none) ;; *) lmkd_reload_ack=none; cfg_set LMKD_SWAP_LOW_RISK_ACK none ;; esac
+cfg_set LMKD_EARLY_SWAP_LOW_TEST 0
+cfg_set LMKD_EARLY_SWAP_LOW_RISK_ACK none
+cfg_set LAST_LMKD_EARLY_SWAP_LOW_TEST disabled
+rm -rf "${CONFIG_FILE%/*}/lmkd-test" 2>/dev/null || true
+
+printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE oc=$oc last=${last:-unset} eh_ack=${eh_ack:-none} migrated=$migrated target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS) lmkd_reload=$lmkd_reload lmkd_ack=$lmkd_reload_ack"
 exit 0

@@ -106,8 +106,8 @@ pass reinit_uses_stock_lmk_and_current_eh_contract
 if grep -Fq 'Emerald Hill OC' "$cycle" "$install_menu" "$action"; then
   fail stale_oc_menu_wording
 fi
-grep -Fq 'version=2.0.0-alpha.3-dev.19' "$module_prop"
-grep -Fq 'versionCode=1016230' "$module_prop"
+grep -Fq 'version=2.0.0-alpha.3-dev.20' "$module_prop"
+grep -Fq 'versionCode=1016231' "$module_prop"
 pass dev19_metadata_and_current_wording
 
 printf '%s\n' 'ROUTE installer: remember/use-last/fresh'

@@ -12,8 +12,6 @@ prerelease_launcher="$repo_root/tools/debug/collect-thermal-prerelease-online-me
 packaged_entrypoint="$repo_root/tools/bootguard/collect-debug.sh"
 packaged_collector="$repo_root/tools/bootguard/collect-debug-v3.sh"
 install_debug="$repo_root/tools/debug/install-debug.sh"
-lmkd_early="$repo_root/tools/lmkd/early-swap-low-test.sh"
-lmkd_verify="$repo_root/tools/lmkd/verify-early-swap-low-test.sh"
 cleanup() {
   rm -f "$out_a" "$out_b" "$log_a" "$log_b"
 }
@@ -85,11 +83,9 @@ grep -Fq '== recent thermal logcat ==' "$install_debug"
 grep -Fq 'collect-debug-v3.sh' "$install_debug"
 grep -Fq 'thermal_collect_debug_on_fail' "$install_debug"
 
-sh -n "$lmkd_early"
-sh -n "$lmkd_verify"
-grep -Fq 'ro.lmk.swap_free_low_percentage' "$lmkd_early"
-grep -Fq 'lmkd_already_running' "$lmkd_early"
-grep -Fq 'indirect_timing_only' "$lmkd_verify"
+sh -n "$repo_root/tools/zram/apply-zram-100p.sh"
+grep -Fq 'setprop lmkd.reinit 1' "$repo_root/tools/zram/apply-zram-100p.sh" || grep -F '"$SETPROP_BIN" lmkd.reinit 1' "$repo_root/tools/zram/apply-zram-100p.sh"
+grep -Fq 'ctl.restart lmkd' "$repo_root/tools/zram/apply-zram-100p.sh"
 
 bash "$repo_root/tests/test-outdoor-runtime-evidence.sh"
 
@@ -122,8 +118,6 @@ unzip -Z1 "$out_a" | grep -Fxq 'tools/core/outdoor-runtime-policy.sh'
 unzip -Z1 "$out_a" | grep -Fxq 'tools/debug/install-debug.sh'
 unzip -Z1 "$out_a" | grep -Fxq 'tools/bootguard/collect-debug.sh'
 unzip -Z1 "$out_a" | grep -Fxq 'tools/bootguard/collect-debug-v3.sh'
-unzip -Z1 "$out_a" | grep -Fxq 'tools/lmkd/early-swap-low-test.sh'
-unzip -Z1 "$out_a" | grep -Fxq 'tools/lmkd/verify-early-swap-low-test.sh'
 unzip -p "$out_a" tools/bootguard/collect-debug.sh | grep -Fq 'collect-debug-v3.sh'
 unzip -p "$out_a" tools/bootguard/collect-debug-v3.sh | grep -Fq 'pixel-thermal-packaged-debug-v3'
 unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq 'outdoor_runtime_policy_missing'
@@ -138,8 +132,6 @@ if unzip -p "$out_a" tools/core/patch-thermal.sh | grep -Fq '%.*f'; then
   exit 1
 fi
 
-grep -q 'PASS lmkd_runtime_helpers_packaged' "$log_a"
-grep -q 'PASS lmkd_runtime_helpers_packaged' "$log_b"
 grep -q 'RESULT: PIXEL_THERMAL_LEAN_PACKAGE_BUILD_PASS' "$log_a"
 grep -q 'RESULT: PIXEL_THERMAL_LEAN_PACKAGE_BUILD_PASS' "$log_b"
 
@@ -152,7 +144,7 @@ printf '%s\n' 'PASS installer_debug_evidence_contract'
 printf '%s\n' 'PASS online_collectors_repo_only'
 printf '%s\n' 'PASS packaged_collector_shipped'
 printf '%s\n' 'PASS runtime_policy_shipped_evidence_repo_only'
-printf '%s\n' 'PASS lmkd_runtime_helpers_shipped_and_wired'
+printf '%s\n' 'PASS lmkd_reload_consolidated_in_zram_script'
 printf '%s\n' 'PASS android_awk_portable_patcher_shipped'
 printf '%s\n' 'PASS release_builder_and_verifier_contract'
 printf '%s\n' 'PASS repeated_release_builds_binary_identical'

@@ -68,8 +68,8 @@ if grep -Fq 'while :; do' "$service"; then
 fi
 grep -Fq 'LMKD_EARLY="$MODDIR/tools/lmkd/early-swap-low-test.sh"' "$post_fs"
 
-grep -Fq 'version=2.0.0-alpha.3-dev.19' "$module_prop"
-grep -Fq 'versionCode=1016230' "$module_prop"
+grep -Fq 'version=2.0.0-alpha.3-dev.20' "$module_prop"
+grep -Fq 'versionCode=1016231' "$module_prop"
 
 printf '%s\n' 'PASS dev18_eh_apply_restore_event_log'
 printf '%s\n' 'PASS dev18_eh_advanced_ux'
