@@ -20,6 +20,7 @@ jobs:
       - name: Assemble and run guarded builder
         run: |
           cat dev_tools/dev20_builder.part00 dev_tools/dev20_builder.part01 dev_tools/dev20_builder.part02 dev_tools/dev20_builder.part03 > /tmp/dev20_builder.py
+          sed -i 's/flags=re.S)/flags=re.S | re.M)/' /tmp/dev20_builder.py
           python3 -m py_compile /tmp/dev20_builder.py
           python3 /tmp/dev20_builder.py
       - name: Commit durable Dev.20 changes
