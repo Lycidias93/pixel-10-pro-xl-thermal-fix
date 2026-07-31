@@ -3,6 +3,7 @@ name: V2 Dev.16 install regression
 on:
   pull_request:
     branches:
+      - main
       - v2
   workflow_dispatch:
 
