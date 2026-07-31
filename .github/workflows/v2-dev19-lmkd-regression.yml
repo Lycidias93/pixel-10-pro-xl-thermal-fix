@@ -1,4 +1,4 @@
-name: V2 Dev.19 LMKD early-test regression
+name: V2 Dev.20 LMKD reload regression
 
 on:
   pull_request:
@@ -11,22 +11,21 @@ permissions:
   contents: read
 
 jobs:
-  dev19-lmkd-early-test:
+  dev20-lmkd-reload:
     runs-on: ubuntu-latest
     timeout-minutes: 7
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Shell and controlled LMKD fixtures
+      - name: Shell and controlled LMKD reload fixtures
         shell: bash
         run: |
           set -euo pipefail
           bash -n post-fs-data.sh
           bash -n service.sh
-          bash -n tools/lmkd/early-swap-low-test.sh
-          bash -n tools/lmkd/verify-early-swap-low-test.sh
           bash -n tools/zram/apply-zram-100p.sh
+          bash -n tools/zram/config-normalize.sh
           bash -n tools/action-dashboard.sh
           bash -n tools/menu/install-options-menu.sh
           bash -n tools/debug/status-lib.sh
@@ -46,14 +45,17 @@ jobs:
           bash tests/test-dev14-eh-safety.sh
           bash tests/test-zram-eh-dev12.sh
 
-      - name: Verify Dynamic V2 and V1 retirement contract
+      - name: Verify Dynamic V2 and Dev.20 contracts
         shell: bash
         run: |
           set -euo pipefail
           grep -Fq 'Dynamic V2 is the active source architecture' README.md
-          grep -Fq 'version=2.0.0-alpha.3-dev.19' module.prop
-          grep -Fq 'versionCode=1016230' module.prop
-          grep -Fq 'indirect_timing_only' release-notes/2.0.0-alpha.3-dev.19.md
+          grep -Fq 'version=2.0.0-alpha.3-dev.20' module.prop
+          grep -Fq 'versionCode=1016231' module.prop
+          grep -Fq 'lmkd.reinit' release-notes/2.0.0-alpha.3-dev.20.md
+          grep -Fq 'consolidated function' release-notes/2.0.0-alpha.3-dev.20.md
           grep -Fq 'Static profile payloads have been removed' docs/V1_EOL.md
           test ! -e deprecated/profiles
-          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV19_LMKD_CI_PASS'
+          test ! -e tools/lmkd/early-swap-low-test.sh
+          test ! -e tools/lmkd/verify-early-swap-low-test.sh
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV20_LMKD_CI_PASS'
