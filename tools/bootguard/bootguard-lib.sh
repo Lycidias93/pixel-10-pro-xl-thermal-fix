@@ -12,6 +12,8 @@ L="$G/bootguard.log"
 LG="$G/last_good.env"
 LA="$G/last_attempt.env"
 TRANSITION="$G/platform-transition.env"
+VERIFY_MODE="$G/verification-mode.env"
+VERIFY_REASON=unknown
 COMPAT_HELPER="${BOOTGUARD_COMPAT_HELPER:-$MODDIR/tools/bootguard/compat-check.sh}"
 TRANSITION_HELPER="${BOOTGUARD_TRANSITION_HELPER:-$MODDIR/tools/core/platform-transition.sh}"
 mkdir -p "$G"
@@ -122,11 +124,67 @@ snapshot() {
   printf '%s\n' "polling_mode=$(getcfg THERMAL_POLLING_MODE)"
   printf '%s\n' "outdoor_profile=$(getcfg THERMAL_OUTDOOR_PROFILE)"
   printf '%s\n' "thermal_disabled=$(getcfg THERMAL_DISABLED)"
+  printf '%s\n' "config_sha256=$(sha_file "$CONFIG_FILE")"
   printf '%s\n' "patch_manifest_sha256=$(sha_file "$G/patch-manifest.tsv")"
   printf '%s\n' "validation_report_sha256=$(sha_file "$MODDIR/validation_report.json")"
   printf '%s\n' "overlay_base_sha256=$(sha_file "$MODDIR/system/vendor/etc/thermal_info_config.json")"
   printf '%s\n' "overlay_charge_sha256=$(sha_file "$MODDIR/system/vendor/etc/thermal_info_config_charge.json")"
   printf '%s\n' "overlay_throttling_sha256=$(sha_file "$MODDIR/system/vendor/etc/thermal_info_config_throttling.json")"
+}
+
+snapshot_signature() {
+  snapshot | grep -v '^timestamp=' | sha256sum 2>/dev/null | awk '{print $1}'
+}
+
+needs_full_verify() {
+  VERIFY_REASON=unchanged_verified_state
+  debug="$(getcfg DEBUG_MODE)"
+  [ -n "$debug" ] || debug="$(getcfg debug_mode)"
+  canary="$(getcfg CANARY_DIAGNOSTIC_MODE)"
+  if [ "$debug" = 1 ] || [ "$canary" = 1 ]; then
+    VERIFY_REASON=debug_or_canary
+    return 0
+  fi
+  if [ "$(pending_transition)" = yes ]; then
+    VERIFY_REASON=platform_transition_pending
+    return 0
+  fi
+  if [ "$(counter_get)" -gt 0 ] 2>/dev/null; then
+    VERIFY_REASON=previous_pending_boot
+    return 0
+  fi
+  if [ ! -s "$LG" ]; then
+    VERIFY_REASON=no_last_good
+    return 0
+  fi
+  previous="$(kv_get state_signature "$LG")"
+  current="$(snapshot_signature)"
+  if [ -z "$previous" ] || [ -z "$current" ] || [ "$previous" != "$current" ]; then
+    VERIFY_REASON=state_signature_changed
+    return 0
+  fi
+  return 1
+}
+
+arm_if_needed() {
+  mkdir -p "$G"
+  if needs_full_verify; then
+    {
+      printf '%s\n' mode=full
+      printf 'reason=%s\n' "$VERIFY_REASON"
+    } > "$VERIFY_MODE"
+    chmod 0600 "$VERIFY_MODE" 2>/dev/null || true
+    log "BOOTGUARD_MODE mode=full reason=$VERIFY_REASON"
+    arm
+  else
+    rm -f "$P"
+    {
+      printf '%s\n' mode=fast
+      printf '%s\n' reason=unchanged_verified_state
+    } > "$VERIFY_MODE"
+    chmod 0600 "$VERIFY_MODE" 2>/dev/null || true
+    log 'BOOTGUARD_MODE mode=fast reason=unchanged_verified_state action=no_full_verify'
+  fi
 }
 
 evaluate() {
@@ -168,12 +226,15 @@ arm() {
 }
 
 success() {
-  snapshot > "$LG"
-  chmod 0600 "$LG" 2>/dev/null || true
+  tmp="$LG.tmp.$$"
+  snapshot > "$tmp"
+  printf 'state_signature=%s\n' "$(snapshot_signature)" >> "$tmp"
+  chmod 0600 "$tmp" 2>/dev/null || true
+  mv "$tmp" "$LG"
   rm -f "$P"
   counter_set 0
   rm -f "$G/disabled_reason"
-  log "BOOTGUARD_SUCCESS build=$(build_id)"
+  log "BOOTGUARD_SUCCESS build=$(build_id) state_signature=$(kv_get state_signature "$LG")"
 }
 
 thermalservice_check() {
@@ -259,7 +320,9 @@ status() {
 case "${1:-status}" in
   evaluate) evaluate ;;
   arm) arm ;;
-  preflight) evaluate && arm ;;
+  arm-if-needed) arm_if_needed ;;
+  needs-full-verify) if needs_full_verify; then printf 'mode=full\nreason=%s\n' "$VERIFY_REASON"; else printf 'mode=fast\nreason=%s\n' "$VERIFY_REASON"; fi ;;
+  preflight) evaluate && arm_if_needed ;;
   success) success ;;
   success-verify) success_verify ;;
   status) status ;;
