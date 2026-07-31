@@ -44,7 +44,7 @@ jobs:
           bash -n tools/bootguard/collect-debug-v3.sh
           bash -n tools/install-finalize.sh
           bash -n tests/test-dev19-lmkd-early-test.sh
-          bash tests/test-dev19-lmkd-early-test.sh
+          bash -x tests/test-dev19-lmkd-early-test.sh
           bash tests/test-dev18-eh-observability.sh
           bash tests/test-dev17-state-preservation.sh
           bash tests/test-dev16-install-regression.sh
