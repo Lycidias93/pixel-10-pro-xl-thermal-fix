@@ -1,0 +1,30 @@
+name: Dev.20 reinit acknowledgement hotfix
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  hotfix:
+    if: github.head_ref == 'repo-maintenance/dev20-reinit-ack-hotfix-20260731'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Apply and verify hotfix
+        run: python3 dev_tools/dev20_reinit_ack_hotfix.py
+      - name: Commit durable changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git reset -- .github/workflows/dev20-reinit-ack-hotfix.yml dev_tools/dev20_reinit_ack_hotfix.py
+          git diff --cached --quiet && exit 0
+          git commit -m "Require successful LMKD reinit trigger before acknowledgement"
+          git push origin HEAD:repo-maintenance/dev20-reinit-ack-hotfix-20260731
