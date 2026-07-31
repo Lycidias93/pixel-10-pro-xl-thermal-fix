@@ -7,12 +7,19 @@ on:
     paths:
       - .github/scripts/dev18-branch-builder.py
       - .github/workflows/dev18-branch-builder.yml
+  pull_request:
+    branches:
+      - v2
+    paths:
+      - .github/scripts/dev18-branch-builder.py
+      - .github/workflows/dev18-branch-builder.yml
 
 permissions:
   contents: write
 
 jobs:
   build:
+    if: github.head_ref == 'repo-maintenance/dev18-eh-ux-logging-v2-main-promotion-20260731' || github.ref_name == 'repo-maintenance/dev18-eh-ux-logging-v2-main-promotion-20260731'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
