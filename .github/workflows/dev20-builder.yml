@@ -24,6 +24,7 @@ jobs:
           sed -i '506s/set_zram/advanced_loop/;507s/set_zram/advanced_loop/' /tmp/dev20_builder.py
           sed -i 's/\[ -n "$original" \] \&\& return 0/if [ -n "$original" ]; then return 0; fi/' /tmp/dev20_builder.py
           sed -i 's/LMKD_SWAP_LOW_ORIGINAL_VALUE=10/LMKD_SWAP_LOW_ORIGINAL_VALUE=100p/' /tmp/dev20_builder.py
+          sed -i 's/sh "$apply" "$1"/sh -x "$apply" "$1"/' /tmp/dev20_builder.py
           sed -i "s/\['bash', 'tests\/test-dev19-lmkd-early-test.sh'\]/['bash', '-x', 'tests\/test-dev19-lmkd-early-test.sh']/" /tmp/dev20_builder.py
           sed -i 's/run_apply manual > "$tmp\/apply.log"/run_apply manual | tee "$tmp\/apply.log"/' /tmp/dev20_builder.py
           python3 -m py_compile /tmp/dev20_builder.py
