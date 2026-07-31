@@ -54,6 +54,7 @@ jobs:
           bash tests/test-dev15-menu-matrix.sh
           bash tests/test-dev14-eh-safety.sh
           bash tests/test-zram-eh-dev12.sh
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
           bash tests/test-release-package-exclusions.sh
 
       - name: Commit durable vNext changes
