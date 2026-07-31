@@ -55,7 +55,7 @@ jobs:
           grep -Fq 'Dynamic V2 is the active source architecture' README.md
           grep -Fq 'version=2.0.0-alpha.3-dev.21' module.prop
           grep -Fq 'versionCode=1016232' module.prop
-          grep -Fq 'Magisk system `resetprop` first' release-notes/2.0.0-alpha.3-dev.21.md
+          grep -Fq 'property_writer=magisk_resetprop|resetprop_rs_fallback' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'Lightweight normal boots' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'SYSTEM_RESETPROP=' tools/zram/apply-zram-100p.sh
           grep -Fq 'property_writer=' tools/zram/apply-zram-100p.sh
