@@ -1,0 +1,59 @@
+name: V2 Dev.16 guarded migration
+
+on:
+  pull_request:
+    branches:
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-dev16:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.ref == 'repo-maintenance/v2-dev16-magisk-zram-staging-debug-collector-20260731'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout task branch
+        uses: actions/checkout@v4
+        with:
+          ref: repo-maintenance/v2-dev16-magisk-zram-staging-debug-collector-20260731
+          fetch-depth: 0
+
+      - name: Apply guarded Dev.16 migration
+        run: python3 dev_tools/migrate-dev16.py
+
+      - name: Verify install regression and preserved contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile dev_tools/migrate-dev16.py
+          bash -n tools/zram/materialize-zram-choice.sh
+          bash -n tools/zram/install-zram.sh
+          bash -n tools/bootguard/collect-debug-v3.sh
+          bash -n tests/test-dev16-install-regression.sh
+          bash tests/test-dev16-install-regression.sh
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev14-eh-safety.sh
+          bash tests/test-zram-eh-dev12.sh
+          bash tests/test-single-install-menu.sh
+          bash tools/ptune/ptune-install-state-observability-guard.sh
+          git diff --check
+
+      - name: Push verified non-workflow implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout -- .github/workflows
+          rm -f dev_tools/migrate-dev16.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          if git diff --cached --quiet; then
+            printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV16_MIGRATION_STOP reason=no_changes'
+            exit 1
+          fi
+          git commit -m "fix: make dev16 magisk staging and debug collection safe"
+          git push origin "HEAD:repo-maintenance/v2-dev16-magisk-zram-staging-debug-collector-20260731"
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV16_MIGRATION_PUSHED scope=non_workflow'
