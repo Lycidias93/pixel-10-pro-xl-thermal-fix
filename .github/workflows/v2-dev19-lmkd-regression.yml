@@ -1,0 +1,59 @@
+name: V2 Dev.19 LMKD early-test regression
+
+on:
+  pull_request:
+    branches:
+      - main
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dev19-lmkd-early-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Shell and controlled LMKD fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n post-fs-data.sh
+          bash -n service.sh
+          bash -n tools/lmkd/early-swap-low-test.sh
+          bash -n tools/lmkd/verify-early-swap-low-test.sh
+          bash -n tools/zram/apply-zram-100p.sh
+          bash -n tools/action-dashboard.sh
+          bash -n tools/menu/install-options-menu.sh
+          bash -n tools/debug/status-lib.sh
+          bash -n tools/bootguard/collect-debug-v3.sh
+          bash -n tools/install-finalize.sh
+          bash -n tests/test-dev19-lmkd-early-test.sh
+          bash tests/test-dev19-lmkd-early-test.sh
+
+      - name: Preserve V2 corrective contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-dev18-eh-observability.sh
+          bash tests/test-dev17-state-preservation.sh
+          bash tests/test-dev16-install-regression.sh
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev14-eh-safety.sh
+          bash tests/test-zram-eh-dev12.sh
+
+      - name: Verify Dynamic V2 and V1 retirement contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Dynamic V2 is the active source architecture' README.md
+          grep -Fq 'version=2.0.0-alpha.3-dev.19' module.prop
+          grep -Fq 'versionCode=1016230' module.prop
+          grep -Fq 'indirect_timing_only' release-notes/2.0.0-alpha.3-dev.19.md
+          grep -Fq 'Static profile payloads have been removed' docs/V1_EOL.md
+          test ! -e deprecated/profiles
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV19_LMKD_CI_PASS'
