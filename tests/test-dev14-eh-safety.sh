@@ -107,8 +107,8 @@ if grep -Fq 'while :; do' "$service"; then
   exit 1
 fi
 
-grep -Fq 'version=2.0.0-alpha.3-dev.15' "$module_prop"
-grep -Fq 'versionCode=1016226' "$module_prop"
+grep -Fq 'version=2.0.0-alpha.3-dev.16' "$module_prop"
+grep -Fq 'versionCode=1016227' "$module_prop"
 
 printf '%s\n' 'PASS dev14_physical_eh_alias_deduplication'
 printf '%s\n' 'PASS dev14_migration_safe_duplicate_baseline_restore'

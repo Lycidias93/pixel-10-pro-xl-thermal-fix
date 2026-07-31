@@ -1,0 +1,36 @@
+name: V2 Dev.16 install regression
+
+on:
+  pull_request:
+    branches:
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dev16-install-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dev.16 Magisk staging and collector regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tools/zram/materialize-zram-choice.sh
+          bash -n tools/zram/install-zram.sh
+          bash -n tools/bootguard/collect-debug-v3.sh
+          bash -n tests/test-dev16-install-regression.sh
+          bash tests/test-dev16-install-regression.sh
+
+      - name: Preserve menu, EH and ZRAM contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev14-eh-safety.sh
+          bash tests/test-zram-eh-dev12.sh
