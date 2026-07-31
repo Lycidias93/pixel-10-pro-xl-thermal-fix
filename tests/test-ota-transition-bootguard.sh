@@ -104,7 +104,7 @@ if grep -Eq 'bootguard-lib\.sh" success([[:space:]]|$)' "$service"; then
   exit 1
 fi
 
-grep -Fq 'build_guard_mode=dynamic_local_validation' "$auto_switch"
+grep -Fq 'state_set build_guard_mode dynamic_local_validation' "$auto_switch"
 grep -Fq 'unsupported_platform' "$auto_switch"
 grep -Fq 'PLATFORM_SUPPORTED=' "$compat"
 grep -Fq 'BUILD_EVIDENCE=' "$compat"
