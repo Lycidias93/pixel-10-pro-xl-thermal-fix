@@ -24,7 +24,22 @@ jobs:
         run: python3 .github/scripts/dev21-branch-builder.py
       - name: Harden transition verification gate
         run: python3 .github/scripts/dev21-postbuild-fix.py
+      - name: Trace legacy regressions
+        run: |
+          failed=0
+          for test_file in \
+            tests/test-dev18-eh-observability.sh \
+            tests/test-dev17-state-preservation.sh \
+            tests/test-dev16-install-regression.sh \
+            tests/test-dev15-menu-matrix.sh \
+            tests/test-dev14-eh-safety.sh \
+            tests/test-zram-eh-dev12.sh; do
+            echo "=== TRACE $test_file ==="
+            bash -x "$test_file" || failed=1
+          done
+          exit "$failed"
       - name: Commit generated Dev.21 source
+        if: success()
         run: |
           if git diff --quiet && git diff --cached --quiet; then
             echo "No generated changes"
