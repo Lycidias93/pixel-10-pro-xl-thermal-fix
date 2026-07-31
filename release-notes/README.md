@@ -4,8 +4,9 @@ Release notes are repository documentation and are never included in the flashab
 
 ## V2 alpha line
 
-- [Next public prerelease — cumulative changes since dev.10](public-prerelease-next-since-dev.10.md) — draft release changelog and gate; not a release authorization.
+- [2.0.0-alpha.3-dev.17 — public cumulative prerelease](2.0.0-alpha.3-dev.17-public.md) — public Alpha changes and verified Mustang evidence since dev.10.
 - [2.0.0-alpha.3-dev.17](2.0.0-alpha.3-dev.17.md) — private install-state preservation and choice-aware verification correction.
+- [Next public prerelease — cumulative changes since dev.10](public-prerelease-next-since-dev.10.md) — retained preparation draft and release gate evidence.
 - [2.0.0-alpha.3-dev.16](2.0.0-alpha.3-dev.16.md) — private Magisk staging and packaged-debug correction preserving the dev.15 defaults/menu work.
 - [2.0.0-alpha.3-dev.15](2.0.0-alpha.3-dev.15.md) — private menu/defaults corrective build with transactional ZRAM layout changes and full route-matrix verification.
 - [2.0.0-alpha.3-dev.14](2.0.0-alpha.3-dev.14.md) — private corrective test build with physical EH alias deduplication, migration-safe restore, adaptive defaults, stock LMK policy, and distinct risk observability.
