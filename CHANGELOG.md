@@ -1,3 +1,12 @@
+# 2.0.0-alpha.3-dev.16
+
+- Keeps dev.15 daily install defaults and the complete installer/Action route matrix.
+- Treats the already packaged identical ZRAM fstab as an idempotent no-op during Magisk staging.
+- Verifies temporary and final ZRAM layout content before committing a replacement.
+- Preserves detailed ZRAM materializer failure evidence in `guard/install-zram-layout.log`.
+- Fixes packaged-debug helper variable collisions that compounded destination paths.
+- Adds a regression fixture that blocks replacement of existing files to reproduce the Mustang install failure.
+
 # 2.0.0-alpha.3-dev.15
 
 - Makes Polling Mod, adaptive ZRAM 100p and verbose logging the Fresh install defaults.

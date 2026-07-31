@@ -52,25 +52,28 @@ mkdir -p "$COLLECT/incident" "$COLLECT/module-active" "$COLLECT/module-staged" \
   "$COLLECT/current-boot" "$COLLECT/previous-boot" "$COLLECT/pstore" \
   "$COLLECT/tombstones" "$COLLECT/hashes" 2>/dev/null || exit 4
 
-collect_cmd() { _name="$1"; shift; { "$@"; } > "$COLLECT/$_name" 2>&1 || true; }
+collect_cmd() { collector_cmd_name="$1"; shift; { "$@"; } > "$COLLECT/$collector_cmd_name" 2>&1 || true; }
 copy_if_readable() {
-  _src="$1"; _dst="$2"
-  [ -r "$_src" ] || return 0
-  mkdir -p "${_dst%/*}" 2>/dev/null || true
-  cp -fp "$_src" "$_dst" 2>/dev/null || true
+  collector_copy_src="$1"
+  collector_copy_dst="$2"
+  [ -r "$collector_copy_src" ] || return 0
+  mkdir -p "${collector_copy_dst%/*}" 2>/dev/null || true
+  cp -fp "$collector_copy_src" "$collector_copy_dst" 2>/dev/null || true
 }
 copy_tail_if_readable() {
-  _src="$1"; _dst="$2"
-  [ -r "$_src" ] || return 0
-  mkdir -p "${_dst%/*}" 2>/dev/null || true
-  tail -n 4000 "$_src" > "$_dst" 2>/dev/null || true
+  collector_tail_src="$1"
+  collector_tail_dst="$2"
+  [ -r "$collector_tail_src" ] || return 0
+  mkdir -p "${collector_tail_dst%/*}" 2>/dev/null || true
+  tail -n 4000 "$collector_tail_src" > "$collector_tail_dst" 2>/dev/null || true
 }
 copy_tree_files() {
-  _src="$1"; _dst="$2"
-  [ -d "$_src" ] || return 0
-  mkdir -p "$_dst" 2>/dev/null || true
-  find "$_src" -maxdepth 1 -type f -print 2>/dev/null | while IFS= read -r _file; do
-    cp -fp "$_file" "$_dst/${_file##*/}" 2>/dev/null || true
+  collector_tree_src="$1"
+  collector_tree_dst="$2"
+  [ -d "$collector_tree_src" ] || return 0
+  mkdir -p "$collector_tree_dst" 2>/dev/null || true
+  find "$collector_tree_src" -maxdepth 1 -type f -print 2>/dev/null | while IFS= read -r collector_tree_file; do
+    cp -fp "$collector_tree_file" "$collector_tree_dst/${collector_tree_file##*/}" 2>/dev/null || true
   done
 }
 sha_file() { sha256sum "$1" 2>/dev/null | awk '{print $1}'; }
