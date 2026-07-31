@@ -3,7 +3,7 @@ set -eu
 
 MODULE_ID="${MODULE_ID:-pixel-10-pro-xl-thermal-fix}"
 MODDIR="${MODDIR:-${0%/*}/..}"
-CONFIG_DIR="/data/adb/$MODULE_ID"
+CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$MODULE_ID}"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 
 mkdir -p "$CONFIG_DIR" 2>/dev/null || true
@@ -314,8 +314,8 @@ fi
 cfg_set THERMAL_SETTINGS_MODE fresh
 record_ptune_presence
 
-current_polling=stock
-polling_index=1
+current_polling=mod
+polling_index=0
 mc_cycle2 "Polling Mode" "Mod values" "Stock values" "$polling_index"
 [ "$MC_INDEX" = 1 ] && apply_polling stock || apply_polling mod
 
@@ -332,8 +332,8 @@ mc_cycle4 \
   0
 apply_profile "$(profile_at "$MC_INDEX")"
 
-current_zram=0
-zram_index=0
+current_zram=1
+zram_index=1
 mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
 if [ "$MC_INDEX" = 0 ]; then
   apply_zram disabled
@@ -353,8 +353,8 @@ ptune_index=1
 mc_cycle2 "pTune Override" "Override ON" "Override OFF" "$ptune_index"
 [ "$MC_INDEX" = 0 ] && apply_ptune 1 || apply_ptune 0
 
-current_debug=0
-debug_index=0
+current_debug=1
+debug_index=1
 mc_cycle2 "Debug Logging" "Silent" "Verbose" "$debug_index"
 [ "$MC_INDEX" = 0 ] && apply_debug 0 || apply_debug 1
 

@@ -10,8 +10,8 @@
 |---|---|---|
 | Stable | `1.5.1-universal.1` / `1016108` | Public stable channel; unchanged |
 | Public Alpha prerelease | `2.0.0-alpha.3-dev.10` / `1016221` | Latest public Alpha; Mustang install, postboot, Thermal, ZRAM and Action verification PASS |
-| Current `v2` source | `2.0.0-alpha.3-dev.14` / `1016225` | Private corrective test build; device verification required |
-| Previous private build | `2.0.0-alpha.3-dev.13` / `1016224` | Superseded after the live EH alias/restore and LMK-observability findings |
+| Current `v2` source | `2.0.0-alpha.3-dev.15` / `1016226` | Private defaults/menu corrective test build; device verification required |
+| Previous private build | `2.0.0-alpha.3-dev.14` / `1016225` | EH safety correction installed successfully; superseded by the menu/defaults audit |
 
 The public prerelease is bound to tag `v2.0.0-alpha.3-dev.10`, asset `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.10.zip`, SHA-256 `49b58b8393090d057ba4ff80006615fc4805a74c92ee19d41d44200e7fe4f83a`, and size `310221` bytes.
 
@@ -48,7 +48,7 @@ Dev.14 implements:
 - migration-safe and readback-verified restore behavior, including old dev.13 duplicate baselines;
 - adaptive Emerald Hill operation as the safe default;
 - ZRAM 100p and `lz77eh` independent from the optional maximum-frequency minimum lock;
-- Fresh choices that start from Stock Polling, Stock Thermal, ZRAM disabled, EH disabled and pTune override off;
+- Fresh choices that start from Polling Mod, Stock Thermal, ZRAM 100 percent with adaptive EH, verbose logging and pTune override off;
 - separate pTune, ZRAM and EH risk acknowledgements;
 - stock LMK policy without an unverified override claim;
 - EH status schema v2 and regression fixtures for physical alias paths.

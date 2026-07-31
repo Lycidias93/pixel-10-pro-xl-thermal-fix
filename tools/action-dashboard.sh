@@ -1,8 +1,10 @@
 #!/system/bin/sh
 ID="${ID:-pixel-10-pro-xl-thermal-fix}"
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
-CONFIG_DIR="/data/adb/$ID"
+CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
 CONFIG_FILE="$CONFIG_DIR/config.env"
+ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
+PTUNE_ROOTS="${PTUNE_MODULE_ROOTS:-/data/adb/modules/ptune /data/adb/modules_update/ptune}"
 ACTION_DASHBOARD_PERF="$MODDIR/guard/action-dashboard-performance.env"
 STATUS_DIRTY=1
 STATUS_SHOWN=0
@@ -286,6 +288,7 @@ set_zram() {
   case "$cur_z" in 1) idx=0 ;; *) idx=1 ;; esac
   ui_menu3 "ZRAM 100%" "Enable 100p" "Disable" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
+
   case "$UI_INDEX" in
     0)
       cur_oc="$(cfg_get ZRAM_EMERALD_OC)"
@@ -294,25 +297,67 @@ set_zram() {
       ui_menu3 "Emerald Hill mode" "Adaptive (recommended)" "Max lock (more power/heat)" "Back" "$oc_idx"
       [ "$UI_REASON" = "timeout" ] && return 0
       case "$UI_INDEX" in
-        0)
-          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set ZRAM_EH_RISK_ACK none; cfg_set LAST_ZRAM_100P enabled_standard
-          msg "- ZRAM: enabled (adaptive EH)"
-        ;;
-        1)
-          cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 1; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set ZRAM_EH_RISK_ACK explicit_user_enable_max_lock; cfg_set LAST_ZRAM_100P enabled_max_lock
-          msg "- ZRAM: enabled (EH max lock; more power/heat)"
-        ;;
+        0) zram_choice=enabled_standard ;;
+        1) zram_choice=enabled_max_lock ;;
         *) msg "Back."; return 0 ;;
       esac
-      if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then msg "- Applying runtime props"; MODDIR="$MODDIR" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1 || true; fi
+
+      if [ ! -r "$ZRAM_LAYOUT" ] ||
+         ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1; then
+        msg "! ZRAM layout materialization failed"
+        msg "! Existing configuration kept"
+        return 0
+      fi
+
+      cfg_set ENABLE_ZRAM_100P 1
+      cfg_set ZRAM_RESTART_MMD 1
+      cfg_set ZRAM_RISK_ACK explicit_user_enable
+      case "$zram_choice" in
+        enabled_max_lock)
+          cfg_set ZRAM_EMERALD_OC 1
+          cfg_set ZRAM_EH_RISK_ACK explicit_user_enable_max_lock
+          cfg_set LAST_ZRAM_100P enabled_max_lock
+          msg "- ZRAM: enabled (EH max lock; more power/heat)"
+        ;;
+        *)
+          cfg_set ZRAM_EMERALD_OC 0
+          cfg_set ZRAM_EH_RISK_ACK none
+          cfg_set LAST_ZRAM_100P enabled_standard
+          msg "- ZRAM: enabled (adaptive EH)"
+        ;;
+      esac
+
+      if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
+        msg "- Applying runtime properties"
+        if ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1; then
+          msg "! Runtime apply failed; reboot path remains configured"
+        fi
+      fi
+      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      msg "- Reboot required for layout guarantee"
     ;;
     1)
-      cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set ZRAM_EH_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled
-      msg "- ZRAM: disabled"; msg "- Reboot recommended"
+      if [ ! -r "$ZRAM_LAYOUT" ] ||
+         ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1; then
+        msg "! ZRAM layout removal failed"
+        msg "! Existing configuration kept"
+        return 0
+      fi
+      cfg_set ENABLE_ZRAM_100P 0
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_RESTART_MMD 0
+      cfg_set ZRAM_RISK_ACK disabled_by_user
+      cfg_set ZRAM_EH_RISK_ACK disabled_by_user
+      cfg_set LAST_ZRAM_100P disabled
+      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      msg "- ZRAM: disabled"
+      msg "- Reboot required"
     ;;
     *) msg "Back."; return 0 ;;
   esac
-  refresh_status; show_status; msg "Back to Settings."
+  refresh_status
+  show_status
+  msg "Back to Settings."
 }
 
 settings_loop() {
@@ -324,7 +369,7 @@ settings_loop() {
 }
 
 ptune_dir() {
-  for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
+  for d in $PTUNE_ROOTS; do
     [ -f "$d/module.prop" ] || continue
     grep -q '^id=ptune$' "$d/module.prop" 2>/dev/null || continue
     echo "$d"; return 0
@@ -435,6 +480,7 @@ toggle_debug_mode() {
     cfg_set LAST_DEBUG_MODE verbose
     msg "Debug logging: verbose"
   fi
+  mark_status_dirty
 }
 
 write_dashboard_performance() {

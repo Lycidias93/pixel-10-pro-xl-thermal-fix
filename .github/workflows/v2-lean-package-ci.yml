@@ -38,6 +38,7 @@ jobs:
           bash -n tests/test-action-thermal-transaction.sh
           bash -n tests/test-outdoor-runtime-evidence.sh
           bash -n tests/test-zram-eh-dev12.sh
+          bash -n tests/test-dev15-menu-matrix.sh
           bash -n tests/test-release-notes-layout.sh
           bash -n tools/bootguard/bootguard-threshold-policy-guard.sh
           bash -n tools/ptune/ptune-install-state-observability-guard.sh
@@ -100,6 +101,12 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-zram-eh-dev12.sh
+
+      - name: Dev.15 menu and helper route matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-dev15-menu-matrix.sh
 
       - name: Outdoor runtime evidence policy
         shell: bash

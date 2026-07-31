@@ -110,7 +110,7 @@ main() {
   setprop vendor.zram.size 100p
   setprop persist.device_config.vendor_system_native_boot.zram_size 100p
   setprop persist.vendor.boot.zram.size 100p
-  setprop ro.lmk.swap_free_low_percentage 1
+  printf '%s\n' 'lmk_swap_low_policy=stock_unmodified'
 
   swappiness="${ZRAM_SWAPPINESS:-100}"
   case "$swappiness" in ''|*[!0-9]*) swappiness=100 ;; *) [ "$swappiness" -le 200 ] 2>/dev/null || swappiness=100 ;; esac
@@ -150,8 +150,9 @@ main() {
   eh_state=adaptive
   if [ -r "$EH_CONTROL" ] &&
      [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
-     [ "${LAST_ZRAM_100P:-}" = enabled ] &&
-     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
+     [ "${LAST_ZRAM_100P:-}" = enabled_max_lock ] &&
+     [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ] &&
+     [ "${ZRAM_EH_RISK_ACK:-}" = explicit_user_enable_max_lock ]; then
     if MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG" sh "$EH_CONTROL" apply; then
       eh_state=max_frequency_lock_active
     else

@@ -86,11 +86,11 @@ fi
 grep -Fq 'lmk_swap_low_policy=stock_unmodified' "$apply"
 grep -Fq 'lmk_swap_low_policy=stock_unmodified' "$service"
 
-grep -Fq 'polling_index=1' "$install_menu"
+grep -Fq 'polling_index=0' "$install_menu"
 grep -Fq 'current_profile=stock' "$install_menu"
-grep -Fq 'zram_index=0' "$install_menu"
+grep -Fq 'zram_index=1' "$install_menu"
 grep -Fq 'ptune_index=1' "$install_menu"
-grep -Fq 'debug_index=0' "$install_menu"
+grep -Fq 'debug_index=1' "$install_menu"
 grep -Fq 'Max lock (more power/heat)' "$install_menu"
 grep -Fq 'Adaptive (recommended)' "$action_dashboard"
 
@@ -107,13 +107,13 @@ if grep -Fq 'while :; do' "$service"; then
   exit 1
 fi
 
-grep -Fq 'version=2.0.0-alpha.3-dev.14' "$module_prop"
-grep -Fq 'versionCode=1016225' "$module_prop"
+grep -Fq 'version=2.0.0-alpha.3-dev.15' "$module_prop"
+grep -Fq 'versionCode=1016226' "$module_prop"
 
 printf '%s\n' 'PASS dev14_physical_eh_alias_deduplication'
 printf '%s\n' 'PASS dev14_migration_safe_duplicate_baseline_restore'
 printf '%s\n' 'PASS dev14_legacy_lock_migrates_to_adaptive'
 printf '%s\n' 'PASS dev14_stock_lmk_policy'
-printf '%s\n' 'PASS dev14_safe_fresh_defaults'
+printf '%s\n' 'PASS dev15_daily_fresh_defaults'
 printf '%s\n' 'PASS dev14_distinct_risk_observability'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV14_EH_SAFETY_TEST_PASS'

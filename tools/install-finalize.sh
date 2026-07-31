@@ -167,6 +167,8 @@ thermal_finalize_install() {
     printf '%s\n' "last_thermal_outdoor_profile=$(config_get LAST_THERMAL_OUTDOOR_PROFILE)"
     printf '%s\n' "last_thermal_polling_mode=$(config_get LAST_THERMAL_POLLING_MODE)"
     printf '%s\n' "last_ptune_override=$(config_get LAST_PTUNE_OVERRIDE)"
+    printf '%s\n' "debug_mode=$(config_get DEBUG_MODE)"
+    printf '%s\n' "last_debug_mode=$(config_get LAST_DEBUG_MODE)"
     printf '%s\n' ""
     printf '%s\n' "expected_thermal_files=${expected_thermal_files:-dynamic_validated}"
     printf '%s\n' "polling_values_changed_by_this_release=stock_300000_to_mod_5000_only"
