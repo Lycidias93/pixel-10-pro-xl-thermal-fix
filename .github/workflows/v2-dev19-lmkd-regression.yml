@@ -56,7 +56,7 @@ jobs:
           grep -Fq 'version=2.0.0-alpha.3-dev.21' module.prop
           grep -Fq 'versionCode=1016232' module.prop
           grep -Fq 'Magisk system `resetprop` first' release-notes/2.0.0-alpha.3-dev.21.md
-          grep -Fq 'lightweight normal boots' release-notes/2.0.0-alpha.3-dev.21.md
+          grep -Fq 'Lightweight normal boots' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'SYSTEM_RESETPROP=' tools/zram/apply-zram-100p.sh
           grep -Fq 'property_writer=' tools/zram/apply-zram-100p.sh
           grep -Fq 'arm-if-needed' post-fs-data.sh
