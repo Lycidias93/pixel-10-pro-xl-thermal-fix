@@ -1,0 +1,179 @@
+name: V2 Dev.17 user-confirmed public prerelease
+
+on:
+  pull_request:
+    branches:
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-dev17:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.ref == 'repo-maintenance/release-v2-alpha3-dev17-user-go-20260731'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: Lycidias93/pixel-10-pro-xl-thermal-fix
+      TARGET_COMMIT: 6297b5fe8a5312b3a593a82c67000bf2f917c7cb
+      TAG_NAME: v2.0.0-alpha.3-dev.17
+      RELEASE_TITLE: 2.0.0 Alpha 3 Dev 17
+      RELEASE_KIND: prerelease
+      VERSION: 2.0.0-alpha.3-dev.17
+      VERSION_CODE: '1016228'
+      ASSET_NAME: pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.17.zip
+      ASSET_SHA256: 3ce56a95fe9d4c2eedcdcad95e985f73296f17bc3afd22eba35c2598416c1662
+      ASSET_BYTES: '324527'
+      NOTES_PATH: release-notes/2.0.0-alpha.3-dev.17-public.md
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: repo-maintenance/release-v2-alpha3-dev17-user-go-20260731
+          fetch-depth: 0
+
+      - name: Install release dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y zip unzip jq
+          gh auth status >/dev/null
+
+      - name: Fail-closed release preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "$REPOSITORY"
+          test -r "$NOTES_PATH"
+          git cat-file -e "$TARGET_COMMIT^{commit}"
+          git merge-base --is-ancestor "$TARGET_COMMIT" HEAD
+          test "$(git show "$TARGET_COMMIT:module.prop" | sed -n 's/^version=//p' | head -n 1)" = "$VERSION"
+          test "$(git show "$TARGET_COMMIT:module.prop" | sed -n 's/^versionCode=//p' | head -n 1)" = "$VERSION_CODE"
+          grep -Fq 'Public Alpha prerelease with the cumulative changes made after `2.0.0-alpha.3-dev.10`.' "$NOTES_PATH"
+          grep -Fq "SHA-256: \`$ASSET_SHA256\`" "$NOTES_PATH"
+          grep -Fq "Verified source commit: \`$TARGET_COMMIT\`" "$NOTES_PATH"
+          jq -e --arg version "$VERSION" --argjson code "$VERSION_CODE" --arg tag "$TAG_NAME" --arg asset "$ASSET_NAME" '
+            .version == $version and
+            .versionCode == $code and
+            .zipUrl == ("https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/" + $tag + "/" + $asset) and
+            .changelog == ("https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/" + $tag)
+          ' update-prerelease.json >/dev/null
+          git diff --exit-code "$TARGET_COMMIT" -- update.json
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+            printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV17_RELEASE_STOP reason=tag_collision'
+            exit 1
+          fi
+          if gh api "repos/$REPOSITORY/releases/tags/$TAG_NAME" >/dev/null 2>&1; then
+            printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV17_RELEASE_STOP reason=release_collision'
+            exit 1
+          fi
+          printf '%s\n' 'PASS release_preflight_no_collision'
+
+      - name: Rebuild exact verified asset from target commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$RUNNER_TEMP/dev17-source"
+          rm -rf "$source_dir"
+          git worktree add --detach "$source_dir" "$TARGET_COMMIT"
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          zip_path="$GITHUB_WORKSPACE/dist/$ASSET_NAME"
+          (
+            cd "$source_dir"
+            chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+            dev_tools/build-release-module.sh "$zip_path" > "$GITHUB_WORKSPACE/dist/build-metadata.txt"
+            dev_tools/verify-release-module.sh "$zip_path"
+          )
+          actual_sha="$(sha256sum "$zip_path" | awk '{print $1}')"
+          actual_bytes="$(wc -c < "$zip_path" | tr -d '[:space:]')"
+          test "$actual_sha" = "$ASSET_SHA256"
+          test "$actual_bytes" = "$ASSET_BYTES"
+          test "$(unzip -p "$zip_path" module.prop | sed -n 's/^version=//p' | head -n 1)" = "$VERSION"
+          test "$(unzip -p "$zip_path" module.prop | sed -n 's/^versionCode=//p' | head -n 1)" = "$VERSION_CODE"
+          unzip -t "$zip_path" >/dev/null
+          printf 'asset_sha256=%s\nasset_bytes=%s\ntarget_commit=%s\n' "$actual_sha" "$actual_bytes" "$TARGET_COMMIT" > dist/release-binding.env
+          git worktree remove --force "$source_dir"
+          printf '%s\n' 'PASS exact_target_asset_rebuilt'
+
+      - name: Create draft, upload, publish, and verify publicly
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_id=''
+          published=no
+          cleanup_release() {
+            cleanup_status=$?
+            trap - EXIT
+            if [ "$cleanup_status" -ne 0 ] && [ "$published" = no ] && [ -n "$release_id" ]; then
+              gh api --method DELETE "repos/$REPOSITORY/releases/$release_id" >/dev/null 2>&1 || true
+              gh api --method DELETE "repos/$REPOSITORY/git/refs/tags/$TAG_NAME" >/dev/null 2>&1 || true
+            fi
+            exit "$cleanup_status"
+          }
+          trap cleanup_release EXIT
+
+          jq -n \
+            --arg tag "$TAG_NAME" \
+            --arg target "$TARGET_COMMIT" \
+            --arg title "$RELEASE_TITLE" \
+            --rawfile body "$NOTES_PATH" \
+            '{tag_name:$tag,target_commitish:$target,name:$title,body:$body,draft:true,prerelease:true}' \
+            > dist/release-create.json
+          gh api --method POST "repos/$REPOSITORY/releases" --input dist/release-create.json > dist/release-created.json
+          release_id="$(jq -r '.id' dist/release-created.json)"
+          test -n "$release_id"
+          test "$(jq -r '.draft' dist/release-created.json)" = true
+          test "$(jq -r '.prerelease' dist/release-created.json)" = true
+
+          gh release upload "$TAG_NAME" "dist/$ASSET_NAME" --repo "$REPOSITORY"
+          gh api "repos/$REPOSITORY/releases/$release_id" > dist/release-draft.json
+          gh api "repos/$REPOSITORY/releases/$release_id/assets" > dist/release-assets-draft.json
+          test "$(jq -r '.draft' dist/release-draft.json)" = true
+          test "$(jq -r '.prerelease' dist/release-draft.json)" = true
+          test "$(jq -r 'length' dist/release-assets-draft.json)" = 1
+          test "$(jq -r '.[0].name' dist/release-assets-draft.json)" = "$ASSET_NAME"
+          test "$(jq -r '.[0].size' dist/release-assets-draft.json)" = "$ASSET_BYTES"
+
+          jq -n '{draft:false,prerelease:true}' > dist/release-publish.json
+          gh api --method PATCH "repos/$REPOSITORY/releases/$release_id" --input dist/release-publish.json > dist/release-published.json
+          test "$(jq -r '.draft' dist/release-published.json)" = false
+          test "$(jq -r '.prerelease' dist/release-published.json)" = true
+          published=yes
+
+          gh api "repos/$REPOSITORY/releases/$release_id" > dist/release-public.json
+          gh api "repos/$REPOSITORY/releases/$release_id/assets" > dist/release-assets-public.json
+          gh api "repos/$REPOSITORY/git/ref/tags/$TAG_NAME" > dist/tag-public.json
+          test "$(jq -r '.tag_name' dist/release-public.json)" = "$TAG_NAME"
+          test "$(jq -r '.name' dist/release-public.json)" = "$RELEASE_TITLE"
+          test "$(jq -r '.draft' dist/release-public.json)" = false
+          test "$(jq -r '.prerelease' dist/release-public.json)" = true
+          test "$(jq -r '.object.sha' dist/tag-public.json)" = "$TARGET_COMMIT"
+          jq -r '.body' dist/release-public.json > dist/release-body-public.md
+          cmp -s "$NOTES_PATH" dist/release-body-public.md
+          test "$(jq -r 'length' dist/release-assets-public.json)" = 1
+          test "$(jq -r '.[0].name' dist/release-assets-public.json)" = "$ASSET_NAME"
+          test "$(jq -r '.[0].size' dist/release-assets-public.json)" = "$ASSET_BYTES"
+          public_url="$(jq -r '.[0].browser_download_url' dist/release-assets-public.json)"
+          curl --fail --location --silent --show-error --retry 3 "$public_url" --output dist/public-download.zip
+          test "$(sha256sum dist/public-download.zip | awk '{print $1}')" = "$ASSET_SHA256"
+          test "$(wc -c < dist/public-download.zip | tr -d '[:space:]')" = "$ASSET_BYTES"
+          printf 'release_url=%s\n' "$(jq -r '.html_url' dist/release-public.json)" >> dist/release-binding.env
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV17_PUBLIC_PRERELEASE_PASS'
+
+      - name: Upload release verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-dev17-public-release-evidence-${{ github.sha }}
+          path: |
+            dist/release-binding.env
+            dist/build-metadata.txt
+            dist/release-public.json
+            dist/release-assets-public.json
+            dist/tag-public.json
+            dist/release-body-public.md
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
