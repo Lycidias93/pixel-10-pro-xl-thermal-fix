@@ -1,3 +1,75 @@
+# 2.0.0-alpha.3-dev.18
+
+Unreleased V2 source hardening and `main` promotion preparation; no tag, release asset, or update-channel change.
+
+- Keeps adaptive Emerald Hill as the daily default.
+- Moves the optional max-frequency minimum lock to Advanced and labels it experimental because higher heat and battery use are expected.
+- Adds a bounded persistent EH event log with boot ID, caller, original minimum, observed maximum, target, readback, node count and alias count.
+- Exposes recent EH events from the Debug menu.
+- Retains one-shot post-Bootguard application and rejects an unbounded service watcher.
+- Preserves stock LMK policy; Harish's early post-fs-data LMKD proposal is retained as a future validation candidate, not a default claim.
+- Makes V2 CI run for both `v2` and `main` pull requests and marks static V1 profiles EOL.
+
+# 2.0.0-alpha.3-dev.17
+
+Public Alpha prerelease with the cumulative changes since public dev.10. Exact asset: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.17.zip`, SHA-256 `3ce56a95fe9d4c2eedcdcad95e985f73296f17bc3afd22eba35c2598416c1662`, 324527 bytes.
+
+- Preserves complete install-time evidence while merging current boot/runtime state.
+- Separates canonical `profile_state` from `runtime_profile_state` instead of replacing one contract with the other.
+- Keeps intentional Thermal choices such as Outdoor Extended valid in post-reboot verification.
+- Preserves pTune, ZRAM, Emerald Hill and debug observability across auto-profile refreshes.
+- Makes unchanged subsequent boots idempotent.
+- Adds a cumulative next-public-prerelease changelog covering every private change since public dev.10.
+
+# 2.0.0-alpha.3-dev.16
+
+- Keeps dev.15 daily install defaults and the complete installer/Action route matrix.
+- Treats the already packaged identical ZRAM fstab as an idempotent no-op during Magisk staging.
+- Verifies temporary and final ZRAM layout content before committing a replacement.
+- Preserves detailed ZRAM materializer failure evidence in `guard/install-zram-layout.log`.
+- Fixes packaged-debug helper variable collisions that compounded destination paths.
+- Adds a regression fixture that blocks replacement of existing files to reproduce the Mustang install failure.
+
+# 2.0.0-alpha.3-dev.15
+
+- Makes Polling Mod, adaptive ZRAM 100p and verbose logging the Fresh install defaults.
+- Adds complete installer/Action menu route verification including Back and timeout behavior.
+- Makes ZRAM layout changes transactional across Action, install and standalone helpers.
+- Preserves unrelated config when disabling pTune override.
+- Removes stale LMK/EH behavior from the manual reinit and fallback menu paths.
+
+# 2.0.0-alpha.3-dev.14
+
+Private corrective test build; no tag, release asset, or update-channel change.
+
+- Deduplicates physical Emerald Hill devfreq aliases and records one baseline per device.
+- Restores legacy dev.13 duplicate baselines using the first true original minimum.
+- Makes adaptive Emerald Hill behavior the safe default and gates the optional maximum-frequency minimum lock separately.
+- Removes the unverified late LMK swap-low override and records stock platform policy.
+- Makes Fresh installer choices genuinely safe and separates pTune, ZRAM, and EH risk evidence.
+- Adds dev.14 regression CI and status schema v2.
+
+# V2 Alpha post-release validation status
+
+- Records Blazer / Android 17 stable community runtime PASS confirmed by Harish / Codecity001.
+- Removes Blazer from the open V2 Alpha validation targets.
+- Adds a living validation plan and explicit Alpha 2 versus Beta 1 decision gate.
+- Exact Blazer build-ID and debug-bundle capture remain evidence hardening, not a PASS blocker.
+- Keeps the released Alpha 1 tag, ZIP, module metadata and both update channels unchanged.
+
+# 1.5.2-universal-v2-alpha.1
+
+Public V2 alpha pre-release.
+
+- Promotes build-keyed stock-source dynamic thermal materialization for tester validation.
+- Controls only thermal_info_config.json, thermal_info_config_charge.json and thermal_info_config_throttling.json.
+- Preserves the remaining vendor thermal files at stock values, following Harish / Codecity001 real-world logging feedback.
+- Adds source, patch, validation-report and active-vendor value verification.
+- Records Mustang / CP2A.260705.006 runtime PASS with Stock Thermal, Polling Mod, 22 x 5000, pTune disabled and module ZRAM disabled.
+- Restores the Action update-channel switch for optional V2 alpha updates.
+- Keeps stable update.json unchanged on 1.5.1-universal.1.
+- Blazer, frankel, rango, Canary/ZP and ZRAM 100p remain separate alpha validation targets.
+
 # Factory image SSD2 canonical root
 
 - Documents /ssd2/pixel-thermal-factory as the canonical factory image and thermal stock-intake root.

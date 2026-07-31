@@ -1,0 +1,47 @@
+name: V2 Dev.17 state preservation regression
+
+on:
+  pull_request:
+    branches:
+      - main
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dev17-state-preservation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preserve install evidence across runtime refresh
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tools/core/auto-profile-switch.sh
+          bash -n tools/install-finalize.sh
+          bash -n tests/test-dev17-state-preservation.sh
+          bash tests/test-dev17-state-preservation.sh
+
+      - name: Preserve prior corrective contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-dev16-install-regression.sh
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev14-eh-safety.sh
+          bash tests/test-zram-eh-dev12.sh
+          bash tools/ptune/ptune-install-state-observability-guard.sh
+
+      - name: Verify cumulative public prerelease draft
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Baseline: `2.0.0-alpha.3-dev.10`' release-notes/public-prerelease-next-since-dev.10.md
+          grep -Fq 'explicit fresh release GO' release-notes/public-prerelease-next-since-dev.10.md
+          grep -Fq 'public-prerelease-next-since-dev.10.md' release-notes/README.md
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV17_STATE_CI_PASS'

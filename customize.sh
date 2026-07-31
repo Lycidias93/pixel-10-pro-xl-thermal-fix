@@ -1,324 +1,212 @@
 #!/system/bin/sh
 SKIPUNZIP=0
+
 MODULE_ID="pixel-10-pro-xl-thermal-fix"
 MODULE_PROP="${MODPATH:-.}/module.prop"
+MODULE_VERSION=""
+MODULE_VERSION_CODE=""
+
 if [ -r "$MODULE_PROP" ]; then
   MODULE_VERSION="$(sed -n 's/^version=//p' "$MODULE_PROP" | head -n 1)"
   MODULE_VERSION_CODE="$(sed -n 's/^versionCode=//p' "$MODULE_PROP" | head -n 1)"
 fi
-[ -n "$MODULE_VERSION" ] || MODULE_VERSION="1.5.2-universal-test.3"
-[ -n "$MODULE_VERSION_CODE" ] || MODULE_VERSION_CODE="1016203"
-A16_PROFILE_SOURCE_BUILD="CP1A.260505.005"
-A17_CP31_PROFILE_SOURCE_BUILD="CP31.260618.005"
-A17_CP31_PROFILE_SOURCE_INCREMENTAL="pending_exact_incremental"
-A17_CP31_EXPECTED_FINGERPRINT="pending_exact_fingerprint"
-A17_CP31_QPR1B4_PROFILE_SOURCE_BUILD="CP31.260522.006"
-A17_CP31_QPR1B4_PROFILE_SOURCE_INCREMENTAL="15591510"
-A17_CP31_QPR1B4_EXPECTED_FINGERPRINT="google/mustang_beta/mustang:CinnamonBun/CP31.260522.006/15591510:user/release-keys"
-A17_CP21_PROFILE_SOURCE_BUILD="CP21.260330.011"
-A17_STABLE_CP2A_PROFILE_SOURCE_BUILD="CP2A.260605.012"
-A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL="15430684"
-A17_STABLE_CP2A_SOURCE_REPORT_SHA256="a17_pixel10_thermal_ptune_magisk_stable_v3_factory_extract"
+[ -n "$MODULE_VERSION" ] || MODULE_VERSION="unknown"
+[ -n "$MODULE_VERSION_CODE" ] || MODULE_VERSION_CODE="0"
 
-ui_print "----------------------------------------"
-ui_print "  A17 Thermal Throttle Fix profile installer"
-ui_print "----------------------------------------"
-ui_print "SELinux read-only policy"
+if [ -s "${MODPATH:-.}/tools/menu/menu-cycle.sh" ]; then
+  . "${MODPATH:-.}/tools/menu/menu-cycle.sh"
+else
+  mc_rule() { ui_print "----------------------------------------"; }
+fi
+
+mc_rule
+ui_print "  Pixel 10 Thermal & Memory Control"
+mc_rule
 case "$MODULE_VERSION" in
-  *-test.*) ui_print "Prerelease: $MODULE_VERSION" ;;
+  *-test.*|*alpha*|*beta*|*rc*|*candidate*) ui_print "Prerelease: $MODULE_VERSION" ;;
   *) ui_print "Release: $MODULE_VERSION" ;;
 esac
-ui_print "Stable channel: 1.5.1"
+ui_print "Dynamic stock-derived thermal validation"
 
-model="$(getprop ro.product.model)"
-device="$(getprop ro.product.device)"
-android="$(getprop ro.build.version.release)"
-android_sdk="$(getprop ro.build.version.sdk)"
-build_id="$(getprop ro.build.id)"
-fingerprint="$(getprop ro.build.fingerprint)"
-incremental="$(getprop ro.build.version.incremental)"
+model="$(getprop ro.product.model 2>/dev/null || true)"
+device="$(getprop ro.product.device 2>/dev/null || true)"
+android="$(getprop ro.build.version.release 2>/dev/null || true)"
+android_sdk="$(getprop ro.build.version.sdk 2>/dev/null || true)"
+build_id="$(getprop ro.build.id 2>/dev/null || true)"
+fingerprint="$(getprop ro.build.fingerprint 2>/dev/null || true)"
+incremental="$(getprop ro.build.version.incremental 2>/dev/null || true)"
 
 root_impl="unknown"
 su_v="$(su -v 2>/dev/null || true)"
 su_V="$(su -V 2>/dev/null || true)"
-case "$su_v $su_V" in
+magisk_v="$(magisk -v 2>/dev/null || true)"
+case "$su_v $su_V $magisk_v" in
   *SukiSU*|*sukisu*|*ksud*) root_impl="sukisu" ;;
   *KernelSU*Next*|*ksu-next*|*KSU-Next*) root_impl="kernelsu_next" ;;
   *KernelSU*|*ksu*) root_impl="kernelsu" ;;
-  *Magisk*|*magisk*) root_impl="magisk" ;;
+  *Magisk*|*magisk*|*MAGISKSU*) root_impl="magisk" ;;
   *APatch*|*apatch*) root_impl="apatch" ;;
 esac
+[ "$root_impl" != unknown ] || [ ! -d /data/adb/magisk ] || root_impl="magisk"
+
 mount_backend_hint="none"
-if find /data/adb /debug_ramdisk /sbin -maxdepth 5 \( -iname '*hybrid*mount*' -o -iname '*mountify*' -o -iname '*metamodule*' -o -iname '*meta-module*' \) 2>/dev/null | head -1 | grep -q .; then
+if find /data/adb /debug_ramdisk /sbin -maxdepth 5 \
+  \( -iname '*hybrid*mount*' -o -iname '*mountify*' -o -iname '*metamodule*' -o -iname '*meta-module*' \) \
+  2>/dev/null | head -1 | grep -q .; then
   mount_backend_hint="overlay_backend_present"
 fi
 root_backend_guard_mode="log_only_no_block"
 
-# BEGIN PIXEL_THERMAL_INSTALL_DEBUG_AUTOSAVE_V1411
-if [ -s "$MODPATH/tools/install-debug.sh" ]; then
-  chmod 0755 "$MODPATH/tools/install-debug.sh" 2>/dev/null || true
-  . "$MODPATH/tools/install-debug.sh"
+if [ -s "$MODPATH/tools/debug/install-debug.sh" ]; then
+  chmod 0755 "$MODPATH/tools/debug/install-debug.sh" 2>/dev/null || true
+  . "$MODPATH/tools/debug/install-debug.sh"
 else
   ui_print "! Install debug missing"
-ui_print "! Autosave disabled"
   thermal_save_install_debug() { :; }
   thermal_collect_debug_on_fail() { :; }
   thermal_abort() { abort "$*"; }
 fi
-# END PIXEL_THERMAL_INSTALL_DEBUG_AUTOSAVE_V1411
 
-
-
-ui_print "- Device: $model ($device)"
-ui_print "- Android: $android (SDK $android_sdk)"
-ui_print "- Build: $build_id"
+ui_print "- Device: ${model:-unknown} (${device:-unknown})"
+ui_print "- Android: ${android:-unknown} (SDK ${android_sdk:-unknown})"
+ui_print "- Build: ${build_id:-unknown}"
 ui_print "- Root: $root_impl"
-
-
 
 CONFIG_DIR="/data/adb/$MODULE_ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
+
 config_get() {
   key="$1"
   [ -r "$CONFIG_FILE" ] || return 0
   grep -E "^${key}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${key}=//" | tr -d '\r'
 }
-# BEGIN CANARY_DIAGNOSTIC_NO_OVERLAY_V152T7
-case "$build_id:$fingerprint" in
-  ZP*:*|*:*/ZP*|*:CANARY/*)
-    ui_print "! Canary/ZP diagnostic mode"
-    ui_print "! No thermal overlay, no ZRAM, no Outdoor profile"
-    android_guard="android17_canary_diagnostic_pass"
-    fingerprint_android_guard="canary_zp_diagnostic_guard"
-    incremental_guard="canary_zp_recorded_$incremental"
-    profile="diagnostic/no-overlay"
-    profile_state="canary_zp_diagnostic_no_overlay_no_zram"
-    build_state="canary_zp_${device}_${build_id}_${incremental}_diagnostic_no_overlay_no_zram"
-    profile_source_android="17"
-    profile_source_build="none_diagnostic"
-    profile_source_incremental="none_diagnostic"
-    source_report_sha256="canary_diagnostic_no_overlay_no_zram"
-    profile_dir="none"
-    active_dir="none"
-    PTUNE_GUARD_MODE="diagnostic"
-    PTUNE_INSTALLED_PATH="unset"
-    PTUNE_ACTIVE_PATH="unset"
-    PTUNE_CONFLICT_PATH="unset"
-    PTUNE_CONFLICT_MODE="diagnostic_no_overlay"
-    PTUNE_OVERRIDE_ALLOWED="0"
-    PTUNE_KNOWN_BAD="not_checked_diagnostic"
-    PTUNE_RISK_ACK_STATE="not_applicable_diagnostic"
-    PTUNE_OVERRIDE_NAME="none"
-    THERMAL_OUTDOOR_PROFILE="stock"
-    mkdir -p "$CONFIG_DIR" "$MODPATH/guard"
-    {
-      echo "DEBUG_MODE=1"
-      echo "debug_mode=1"
-      echo "ENABLE_ZRAM_100P=0"
-      echo "ZRAM_RESTART_MMD=0"
-      echo "ZRAM_RISK_ACK=diagnostic_disabled"
-      echo "THERMAL_OUTDOOR_PROFILE=stock"
-      echo "THERMAL_OUTDOOR_TARGET=stock"
-      echo "THERMAL_SETTINGS_MODE=canary_diagnostic"
-      echo "THERMAL_SAFETY_LEVEL=normal"
-      echo "THERMAL_POLLING_MODE=stock"
-      echo "THERMAL_POLLING_EFFECTIVE=stock"
-      echo "BOOTGUARD_FAIL_THRESHOLD=1"
-      echo "CANARY_DIAGNOSTIC_MODE=1"
-    } > "$CONFIG_FILE"
-    rm -rf "$MODPATH/system"
-    if [ -s "$MODPATH/tools/preinstall-debug.sh" ]; then
-      chmod 0755 "$MODPATH/tools/preinstall-debug.sh" 2>/dev/null || true
-      MODULE_VERSION="$MODULE_VERSION" MODULE_VERSION_CODE="$MODULE_VERSION_CODE" sh "$MODPATH/tools/preinstall-debug.sh" install || true
-    fi
-    {
-      echo "module_id=$MODULE_ID"
-      echo "module_version=$MODULE_VERSION"
-      echo "module_version_code=$MODULE_VERSION_CODE"
-      echo "device=$device"
-      echo "profile=$profile"
-      echo "profile_state=$profile_state"
-      echo "build_state=$build_state"
-      echo "android=$android"
-      echo "android_sdk=$android_sdk"
-      echo "build_id=$build_id"
-      echo "incremental=$incremental"
-      echo "android_guard=$android_guard"
-      echo "fingerprint_android_guard=$fingerprint_android_guard"
-      echo "incremental_guard=$incremental_guard"
-      echo "profile_source_android=$profile_source_android"
-      echo "profile_source_build=$profile_source_build"
-      echo "profile_source_incremental=$profile_source_incremental"
-      echo "source_report_sha256=$source_report_sha256"
-      echo "profile_materialized=no"
-      echo "overlay_materializer=canary_diagnostic_no_overlay_v152t7"
-      echo "active_overlay_dir=none"
-      echo
-      echo "zram_fstab_materialized=no"
-      echo "zram_feature=disabled_canary_diagnostic"
-      echo "zram_apply_stage=disabled"
-      echo "thermal_outdoor_profile=stock"
-      echo "thermal_outdoor_target=stock"
-      echo "thermal_polling_mode=stock"
-      echo "thermal_polling_effective=stock"
-      echo "debug_collector=canary_preinstall_debug_v152t7"
-      echo "debug_zip_target=/sdcard/Download/pixel_thermal_canary_diagnostic_*.tgz"
-    } > "$MODPATH/install-state.txt"
-    thermal_save_install_debug "success" "canary_diagnostic_no_overlay_no_zram"
-    ui_print "- Diagnostic install-state written"
-    ui_print "- Debug TGZ: /sdcard/Download/pixel_thermal_canary_diagnostic_*.tgz"
-    ui_print "- Reboot test: safe diagnostic, no overlay"
-    exit 0
-  ;;
-esac
-# END CANARY_DIAGNOSTIC_NO_OVERLAY_V152T7
-# BEGIN PIXEL_THERMAL_INSTALL_OPTIONS_MENU_V1413_TEST17
-if [ -s "$MODPATH/tools/install-options-menu.sh" ]; then
-  chmod 0755 "$MODPATH/tools/menu-cycle.sh" "$MODPATH/tools/install-options-menu.sh" 2>/dev/null || true
-  MODULE_ID="$MODULE_ID" MODDIR="$MODPATH" sh "$MODPATH/tools/install-options-menu.sh" install || ui_print "! Install options menu failed nonfatal; using current config/defaults"
+
+config_set() {
+  key="$1"
+  value="$2"
+  mkdir -p "$CONFIG_DIR" 2>/dev/null || true
+  touch "$CONFIG_FILE" 2>/dev/null || true
+  tmp="$CONFIG_FILE.tmp.$$"
+  grep -v "^${key}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
+  printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  mv "$tmp" "$CONFIG_FILE"
+  chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
+}
+
+ZRAM_NORMALIZE="$MODPATH/tools/zram/config-normalize.sh"
+if [ -s "$ZRAM_NORMALIZE" ]; then
+  chmod 0755 "$ZRAM_NORMALIZE" 2>/dev/null || true
+  ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_NORMALIZE" >/dev/null 2>&1 ||
+    ui_print "! ZRAM config normalization failed; optional EH lock remains unavailable"
+fi
+
+if [ -s "$MODPATH/tools/menu/install-options-menu.sh" ]; then
+  chmod 0755 "$MODPATH/tools/menu/menu-cycle.sh" "$MODPATH/tools/menu/install-options-menu.sh" 2>/dev/null || true
+  MODULE_ID="$MODULE_ID" MODDIR="$MODPATH" sh "$MODPATH/tools/menu/install-options-menu.sh" install ||
+    ui_print "! Install options menu failed; using current config/defaults"
 else
   ui_print "! Options menu missing"
-ui_print "! Using current/defaults"
+  ui_print "! Using current/defaults"
 fi
-# END PIXEL_THERMAL_INSTALL_OPTIONS_MENU_V1413_TEST17
 
-# BEGIN PIXEL_THERMAL_PTUNE_GUARD_HELPER_V1413_TEST22
-if [ -s "$MODPATH/tools/ptune-guard.sh" ]; then
-  chmod 0755 "$MODPATH/tools/ptune-guard.sh" 2>/dev/null || true
-  . "$MODPATH/tools/ptune-guard.sh"
+if [ -s "$ZRAM_NORMALIZE" ]; then
+  ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_NORMALIZE" >/dev/null 2>&1 || true
+fi
+
+if [ -s "$MODPATH/tools/ptune/ptune-guard.sh" ]; then
+  chmod 0755 "$MODPATH/tools/ptune/ptune-guard.sh" 2>/dev/null || true
+  . "$MODPATH/tools/ptune/ptune-guard.sh"
 else
   thermal_abort "! pTune guard helper missing"
 fi
-# END PIXEL_THERMAL_PTUNE_GUARD_HELPER_V1413_TEST22
 
-if [ -n "$PTUNE_INSTALLED_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" = "1" ]; then
-  ui_print "! OVERRIDE active"
-ui_print "! Thermal allowed with pTune"
-  ui_print "! Risk ack accepted"
-  [ "$PTUNE_KNOWN_BAD" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
+if [ -n "${PTUNE_INSTALLED_PATH:-}" ] && [ "${PTUNE_OVERRIDE_ALLOWED:-0}" = "1" ]; then
+  ui_print "! pTune override active"
+  ui_print "! Thermal coexistence risk acknowledged"
+  [ "${PTUNE_KNOWN_BAD:-no}" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
 fi
-case "$android" in
-  16|16.*)
-    android_guard="android16_pass"
-    case "$fingerprint" in *":16/"*) fingerprint_android_guard="fingerprint_android16_pass" ;; *) thermal_abort "! Fingerprint does not identify Android 16 build: $fingerprint" ;; esac
-    profile_source_android="16"; profile_source_build="$A16_PROFILE_SOURCE_BUILD"; profile_source_incremental="not_applicable"; source_report_sha256="factory_android16_profile_set"
-    case "$build_id" in "$A16_PROFILE_SOURCE_BUILD") build_family="android16_cp1a_260505_005" ;; *) build_family="android16_unverified_build"; ui_print "! Android 16 build differs from source build: $build_id" ;; esac
-    case "$device" in
-      mustang) profile="mustang"; profile_state="verified_android16_mustang"; case "$fingerprint" in google/mustang/mustang:16/CP1A.260505.005/15081906:user/release-keys) build_state="verified_build" ;; *) build_state="new_or_unverified_mustang_android16_build" ;; esac ;;
-      blazer) profile="blazer"; profile_state="verified_android16_blazer"; build_state="${build_family}_blazer_runtime_verified"; ui_print "Blazer Android 16 has runtime PASS evidence" ;;
-      frankel) profile="frankel"; profile_state="beta_pending_live_verification"; build_state="${build_family}_frankel_beta"; ui_print "! Frankel Android 16 pending live verification" ;;
-      rango) profile="rango"; profile_state="beta_pending_live_verification"; build_state="${build_family}_rango_beta"; ui_print "! Rango Android 16 pending live verification" ;;
-      *) thermal_abort "! Unsupported Pixel 10 Android 16 device codename: $device" ;;
-    esac
-    ;;
-  17|17.*)
-    android_guard="android17_pass"
-    build_guard_mode="android_major_only_unverified_build_allowed"
-    profile_source_android="17"
-    source_report_sha256="factory_android17_major_guard_test"
-    fingerprint_android_guard="android17_major_only_not_exact_build_guard"
-    incremental_guard="recorded_unverified_incremental_$incremental"
-    case "$device" in
-      mustang)
-        case "$build_id" in
-          CP31.*)
-            profile="mustang/17/cp31/cp31260618005/base"
-            profile_state="android17_cp31_major_guard_test_pending_live_verification"
-            build_state="android17_mustang_${build_id}_${incremental}_major_guard_test_using_cp31_profile"
-            profile_source_build="$A17_CP31_PROFILE_SOURCE_BUILD"
-            profile_source_incremental="$A17_CP31_PROFILE_SOURCE_INCREMENTAL"
-            ;;
-          CP21.*)
-            profile="mustang/17/cp21/cp21260330011/base"
-            profile_state="android17_cp21_major_guard_test_pending_live_verification"
-            build_state="android17_mustang_${build_id}_${incremental}_major_guard_test_using_cp21_profile"
-            profile_source_build="$A17_CP21_PROFILE_SOURCE_BUILD"
-            profile_source_incremental="$incremental"
-            ;;
-          *)
-            profile="mustang/17/stable/cp2a-260605012/base"
-            profile_state="android17_stable_major_guard_test_mustang_runtime_verified_baseline"
-            build_state="android17_mustang_${build_id}_${incremental}_major_guard_test_using_cp2a_profile"
-            profile_source_build="$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD"
-            profile_source_incremental="$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL"
-            source_report_sha256="$A17_STABLE_CP2A_SOURCE_REPORT_SHA256"
-            ;;
-        esac
-        ;;
-      blazer|frankel|rango)
-        case "$build_id" in
-          CP21.*)
-            profile="${device}/17/cp21/cp21260330011/base"
-            profile_state="android17_cp21_major_guard_test_pending_live_verification"
-            build_state="android17_${device}_${build_id}_${incremental}_major_guard_test_using_cp21_profile"
-            profile_source_build="$A17_CP21_PROFILE_SOURCE_BUILD"
-            profile_source_incremental="$incremental"
-            ;;
-          *)
-            profile="${device}/17/stable/cp2a-260605012/base"
-            profile_state="android17_stable_major_guard_test_${device}_pending_live_verification"
-            build_state="android17_${device}_${build_id}_${incremental}_major_guard_test_using_cp2a_profile"
-            profile_source_build="$A17_STABLE_CP2A_PROFILE_SOURCE_BUILD"
-            profile_source_incremental="$A17_STABLE_CP2A_PROFILE_SOURCE_INCREMENTAL"
-            source_report_sha256="$A17_STABLE_CP2A_SOURCE_REPORT_SHA256"
-            ;;
-        esac
-        ;;
-      *) thermal_abort "! Unsupported Pixel 10 Android 17 device codename: $device" ;;
-    esac
-    ui_print "! A17 relaxed build guard"
-ui_print "! Build: $build_id"
-ui_print "! Inc: $incremental"
-    ui_print "! Profile: A17 + codename"
-ui_print "! Codename: $device"
-    ;;
-  *) thermal_abort "! Unsupported Android version: $android. This stable build supports Android 16 and guarded Android 17 CP31/CP21/Stable CP2A profiles." ;;
-esac
 
-profile_dir="$MODPATH/profiles/$profile/system/vendor/etc"
-if [ ! -s "$profile_dir/thermal_info_config_throttling.json" ]; then
-  if [ -s "$MODPATH/$profile/thermal_info_config_throttling.json" ]; then
-    profile_dir="$MODPATH/$profile"
-  elif [ -s "$MODPATH/profiles/$profile/thermal_info_config_throttling.json" ]; then
-    profile_dir="$MODPATH/profiles/$profile"
+SUPPORTED_JSON="$MODPATH/supported_versions.json"
+SUPPORTED_HELPER="$MODPATH/tools/core/supported-build.sh"
+[ -r "$SUPPORTED_HELPER" ] || thermal_abort "! supported-build helper missing"
+. "$SUPPORTED_HELPER"
+thermal_supported_validate_file "$SUPPORTED_JSON" || thermal_abort "! supported_versions.json is invalid"
+
+THERMAL_INSTALL_ENABLED=0
+build_evidence="unsupported_platform"
+
+if thermal_supported_platform_check "$SUPPORTED_JSON" "$device" "$android"; then
+  THERMAL_INSTALL_ENABLED=1
+  if thermal_exact_build_check "$SUPPORTED_JSON" "$device" "$android" "$build_id"; then
+    build_evidence="exact_verified"
+    ui_print "- Build evidence: exact verified"
+  else
+    build_evidence="dynamic_unverified"
+    ui_print "- Build evidence: new/unlisted"
+    ui_print "- Admission: local stock structure + diff validation"
   fi
+  config_set THERMAL_DISABLED 0
+  config_set CANARY_DIAGNOSTIC_MODE 0
+else
+  config_set THERMAL_DISABLED 1
+  ui_print "! Unsupported device or Android version"
+  ui_print "- Thermal files will not be installed"
+  ui_print "- ZRAM remains available"
 fi
 
-# BEGIN PIXEL_THERMAL_INSTALL_OVERLAY_HELPER_V1413_TEST27
-if [ -s "$MODPATH/tools/install-thermal-overlay.sh" ]; then
-  chmod 0755 "$MODPATH/tools/install-thermal-overlay.sh" 2>/dev/null || true
-  . "$MODPATH/tools/install-thermal-overlay.sh"
+config_set THERMAL_BUILD_EVIDENCE "$build_evidence"
+config_set THERMAL_BUILD_ID "$build_id"
+if [ "$build_evidence" = dynamic_unverified ]; then
+  config_set DYNAMIC_UNVERIFIED_BUILD 1
+else
+  config_set DYNAMIC_UNVERIFIED_BUILD 0
+fi
+
+android_guard="android${android}_pass"
+fingerprint_android_guard="fingerprint_android${android}_pass"
+profile_source_android="$android"
+profile_source_build="$build_id"
+profile_source_incremental="$incremental"
+source_report_sha256="dynamic_patching_validated"
+build_state="dynamic_${device}_${build_id}_${incremental}"
+build_guard_mode="dynamic_local_validation"
+
+if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
+  profile_state="dynamic_stock_validated_${build_evidence}"
+  profile="dynamic/${device}/android${android}"
+  profile_materialized=yes
+  expected_thermal_files=dynamic_validated
+else
+  profile_state="thermal_disabled_unsupported_platform"
+  profile="dynamic/unsupported-platform"
+  profile_materialized=no
+  expected_thermal_files=0
+fi
+active_dir="$MODPATH/system/vendor/etc"
+
+if [ -s "$MODPATH/tools/core/install-thermal-overlay.sh" ]; then
+  chmod 0755 "$MODPATH/tools/core/install-thermal-overlay.sh" 2>/dev/null || true
+  . "$MODPATH/tools/core/install-thermal-overlay.sh"
   thermal_install_overlay
 else
   thermal_abort "! Thermal overlay install helper missing"
 fi
-# END PIXEL_THERMAL_INSTALL_OVERLAY_HELPER_V1413_TEST27
 
-# BEGIN PIXEL_THERMAL_POLLING_MODE_V1413_TEST17
-if [ -s "$MODPATH/tools/apply-polling-mode.sh" ]; then
-  chmod 0755 "$MODPATH/tools/apply-polling-mode.sh" 2>/dev/null || true
-  BASE_PROFILE="$base_profile" ACTIVE_DIR="$active_dir" MODDIR="$MODPATH" CONFIG_FILE="$CONFIG_FILE" sh "$MODPATH/tools/apply-polling-mode.sh" install || ui_print "! Polling mode helper failed nonfatal; keeping materialized profile polling"
-else
-  ui_print "! Polling helper missing"
-ui_print "! Keeping profile polling"
-fi
-# END PIXEL_THERMAL_POLLING_MODE_V1413_TEST17
-
-# BEGIN PIXEL_THERMAL_INSTALL_ZRAM_HELPER_V1413_TEST25
-if [ -s "$MODPATH/tools/install-zram.sh" ]; then
-  chmod 0755 "$MODPATH/tools/install-zram.sh" 2>/dev/null || true
-  . "$MODPATH/tools/install-zram.sh"
+if [ -s "$MODPATH/tools/zram/install-zram.sh" ]; then
+  chmod 0755 "$MODPATH/tools/zram/install-zram.sh" 2>/dev/null || true
+  . "$MODPATH/tools/zram/install-zram.sh"
   thermal_install_zram
 else
   ui_print "! ZRAM helper missing"
-ui_print "! Keeping safe config"
+  ui_print "! Keeping safe config"
 fi
-# END PIXEL_THERMAL_INSTALL_ZRAM_HELPER_V1413_TEST25
 
+if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
+  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
+    [ -s "$MODPATH/system/vendor/etc/$f" ] || thermal_abort "! Failed to materialize active file: $f"
+  done
+fi
 
-for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do [ -s "$active_dir/$f" ] || thermal_abort "! Failed to materialize active file: $f"; done
-
-# BEGIN PIXEL_THERMAL_INSTALL_FINALIZE_HELPER_V1413_TEST24
 if [ -s "$MODPATH/tools/install-finalize.sh" ]; then
   chmod 0755 "$MODPATH/tools/install-finalize.sh" 2>/dev/null || true
   . "$MODPATH/tools/install-finalize.sh"
@@ -326,15 +214,22 @@ if [ -s "$MODPATH/tools/install-finalize.sh" ]; then
 else
   thermal_abort "! Install finalize helper missing"
 fi
-# END PIXEL_THERMAL_INSTALL_FINALIZE_HELPER_V1413_TEST24
+
+# Add dynamic evidence without duplicating the finalizer.
+if [ -s "$MODPATH/install-state.txt" ]; then
+  printf '%s\n' "build_guard_mode=$build_guard_mode" >> "$MODPATH/install-state.txt"
+  printf '%s\n' "build_evidence=$build_evidence" >> "$MODPATH/install-state.txt"
+fi
 
 thermal_save_install_debug "success" "install_completed"
 ui_print "- Target validation: PASS"
-ui_print "- Thermal fix applied"
+if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
+  ui_print "- Thermal overlay materialized"
+else
+  ui_print "- Thermal safely disabled for this platform"
+fi
 ui_print "- Android: $android"
 
-
-# ZRAM_HELPER_CHMOD_V1412_TEST2: keep helper scripts executable for direct Magisk/KSU shell use.
 if [ -d "$MODPATH/tools" ]; then
-  chmod 0755 "$MODPATH"/tools/*.sh "$MODPATH"/tools/resetprop-rs 2>/dev/null || true
+  chmod -R 0755 "$MODPATH/tools" 2>/dev/null || true
 fi

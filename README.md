@@ -1,319 +1,321 @@
 # Pixel 10 Thermal & Memory Control
 
-**Magisk module for Pixel 10-series thermal profiles, dynamic manager status, Action settings, and optional ZRAM 100p.**
+**Magisk module for guarded Pixel 10 thermal profiles, local dynamic build admission, Action settings, Bootguard, and optional ZRAM 100p.**
 
-Stable **1.5.1-universal.1** promotes the verified Test7 dynamic manager Ampel/Action dashboard line on top of Stable 1.5: P/T/Z status with active values, Settings/Debug/Advanced menus, pTune status consistency, profile-matrix verification, and ZRAM 100p runtime proof.
+[Download latest release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
-[Download latest release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](RELEASE_NOTES_v1.5.1-universal.1.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+## Channels and current Alpha status
 
----
+| Lane | Version | Status |
+|---|---|---|
+| Stable | `1.5.1-universal.1` / `1016108` | Public stable channel; unchanged |
+| Public Alpha prerelease | `2.0.0-alpha.3-dev.17` / `1016228` | Latest public Alpha; exact Mustang install, postboot, Thermal, ZRAM, Emerald Hill, Bootguard, and install-state verification PASS |
+| Current V2 source | `2.0.0-alpha.3-dev.18` / `1016229` | Unreleased source hardening for EH UX/evidence and `main` promotion; no tag or channel change |
+| Previous public Alpha | `2.0.0-alpha.3-dev.10` / `1016221` | Superseded public Action-responsiveness prerelease |
 
-## Current pre-release test channel
+The public prerelease is bound to tag `v2.0.0-alpha.3-dev.17`, asset `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.17.zip`, SHA-256 `3ce56a95fe9d4c2eedcdcad95e985f73296f17bc3afd22eba35c2598416c1662`, and size `324527` bytes.
 
-- 1.5.2-universal-test.5 fixes the nested Android 17 Outdoor menu and profile resolver.
-- Use test.5 or newer for Outdoor Extended on CP2A, CP21 and CP31 nested profiles.
-- 1.5.2-universal-test.4 can wrongly fall back to Stock because its Outdoor menu checked old flat profile paths.
-- Stable channel remains 1.5.1-universal.1.
+Stable `update.json` remains unchanged. `update-prerelease.json` points to dev.17. Development commits never publish a tag, asset, or update-channel change by themselves.
 
-## What this module does
+`main` is being promoted to the Dynamic V2 source line. Static V1 profile snapshots remain only under `deprecated/profiles/` as historical rollback and research evidence; they are no longer an active extraction or maintenance contract.
 
-This module installs guarded Pixel 10 thermal and memory overlays through Magisk. It does **not** replace Android thermal management; the stock thermal HAL remains in control while selected profile inputs are changed for supported device/build combinations.
+Living status and evidence boundaries: [V2 Alpha validation plan](docs/v2-alpha-validation-plan.md).
 
-Main functions:
+## Dev.18 source hardening
 
-- **Thermal polling:** preserves the verified polling-mod path for supported Pixel 10 thermal configs. In daily use, this aims for more consistent thermal sensor/update behavior during longer load, charging, navigation, camera use, or outdoor use.
-- **Throttling profiles:** applies guarded `thermal_info_config*.json` profile overlays, including the verified **Outdoor Extended** path. This can make sustained load feel less abrupt by using tested profile variants, without disabling thermal safety.
-- **ZRAM 100p:** optional boot/runtime memory profile for the verified ZRAM 100p path. This can help multitasking under memory pressure and reduce app reloads in daily use.
-- **Compatibility guard:** activates only when device/build/profile evidence matches the supported matrix. This reduces the risk of applying the wrong thermal profile to an unknown build.
+- keeps adaptive Emerald Hill as the daily default;
+- moves the optional maximum-frequency minimum lock into Advanced and labels it experimental;
+- records bounded persistent apply/restore evidence with boot ID, caller, node, original minimum, observed maximum, target and readback;
+- exposes the recent EH event log from Debug;
+- preserves the one-shot post-Bootguard model and does not add an unbounded screen-on watcher;
+- keeps stock LMK policy. The proposed early `ro.lmk.swap_free_low_percentage=1` path is documented for future controlled validation but is not enabled without device proof.
 
-It is **not** an overclock, benchmark unlock, FPS tweak, or thermal safety bypass.
+## Dev.13 live-verification result
 
----
+Dev.13 successfully proved the main runtime path on Mustang Stable `CP2A.260705.006 / 15641320`:
 
-## Stable 1.5.1 highlights
+- dynamic local Thermal validation and materialization;
+- Polling Mod with all 22 controlled values active;
+- Outdoor Extended with validated `+3 °C` controlled delta;
+- all three active Vendor Thermal files matching the module overlays;
+- ZRAM near 100 percent of RAM with active `lz77eh`;
+- `vm.swappiness=100`;
+- Bootguard and Thermal service health;
+- complete post-OTA runtime state refresh.
 
-| Area | Stable 1.5.1 |
-|---|---|
-| Install UX | Use-last flow plus Action dashboard for Status, Settings, Debug ZIP, Advanced and Exit |
-| Safety | Fresh-default fallback, pTune status consistency, and known-bad version/runtime split |
-| Thermal | Outdoor Extended verified and promoted |
-| Memory | Optional ZRAM 100p boot/runtime path verified |
-| Compatibility | Profile Matrix PASS count 67 and dynamic thermal overlay checks |
-| Refactor | Thermal/ZRAM helper cleanup plus manager status/action helpers promoted to stable |
-| Profiles | Harish / Codecity001 profile-layout mapping audit plus Allen Chang Beta 1/QPR1 feedback preserved |
+Live verification also found two issues that block publication:
 
----
+1. Mustang exposes the same Emerald Hill devfreq device through two sysfs aliases. Dev.13 counted and recorded both paths, allowing a duplicate baseline entry and an unsafe restore sequence.
+2. The attempted `ro.lmk.swap_free_low_percentage=1` post-boot override was not readable or proven effective. The module must not claim that LMKD accepted the value.
 
-## Runtime and factory-basis status
+For that reason, dev.13 is **not a release candidate**. The optional Emerald Hill maximum-frequency lock is not the everyday default. The normal adaptive hardware-accelerated ZRAM path remains the intended daily configuration.
 
-Stable 1.5.1 remains intentionally honest:
+## Dev.14 corrective implementation
 
-- Runtime-proven on **mustang**.
-- Factory-basis covered for all G5 Pixel 10 devices.
-- Runtime feedback is still needed for **frankel**, **blazer**, and **rango**.
+Dev.14 implements:
 
-Runtime PASS:
+- physical Emerald Hill node deduplication across sysfs aliases;
+- one authoritative baseline per physical device;
+- migration-safe and readback-verified restore behavior, including old dev.13 duplicate baselines;
+- adaptive Emerald Hill operation as the safe default;
+- ZRAM 100p and `lz77eh` independent from the optional maximum-frequency minimum lock;
+- Fresh choices that start from Polling Mod, Stock Thermal, ZRAM 100 percent with adaptive EH, verbose logging and pTune override off;
+- separate pTune, ZRAM and EH risk acknowledgements;
+- stock LMK policy without an unverified override claim;
+- EH status schema v2 and regression fixtures for physical alias paths.
 
-- `mustang / CP2A.260605.012 / outdoor-extended / polling mod / ZRAM 100p`
-- `mustang / CP31.260618.005 / outdoor-plus / polling mod / ZRAM 100p`
+Dev.14 still requires exact package construction, installation, reboot, and fresh on-device verification before any release decision.
 
-Factory-basis PASS:
+## Dynamic V2 admission model
 
-- `frankel / CP31.260618.005`
-- `blazer / CP31.260618.005`
-- `mustang / CP31.260618.005`
-- `rango / CP31.260618.005`
+The exact build list is an **evidence registry**, not the activation gate.
 
-`CP31.260618.005` is the current QPR1 Beta 6 factory basis for frankel, blazer, mustang and rango.
+Thermal materialization may proceed when:
 
-## Compatibility
+1. the device codename belongs to the supported Pixel 10 platform set;
+2. the Android major version is supported;
+3. the device's own three stock Thermal files are readable and structurally valid;
+4. the generated overlay changes only controlled Polling and Outdoor targets;
+5. source manifest, patch manifest, exact-delta validation, and active-runtime checks pass.
 
-| Device / build | Status |
-|---|---|
-| Pixel 10 Pro XL `mustang` / Android 17 `CP2A.260605.012` | Verified |
-| Pixel 10 Pro `blazer` / Android 17 stable | Community verified |
-| Pixel 10 Pro XL `mustang` / Android 17 CP31 beta path | Community verified |
-| Pixel 10 `frankel` / Pixel 10 Pro Fold `rango` | Profiles included, live verification still useful |
-| Unknown devices or builds | Blocked until compatibility evidence exists |
+Evidence states:
 
-A PASS on one Pixel 10 model does **not** automatically verify every other codename.
+- `exact_verified`: exact build evidence already exists;
+- `dynamic_unverified`: an unlisted build on a supported platform passes local stock-derived validation;
+- `unsupported_platform`: unknown codename or unsupported Android version; Thermal stays disabled while independent ZRAM functionality may remain available.
 
----
+No GitHub API or raw-file refresh is required before Action opens or before a supported unlisted build can be validated.
 
-## Install
+## Controlled Thermal scope
+
+Only these stock-derived files are controlled:
+
+- `thermal_info_config.json`
+- `thermal_info_config_charge.json`
+- `thermal_info_config_throttling.json`
+
+Available profiles:
+
+| Profile | Controlled Outdoor delta |
+|---|---:|
+| Stock | `+0 °C` |
+| Outdoor Safe | `+1 °C` |
+| Outdoor Plus | `+2 °C` |
+| Outdoor Extended | `+3 °C` |
+
+Polling Mod replaces only matching controlled `PollingDelay: 300000` values with `5000`. The independent validator rejects unexpected byte changes, malformed target arrays, wrong deltas, unsupported polling values, or incomplete source/overlay inventories.
+
+The module does **not** disable Android Thermal safety or replace the stock Thermal HAL.
+
+## ZRAM and Emerald Hill
+
+ZRAM 100p is optional and requires explicit user selection. The current verified daily path uses:
+
+- active `/dev/block/zram0` swap near total RAM size;
+- `lz77eh` compression;
+- `vm.swappiness=100`;
+- adaptive Emerald Hill devfreq behavior;
+- no persistent backup of transient in-memory properties.
+
+The optional Emerald Hill tuning does not request a frequency above the kernel-exposed maximum. A maximum-frequency minimum lock can nevertheless increase power use and heat because the accelerator can no longer downclock while the lock is active. It is experimental and is not the normal daily recommendation.
+
+ZRAM capacity and `lz77eh` provide the main multitasking path. The optional EH lock only targets compression/decompression latency; it does not create additional RAM.
+
+## Installation flow
 
 ### Requirements
 
-- Supported Pixel 10-series device/build.
-- Magisk is the recommended install path.
-- Keep a working rollback path before flashing.
-- Do not force unsupported devices or builds.
-- Reboot and verify after install/update.
+- Supported Pixel 10-series platform.
+- Supported Android major version.
+- Magisk or a compatible tested module backend.
+- A working module-disable or recovery path.
+- At least 15 percent battery for installation.
 
-### Install/update
+### Install choices
 
-1. Download the latest ZIP from [Releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/latest).
-2. Install it in Magisk.
-3. Choose the desired install options.
-4. Reboot.
-5. Run the compatibility check.
+The single installer menu controls:
 
-Stable update channel: [update.json](update.json)
+- Polling Mode;
+- Thermal Profile;
+- ZRAM 100p;
+- optional Emerald Hill behavior on builds that provide it;
+- pTune override;
+- debug logging.
+
+Thermal and ZRAM helpers consume the confirmed configuration without duplicate install submenus. Separate settings remain available through Magisk Action.
+
+### Install and verify
+
+1. Install the exact test or release ZIP through Magisk.
+2. Review the selected options and install autosave.
+3. Reboot.
+4. Run the installed compatibility verifier.
+5. Confirm Bootguard, active Vendor hashes, Polling values, Thermal service, ZRAM, EH state, and pTune state.
+
+Primary installed verifier:
 
 ```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/compat-check.sh
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/bootguard/compat-check.sh
 ```
 
-Expected healthy markers:
+Healthy Thermal runtime markers include:
 
 ```text
+DYNAMIC_MATERIALIZATION_VALID=yes
 MODULE_OVERLAY_READY=yes
 ACTIVE_VENDOR_MATCH=yes
+ACTIVE_POLLING_VALID=yes
 SAFE_TO_REBOOT=yes
+REASON=active_dynamic_overlay_verified
 ```
 
-For a full debug package:
+## Canonical validation state
 
-```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/collect-debug.sh
-```
-
-Online debug command for Termux / shells with `curl`, using the latest helper from main:
-
-```sh
-cd /sdcard/Download
-curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/collect-debug.sh
-su -c "sh -n /sdcard/Download/collect-debug.sh && sh /sdcard/Download/collect-debug.sh"
-```
-
-Generated output:
+Persistent validation evidence is canonical under:
 
 ```text
-/sdcard/Download/pixel_thermal_debug_*.zip
+/data/adb/pixel-10-pro-xl-thermal-fix/validation/
 ```
 
-Review generated output before posting it publicly.
+Important files:
 
-Do not post raw tokens, private hostnames, private IPs, MAC addresses, personal paths, or unrelated logs.
+- `validation-report.json`
+- `outdoor-delta-validation.env`
+- `patch-manifest.tsv`
+- `state.env`
 
-When reporting issues, include:
+`state.env` records schema, build/profile coordinates, canonical paths, hashes, and final validation state. Historical locations remain compatibility links only.
 
-- device and codename
-- Android version, build ID, incremental and fingerprint
-- root solution and version
-- module version and install/update path
-- compat-check result
-- debug ZIP, plus the Magisk install log or install screenshot when relevant
+## Bootguard and rollback
 
-For Magisk module-state or toggle issues:
+Normal Bootguard minimum threshold: `2`.
+
+Threshold `1` is reserved for explicit Canary diagnostic recovery mode and is not enabled merely because a build is unlisted.
+
+Normal rollback:
+
+1. Disable or remove the module in Magisk.
+2. Reboot.
+
+Emergency root-shell disable:
 
 ```sh
-cd /sdcard/Download
-curl -fsSLO https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/tools/pixel_thermal_toggle_debug.sh
-su -c "sh -n /sdcard/Download/pixel_thermal_toggle_debug.sh && sh /sdcard/Download/pixel_thermal_toggle_debug.sh"
+su -c 'touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/disable'
+su -c reboot
 ```
 
-Generated module-state output:
-
-```text
-/sdcard/Download/pixel_thermal_toggle_debug_*.txt
-```
-
-This helper is read-only; it does not delete, disable, enable, mount, or patch anything.
-
----
-
-## Manager status and Action dashboard
-
-`1.5.1-universal.1` adds a verified status line for module managers:
-
-```text
-P:🟢 mod | T:🟢 outdoor-ext | Z:🟢 100p | Action: settings/debug
-```
-
-The status is refreshed after boot and whenever the module Action is opened. If the manager caches module descriptions, reopen or refresh the manager after using Action.
-
-The Action button opens an extended terminal dashboard with Status, Settings for Polling/Thermal/ZRAM, Debug ZIP creation, Advanced pTune status/override guards, and Exit.
-
-Action menu quick guide:
-
-- Navigation: Vol+ cycles, Vol- selects, 30s timeout keeps the shown choice.
-
-- Status: refreshes P, T, Z and manager description.
-- Settings > Polling: Mod values or Stock values; rematerializes the thermal overlay.
-- Settings > Thermal: Stock, Outdoor Safe, Outdoor Plus, or Outdoor Ext; reboot recommended.
-- Settings > ZRAM: Enabled or Disabled; disabling needs reboot.
-- Debug > Debug ZIP: creates a report in Download.
-- Debug > Boot Crash Archive: creates a boot-crash evidence archive.
-- Debug > Bootguard: shows Bootguard and last-good diff.
-- Debug > Clear Counters: resets Bootguard counters only; disable state is preserved.
-- Advanced > Update Channel: switches the Magisk update path only; no ZIP download.
-- Advanced > pTune Status or pTune OFF or pTune ON: inspect or explicitly allow pTune coexistence risk.
-
-
----
-
-## Install options
-
-| Option | Meaning |
-|---|---|
-| **Use last settings** | Reuses the previous thermal/ZRAM choices |
-| **Fresh defaults** | Safe fallback when no saved settings exist |
-| **Outdoor Extended** | Verified 1.5 thermal profile path |
-| **Polling mod** | Preserved verified polling behavior |
-| **pTune Override** | OFF by default |
-| **ZRAM 100p** | Optional memory profile, verified in 1.5 |
-
----
-
-## Safety notes
-
-Stable 1.5.1 intentionally does **not** include:
-
-- TensorConservative sysfs/procfs writes
-- direct profile resolver layout switching
-- unsupported device/build activation
-- thermal safety disablement
-- blind Android 17 support using unrelated files
-
-The module prefers guarded activation over risky auto-detection.
-
-Advanced compatibility:
-
-- **pTune:** advanced/experimental. pTune Override stays OFF by default and requires an explicit risk acknowledgement.
-- **KernelSU-Next / mountify:** community-tested paths exist, but verify `ACTIVE_VENDOR_MATCH=yes` after reboot.
-- **Unknown root or mount backends:** collect debug evidence before reporting; do not force unsupported profiles.
-
----
-
-## Verified Stable 1.5 runtime
-
-- Pixel 10 Pro XL / `mustang`
-- Android 17 `CP2A.260605.012`
-- Incremental `15430684`
-- Outdoor Extended
-- Polling mod
-- pTune Override OFF
-- ZRAM 100p runtime PASS
-- Thermal tombstone index empty or absent
-
-Artifact:
-
-```text
-pixel-10-thermal-memory-control-1.5-universal.1.zip
-SHA256: 225013f7e51cb29b1ceebb1460f6f5125c134518ae900c2587f4416c2b6f057f
-```
-
----
-
-## Rollback / emergency disable
-
-Normal rollback: disable or remove the module in Magisk, then reboot.
-
-Emergency disable from a root shell:
+Mount-only emergency bypass:
 
 ```sh
-su -c "touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/disable"
-su -c "reboot"
+su -c 'touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/skip_mount'
+su -c reboot
 ```
 
-If mount behavior is the suspected issue:
+## pTune coexistence
+
+pTune coexistence remains advanced and experimental.
+
+- pTune absent: no conflict.
+- pTune installed-disabled: no active conflict.
+- pTune active without explicit override: Thermal mounting is blocked.
+- pTune active with explicit acknowledgement: advanced risk path only.
+
+Known-bad pTune version metadata remains visible even when pTune is safely disabled.
+
+## Action dashboard
+
+Magisk Action provides:
+
+- current Polling, Thermal and ZRAM status;
+- guarded settings changes;
+- debug ZIP creation;
+- Bootguard status;
+- pTune status and explicit override controls;
+- update-channel selection.
+
+Action admission and rematerialization are local. The dev.9/dev.10 performance work avoids repeated full scans, caches validated state, and suppresses unnecessary status re-rendering when returning from read-only submenus.
+
+## Debug evidence
+
+Create a debug ZIP:
 
 ```sh
-su -c "touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/skip_mount"
-su -c "reboot"
+su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/bootguard/collect-debug.sh
 ```
 
----
+The collector and install autosave include, when available:
 
-## Project files
+- package path, SHA-256, bytes, battery, and power state;
+- device/build/root/backend information;
+- selected options and risk acknowledgements;
+- overlay, validation, Bootguard, ZRAM, EH, pTune, and install-state evidence;
+- current and previous boot diagnostics.
 
-| File | Purpose |
-|---|---|
-| [RELEASE_NOTES_v1.5-universal.1.md](RELEASE_NOTES_v1.5-universal.1.md) | Stable 1.5 release summary |
-| [CHANGELOG.md](CHANGELOG.md) | Full change history |
-| [CREDITS.md](CREDITS.md) | Credits and acknowledgements |
-| [VERIFY_MUSTANG.md](VERIFY_MUSTANG.md) | Mustang verification notes |
-| [docs/test29_profile_layout_mapping.md](docs/test29_profile_layout_mapping.md) | Profile-layout mapping audit notes |
+Review debug output before posting it publicly. Remove tokens, personal paths, private hostnames, private IP addresses, MAC addresses, and unrelated logs.
 
----
+## Runtime evidence status
+
+### Public Alpha baseline
+
+The exact public dev.10 package passed installation and postboot verification on:
+
+- Pixel 10 Pro XL (`mustang`);
+- Android `17`;
+- build `CP2A.260705.006` / incremental `15641320`;
+- Outdoor Extended with exact `+3 °C` controlled delta;
+- Polling Mod;
+- ZRAM 100p with active `lz77eh`;
+- pTune installed-disabled;
+- Bootguard healthy;
+- all three active Vendor files matching generated overlays;
+- Action read-only cycle with one refresh, one status print, and two menu renders;
+- zero failed checks and zero warnings.
+
+### Current private evidence boundary
+
+Dev.13 extended the verified Mustang path to OTA rematerialization state and exact `eh_freq` admission, but the live alias/restore and LMK-observability findings prevented release. Dev.14 contains the corrective implementation; its repository tests do not replace fresh Mustang installation and post-reboot proof.
+
+### Remaining evidence work
+
+- dev.14 exact Mustang installation and post-reboot verification;
+- Blazer exact normalized evidence hardening;
+- Frankel and rango runtime evidence;
+- external `dynamic_unverified` install/postboot proof on a supported unlisted build;
+- active pTune coexistence evidence.
+
+A PASS on one codename does not automatically verify every Pixel 10 model.
+
+## Lean release package contract
+
+The deterministic flashable ZIP excludes repository-only content, including:
+
+- `.git*`, `.github/`, docs, tests, fixtures, and evidence;
+- deprecated, scratch, development, and release-work files;
+- repository README, changelog, credits, and release notes;
+- nested ZIP files.
+
+Current CI budgets:
+
+- no more than `60` ZIP entries;
+- no more than `450000` bytes;
+- no more than `12000` bytes for `action.sh`;
+- exactly one install-menu process.
+
+CI builds twice for reproducibility, verifies ZIP integrity and required runtime entries, records package/performance metrics, and uploads only a temporary test artifact. Public publication remains a separate user-confirmed operation.
+
+## Repository documentation
+
+- [Release notes index](release-notes/README.md)
+- [V2 Alpha validation plan](docs/v2-alpha-validation-plan.md)
+- [Changelog](CHANGELOG.md)
+- [Credits](CREDITS.md)
 
 ## Credits
 
 Created by **Lycidias93**, based on earlier work by **marx161**.
 
-Stable 1.5 includes testing, feedback, and reference work from **Harish / Codecity001**, **JoshuaDoes**, **Allen Chang**, **Jiggs**, **maicol07**, and the existing project acknowledgements.
-
-See [CREDITS.md](CREDITS.md) for the detailed list.
-
----
+The V2 line includes engineering, testing, runtime evidence, UX, and package feedback from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes**, and the existing project contributors. Detailed attribution is maintained in [CREDITS.md](CREDITS.md).
 
 ## License
 
 See [LICENSE](LICENSE).
-
-## Outdoor profile temperature deltas
-
-The Outdoor profiles are staged thermal profile deltas, not thermal-safety bypass modes.
-
-For the current mustang CP2A profile set:
-
-| Variant | VIRTUAL-SKIN thresholds | Delta vs base | VIRTUAL-SKIN-HINT thresholds | Delta vs base |
-|---|---:|---:|---:|---:|
-| Base | 39 / 43 / 45 / 46.5 / 52 / 55 C | baseline | 37 / 43 / 45 / 46.5 / 52 / 55 C | baseline |
-| outdoor-safe | 40 / 44 / 46 / 47.5 / 53 / 56 C | +1 C each | 38 / 44 / 46 / 47.5 / 53 / 56 C | +1 C each |
-| outdoor-plus | 41 / 45 / 47 / 48.5 / 54 / 57 C | +2 C each | 39 / 45 / 47 / 48.5 / 54 / 57 C | +2 C each |
-| outdoor-extended | 42 / 46 / 48 / 49.5 / 55 / 58 C | +3 C each | 40 / 46 / 48 / 49.5 / 55 / 58 C | +3 C each |
-
-Short version: safe = base +1 C, plus = base +2 C, extended = base +3 C for the main VIRTUAL-SKIN and VIRTUAL-SKIN-HINT threshold rows.
-
-Outdoor Extended is not always better. It is the strongest outdoor delta and should stay limited to tested device/build combinations. For unknown builds, Stock or Safe fallback should be used until anchors and runtime behavior are verified.
-
-These modes do not disable core thermal safety.
-
-## 1.5.2-universal-test.7 Canary diagnostic
-
-- Adds a guarded diagnostic path for Canary/ZP builds.
-- On Canary/ZP, install is debug-only: no thermal overlay, no Outdoor profile, no ZRAM fstab.
-- Creates /sdcard/Download/pixel_thermal_canary_diagnostic_*.tgz during install.
-- Normal supported non-Canary builds keep the existing test.6 behavior.

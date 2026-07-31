@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=1.5.2-universal-test.7
-versionCode=1016207
+version=2.0.0-alpha.3-dev.18
+versionCode=1016229
 author=Lycidias93, marx161, Codecity001
-description=Pre-release test.7: Canary/ZP diagnostic safe mode, normal devices unchanged. P: diagnostic/stock, T: no-overlay on Canary, Z: off on Canary
+description=V2 Alpha 3 dev.18 source: clearer experimental Emerald Hill max-lock UX, persistent bounded EH event evidence, and V2-to-main promotion readiness.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json

@@ -1,6 +1,6 @@
 {
-  "version": "1.5.2-universal-test.7",
-  "versionCode": 1016207,
-  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v1.5.2-universal-test.7/pixel-10-thermal-memory-control-1.5.2-universal-test.7.zip",
-  "changelog": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/RELEASE_NOTES_1.5.2-universal-test.7.md"
+  "version": "2.0.0-alpha.3-dev.17",
+  "versionCode": 1016228,
+  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v2.0.0-alpha.3-dev.17/pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.17.zip",
+  "changelog": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.17"
 }

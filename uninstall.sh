@@ -1,2 +1,3 @@
 #!/system/bin/sh
-rm -rf "${0%/*}/guard"
+ID="pixel-10-pro-xl-thermal-fix"
+rm -rf "${0%/*}/guard" "/data/adb/$ID"

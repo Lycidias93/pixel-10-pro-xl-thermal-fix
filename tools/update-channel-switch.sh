@@ -7,7 +7,7 @@ CONFIG_DIR="/data/adb/$ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 
 STABLE_URL="https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json"
-TEST_URL="https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update-prerelease.json"
+TEST_URL="https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/v2/update-prerelease.json"
 
 say() {
   printf '%s\n' "$*"

@@ -1,0 +1,99 @@
+{
+    "Sensors":[
+        {
+            "Name": "battery_capacity",
+            "Type": "UNKNOWN",
+            "Hidden":true,
+            "TempPath":"/sys/class/power_supply/battery/capacity",
+            "Multiplier": 1,
+            "TripPointIgnorable": true
+        },
+        {
+            "Name":"BG-TASKS-THROTTLING-EXP-PROPERTY",
+            "Type":"UNKNOWN",
+            "Hidden":true,
+            "TempPathType": "DEVICE_PROPERTY",
+            "TempPath":"vendor.thermal.bgtasks_experiment_is_running"
+        },
+        {
+            "Name":"IS_CHARGING",
+            "Type":"UNKNOWN",
+            "Hidden":true,
+            "VirtualSensor":true,
+            "Formula":"COUNT_THRESHOLD",
+            "Combination":["thb_hda"],
+            "Coefficient":[1],
+            "Multiplier":1
+        },
+        {
+            "Name":"BG_TASKS_THROTTLING_COUNT",
+            "Type":"UNKNOWN",
+            "Hidden":true,
+            "VirtualSensor":true,
+            "Formula":"COUNT_THRESHOLD",
+            "Combination":["IS_CHARGING", "BG-TASKS-THROTTLING-EXP-PROPERTY"],
+            "Coefficient":[1, 1],
+            "Multiplier":1
+        },
+        {
+            "Name":"IS_BG_TASKS_THROTTLING_ACTIVE",
+            "Type":"UNKNOWN",
+            "Hidden":true,
+            "VirtualSensor":true,
+            "Formula":"COUNT_THRESHOLD",
+            "Combination":["BG_TASKS_THROTTLING_COUNT"],
+            "Coefficient":[2],
+            "Multiplier":1
+        },
+        {
+            "Name":"BG_TASKS_THROTTLING_LEVEL",
+            "Type":"UNKNOWN",
+            "Hidden":true,
+            "VirtualSensor":true,
+            "Formula":"SENSOR_MAPPING_2D",
+            "Combination":["battery_capacity", "VIRTUAL-SKIN"],
+            "ValueMap": {
+                "SensorXRange": [0, 60, 80],
+                "SensorYRange": [0, 30000, 35000, 38000],
+                "SensorXHysteresis": [0, 2, 2],
+                "SensorYHysteresis": [0, 2000, 2000, 2000],
+                "OutputVals": [
+                    0, 1, 2, 3,
+                    0, 0, 2, 3,
+                    0, 0, 1, 3,
+                ]
+            },
+            "Multiplier":1
+        },
+        {
+            "Name":"BG_TASKS_THROTTLING_TRIGGER",
+            "Type":"UNKNOWN",
+            "Hidden":true,
+            "VirtualSensor":true,
+            "Formula":"WEIGHTED_AVG",
+            "Combination":["VIRTUAL-SKIN"],
+            "Coefficient":[1.0],
+            "HotThreshold":["NAN", "35.0", "NAN", "NAN", "NAN", "NAN", "NAN"],
+            "PollingDelay":5000,
+            "PassiveDelay":7000,
+            "Multiplier":1
+        },
+        {
+            "Name":"BG-TASKS-THROTTLING-HINT",
+            "Type":"UNKNOWN",
+            "VirtualSensor":true,
+            "TriggerSensor": ["BG_TASKS_THROTTLING_TRIGGER"],
+            "Formula":"WEIGHTED_AVG",
+            "Combination":["BG_TASKS_THROTTLING_LEVEL"],
+            "Coefficient":["IS_BG_TASKS_THROTTLING_ACTIVE"],
+            "CoefficientType": ["SENSOR"],
+            "HotThreshold":["NAN", 1.0, 2.0, 3.0, "NAN", "NAN", "NAN"],
+            "HotHysteresis":[0.0, 0.5, 0.5, 0.5, 0.0, 0.0, 0.0],
+            "Multiplier":1,
+            "SendPowerHint":true,
+            "SendCallback": true,
+            "PollingDelay":5000,
+            "PassiveDelay":7000
+        }
+    ]
+}

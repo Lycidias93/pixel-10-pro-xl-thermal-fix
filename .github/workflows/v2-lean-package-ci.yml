@@ -1,0 +1,186 @@
+name: V2 lean package CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - v2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
+
+      - name: Shell syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n dev_tools/build-release-module.sh
+          bash -n dev_tools/verify-release-module.sh
+          bash -n tests/test-dynamic-build-admission.sh
+          bash -n tests/test-release-package-exclusions.sh
+          bash -n tests/test-single-install-menu.sh
+          bash -n tests/test-validation-state-sot.sh
+          bash -n tests/test-validation-state-runtime.sh
+          bash -n tests/test-outdoor-delta-validation-runtime.sh
+          bash -n tests/test-canary-thermal-patch-hotfix.sh
+          bash -n tests/test-action-thermal-transaction.sh
+          bash -n tests/test-outdoor-runtime-evidence.sh
+          bash -n tests/test-zram-eh-dev12.sh
+          bash -n tests/test-dev15-menu-matrix.sh
+          bash -n tests/test-release-notes-layout.sh
+          bash -n tools/bootguard/bootguard-threshold-policy-guard.sh
+          bash -n tools/ptune/ptune-install-state-observability-guard.sh
+          bash -n action.sh
+          bash -n customize.sh
+          bash -n service.sh
+          bash -n tools/action-dashboard.sh
+          bash -n tools/core/supported-build.sh
+          bash -n tools/core/validation-state.sh
+          bash -n tools/core/outdoor-runtime-policy.sh
+          bash -n tools/core/patch-thermal-validated.sh
+          bash -n tools/core/install-thermal-overlay.sh
+          bash -n tools/menu/install-options-menu.sh
+          bash -n tools/zram/install-zram.sh
+          bash -n tools/zram/config-normalize.sh
+          bash -n tools/zram/emerald-hill-control.sh
+          bash -n tools/zram/apply-zram-100p.sh
+          bash -n tools/zram/reinit-zram-100p.sh
+          bash -n tools/install-finalize.sh
+
+      - name: Dynamic unknown-build admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-dynamic-build-admission.sh
+
+      - name: Single install menu contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-single-install-menu.sh
+
+      - name: Canonical validation state contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-validation-state-sot.sh
+          bash tests/test-validation-state-runtime.sh
+
+      - name: Outdoor delta runtime matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-outdoor-delta-validation-runtime.sh
+
+      - name: Canary portable patch and Safe-only policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-canary-thermal-patch-hotfix.sh
+
+      - name: Action and background materialization transaction
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-action-thermal-transaction.sh
+
+      - name: ZRAM and Emerald Hill fail-closed policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-zram-eh-dev12.sh
+
+      - name: Dev.15 menu and helper route matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-dev15-menu-matrix.sh
+
+      - name: Outdoor runtime evidence policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-outdoor-runtime-evidence.sh
+
+      - name: Bootguard and pTune policy contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/bootguard/bootguard-threshold-policy-guard.sh
+          bash tools/ptune/ptune-install-state-observability-guard.sh
+
+      - name: Release notes layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-release-notes-layout.sh
+
+      - name: Lean release package contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          bash tests/test-release-package-exclusions.sh
+
+      - name: Build exact Alpha 3 next test artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version=//p' module.prop | head -n 1)"
+          test -n "$version"
+          mkdir -p dist
+          zip_name="pixel-10-thermal-memory-control-${version}.zip"
+          zip_path="dist/${zip_name}"
+          started_ns="$(date +%s%N)"
+          dev_tools/build-release-module.sh "$zip_path" | tee dist/build-metadata.txt
+          finished_ns="$(date +%s%N)"
+          build_ms="$(( (finished_ns - started_ns) / 1000000 ))"
+          action_bytes="$(wc -c < action.sh | tr -d ' ')"
+          customize_bytes="$(wc -c < customize.sh | tr -d ' ')"
+          entries="$(unzip -Z1 "$zip_path" | wc -l | tr -d ' ')"
+          bytes="$(wc -c < "$zip_path" | tr -d ' ')"
+          test "$entries" -le 62
+          test "$bytes" -le 460000
+          test "$action_bytes" -le 12000
+          {
+            printf 'build_ms=%s\n' "$build_ms"
+            printf 'zip_bytes=%s\n' "$bytes"
+            printf 'zip_entries=%s\n' "$entries"
+            printf 'action_bytes=%s\n' "$action_bytes"
+            printf 'customize_bytes=%s\n' "$customize_bytes"
+            printf 'install_menu_process_budget=1\n'
+          } | tee dist/performance-metrics.txt
+          (
+            cd dist
+            sha256sum "$zip_name" > "${zip_name}.sha256"
+            sha256sum -c "${zip_name}.sha256"
+          )
+          unzip -Z1 "$zip_path" > dist/package-entries.txt
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_ALPHA3_NEXT_CI_ARTIFACT_PASS'
+
+      - name: Upload verified Alpha 3 next artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-alpha3-next-${{ github.sha }}
+          path: |
+            dist/pixel-10-thermal-memory-control-*.zip
+            dist/pixel-10-thermal-memory-control-*.zip.sha256
+            dist/build-metadata.txt
+            dist/package-entries.txt
+            dist/performance-metrics.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

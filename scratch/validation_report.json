@@ -1,0 +1,79 @@
+{
+  "thermal_info_config.json": {
+    "original_sha256": "a70e266c0d36fb5f7ab493bb759438ccf30eef8b88760405bd416dd065031cf4",
+    "original_polling_count": 4,
+    "patched_sha256": "7564d7be0eb1c468a15e08b839657bbc9af802ee8b9a904451ac19c7408594a3",
+    "patched_polling_count": 4,
+    "original_outdoor_profile": "stock",
+    "patched_outdoor_profile": "outdoor-plus",
+    "original_hot_thresholds": "none",
+    "patched_hot_thresholds": "none",
+    "validation": "passed"
+  },
+  "thermal_info_config_bg_tasks_throttling.json": {
+    "original_sha256": "1d73bbe9130bd52a39a1724ed768cda6dbd91340ee120cc579a9015b5e2ddc76",
+    "original_polling_count": 2,
+    "patched_sha256": "88bb90ee1e18c1e539f83f7aa34b654b2b278b452ecae3c329975cc4f82f89b5",
+    "patched_polling_count": 2,
+    "original_outdoor_profile": "stock",
+    "patched_outdoor_profile": "outdoor-plus",
+    "original_hot_thresholds": "none",
+    "patched_hot_thresholds": "none",
+    "validation": "passed"
+  },
+  "thermal_info_config_charge.json": {
+    "original_sha256": "eb7804f65303af6fdf44ad420c1bf958eac48a65b83fd1172e1fa67109f90196",
+    "original_polling_count": 11,
+    "patched_sha256": "8d6d47e149d982917873d348afe11cef070a230409a2ab21ea9dbca970210cf5",
+    "patched_polling_count": 11,
+    "original_outdoor_profile": "stock",
+    "patched_outdoor_profile": "outdoor-plus",
+    "original_hot_thresholds": "none",
+    "patched_hot_thresholds": "none",
+    "validation": "passed"
+  },
+  "thermal_info_config_earlywarnings.json": {
+    "original_sha256": "19da7d1cfe078bb6a5028c6e7e73fce4584209e17cc569ba48b89d2824d4aebb",
+    "original_polling_count": 1,
+    "patched_sha256": "b11051d4e9b6525b833739c818edc6ae442c87873ed3e1383b39f87260f1c6d4",
+    "patched_polling_count": 1,
+    "original_outdoor_profile": "stock",
+    "patched_outdoor_profile": "outdoor-plus",
+    "original_hot_thresholds": "none",
+    "patched_hot_thresholds": "none",
+    "validation": "passed"
+  },
+  "thermal_info_config_lpm.json": {
+    "original_sha256": "e1bbad86876e49d9774b56e38dc7380d5c136a16adec986432e40348a8bcac5f",
+    "original_polling_count": 3,
+    "patched_sha256": "65cdb1f05cd62ad3d69d26a799854d4fb7da474aade1559d2c44a635298b6b19",
+    "patched_polling_count": 3,
+    "original_outdoor_profile": "stock",
+    "patched_outdoor_profile": "outdoor-plus",
+    "original_hot_thresholds": "VIRTUAL-SKIN: ['NAN',39,43,45,46.5,52,65.0]",
+    "patched_hot_thresholds": "VIRTUAL-SKIN: ['NAN',41,45,47,48.5,54,67]",
+    "validation": "passed"
+  },
+  "thermal_info_config_stats.json": {
+    "original_sha256": "49fb362d5e067b4e558a73a2dd0da1a34b4357abe91560b4193fab284239d7ee",
+    "original_polling_count": 1,
+    "patched_sha256": "9904876f33c7a74b74717396a9353b60927786a7ca4df90816c0bd6fa28660ae",
+    "patched_polling_count": 1,
+    "original_outdoor_profile": "stock",
+    "patched_outdoor_profile": "outdoor-plus",
+    "original_hot_thresholds": "none",
+    "patched_hot_thresholds": "none",
+    "validation": "passed"
+  },
+  "thermal_info_config_throttling.json": {
+    "original_sha256": "e86af41752d1ebcc4c2ded05c39db07260f67182b3cee0636ddea4213482a04e",
+    "original_polling_count": 8,
+    "patched_sha256": "c6c9748252867f52afe487d1e173d6c0271b43cb5f065e4b3be8d19a81b5bcbe",
+    "patched_polling_count": 8,
+    "original_outdoor_profile": "stock",
+    "patched_outdoor_profile": "outdoor-plus",
+    "original_hot_thresholds": "VIRTUAL-SKIN: ['NAN',39,43,45,46.5,52,55.0] | VIRTUAL-SKIN-HINT: ['NAN',37.0,43.0,45.0,46.5,52.0,55.0]",
+    "patched_hot_thresholds": "VIRTUAL-SKIN: ['NAN',41,45,47,48.5,54,57] | VIRTUAL-SKIN-HINT: ['NAN',39,45,47,48.5,54,57]",
+    "validation": "passed"
+  }
+}
