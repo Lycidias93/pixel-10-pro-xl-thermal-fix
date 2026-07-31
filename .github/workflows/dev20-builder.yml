@@ -1,0 +1,33 @@
+name: Dev.20 LMKD consolidation builder
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.head_ref == 'repo-maintenance/dev20-lmkd-reload-consolidation-20260731'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Assemble and run guarded builder
+        run: |
+          cat dev_tools/dev20_builder.part00 dev_tools/dev20_builder.part01 dev_tools/dev20_builder.part02 dev_tools/dev20_builder.part03 > /tmp/dev20_builder.py
+          python3 -m py_compile /tmp/dev20_builder.py
+          python3 /tmp/dev20_builder.py
+      - name: Commit durable Dev.20 changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git reset -- .github/workflows/dev20-builder.yml dev_tools/dev20_builder.part00 dev_tools/dev20_builder.part01 dev_tools/dev20_builder.part02 dev_tools/dev20_builder.part03
+          git diff --cached --quiet && exit 0
+          git commit -m "Implement Dev.20 consolidated LMKD reload and badge fix"
+          git push origin HEAD:repo-maintenance/dev20-lmkd-reload-consolidation-20260731
