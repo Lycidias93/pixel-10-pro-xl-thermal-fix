@@ -1,0 +1,33 @@
+name: Dev.21 branch builder
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-dev21:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'repo-maintenance/dev21-lmkd-resetprop-light-boot-20260731'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          fetch-depth: 0
+      - name: Build and test Dev.21 source
+        run: python3 .github/scripts/dev21-branch-builder.py
+      - name: Commit generated Dev.21 source
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No generated changes"
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add module.prop README.md post-fs-data.sh service.sh tools/zram/apply-zram-100p.sh tools/bootguard/bootguard-lib.sh tests/test-dev19-lmkd-early-test.sh tests/test-dev21-light-boot.sh release-notes/2.0.0-alpha.3-dev.21.md
+          git commit -m "feat: build Dev.21 LMKD writer and light boot test source"
+          git push origin HEAD:${{ github.event.pull_request.head.ref || github.ref_name }}
