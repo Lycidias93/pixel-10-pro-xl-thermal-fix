@@ -30,7 +30,8 @@ fi
 # Hill maximum-frequency minimum lock is deferred until Bootguard verifies the
 # completed Android boot and active Thermal runtime.
 if [ "${ENABLE_ZRAM_100P:-0}" = 1 ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
-  printf '%s SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip eh=deferred lmk=stock\n' "$(date -Is 2>/dev/null || date)" >> "$L"
+  printf '%s SERVICE_ZRAM action=apply mode=boot_early resetprop=required mmd_restart=skip eh=deferred lmk_reload=%s\n' \
+    "$(date -Is 2>/dev/null || date)" "${LMKD_SWAP_LOW_RELOAD:-0}" >> "$L"
   if [ -r "$ZRAM_APPLY" ]; then
     sh "$ZRAM_APPLY" boot_early >> "$H" 2>&1 ||
       printf '%s\n' 'SERVICE_ZRAM result=apply_failed_nonfatal' >> "$H"
@@ -74,8 +75,8 @@ fi
 
 
 # Android may rewrite selected ZRAM properties after early service startup.
-# Reapply exactly once after verified boot. This path never mutates the LMKD
-# property; the optional experiment is restricted to post-fs-data.
+# Reapply exactly once after verified boot. The consolidated ZRAM helper also
+# applies the opt-in LMKD policy and skips a reload already verified this boot.
 if [ "$bootguard_verified" = 1 ] &&
    [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
    [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then

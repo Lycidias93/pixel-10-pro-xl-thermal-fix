@@ -137,8 +137,7 @@ reload_lmkd() {
   pid_before="$(lmkd_pid)"
   svc_before="$(lmkd_service)"
   method=aosp_reinit
-  "$SETPROP_BIN" lmkd.reinit 1 2>/dev/null || true
-  if wait_reinit_ack; then
+  if "$SETPROP_BIN" lmkd.reinit 1 2>/dev/null && wait_reinit_ack; then
     pid_after="$(lmkd_pid)"
     svc_after="$(lmkd_service)"
     after="$(prop_get ro.lmk.swap_free_low_percentage)"
@@ -147,6 +146,7 @@ reload_lmkd() {
     return 0
   fi
 
+  log 'LMKD_RELOAD reinit=failed_or_unacknowledged fallback=ctl_restart'
   method=ctl_restart
   "$SETPROP_BIN" ctl.restart lmkd 2>/dev/null || {
     "$STOP_BIN" lmkd 2>/dev/null || "$SETPROP_BIN" ctl.stop lmkd 2>/dev/null || true
