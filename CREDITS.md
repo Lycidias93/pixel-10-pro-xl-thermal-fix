@@ -15,10 +15,20 @@ Reference threads provided by user:
 
 ## Pixel Thermal V2 Alpha 3 development line
 
-- **Allen Chang**: July Canary screenshot and installation evidence showing the unsupported-build guard disabling Thermal while ZRAM stayed active. This evidence drove the correction that treats exact build IDs as evidence rather than the Dynamic V2 activation gate.
-- **Harish / Codecity001**: post-Alpha-2 package and performance review covering slow extraction, slow Action startup, removal of repository-only content from the flashable ZIP, and leaner validation organization without weakening independent safety checks.
+- **Allen Chang**: July Canary screenshot, installation/failure evidence and stock Thermal files showing the unsupported-build guard disabling Thermal while ZRAM stayed active and later exposing the Canary Outdoor-profile boot failure. This evidence drove the correction that treats exact build IDs as evidence rather than the Dynamic V2 activation gate and supported the exact-target Thermal safety work.
+- **Harish / Codecity001**:
+  - real-world Pixel 10 Pro / Blazer logging, installation, reboot and runtime testing, including the post-release Blazer / Android 17 stable community PASS;
+  - commit `b9ff85db` limiting Dynamic V2 patching to the three critical base, charge and throttling configurations;
+  - post-Alpha-2 package/performance review covering slow extraction, slow Action startup, repository-only flashable-ZIP content and leaner validator organization without weakening independent checks;
+  - Action-dashboard optimization design: cached status, shallow backend probing, one combined supported-build probe, removal of obsolete/duplicate paths and suppression of unnecessary status re-renders after submenu return;
+  - analysis of Allen's Canary stock Thermal files that identified prefix-target overreach, the fixed emergency-threshold entry and loss of decimal formatting;
+  - PR #70 ZRAM application rework with `resetprop-rs`, `boot_early` service timing, script cleanup, debug-gating feedback and Pixel test iteration;
+  - the `v2-perf` ZRAM and Emerald Hill direction integrated into Dev.12: `lz77eh`, configurable swappiness, adaptive daily operation, install/Action choices and an explicit maximum-frequency-lock option;
+  - profile-layout refactor concept and mockup reference used by the manager/menu work.
+- **JoshuaDoes**: ZRAM 100-percent technical input and context covering the `mmd` restart path (`stop mmd && start mmd`), early timing after Magisk mounts the vendor overlay, in-memory `resetprop -n`, `sys.boot_completed` timing and root-detection-safe property handling. This guidance informed the ZRAM foundation retained and safety-adapted through Dev.17.
+- **Lycidias93**: Mustang CP2A.260705.006 installation, reboot, active-vendor, PollingDelay, Magisk, Bootguard, ZRAM, Emerald Hill and install-state runtime verification, plus the fail-closed integration, regression coverage and release binding.
 
-These are separate contributions: Allen supplied the referenced Canary runtime/install evidence; Harish supplied the package-size, Action-performance, and validator-organization feedback.
+The final Alpha 3 implementation safety-adapts contributed concepts and evidence with independent local validation, Bootguard ordering, kernel-OPP bounds, baseline restore, adaptive fallback, physical Emerald Hill alias deduplication, stock LMK policy, install-state preservation and deterministic package verification.
 
 <!-- PIXEL_THERMAL_V2_ALPHA1_CREDITS_20260715_START -->
 ## Pixel Thermal V2 alpha line
