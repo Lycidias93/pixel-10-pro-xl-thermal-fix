@@ -339,7 +339,7 @@ if [ "$MC_INDEX" = 0 ]; then
   apply_zram disabled
 else
   oc_index=0
-  mc_cycle2 "Emerald Hill mode" "Adaptive (recommended)" "Max lock (more power/heat)" "$oc_index"
+  mc_cycle2 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock (heat/battery)" "$oc_index"
   if [ "$MC_INDEX" = 0 ]; then
     apply_zram enabled_standard
   else

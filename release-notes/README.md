@@ -4,6 +4,7 @@ Release notes are repository documentation and are never included in the flashab
 
 ## V2 alpha line
 
+- [2.0.0-alpha.3-dev.18](2.0.0-alpha.3-dev.18.md) — unreleased EH UX/evidence hardening and controlled `v2` to `main` promotion preparation.
 - [2.0.0-alpha.3-dev.17 — public cumulative prerelease](2.0.0-alpha.3-dev.17-public.md) — public Alpha changes and verified Mustang evidence since dev.10.
 - [2.0.0-alpha.3-dev.17](2.0.0-alpha.3-dev.17.md) — private install-state preservation and choice-aware verification correction.
 - [Next public prerelease — cumulative changes since dev.10](public-prerelease-next-since-dev.10.md) — retained preparation draft and release gate evidence.

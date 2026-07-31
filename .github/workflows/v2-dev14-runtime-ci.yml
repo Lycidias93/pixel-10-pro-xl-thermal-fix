@@ -3,6 +3,7 @@ name: V2 Dev.14 EH safety regression
 on:
   pull_request:
     branches:
+      - main
       - v2
   workflow_dispatch:
 

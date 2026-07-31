@@ -4,6 +4,8 @@ MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
+EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
+EH_EVENT_LOG="$CONFIG_DIR/zram-eh/events.log"
 PTUNE_ROOTS="${PTUNE_MODULE_ROOTS:-/data/adb/modules/ptune /data/adb/modules_update/ptune}"
 ACTION_DASHBOARD_PERF="$MODDIR/guard/action-dashboard-performance.env"
 STATUS_DIRTY=1
@@ -283,57 +285,104 @@ set_thermal() {
   refresh_status; show_status; msg "Back to Settings."
 }
 
-set_zram() {
-  cur_z="$(cfg_get ENABLE_ZRAM_100P)"
-  case "$cur_z" in 1) idx=0 ;; *) idx=1 ;; esac
-  ui_menu3 "ZRAM 100%" "Enable 100p" "Disable" "Back" "$idx"
+show_eh_event_log() {
+  msg ""
+  msg "Emerald Hill event log"
+  msg "----------------------------------------"
+  if [ -r "$EH_EVENT_LOG" ]; then
+    tail -n 20 "$EH_EVENT_LOG" 2>/dev/null || true
+  else
+    msg "No EH events recorded yet."
+  fi
+  msg "----------------------------------------"
+}
+
+set_emerald_hill() {
+  if [ "$(cfg_get ENABLE_ZRAM_100P)" != 1 ]; then
+    msg "! Enable ZRAM 100% first."
+    msg "! Adaptive EH remains the daily default."
+    sleep 2
+    return 0
+  fi
+
+  cur_oc="$(cfg_get ZRAM_EMERALD_OC)"
+  [ -n "$cur_oc" ] || cur_oc=0
+  case "$cur_oc" in 1) oc_idx=1 ;; *) oc_idx=0 ;; esac
+  ui_menu3 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock" "Back" "$oc_idx"
   [ "$UI_REASON" = "timeout" ] && return 0
 
   case "$UI_INDEX" in
     0)
-      cur_oc="$(cfg_get ZRAM_EMERALD_OC)"
-      [ -n "$cur_oc" ] || cur_oc=0
-      case "$cur_oc" in 1) oc_idx=1 ;; *) oc_idx=0 ;; esac
-      ui_menu3 "Emerald Hill mode" "Adaptive (recommended)" "Max lock (more power/heat)" "Back" "$oc_idx"
-      [ "$UI_REASON" = "timeout" ] && return 0
-      case "$UI_INDEX" in
-        0) zram_choice=enabled_standard ;;
-        1) zram_choice=enabled_max_lock ;;
-        *) msg "Back."; return 0 ;;
-      esac
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_EH_RISK_ACK none
+      cfg_set LAST_ZRAM_100P enabled_standard
+      if [ -s "$EH_CONTROL" ]; then
+        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_adaptive \
+          sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+      fi
+      msg "- Emerald Hill: adaptive daily mode"
+    ;;
+    1)
+      cfg_set ENABLE_ZRAM_100P 1
+      cfg_set ZRAM_RISK_ACK explicit_user_enable
+      cfg_set ZRAM_EMERALD_OC 1
+      cfg_set ZRAM_EH_RISK_ACK explicit_user_enable_max_lock
+      cfg_set LAST_ZRAM_100P enabled_max_lock
+      msg "! EXPERIMENTAL: higher heat and battery use are expected."
+      if [ -s "$EH_CONTROL" ] &&
+         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_experimental_max \
+           sh "$EH_CONTROL" apply >/dev/null 2>&1; then
+        msg "- Emerald Hill max lock applied and logged"
+      else
+        msg "! Max lock configured but runtime apply failed"
+        msg "! Reboot path remains configured; inspect EH event log"
+      fi
+    ;;
+    *) msg "Back."; return 0 ;;
+  esac
 
+  printf '%s
+' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+  mark_status_dirty
+  refresh_status
+  show_status
+  msg "Back to Advanced."
+}
+
+set_zram() {
+  cur_z="$(cfg_get ENABLE_ZRAM_100P)"
+  case "$cur_z" in 1) idx=0 ;; *) idx=1 ;; esac
+  ui_menu3 "ZRAM 100%" "Enable 100p (adaptive EH)" "Disable" "Back" "$idx"
+  [ "$UI_REASON" = "timeout" ] && return 0
+
+  case "$UI_INDEX" in
+    0)
       if [ ! -r "$ZRAM_LAYOUT" ] ||
          ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1; then
         msg "! ZRAM layout materialization failed"
         msg "! Existing configuration kept"
         return 0
       fi
-
       cfg_set ENABLE_ZRAM_100P 1
       cfg_set ZRAM_RESTART_MMD 1
       cfg_set ZRAM_RISK_ACK explicit_user_enable
-      case "$zram_choice" in
-        enabled_max_lock)
-          cfg_set ZRAM_EMERALD_OC 1
-          cfg_set ZRAM_EH_RISK_ACK explicit_user_enable_max_lock
-          cfg_set LAST_ZRAM_100P enabled_max_lock
-          msg "- ZRAM: enabled (EH max lock; more power/heat)"
-        ;;
-        *)
-          cfg_set ZRAM_EMERALD_OC 0
-          cfg_set ZRAM_EH_RISK_ACK none
-          cfg_set LAST_ZRAM_100P enabled_standard
-          msg "- ZRAM: enabled (adaptive EH)"
-        ;;
-      esac
-
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_EH_RISK_ACK none
+      cfg_set LAST_ZRAM_100P enabled_standard
+      if [ -s "$EH_CONTROL" ]; then
+        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_enable \
+          sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+      fi
       if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
         msg "- Applying runtime properties"
         if ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1; then
           msg "! Runtime apply failed; reboot path remains configured"
         fi
       fi
-      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      printf '%s
+' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      msg "- ZRAM: enabled with adaptive EH"
+      msg "- Experimental max lock is under Advanced"
       msg "- Reboot required for layout guarantee"
     ;;
     1)
@@ -343,13 +392,18 @@ set_zram() {
         msg "! Existing configuration kept"
         return 0
       fi
+      if [ -s "$EH_CONTROL" ]; then
+        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_disable \
+          sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+      fi
       cfg_set ENABLE_ZRAM_100P 0
       cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_RESTART_MMD 0
       cfg_set ZRAM_RISK_ACK disabled_by_user
       cfg_set ZRAM_EH_RISK_ACK disabled_by_user
       cfg_set LAST_ZRAM_100P disabled
-      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      printf '%s
+' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
       msg "- ZRAM: disabled"
       msg "- Reboot required"
     ;;
@@ -452,15 +506,16 @@ update_channel_loop() {
 
 advanced_loop() {
   while :; do
-    mc_cycle4 "Advanced" "pTune Status" "pTune Override" "Update Channel" "Back" 0
-    [ "$MC_REASON" = "timeout" ] && return 0
-    case "$MC_INDEX" in
-      0) ptune_status; sleep 2 ;;
-      1)
+    ui_menu5 "Advanced" "Emerald Hill mode" "pTune Status" "pTune Override" "Update Channel" "Back" 0
+    [ "$UI_REASON" = "timeout" ] && return 0
+    case "$UI_INDEX" in
+      0) set_emerald_hill ;;
+      1) ptune_status; sleep 2 ;;
+      2)
         if [ "$(cfg_get ALLOW_THERMAL_WITH_PTUNE)" = 1 ]; then ptune_override_off; else ptune_override_on; fi
         sleep 2
       ;;
-      2) update_channel_loop ;;
+      3) update_channel_loop ;;
       *) msg "Back."; return 0 ;;
     esac
   done
@@ -497,9 +552,9 @@ write_dashboard_performance() {
 
 debug_loop() {
   while :; do
-    mc_cycle4 "Debug" "Status" "Collect ZIP" "Debug Logging" "Back" 0
-    [ "$MC_REASON" = "timeout" ] && return 0
-    case "$MC_INDEX" in
+    ui_menu5 "Debug" "Status" "Collect ZIP" "EH Event Log" "Debug Logging" "Back" 0
+    [ "$UI_REASON" = "timeout" ] && return 0
+    case "$UI_INDEX" in
       0) refresh_status; show_status; sleep 2 ;;
       1)
         if [ -s "$MODDIR/tools/bootguard/collect-debug.sh" ]; then
@@ -509,10 +564,8 @@ debug_loop() {
         fi
         sleep 2
       ;;
-      2)
-        toggle_debug_mode
-        sleep 1
-      ;;
+      2) show_eh_event_log; sleep 2 ;;
+      3) toggle_debug_mode; sleep 1 ;;
       *) msg "Back."; return 0 ;;
     esac
   done

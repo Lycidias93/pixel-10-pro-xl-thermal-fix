@@ -3,6 +3,7 @@ name: V2 Dev.17 state preservation regression
 on:
   pull_request:
     branches:
+      - main
       - v2
   workflow_dispatch:
 

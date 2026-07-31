@@ -1,3 +1,15 @@
+# 2.0.0-alpha.3-dev.18
+
+Unreleased V2 source hardening and `main` promotion preparation; no tag, release asset, or update-channel change.
+
+- Keeps adaptive Emerald Hill as the daily default.
+- Moves the optional max-frequency minimum lock to Advanced and labels it experimental because higher heat and battery use are expected.
+- Adds a bounded persistent EH event log with boot ID, caller, original minimum, observed maximum, target, readback, node count and alias count.
+- Exposes recent EH events from the Debug menu.
+- Retains one-shot post-Bootguard application and rejects an unbounded service watcher.
+- Preserves stock LMK policy; Harish's early post-fs-data LMKD proposal is retained as a future validation candidate, not a default claim.
+- Makes V2 CI run for both `v2` and `main` pull requests and marks static V1 profiles EOL.
+
 # 2.0.0-alpha.3-dev.17
 
 Public Alpha prerelease with the cumulative changes since public dev.10. Exact asset: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.17.zip`, SHA-256 `3ce56a95fe9d4c2eedcdcad95e985f73296f17bc3afd22eba35c2598416c1662`, 324527 bytes.

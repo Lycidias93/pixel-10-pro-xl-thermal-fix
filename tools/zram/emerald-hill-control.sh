@@ -10,6 +10,8 @@ CONFIG_FILE="${ZRAM_CONFIG_FILE:-/data/adb/$ID/config.env}"
 STATE_DIR="${ZRAM_EH_STATE_DIR:-/data/adb/$ID/zram-eh}"
 BASELINE_FILE="$STATE_DIR/baseline.tsv"
 STATUS_FILE="$STATE_DIR/status.env"
+EVENT_LOG="${ZRAM_EH_EVENT_LOG:-$STATE_DIR/events.log}"
+EVENT_MAX_LINES="${ZRAM_EH_EVENT_MAX_LINES:-256}"
 NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 ROOTS="${ZRAM_EH_DEVFREQ_ROOTS:-/sys/class/devfreq/* /sys/devices/platform/*/devfreq/*}"
 MODE="${1:-status}"
@@ -21,6 +23,47 @@ STATUS_ALIASES_SKIPPED=0
 RESTORE_NODES=0
 RESTORE_ALIASES_SKIPPED=0
 RESTORE_FAILED=0
+
+
+event_count() {
+  event_name="$1"
+  [ -r "$EVENT_LOG" ] || { printf '%s\n' 0; return 0; }
+  grep -c " event=$event_name " "$EVENT_LOG" 2>/dev/null || printf '%s\n' 0
+}
+
+event_append() {
+  event_name="$1"
+  outcome="$2"
+  path="$3"
+  original_min="$4"
+  observed_max="$5"
+  target="$6"
+  readback="$7"
+  nodes="$8"
+  aliases="$9"
+  detail="${10}"
+
+  mkdir -p "$STATE_DIR" 2>/dev/null || true
+  chmod 0700 "$STATE_DIR" 2>/dev/null || true
+  epoch="$(date +%s 2>/dev/null || printf unknown)"
+  boot_id="$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || printf unknown)"
+  caller="${ZRAM_EH_CALLER:-$MODE}"
+  printf '%s\n' \
+    "epoch=$epoch boot_id=$boot_id caller=$caller event=$event_name outcome=$outcome path=$path original_min=$original_min observed_max=$observed_max target=$target readback=$readback nodes=$nodes aliases_skipped=$aliases detail=$detail" \
+    >> "$EVENT_LOG" 2>/dev/null || true
+  chmod 0600 "$EVENT_LOG" 2>/dev/null || true
+
+  case "$EVENT_MAX_LINES" in ''|*[!0-9]*) EVENT_MAX_LINES=256 ;; esac
+  [ "$EVENT_MAX_LINES" -ge 32 ] 2>/dev/null || EVENT_MAX_LINES=32
+  line_count="$(wc -l < "$EVENT_LOG" 2>/dev/null | tr -d '[:space:]')"
+  case "$line_count" in ''|*[!0-9]*) line_count=0 ;; esac
+  if [ "$line_count" -gt "$EVENT_MAX_LINES" ] 2>/dev/null; then
+    tmp="$EVENT_LOG.tmp.$$"
+    tail -n "$EVENT_MAX_LINES" "$EVENT_LOG" > "$tmp" 2>/dev/null || true
+    chmod 0600 "$tmp" 2>/dev/null || true
+    mv "$tmp" "$EVENT_LOG" 2>/dev/null || true
+  fi
+}
 
 cfg_get() {
   [ -r "$CONFIG_FILE" ] || return 0
@@ -88,6 +131,9 @@ status_write() {
     printf '%s\n' "eh_risk_ack=$(cfg_get ZRAM_EH_RISK_ACK)"
     printf '%s\n' "last_choice=$(cfg_get LAST_ZRAM_100P)"
     printf '%s\n' "zram_enabled=$(cfg_get ENABLE_ZRAM_100P)"
+    printf '%s\n' "event_log=$EVENT_LOG"
+    printf '%s\n' "apply_events=$(event_count apply)"
+    printf '%s\n' "restore_events=$(event_count restore)"
     printf '%s\n' "updated_epoch=$(date +%s 2>/dev/null || printf unknown)"
   } > "$tmp"
   chmod 0600 "$tmp" 2>/dev/null || true
@@ -159,6 +205,7 @@ apply_lock() {
      [ "${ZRAM_RISK_ACK:-}" != explicit_user_enable ] ||
      [ "${ZRAM_EH_RISK_ACK:-}" != explicit_user_enable_max_lock ]; then
     STATUS_ALIASES_SKIPPED=0
+    event_append apply refused none none none none none 0 0 explicit_max_lock_choice_missing
     status_write adaptive not_explicitly_authorized 0 none
     printf '%s\n' 'RESULT: ZRAM_EH_APPLY_REFUSED reason=explicit_max_lock_choice_missing'
     return 3
@@ -253,6 +300,7 @@ apply_lock() {
   if [ "$nodes" -eq 0 ] 2>/dev/null; then
     rm -f "$tmp" 2>/dev/null || true
     STATUS_ALIASES_SKIPPED="$aliases_skipped"
+    event_append apply failure none none none none none 0 "$aliases_skipped" no_matching_devfreq_node
     status_write unsupported no_matching_devfreq_node 0 none
     printf '%s\n' 'RESULT: ZRAM_EH_APPLY_FAIL reason=no_matching_devfreq_node'
     return 8
@@ -264,6 +312,8 @@ apply_lock() {
   STATUS_PATH="$first_path"
   STATUS_ORIGINAL_MIN="$first_original"
   STATUS_OBSERVED_MAX="$first_max"
+  readback="$(cat "$first_path/min_freq" 2>/dev/null || printf unknown)"
+  event_append apply success "$first_path" "$first_original" "$first_max" "$target_summary" "$readback" "$nodes" "$aliases_skipped" max_frequency_minimum_lock_verified
   status_write active max_frequency_minimum_lock_verified "$nodes" "$target_summary"
   printf '%s\n' "RESULT: ZRAM_EH_APPLY_DONE nodes=$nodes aliases_skipped=$aliases_skipped target=$target_summary policy=kernel_exposed_opp_only"
   return 0
@@ -272,6 +322,7 @@ apply_lock() {
 restore_lock() {
   if [ ! -s "$BASELINE_FILE" ]; then
     STATUS_ALIASES_SKIPPED=0
+    event_append restore no_op none none none none none 0 0 no_baseline
     status_write adaptive no_baseline 0 none
     printf '%s\n' 'RESULT: ZRAM_EH_RESTORE_DONE nodes=0 aliases_skipped=0 reason=no_baseline'
     return 0
@@ -280,12 +331,14 @@ restore_lock() {
   if restore_file "$BASELINE_FILE"; then
     rm -f "$BASELINE_FILE" 2>/dev/null || true
     STATUS_ALIASES_SKIPPED="$RESTORE_ALIASES_SKIPPED"
+    event_append restore success none none none none none "$RESTORE_NODES" "$RESTORE_ALIASES_SKIPPED" baseline_restored
     status_write adaptive baseline_restored "$RESTORE_NODES" none
     printf '%s\n' "RESULT: ZRAM_EH_RESTORE_DONE nodes=$RESTORE_NODES aliases_skipped=$RESTORE_ALIASES_SKIPPED"
     return 0
   fi
 
   STATUS_ALIASES_SKIPPED="$RESTORE_ALIASES_SKIPPED"
+  event_append restore failure none none none none none "$RESTORE_NODES" "$RESTORE_ALIASES_SKIPPED" baseline_restore_incomplete
   status_write failed baseline_restore_incomplete "$RESTORE_NODES" none
   printf '%s\n' "RESULT: ZRAM_EH_RESTORE_FAIL reason=baseline_restore_incomplete restored=$RESTORE_NODES failed=$RESTORE_FAILED aliases_skipped=$RESTORE_ALIASES_SKIPPED"
   return 9

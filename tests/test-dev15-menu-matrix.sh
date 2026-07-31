@@ -34,7 +34,7 @@ for route in \
   '"$plus_label" \' \
   '"$ext_label" \' \
   'ZRAM 100%" "Disabled" "Enabled"' \
-  'Emerald Hill mode" "Adaptive (recommended)" "Max lock (more power/heat)"' \
+  'Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock (heat/battery)"' \
   'pTune Override" "Override ON" "Override OFF"' \
   'Debug Logging" "Silent" "Verbose"'; do
   grep -Fq "$route" "$install_menu" || fail "installer_route_missing=$route"
@@ -46,10 +46,10 @@ for route in \
   'mc_cycle4 "Settings" "Polling Mode" "Thermal Profile" "ZRAM 100%" "Back"' \
   'ui_menu3 "Polling Mode" "Module values" "Stock values" "Back"' \
   'ui_menu5 "Thermal max+' \
-  'ui_menu3 "ZRAM 100%" "Enable 100p" "Disable" "Back"' \
-  'ui_menu3 "Emerald Hill mode" "Adaptive (recommended)" "Max lock (more power/heat)" "Back"' \
-  'mc_cycle4 "Debug" "Status" "Collect ZIP" "Debug Logging" "Back"' \
-  'mc_cycle4 "Advanced" "pTune Status" "pTune Override" "Update Channel" "Back"' \
+  'ui_menu3 "ZRAM 100%" "Enable 100p (adaptive EH)" "Disable" "Back"' \
+  'ui_menu3 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock" "Back"' \
+  'ui_menu5 "Debug" "Status" "Collect ZIP" "EH Event Log" "Debug Logging" "Back"' \
+  'ui_menu5 "Advanced" "Emerald Hill mode" "pTune Status" "pTune Override" "Update Channel" "Back"' \
   'ui_menu3 "pTune Risk" "Keep OFF" "Enable risk" "Back"' \
   'ui_menu3 "Update Channel" "Use Stable" "Use Test" "Back"'; do
   grep -Fq "$route" "$action" || fail "action_route_missing=$route"
@@ -105,19 +105,19 @@ pass reinit_uses_stock_lmk_and_current_eh_contract
 if grep -Fq 'Emerald Hill OC' "$cycle" "$install_menu" "$action"; then
   fail stale_oc_menu_wording
 fi
-grep -Fq 'version=2.0.0-alpha.3-dev.17' "$module_prop"
-grep -Fq 'versionCode=1016228' "$module_prop"
-pass dev17_metadata_and_current_wording
+grep -Fq 'version=2.0.0-alpha.3-dev.18' "$module_prop"
+grep -Fq 'versionCode=1016229' "$module_prop"
+pass dev18_metadata_and_current_wording
 
 printf '%s\n' 'ROUTE installer: remember/use-last/fresh'
 printf '%s\n' 'ROUTE installer: polling mod/stock'
 printf '%s\n' 'ROUTE installer: thermal stock/safe/plus/extended'
-printf '%s\n' 'ROUTE installer: zram disabled/adaptive/max-lock'
+printf '%s\n' 'ROUTE installer: zram disabled/adaptive/experimental-max-lock'
 printf '%s\n' 'ROUTE installer: ptune on/off'
 printf '%s\n' 'ROUTE installer: debug silent/verbose'
 printf '%s\n' 'ROUTE action: settings/debug/advanced/exit'
 printf '%s\n' 'ROUTE action settings: polling/thermal/zram/back'
-printf '%s\n' 'ROUTE action debug: status/collect/toggle/back'
-printf '%s\n' 'ROUTE action advanced: ptune-status/ptune-override/update-channel/back'
+printf '%s\n' 'ROUTE action debug: status/collect/eh-log/toggle/back'
+printf '%s\n' 'ROUTE action advanced: eh-mode/ptune-status/ptune-override/update-channel/back'
 printf '%s\n' 'ROUTE action leafs: back/timeout preserve state'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV15_MENU_MATRIX_PASS'
