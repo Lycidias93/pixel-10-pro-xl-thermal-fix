@@ -2,6 +2,8 @@
 
 **Dynamic V2 Magisk module for guarded Pixel 10 thermal profiles, stock-derived runtime validation, optional ZRAM tuning, controlled LMKD experiments, Bootguard recovery, and an interactive Action dashboard.**
 
+Dynamic V2 is the active source architecture on `main`.
+
 [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
 > [!IMPORTANT]
