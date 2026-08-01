@@ -1,4 +1,4 @@
-name: V2 Dev.20 LMKD reload regression
+name: V2 Dev.21 LMKD writer and light boot regression
 
 on:
   pull_request:
@@ -11,19 +11,20 @@ permissions:
   contents: read
 
 jobs:
-  dev20-lmkd-reload:
+  dev21-lmkd-light-boot:
     runs-on: ubuntu-latest
     timeout-minutes: 7
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Shell and controlled LMKD reload fixtures
+      - name: Shell and Dev.21 focused fixtures
         shell: bash
         run: |
           set -euo pipefail
           bash -n post-fs-data.sh
           bash -n service.sh
+          bash -n tools/bootguard/bootguard-lib.sh
           bash -n tools/zram/apply-zram-100p.sh
           bash -n tools/zram/config-normalize.sh
           bash -n tools/action-dashboard.sh
@@ -32,7 +33,9 @@ jobs:
           bash -n tools/bootguard/collect-debug-v3.sh
           bash -n tools/install-finalize.sh
           bash -n tests/test-dev19-lmkd-early-test.sh
+          bash -n tests/test-dev21-light-boot.sh
           bash tests/test-dev19-lmkd-early-test.sh
+          bash tests/test-dev21-light-boot.sh
 
       - name: Preserve V2 corrective contracts
         shell: bash
@@ -45,17 +48,21 @@ jobs:
           bash tests/test-dev14-eh-safety.sh
           bash tests/test-zram-eh-dev12.sh
 
-      - name: Verify Dynamic V2 and Dev.20 contracts
+      - name: Verify Dynamic V2 and Dev.21 contracts
         shell: bash
         run: |
           set -euo pipefail
           grep -Fq 'Dynamic V2 is the active source architecture' README.md
-          grep -Fq 'version=2.0.0-alpha.3-dev.20' module.prop
-          grep -Fq 'versionCode=1016231' module.prop
-          grep -Fq 'lmkd.reinit' release-notes/2.0.0-alpha.3-dev.20.md
-          grep -Fq 'consolidated function' release-notes/2.0.0-alpha.3-dev.20.md
+          grep -Fq 'version=2.0.0-alpha.3-dev.21' module.prop
+          grep -Fq 'versionCode=1016232' module.prop
+          grep -Fq 'property_writer=magisk_resetprop|resetprop_rs_fallback' release-notes/2.0.0-alpha.3-dev.21.md
+          grep -Fq 'Lightweight normal boots' release-notes/2.0.0-alpha.3-dev.21.md
+          grep -Fq 'SYSTEM_RESETPROP=' tools/zram/apply-zram-100p.sh
+          grep -Fq 'property_writer=' tools/zram/apply-zram-100p.sh
+          grep -Fq 'arm-if-needed' post-fs-data.sh
+          grep -Fq 'update_manager_badges_fast' service.sh
           grep -Fq 'Static profile payloads have been removed' docs/V1_EOL.md
           test ! -e deprecated/profiles
           test ! -e tools/lmkd/early-swap-low-test.sh
           test ! -e tools/lmkd/verify-early-swap-low-test.sh
-          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV20_LMKD_CI_PASS'
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV21_LMKD_LIGHT_BOOT_CI_PASS'
