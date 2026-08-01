@@ -1,3 +1,15 @@
+# 2.0.0-alpha.3-dev.21
+
+Public device-tested Dynamic V2 prerelease. Exact asset: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.21.zip`, SHA-256 `bebed9e85bfa35bc7b7b485255e3d727b770956d6e2290b28c6580cb4fc881cd`, 332201 bytes.
+
+- Uses Magisk system `resetprop` first for `ro.lmk.swap_free_low_percentage=1`, with readback-controlled `resetprop-rs` fallback only for that property.
+- Keeps normal ZRAM property writes on `resetprop-rs` and records the successful LMKD writer.
+- Retains targeted `lmkd.reinit` with verified daemon-restart fallback.
+- Replaces full verification on unchanged boots with a signed-state fast path for runtime apply, lightweight readbacks and badge refresh.
+- Automatically restores full verification after install, update, firmware/config/overlay changes, pending transitions, debug/canary mode or problem boots.
+- Preserves Bootguard, automatic P/T/Z/L badge refresh and clean module/data removal.
+- Hardware verification completed by Harish / Codecity001.
+
 # 2.0.0-alpha.3-dev.20
 
 Unreleased Dynamic V2 source; no tag, release asset, or update-channel change.

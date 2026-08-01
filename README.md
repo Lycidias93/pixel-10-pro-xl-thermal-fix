@@ -10,8 +10,8 @@ Dynamic V2 is the active source architecture on `main`.
 
 | Lane | Version | State |
 |---|---|---|
-| Current source | `2.0.0-alpha.3-dev.21` / `1016232` | Unreleased test source with LMKD writer fallback evidence and lightweight unchanged boots |
-| Public Alpha | `2.0.0-alpha.3-dev.17` / `1016228` | Latest published and Mustang-verified prerelease |
+| Current source | `2.0.0-alpha.3-dev.21` / `1016232` | Published, device-tested prerelease source |
+| Public Alpha | `2.0.0-alpha.3-dev.21` / `1016232` | Latest published and Mustang-verified prerelease |
 | Stable update channel | `1.5.1-universal.1` / `1016108` | Legacy public stable package; unchanged |
 
 Source development does not publish a tag, release asset, or update-channel change. `update.json` and `update-prerelease.json` remain separate publication gates.

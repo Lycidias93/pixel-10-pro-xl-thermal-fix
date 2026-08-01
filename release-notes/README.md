@@ -3,6 +3,7 @@
 Release notes are repository documentation and are never included in the flashable Magisk ZIP.
 
 ## V2 alpha line
+- [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — public device-tested prerelease with Magisk resetprop-first LMKD evidence and lightweight unchanged boots.
 
 - [2.0.0-alpha.3-dev.19](2.0.0-alpha.3-dev.19.md) — unreleased guarded LMKD early-test and V2 cleanup source.
 - [2.0.0-alpha.3-dev.18](2.0.0-alpha.3-dev.18.md) — unreleased EH UX/evidence hardening and controlled `v2` to `main` promotion preparation.
