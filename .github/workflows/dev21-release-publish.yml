@@ -73,19 +73,38 @@ jobs:
           match_count="$(jq --arg tag "$TAG_NAME" '[.[] | select(.tag_name == $tag)] | length' dist/releases-before.json)"
           test "$match_count" -le 1
           existing_public=0
+          resume_draft=0
+          release_id=
+
           if [ "$match_count" = 1 ]; then
             jq --arg tag "$TAG_NAME" '[.[] | select(.tag_name == $tag)] | .[0]' dist/releases-before.json > dist/release-existing.json
-            if [ "$(jq -r '.draft' dist/release-existing.json)" = true ]; then
-              echo 'STOP pre-existing draft release requires manual review'
-              exit 1
-            fi
-            jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" \
-              '.draft == false and .prerelease == true and .name == $title and .tag_name == $tag' \
+            release_id="$(jq -r '.id' dist/release-existing.json)"
+            test -n "$release_id"
+            test "$release_id" != null
+            jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
+              '.name == $title and .tag_name == $tag and .target_commitish == $target' \
               dist/release-existing.json >/dev/null
             jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
-              '.assets[] | select(.name == $name and .size == $size)' \
+              '[.assets[] | select(.name == $name and .size == $size)] | length == 1' \
               dist/release-existing.json >/dev/null
-            existing_public=1
+            test "$(jq '.assets | length' dist/release-existing.json)" = 1
+            jq -r '.body' dist/release-existing.json | grep -Fq "Target commit: \`$TARGET_COMMIT\`"
+            jq -r '.body' dist/release-existing.json | grep -Fq "Asset SHA-256: \`$ASSET_SHA256\`"
+
+            if [ "$(jq -r '.draft' dist/release-existing.json)" = true ]; then
+              asset_id="$(jq -r --arg name "$ASSET_NAME" '.assets[] | select(.name == $name) | .id' dist/release-existing.json)"
+              test -n "$asset_id"
+              mkdir -p dist/draft-download
+              gh api -H 'Accept: application/octet-stream' "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" > "dist/draft-download/$ASSET_NAME"
+              draft_sha="$(sha256sum "dist/draft-download/$ASSET_NAME" | awk '{print $1}')"
+              draft_bytes="$(wc -c < "dist/draft-download/$ASSET_NAME" | tr -d ' ')"
+              test "$draft_sha" = "$ASSET_SHA256"
+              test "$draft_bytes" = "$ASSET_BYTES"
+              resume_draft=1
+            else
+              jq -e '.prerelease == true' dist/release-existing.json >/dev/null
+              existing_public=1
+            fi
           else
             if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
               echo 'STOP tag exists without matching release'
@@ -95,22 +114,17 @@ jobs:
 
           created=0
           published=0
-          release_id=
           cleanup() {
             if [ "$created" = 1 ] && [ "$published" = 0 ]; then
               if [ -n "$release_id" ]; then
                 gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$release_id" >/dev/null 2>&1 || true
-              else
-                gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" 2>/dev/null | jq -r --arg tag "$TAG_NAME" '.[] | select(.tag_name == $tag and .draft == true) | .id' | while read -r draft_id; do
-                  [ -n "$draft_id" ] && gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$draft_id" >/dev/null 2>&1 || true
-                done
               fi
               gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG_NAME" >/dev/null 2>&1 || true
             fi
           }
           trap cleanup EXIT
 
-          if [ "$existing_public" = 0 ]; then
+          if [ "$existing_public" = 0 ] && [ "$resume_draft" = 0 ]; then
             gh release create "$TAG_NAME" "$asset_path" \
               --repo "$GITHUB_REPOSITORY" \
               --target "$TARGET_COMMIT" \
@@ -133,7 +147,9 @@ jobs:
             jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
               '.assets[] | select(.name == $name and .size == $size)' \
               dist/release-draft.json >/dev/null
+          fi
 
+          if [ "$existing_public" = 0 ]; then
             gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
               -F draft=false \
               -F prerelease=true \
@@ -168,6 +184,7 @@ jobs:
             printf 'draft=false\n'
             printf 'prerelease=true\n'
             printf 'existing_public=%s\n' "$existing_public"
+            printf 'resumed_draft=%s\n' "$resume_draft"
             printf 'RESULT: DEV21_PUBLIC_PRERELEASE_VERIFY_PASS\n'
           } | tee dist/release-receipt.txt
 
