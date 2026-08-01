@@ -111,8 +111,8 @@ fi
 
 # Arm only after the final current-build overlay/disabled state is known.
 if [ -s "$BOOTGUARD" ]; then
-  MODDIR="$MODDIR" CONFIG_FILE="$CFG" sh "$BOOTGUARD" arm >> "$L" 2>&1 ||
-    log "BOOTGUARD_ARM_WARN reason=arm_nonzero"
+  MODDIR="$MODDIR" CONFIG_FILE="$CFG" sh "$BOOTGUARD" arm-if-needed >> "$L" 2>&1 ||
+    log "BOOTGUARD_ARM_WARN reason=arm_if_needed_nonzero"
 fi
 log "GUARD_ALLOW reason=post_fs_data_completed source=state action=mount_current_state"
 exit 0

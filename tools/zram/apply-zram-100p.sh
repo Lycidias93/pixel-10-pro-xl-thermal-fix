@@ -8,6 +8,7 @@ CONFIG_FILE="${ZRAM_CONFIG_FILE:-/data/adb/$ID/config.env}"
 MODE="${1:-manual}"
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 RESET="$MODDIR/tools/resetprop-rs"
+SYSTEM_RESETPROP="${LMKD_SYSTEM_RESETPROP_BIN:-resetprop}"
 NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 BIGMAX="2147483647"
@@ -32,6 +33,7 @@ SWAPPINESS="${ZRAM_SWAPPINESS:-100}"
 THP_MODE="${ZRAM_THP_MODE:-stock}"
 LMKD_RELOAD="${LMKD_SWAP_LOW_RELOAD:-0}"
 LMKD_ACK="${LMKD_SWAP_LOW_RISK_ACK:-none}"
+LMKD_PROPERTY_WRITER=none
 
 log() { printf '%s\n' "$*"; }
 
@@ -80,6 +82,7 @@ write_lmkd_state() {
     printf 'risk_ack=%s\n' "$LMKD_ACK"
     printf 'property_before=%s\n' "${before:-unset}"
     printf 'property_after=%s\n' "${after:-unset}"
+    printf 'property_writer=%s\n' "${LMKD_PROPERTY_WRITER:-none}"
     printf 'lmkd_pid_before=%s\n' "${pid_before:-none}"
     printf 'lmkd_pid_after=%s\n' "${pid_after:-none}"
     printf 'lmkd_service_before=%s\n' "${svc_before:-unknown}"
@@ -169,6 +172,24 @@ reload_lmkd() {
   return 1
 }
 
+set_lmkd_property_1() {
+  LMKD_PROPERTY_WRITER=none
+  if command -v "$SYSTEM_RESETPROP" >/dev/null 2>&1; then
+    "$SYSTEM_RESETPROP" ro.lmk.swap_free_low_percentage 1 >/dev/null 2>&1 || true
+    if [ "$(prop_get ro.lmk.swap_free_low_percentage)" = 1 ]; then
+      LMKD_PROPERTY_WRITER=magisk_resetprop
+      return 0
+    fi
+  fi
+
+  "$RESET" -n ro.lmk.swap_free_low_percentage 1 >/dev/null 2>&1 || true
+  if [ "$(prop_get ro.lmk.swap_free_low_percentage)" = 1 ]; then
+    LMKD_PROPERTY_WRITER=resetprop_rs_fallback
+    return 0
+  fi
+  return 1
+}
+
 apply_lmkd_policy() {
   before="$(prop_get ro.lmk.swap_free_low_percentage)"
   if [ "$LMKD_RELOAD" != 1 ] || [ "$LMKD_ACK" != explicit_user_reload ]; then
@@ -178,16 +199,13 @@ apply_lmkd_policy() {
   fi
 
   remember_original_lmkd_value "$before"
-  if command -v resetprop >/dev/null 2>&1; then
-    resetprop ro.lmk.swap_free_low_percentage 1 2>/dev/null || "$RESET" ro.lmk.swap_free_low_percentage 1 2>/dev/null || true
-  else
-    "$RESET" ro.lmk.swap_free_low_percentage 1 2>/dev/null || true
+  if ! set_lmkd_property_1; then
+    after="$(prop_get ro.lmk.swap_free_low_percentage)"
+    write_lmkd_state failed property_readback "$before" "$after" "$(lmkd_pid)" "$(lmkd_pid)" "$(lmkd_service)" "$(lmkd_service)" both_property_writers_failed_readback
+    return 1
   fi
   after="$(prop_get ro.lmk.swap_free_low_percentage)"
-  [ "$after" = 1 ] || {
-    write_lmkd_state failed property_readback "$before" "$after" "$(lmkd_pid)" "$(lmkd_pid)" "$(lmkd_service)" "$(lmkd_service)" readback_mismatch
-    return 1
-  }
+  log "LMKD_PROPERTY_WRITE result=success writer=$LMKD_PROPERTY_WRITER property_after=$after"
 
   if [ "$MODE" = boot_verified ] && [ "$(kv_get boot_id "$LMKD_STATE_FILE")" = "$(boot_id)" ] && [ "$(kv_get reload_result "$LMKD_STATE_FILE")" = success ]; then
     log 'LMKD_RELOAD result=skipped method=already_verified_this_boot mode=boot_verified'

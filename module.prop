@@ -1,6 +1,6 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.0-alpha.3-dev.20
-versionCode=1016231
+version=2.0.0-alpha.3-dev.21
+versionCode=1016232
 author=Lycidias93, marx161, Codecity001
-description=V2 Alpha 3 dev.20 source: consolidated LMKD 1% reload in the ZRAM path, AOSP reinit-first fallback restart, and reliable automatic status badges.
+description=V2 Alpha 3 dev.21 test: Magisk resetprop-first LMKD write with readback fallback, lightweight unchanged-boot path, and preserved Bootguard escalation.
