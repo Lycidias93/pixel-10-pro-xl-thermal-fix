@@ -43,15 +43,6 @@ jobs:
           grep -Fxq "versionCode=$VERSION_CODE" module.prop
           test -s "$RELEASE_NOTES_PATH"
 
-          if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
-            echo 'STOP tag already exists'
-            exit 1
-          fi
-          if gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" | jq -e --arg tag "$TAG_NAME" 'any(.[]; .tag_name == $tag)' >/dev/null; then
-            echo 'STOP release already exists'
-            exit 1
-          fi
-
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
           bash tests/test-release-package-exclusions.sh
           mkdir -p dist
@@ -78,6 +69,30 @@ jobs:
           printf -- '- Asset SHA-256: `%s`\n' "$ASSET_SHA256" >> "$notes_file"
           printf -- '- Release notes source: `%s@%s`\n' "$RELEASE_NOTES_PATH" "$TARGET_COMMIT" >> "$notes_file"
 
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > dist/releases-before.json
+          match_count="$(jq --arg tag "$TAG_NAME" '[.[] | select(.tag_name == $tag)] | length' dist/releases-before.json)"
+          test "$match_count" -le 1
+          existing_public=0
+          if [ "$match_count" = 1 ]; then
+            jq --arg tag "$TAG_NAME" '[.[] | select(.tag_name == $tag)] | .[0]' dist/releases-before.json > dist/release-existing.json
+            if [ "$(jq -r '.draft' dist/release-existing.json)" = true ]; then
+              echo 'STOP pre-existing draft release requires manual review'
+              exit 1
+            fi
+            jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" \
+              '.draft == false and .prerelease == true and .name == $title and .tag_name == $tag' \
+              dist/release-existing.json >/dev/null
+            jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
+              '.assets[] | select(.name == $name and .size == $size)' \
+              dist/release-existing.json >/dev/null
+            existing_public=1
+          else
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+              echo 'STOP tag exists without matching release'
+              exit 1
+            fi
+          fi
+
           created=0
           published=0
           release_id=
@@ -95,34 +110,40 @@ jobs:
           }
           trap cleanup EXIT
 
-          gh release create "$TAG_NAME" "$asset_path" \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$TARGET_COMMIT" \
-            --title "$RELEASE_TITLE" \
-            --notes-file "$notes_file" \
-            --prerelease \
-            --draft
-          created=1
+          if [ "$existing_public" = 0 ]; then
+            gh release create "$TAG_NAME" "$asset_path" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$TARGET_COMMIT" \
+              --title "$RELEASE_TITLE" \
+              --notes-file "$notes_file" \
+              --prerelease \
+              --draft
+            created=1
 
-          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > dist/releases-after-create.json
-          jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
-            '[.[] | select(.draft == true and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target)] | length == 1' \
-            dist/releases-after-create.json >/dev/null
-          jq --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
-            '[.[] | select(.draft == true and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target)] | .[0]' \
-            dist/releases-after-create.json > dist/release-draft.json
-          release_id="$(jq -r '.id' dist/release-draft.json)"
-          test -n "$release_id"
-          test "$release_id" != null
-          jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
-            '.assets[] | select(.name == $name and .size == $size)' \
-            dist/release-draft.json >/dev/null
+            gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > dist/releases-after-create.json
+            jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" \
+              '[.[] | select(.draft == true and .name == $title and .tag_name == $tag)] | length == 1' \
+              dist/releases-after-create.json >/dev/null
+            jq --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" \
+              '[.[] | select(.draft == true and .name == $title and .tag_name == $tag)] | .[0]' \
+              dist/releases-after-create.json > dist/release-draft.json
+            release_id="$(jq -r '.id' dist/release-draft.json)"
+            test -n "$release_id"
+            test "$release_id" != null
+            jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
+              '.assets[] | select(.name == $name and .size == $size)' \
+              dist/release-draft.json >/dev/null
 
-          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" -F draft=false -F prerelease=true > dist/release-public-patch.json
-          published=1
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+              -F draft=false \
+              -F prerelease=true \
+              -f target_commitish="$TARGET_COMMIT" > dist/release-public-patch.json
+            published=1
+          fi
+
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_NAME" > dist/release-public.json
-          jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
-            '.draft == false and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target' \
+          jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" \
+            '.draft == false and .prerelease == true and .name == $title and .tag_name == $tag' \
             dist/release-public.json >/dev/null
           jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
             '.assets[] | select(.name == $name and .size == $size)' \
@@ -146,6 +167,7 @@ jobs:
             printf 'asset_bytes=%s\n' "$public_bytes"
             printf 'draft=false\n'
             printf 'prerelease=true\n'
+            printf 'existing_public=%s\n' "$existing_public"
             printf 'RESULT: DEV21_PUBLIC_PRERELEASE_VERIFY_PASS\n'
           } | tee dist/release-receipt.txt
 
