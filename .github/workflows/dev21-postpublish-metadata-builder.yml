@@ -1,0 +1,90 @@
+name: Build Dev.21 post-publish metadata branch
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-metadata:
+    if: github.head_ref == 'repo-maintenance/dev21-lmkd-resetprop-light-boot-20260731'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Create clean metadata branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='repo-maintenance/dev21-prerelease-metadata-20260801'
+          expected_main='2ff33ece36e2a83c0c2fd7debd947fe2fa05632e'
+          git fetch origin main
+          main_sha="$(git rev-parse origin/main)"
+          test "$main_sha" = "$expected_main"
+          if git ls-remote --exit-code --heads origin "refs/heads/$branch" >/dev/null 2>&1; then
+            echo 'metadata branch already exists'
+            exit 1
+          fi
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git switch -c "$branch" "$main_sha"
+
+          printf '%s\n' \
+            '{' \
+            '  "version": "2.0.0-alpha.3-dev.21",' \
+            '  "versionCode": 1016232,' \
+            '  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v2.0.0-alpha.3-dev.21/pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.21.zip",' \
+            '  "changelog": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21"' \
+            '}' > update-prerelease.json
+
+          sed -i \
+            -e 's/| Current source | `2.0.0-alpha.3-dev.21` \/ `1016232` | Unreleased test source with LMKD writer fallback evidence and lightweight unchanged boots |/| Current source | `2.0.0-alpha.3-dev.21` \/ `1016232` | Published, device-tested prerelease source |/' \
+            -e 's/| Public Alpha | `2.0.0-alpha.3-dev.17` \/ `1016228` | Latest published and Mustang-verified prerelease |/| Public Alpha | `2.0.0-alpha.3-dev.21` \/ `1016232` | Latest published and Mustang-verified prerelease |/' \
+            README.md
+
+          sed -i \
+            -e '1s/# 2.0.0-alpha.3-dev.21 (test source)/# 2.0.0-alpha.3-dev.21/' \
+            -e 's/^Dev.21 is an unreleased device-test build\.$/Dev.21 is a device-tested public prerelease build./' \
+            release-notes/2.0.0-alpha.3-dev.21.md
+
+          sed -i '/## V2 alpha line/a\
+- [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — public device-tested prerelease with Magisk resetprop-first LMKD evidence and lightweight unchanged boots.' release-notes/README.md
+
+          changelog_tmp="$(mktemp)"
+          printf '%s\n' \
+            '# 2.0.0-alpha.3-dev.21' \
+            '' \
+            'Public device-tested Dynamic V2 prerelease. Exact asset: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.21.zip`, SHA-256 `bebed9e85bfa35bc7b7b485255e3d727b770956d6e2290b28c6580cb4fc881cd`, 332201 bytes.' \
+            '' \
+            '- Uses Magisk system `resetprop` first for `ro.lmk.swap_free_low_percentage=1`, with readback-controlled `resetprop-rs` fallback only for that property.' \
+            '- Keeps normal ZRAM property writes on `resetprop-rs` and records the successful LMKD writer.' \
+            '- Retains targeted `lmkd.reinit` with verified daemon-restart fallback.' \
+            '- Replaces full verification on unchanged boots with a signed-state fast path for runtime apply, lightweight readbacks and badge refresh.' \
+            '- Automatically restores full verification after install, update, firmware/config/overlay changes, pending transitions, debug/canary mode or problem boots.' \
+            '- Preserves Bootguard, automatic P/T/Z/L badge refresh and clean module/data removal.' \
+            '- Hardware verification completed by Harish / Codecity001.' \
+            '' > "$changelog_tmp"
+          cat CHANGELOG.md >> "$changelog_tmp"
+          mv "$changelog_tmp" CHANGELOG.md
+
+          jq -e '.version == "2.0.0-alpha.3-dev.21" and .versionCode == 1016232' update-prerelease.json >/dev/null
+          grep -Fq '| Public Alpha | `2.0.0-alpha.3-dev.21` / `1016232` |' README.md
+          grep -Fq 'device-tested public prerelease build' release-notes/2.0.0-alpha.3-dev.21.md
+          grep -Fq 'public device-tested prerelease' release-notes/README.md
+          grep -Fq 'SHA-256 `bebed9e85bfa35bc7b7b485255e3d727b770956d6e2290b28c6580cb4fc881cd`' CHANGELOG.md
+          grep -Fq '"version": "1.5.1-universal.1"' update.json
+          bash tests/test-release-notes-layout.sh
+
+          git add update-prerelease.json README.md release-notes/2.0.0-alpha.3-dev.21.md release-notes/README.md CHANGELOG.md
+          git commit -m 'release: publish Dev.21 prerelease metadata'
+          test "$(git rev-list --count "$main_sha"..HEAD)" = 1
+          git push origin "HEAD:refs/heads/$branch"
+          printf 'RESULT: DEV21_POSTPUBLISH_METADATA_BRANCH_PASS branch=%s head=%s commits=1\n' "$branch" "$(git rev-parse HEAD)"
