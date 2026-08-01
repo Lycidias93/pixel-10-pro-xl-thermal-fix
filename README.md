@@ -10,7 +10,7 @@ Dynamic V2 is the active source architecture on `main`.
 
 | Lane | Version | State |
 |---|---|---|
-| Current source | `2.0.0-alpha.3-dev.20` / `1016231` | Unreleased vNext source with consolidated LMKD reload and badge reliability fix |
+| Current source | `2.0.0-alpha.3-dev.21` / `1016232` | Unreleased test source with LMKD writer fallback evidence and lightweight unchanged boots |
 | Public Alpha | `2.0.0-alpha.3-dev.17` / `1016228` | Latest published and Mustang-verified prerelease |
 | Stable update channel | `1.5.1-universal.1` / `1016108` | Legacy public stable package; unchanged |
 
@@ -78,6 +78,8 @@ Safety contract:
 - does not claim a direct internal-value probe beyond the AOSP reinit/start contract.
 
 Dev.20 also verifies the final P/T/Z/L manager description after boot and retries the write when readback is still static.
+
+Dev.21 keeps `resetprop-rs` for ZRAM properties but uses Magisk system `resetprop` first for the single LMKD property, with readback-controlled fallback and writer evidence. It also replaces the full compatibility scan on every unchanged boot with a signed-state gate: first/changed/debug/transition boots run full verification, while unchanged verified boots perform only runtime apply, lightweight readbacks and badge refresh.
 
 ## Installation
 
