@@ -1,1 +1,0 @@
-Trigger the temporary Dev.21 post-publish metadata builder after workflow registration.
