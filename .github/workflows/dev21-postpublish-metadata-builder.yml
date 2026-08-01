@@ -55,8 +55,7 @@ jobs:
             -e 's/^Dev.21 is an unreleased device-test build\.$/Dev.21 is a device-tested public prerelease build./' \
             release-notes/2.0.0-alpha.3-dev.21.md
 
-          sed -i '/## V2 alpha line/a\
-- [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — public device-tested prerelease with Magisk resetprop-first LMKD evidence and lightweight unchanged boots.' release-notes/README.md
+          sed -i '/## V2 alpha line/a - [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — public device-tested prerelease with Magisk resetprop-first LMKD evidence and lightweight unchanged boots.' release-notes/README.md
 
           changelog_tmp="$(mktemp)"
           printf '%s\n' \
