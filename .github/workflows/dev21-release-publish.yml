@@ -47,7 +47,7 @@ jobs:
             echo 'STOP tag already exists'
             exit 1
           fi
-          if gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          if gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" | jq -e --arg tag "$TAG_NAME" 'any(.[]; .tag_name == $tag)' >/dev/null; then
             echo 'STOP release already exists'
             exit 1
           fi
@@ -80,9 +80,17 @@ jobs:
 
           created=0
           published=0
+          release_id=
           cleanup() {
             if [ "$created" = 1 ] && [ "$published" = 0 ]; then
-              gh release delete "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag >/dev/null 2>&1 || true
+              if [ -n "$release_id" ]; then
+                gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$release_id" >/dev/null 2>&1 || true
+              else
+                gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" 2>/dev/null | jq -r --arg tag "$TAG_NAME" '.[] | select(.tag_name == $tag and .draft == true) | .id' | while read -r draft_id; do
+                  [ -n "$draft_id" ] && gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$draft_id" >/dev/null 2>&1 || true
+                done
+              fi
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG_NAME" >/dev/null 2>&1 || true
             fi
           }
           trap cleanup EXIT
@@ -96,25 +104,31 @@ jobs:
             --draft
           created=1
 
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_NAME" > dist/release-draft.json
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > dist/releases-after-create.json
           jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
-            '.draft == true and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target' \
-            dist/release-draft.json >/dev/null
+            '[.[] | select(.draft == true and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target)] | length == 1' \
+            dist/releases-after-create.json >/dev/null
+          jq --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
+            '[.[] | select(.draft == true and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target)] | .[0]' \
+            dist/releases-after-create.json > dist/release-draft.json
+          release_id="$(jq -r '.id' dist/release-draft.json)"
+          test -n "$release_id"
+          test "$release_id" != null
           jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
             '.assets[] | select(.name == $name and .size == $size)' \
             dist/release-draft.json >/dev/null
-          git fetch origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME"
-          test "$(git rev-list -n 1 "$TAG_NAME")" = "$TARGET_COMMIT"
 
-          gh release edit "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" -F draft=false -F prerelease=true > dist/release-public-patch.json
           published=1
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_NAME" > dist/release-public.json
-          jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" \
-            '.draft == false and .prerelease == true and .name == $title and .tag_name == $tag' \
+          jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
+            '.draft == false and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target' \
             dist/release-public.json >/dev/null
           jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
             '.assets[] | select(.name == $name and .size == $size)' \
             dist/release-public.json >/dev/null
+          git fetch origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME"
+          test "$(git rev-list -n 1 "$TAG_NAME")" = "$TARGET_COMMIT"
 
           mkdir -p dist/public-download
           gh release download "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET_NAME" --dir dist/public-download
