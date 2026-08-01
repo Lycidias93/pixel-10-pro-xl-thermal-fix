@@ -1,0 +1,148 @@
+name: Publish verified Dev.21 prerelease
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.head_ref == 'repo-maintenance/dev21-lmkd-resetprop-light-boot-20260731'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_COMMIT: 2ff33ece36e2a83c0c2fd7debd947fe2fa05632e
+      TAG_NAME: v2.0.0-alpha.3-dev.21
+      RELEASE_TITLE: 2.0.0 Alpha 3 Dev 21
+      VERSION: 2.0.0-alpha.3-dev.21
+      VERSION_CODE: '1016232'
+      ASSET_NAME: pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.21.zip
+      ASSET_SHA256: bebed9e85bfa35bc7b7b485255e3d727b770956d6e2290b28c6580cb4fc881cd
+      ASSET_BYTES: '332201'
+      RELEASE_NOTES_PATH: release-notes/2.0.0-alpha.3-dev.21.md
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_COMMIT }}
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y zip unzip jq
+
+      - name: Build, publish and publicly verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh auth status >/dev/null 2>&1
+          test "$(git rev-parse HEAD)" = "$TARGET_COMMIT"
+          grep -Fxq "version=$VERSION" module.prop
+          grep -Fxq "versionCode=$VERSION_CODE" module.prop
+          test -s "$RELEASE_NOTES_PATH"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+            echo 'STOP tag already exists'
+            exit 1
+          fi
+          if gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'STOP release already exists'
+            exit 1
+          fi
+
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          bash tests/test-release-package-exclusions.sh
+          mkdir -p dist
+          asset_path="dist/$ASSET_NAME"
+          dev_tools/build-release-module.sh "$asset_path" | tee dist/release-build-metadata.txt
+          dev_tools/verify-release-module.sh "$asset_path"
+          actual_sha="$(sha256sum "$asset_path" | awk '{print $1}')"
+          actual_bytes="$(wc -c < "$asset_path" | tr -d ' ')"
+          test "$actual_sha" = "$ASSET_SHA256"
+          test "$actual_bytes" = "$ASSET_BYTES"
+          unzip -tq "$asset_path"
+          unzip -p "$asset_path" module.prop | grep -Fxq "version=$VERSION"
+          unzip -p "$asset_path" module.prop | grep -Fxq "versionCode=$VERSION_CODE"
+
+          notes_file=dist/release-notes-public.md
+          sed \
+            -e '1s/.*/# 2.0.0 Alpha 3 Dev 21/' \
+            -e 's/^Dev.21 is an unreleased device-test build\.$/Dev.21 is a device-tested prerelease build./' \
+            "$RELEASE_NOTES_PATH" > "$notes_file"
+          printf '\n## Verification\n\n' >> "$notes_file"
+          printf -- '- Hardware test: PASS (Harish)\n' >> "$notes_file"
+          printf -- '- Repository CI: 6/6 PASS on the cleaned integration head\n' >> "$notes_file"
+          printf -- '- Target commit: `%s`\n' "$TARGET_COMMIT" >> "$notes_file"
+          printf -- '- Asset SHA-256: `%s`\n' "$ASSET_SHA256" >> "$notes_file"
+          printf -- '- Release notes source: `%s@%s`\n' "$RELEASE_NOTES_PATH" "$TARGET_COMMIT" >> "$notes_file"
+
+          created=0
+          published=0
+          cleanup() {
+            if [ "$created" = 1 ] && [ "$published" = 0 ]; then
+              gh release delete "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+
+          gh release create "$TAG_NAME" "$asset_path" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_COMMIT" \
+            --title "$RELEASE_TITLE" \
+            --notes-file "$notes_file" \
+            --prerelease \
+            --draft
+          created=1
+
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_NAME" > dist/release-draft.json
+          jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" --arg target "$TARGET_COMMIT" \
+            '.draft == true and .prerelease == true and .name == $title and .tag_name == $tag and .target_commitish == $target' \
+            dist/release-draft.json >/dev/null
+          jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
+            '.assets[] | select(.name == $name and .size == $size)' \
+            dist/release-draft.json >/dev/null
+          git fetch origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME"
+          test "$(git rev-list -n 1 "$TAG_NAME")" = "$TARGET_COMMIT"
+
+          gh release edit "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
+          published=1
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG_NAME" > dist/release-public.json
+          jq -e --arg title "$RELEASE_TITLE" --arg tag "$TAG_NAME" \
+            '.draft == false and .prerelease == true and .name == $title and .tag_name == $tag' \
+            dist/release-public.json >/dev/null
+          jq -e --arg name "$ASSET_NAME" --argjson size "$ASSET_BYTES" \
+            '.assets[] | select(.name == $name and .size == $size)' \
+            dist/release-public.json >/dev/null
+
+          mkdir -p dist/public-download
+          gh release download "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET_NAME" --dir dist/public-download
+          public_sha="$(sha256sum "dist/public-download/$ASSET_NAME" | awk '{print $1}')"
+          public_bytes="$(wc -c < "dist/public-download/$ASSET_NAME" | tr -d ' ')"
+          test "$public_sha" = "$ASSET_SHA256"
+          test "$public_bytes" = "$ASSET_BYTES"
+
+          {
+            printf 'release_kind=prerelease\n'
+            printf 'tag=%s\n' "$TAG_NAME"
+            printf 'target_commit=%s\n' "$TARGET_COMMIT"
+            printf 'asset_name=%s\n' "$ASSET_NAME"
+            printf 'asset_sha256=%s\n' "$public_sha"
+            printf 'asset_bytes=%s\n' "$public_bytes"
+            printf 'draft=false\n'
+            printf 'prerelease=true\n'
+            printf 'RESULT: DEV21_PUBLIC_PRERELEASE_VERIFY_PASS\n'
+          } | tee dist/release-receipt.txt
+
+      - name: Upload publication receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev21-publication-receipt-${{ env.TARGET_COMMIT }}
+          path: |
+            dist/release-receipt.txt
+            dist/release-public.json
+            dist/release-build-metadata.txt
+            dist/release-notes-public.md
+          if-no-files-found: error
+          retention-days: 30
