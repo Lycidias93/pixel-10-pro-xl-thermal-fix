@@ -168,6 +168,24 @@ ui_menu4() {
   UI_INDEX="$_idx"; UI_REASON="max_steps"; UI_STEPS="$_steps"; return 0
 }
 
+ui_menu5() {
+  _title="$1"; _label0="$2"; _label1="$3"; _label2="$4"; _label3="$5"; _label4="$6"; _idx="${7:-0}"; _steps=0
+  case "$_idx" in 0|1|2|3|4) ;; *) _idx=0 ;; esac
+  mc_head "$_title"; mc_msg "1 $_label0"; mc_msg "2 $_label1"; mc_msg "3 $_label2"; mc_msg "4 $_label3"; mc_msg "5 $_label4"; mc_foot
+  while [ "$_steps" -le 16 ]; do
+    _pos=$(( _idx + 1 ))
+    case "$_idx" in 0) _label="$_label0" ;; 1) _label="$_label1" ;; 2) _label="$_label2" ;; 3) _label="$_label3" ;; *) _label="$_label4" ;; esac
+    mc_msg "Current $_pos/5: $_label"
+    _key="$(mc_read_key)"
+    case "$_key" in
+      up) _idx=$(( (_idx + 1) % 5 )); _steps=$(( _steps + 1 )) ;;
+      down) UI_INDEX="$_idx"; UI_REASON="volume_down"; UI_STEPS="$_steps"; return 0 ;;
+      timeout) UI_INDEX="$_idx"; UI_REASON="timeout"; UI_STEPS="$_steps"; return 0 ;;
+    esac
+  done
+  UI_INDEX="$_idx"; UI_REASON="max_steps"; UI_STEPS="$_steps"; return 0
+}
+
 ui_menu6() {
   _title="$1"; _label0="$2"; _label1="$3"; _label2="$4"; _label3="$5"; _label4="$6"; _label5="$7"; _idx="${8:-0}"; _steps=0
   case "$_idx" in 0|1|2|3|4|5) ;; *) _idx=0 ;; esac

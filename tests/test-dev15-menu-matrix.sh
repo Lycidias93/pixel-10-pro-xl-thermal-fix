@@ -42,6 +42,11 @@ for route in \
 done
 pass installer_route_matrix_complete
 
+for fn in 'ui_menu3() {' 'ui_menu4() {' 'ui_menu5() {' 'ui_menu6() {'; do
+  grep -Fq "$fn" "$action" || fail "ui_menu_fn_missing=$fn"
+done
+pass action_menu_functions_defined
+
 for route in \
   'mc_cycle4 "Action" "Settings" "Debug" "Advanced" "Exit"' \
   'mc_cycle4 "Settings" "Polling Mode" "Thermal Profile" "ZRAM 100%" "Back"' \
