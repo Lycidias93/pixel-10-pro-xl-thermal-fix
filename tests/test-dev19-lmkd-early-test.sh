@@ -78,12 +78,12 @@ grep -Fq 'LMKD 1% reload' "$action"
 grep -Fq 'LMKD Reload Evidence' "$action"
 grep -Fq 'LMKD 1% reload' "$menu"
 grep -Fq 'LMKD_SWAP_LOW_RELOAD' "$status"
-grep -Fq 'version=2.0.0-alpha.3-dev.21' "$module_prop"
-grep -Fq 'versionCode=1016232' "$module_prop"
+grep -Fq 'version=2.0.0' "$module_prop"
+grep -Fq 'versionCode=1016240' "$module_prop"
 [[ ! -e "$root/tools/lmkd/early-swap-low-test.sh" ]]
 [[ ! -e "$root/tools/lmkd/verify-early-swap-low-test.sh" ]]
 
-printf '%s\n' 'PASS dev21_lmkd_consolidated_in_zram_script'
+printf '%s\n' 'PASS stable_lmkd_consolidated_in_zram_script'
 printf '%s\n' 'PASS dev20_aosp_reinit_trigger_must_succeed'
 printf '%s\n' 'PASS dev20_failed_reinit_uses_verified_restart_fallback'
 printf '%s\n' 'PASS dev20_runtime_restore_path'
