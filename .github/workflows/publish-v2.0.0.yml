@@ -1,0 +1,89 @@
+name: Publish 2.0.0 stable
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-v2.0.0.yml
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: publish-v2.0.0-stable
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      EXPECTED_ARTIFACT_ID: "8920401033"
+      EXPECTED_SHA256: b22eb7a5b761711c204db1ea4e375eed1cf9f1cfc39a852411e47db4481348fa
+      EXPECTED_BYTES: "330660"
+      RELEASE_TAG: v2.0.0
+      RELEASE_ASSET: pixel-10-thermal-memory-control-2.0.0.zip
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Finalize stable metadata
+        run: python3 dev_tools/finalize-v2.0.0-release.py
+
+      - name: Remove one-shot publisher
+        run: git rm .github/workflows/publish-v2.0.0.yml dev_tools/finalize-v2.0.0-release.py
+
+      - name: Commit and push final public state
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add README.md CHANGELOG.md update.json release-notes/2.0.0.md release-notes/README.md
+          git commit -m "Publish 2.0.0 stable metadata"
+          git push origin HEAD:main
+
+      - name: Download and verify exact device-tested package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/v2.0.0-release"
+          mkdir -p "$work/artifact" "$work/release"
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/artifacts/$EXPECTED_ARTIFACT_ID/zip" > "$work/artifact-wrapper.zip"
+          unzip -q "$work/artifact-wrapper.zip" -d "$work/artifact"
+          candidate=""
+          while IFS= read -r file; do
+            actual_sha="$(sha256sum "$file" | awk '{print $1}')"
+            if [ "$actual_sha" = "$EXPECTED_SHA256" ]; then
+              candidate="$file"
+              break
+            fi
+          done < <(find "$work/artifact" -type f -name '*.zip' -print)
+          test -n "$candidate"
+          actual_bytes="$(wc -c < "$candidate" | tr -d ' ')"
+          test "$actual_bytes" = "$EXPECTED_BYTES"
+          cp "$candidate" "$work/release/$RELEASE_ASSET"
+          unzip -tq "$work/release/$RELEASE_ASSET"
+          test "$(sha256sum "$work/release/$RELEASE_ASSET" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          printf '%s\n' "release_asset=$work/release/$RELEASE_ASSET" >> "$GITHUB_ENV"
+          printf '%s\n' "RESULT: V200_EXACT_ASSET_VERIFY_PASS sha256=$EXPECTED_SHA256 bytes=$EXPECTED_BYTES"
+
+      - name: Create stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release already exists: $RELEASE_TAG"
+            exit 20
+          fi
+          final_sha="$(git rev-parse HEAD)"
+          gh release create "$RELEASE_TAG" "$release_asset#Pixel 10 Thermal & Memory Control 2.0.0" --title "Pixel 10 Thermal & Memory Control 2.0.0" --notes-file release-notes/2.0.0.md --target "$final_sha" --latest
+          verify_dir="$RUNNER_TEMP/v2.0.0-release/verify"
+          mkdir -p "$verify_dir"
+          gh release download "$RELEASE_TAG" --pattern "$RELEASE_ASSET" --dir "$verify_dir"
+          test "$(sha256sum "$verify_dir/$RELEASE_ASSET" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          test "$(wc -c < "$verify_dir/$RELEASE_ASSET" | tr -d ' ')" = "$EXPECTED_BYTES"
+          printf '%s\n' "RESULT: V200_PUBLIC_RELEASE_PASS tag=$RELEASE_TAG sha256=$EXPECTED_SHA256 bytes=$EXPECTED_BYTES"
