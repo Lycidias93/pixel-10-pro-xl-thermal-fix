@@ -48,13 +48,14 @@ jobs:
           bash tests/test-dev14-eh-safety.sh
           bash tests/test-zram-eh-dev12.sh
 
-      - name: Verify Dynamic V2 and Dev.21 contracts
+      - name: Verify Dynamic V2 and current release contracts
         shell: bash
         run: |
           set -euo pipefail
           grep -Fq 'Dynamic V2 is the active source architecture' README.md
-          grep -Fq 'version=2.0.0-alpha.3-dev.21' module.prop
-          grep -Fq 'versionCode=1016232' module.prop
+          grep -Fq 'version=2.0.0' module.prop
+          grep -Fq 'versionCode=1016240' module.prop
+          grep -Fq '2.0.0 promotes the device-tested Dynamic V2 line' release-notes/2.0.0.md
           grep -Fq 'property_writer=magisk_resetprop|resetprop_rs_fallback' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'Lightweight normal boots' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'SYSTEM_RESETPROP=' tools/zram/apply-zram-100p.sh
