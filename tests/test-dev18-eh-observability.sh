@@ -77,8 +77,8 @@ grep -Fq 'explicit_user_reload' "$apply"
 grep -Fq 'lmkd.reinit' "$apply"
 grep -Fq 'update_manager_badges' "$service"
 
-grep -Fq 'version=2.0.0-alpha.3-dev.21' "$module_prop"
-grep -Fq 'versionCode=1016232' "$module_prop"
+grep -Fq 'version=2.0.0' "$module_prop"
+grep -Fq 'versionCode=1016240' "$module_prop"
 
 printf '%s\n' 'PASS dev18_eh_apply_restore_event_log'
 printf '%s\n' 'PASS dev18_eh_advanced_ux'
