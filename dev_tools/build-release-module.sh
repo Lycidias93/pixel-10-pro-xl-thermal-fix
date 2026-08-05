@@ -25,7 +25,7 @@ exclude_path() {
   case "$1" in
     .git*|.github/*|.workflow-baseline|.gitattributes) return 0 ;;
     deprecated/*|scratch/*|dev_tools/*|docs/*|tests/*|test/*|fixtures/*|evidence/*|release/*|release-notes/*|dist/*) return 0 ;;
-    RELEASE_NOTES_*|README.md|CHANGELOG.md|CREDITS.md|VERIFY_*.md|WORKFLOW_*.md|LICENSE|*.zip) return 0 ;;
+    RELEASE_NOTES_*|README.md|CHANGELOG.md|CREDITS.md|AGENTS.md|VERIFY_*.md|WORKFLOW_*.md|LICENSE|*.zip) return 0 ;;
     tools/v2-public-alpha2-policy-guard.sh|tools/verify-v2-alpha2-candidate.sh) return 0 ;;
     tools/outdoor-delta-validation-guard.sh) return 0 ;;
     tools/bootguard/bootguard-threshold-policy-guard.sh) return 0 ;;
