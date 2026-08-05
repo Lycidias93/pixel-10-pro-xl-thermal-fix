@@ -4,27 +4,27 @@
 
 Dynamic V2 is the active source architecture on `main`.
 
-[Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
 > [!IMPORTANT]
-> The current build is a **public prerelease**. Keep a working module-disable or recovery path. Experimental Emerald Hill and LMKD options are opt-in and are not required for the normal thermal feature set.
+> **2.0.0 is the current stable release.** It passed repository CI and exact-package verification on a Pixel 10 Pro XL (`mustang`) running Android 17 build `CP2A.260705.006`. Experimental Emerald Hill and LMKD controls remain opt-in.
 
 ## Current release
 
 | Item | Value |
 |---|---|
-| Version | `2.0.0-alpha.3-dev.21` |
-| Version code | `1016232` |
-| Release type | Public, device-tested prerelease |
-| Tag | `v2.0.0-alpha.3-dev.21` |
-| Asset | `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.21.zip` |
-| Asset size | `332201` bytes |
-| SHA-256 | `bebed9e85bfa35bc7b7b485255e3d727b770956d6e2290b28c6580cb4fc881cd` |
-| Release target | `2ff33ece36e2a83c0c2fd7debd947fe2fa05632e` |
+| Version | `2.0.0` |
+| Version code | `1016240` |
+| Release type | Stable, device-verified Dynamic V2 |
+| Tag | `v2.0.0` |
+| Asset | `pixel-10-thermal-memory-control-2.0.0.zip` |
+| Asset size | `330660` bytes |
+| SHA-256 | `b22eb7a5b761711c204db1ea4e375eed1cf9f1cfc39a852411e47db4481348fa` |
+| Device proof | `mustang / CP2A.260705.006 / Android 17` |
 
-Dev.21 adds a readback-verified LMKD property writer, targeted LMKD reload, lightweight unchanged-boot verification, automatic P/T/Z/L badge refresh, and preserved Bootguard escalation.
+2.0.0 promotes Dynamic V2 to stable with stock-derived thermal materialization, guarded Polling and Outdoor profiles, optional ZRAM 100%, adaptive or experimental Emerald Hill control, the optional LMKD 1% reload path, Bootguard recovery, lightweight unchanged boots, and automatic P/T/Z/L manager badges.
 
-The stable and test update paths are maintained independently. The **test** path follows current prereleases; selecting a channel only changes the update metadata path and does not download or flash a ZIP.
+The stable and test update paths remain independent. Selecting a channel changes only the active update metadata path; it does not download or flash a ZIP.
 
 ## What the module is designed to do
 
@@ -131,7 +131,7 @@ These deltas apply only to validated Outdoor target entries. Higher profiles may
 
 ### ZRAM 100%
 
-ZRAM is optional but enabled by default in a fresh Dev.21 install unless the user selects Disabled.
+ZRAM is optional but enabled by default in a fresh 2.0.0 install unless the user selects Disabled.
 
 When enabled, the module configures:
 
@@ -162,7 +162,7 @@ LMKD is Android's Low Memory Killer Daemon. The experimental option sets:
 ro.lmk.swap_free_low_percentage=1
 ```
 
-Dev.21 uses Magisk system `resetprop` first for this one property, verifies readback, and falls back to `resetprop-rs` only when required. Normal ZRAM properties continue to use `resetprop-rs`.
+2.0.0 uses Magisk system `resetprop` first for this one property, verifies readback, and falls back to `resetprop-rs` only when required. Normal ZRAM properties continue to use `resetprop-rs`.
 
 After the write, the module:
 
@@ -270,7 +270,7 @@ The compact `Z` badge shows ZRAM state, not the Emerald Hill submode. Check **Ac
 
 ### Install steps
 
-1. Download the ZIP from the [Dev.21 prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21).
+1. Download `pixel-10-thermal-memory-control-2.0.0.zip` from the [2.0.0 stable release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0).
 2. Verify the SHA-256 shown in [Current release](#current-release).
 3. Install the ZIP from Magisk.
 4. Use the volume-key menu:
@@ -368,7 +368,7 @@ lmkd_service_after=running
 Use **Action → Advanced → Update Channel**.
 
 - **Stable:** follows the separately maintained stable metadata.
-- **Test:** follows public prereleases such as Dev.21.
+- **Test:** follows public prereleases such as 2.0.0.
 - Switching changes `updateJson` only.
 - It does not download, install, or flash anything.
 - Refresh Magisk's update check after switching.
@@ -457,7 +457,7 @@ The module uninstaller explicitly removes its persistent data and guard state; t
 
 ## Evidence boundaries
 
-Dev.21 has detailed postboot evidence on Pixel 10 Pro XL (`mustang`) and external Pixel 10 Pro (`blazer`) testing. Platform support for `frankel` and `rango` is implemented, but each new device/build combination still benefits from fresh on-device evidence.
+2.0.0 has detailed postboot evidence on Pixel 10 Pro XL (`mustang`) and external Pixel 10 Pro (`blazer`) testing. Platform support for `frankel` and `rango` is implemented, but each new device/build combination still benefits from fresh on-device evidence.
 
 A green CI run proves repository behavior, packaging, fixtures, and static contracts. It does not replace installation, reboot, active-vendor, ZRAM, LMKD, pTune, or hardware evidence.
 

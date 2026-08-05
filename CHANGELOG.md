@@ -1,3 +1,17 @@
+# 2.0.0
+
+Stable Dynamic V2 release. Exact asset: `pixel-10-thermal-memory-control-2.0.0.zip`, SHA-256 `b22eb7a5b761711c204db1ea4e375eed1cf9f1cfc39a852411e47db4481348fa`, 330660 bytes.
+
+- Promotes the stock-derived Dynamic V2 architecture from the device-tested prerelease line to stable.
+- Verifies the exact package on Pixel 10 Pro XL (`mustang`) with Android 17 build `CP2A.260705.006`.
+- Records full first-boot Bootguard verification with an active validated vendor overlay and signed last-good state.
+- Ships Polling Mod with 22/22 controlled values active at `5000` and four Thermal choices through Outdoor Extended `+3 °C`.
+- Provides optional ZRAM 100% with `lz77eh`, `vm.swappiness=100`, active-swap and non-zero-disksize verification.
+- Keeps Emerald Hill adaptive by default and gates the experimental maximum-frequency minimum lock separately.
+- Provides the optional LMKD 1% policy with readback-verified property writing and targeted AOSP reinit evidence.
+- Refreshes P/T/Z/L manager badges after verified boot and Action changes.
+- Retains pTune conflict protection, firmware-transition rematerialization, bounded Bootguard recovery, and a lean package without development-only files or hash sidecars.
+
 # 2.0.0-alpha.3-dev.21
 
 Public device-tested Dynamic V2 prerelease. Exact asset: `pixel-10-thermal-memory-control-2.0.0-alpha.3-dev.21.zip`, SHA-256 `bebed9e85bfa35bc7b7b485255e3d727b770956d6e2290b28c6580cb4fc881cd`, 332201 bytes.
