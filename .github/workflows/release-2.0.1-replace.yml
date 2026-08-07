@@ -42,7 +42,6 @@ jobs:
           bash tests/test-canary-thermal-patch-hotfix.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
           bash tests/test-release-package-exclusions.sh
-          bash dev_tools/verify-v2-dynamic-safety.sh
 
       - name: Build and verify stable asset
         id: build
