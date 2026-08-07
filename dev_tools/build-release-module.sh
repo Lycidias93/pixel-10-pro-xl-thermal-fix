@@ -10,7 +10,7 @@ version="$(sed -n 's/^version=//p' module.prop | head -n 1)"
   exit 2
 }
 
-output="${1:-$repo_root/dist/pixel-10-thermal-memory-control-${version}.zip}"
+output="${1:-$repo_root/dist/pixel-thermal-memory-control-${version}.zip}"
 mkdir -p "$(dirname "$output")"
 output="$(cd "$(dirname "$output")" && pwd)/$(basename "$output")"
 
@@ -31,6 +31,7 @@ exclude_path() {
     tools/bootguard/bootguard-threshold-policy-guard.sh) return 0 ;;
     tools/ptune/ptune-install-state-observability-guard.sh) return 0 ;;
     tools/debug/collect-outdoor-boot-failure-online.sh|tools/debug/collect-thermal-prerelease-online.sh|tools/debug/collect-thermal-prerelease-online-menu.sh) return 0 ;;
+    tools/core/patch-thermal-fix5-core.sh) return 0 ;;
     tools/core/outdoor-runtime-evidence.tsv) return 0 ;;
     */tests/*|*/test/*|*/fixtures/*|*/scratch/*|*/deprecated/*) return 0 ;;
     */test-*.sh|*/*-test.sh|*/*-fixture.sh|*/*-fixtures.sh|*/*fixture*.json) return 0 ;;
@@ -58,8 +59,13 @@ required=(
   tools/core/supported-build.sh
   tools/core/validation-state.sh
   tools/core/outdoor-runtime-policy.sh
+  tools/core/thermal-layout.sh
+  tools/core/patch-thermal-vnext-core.sh
+  tools/core/patch-thermal-validated-vnext.sh
   tools/core/patch-thermal-validated.sh
+  tools/bootguard/compat-check-vnext.sh
   tools/bootguard/compat-check.sh
+  tools/debug/collect-thermal-online-v5.sh
 )
 for path in "${required[@]}"; do
   [[ -s "$stage/$path" ]] || {
