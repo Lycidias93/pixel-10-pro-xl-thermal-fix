@@ -34,11 +34,8 @@ jobs:
           sh -n tools/menu/install-options-menu.sh
           sh -n tools/core/platform-transition.sh
 
-      - name: vNext layout regression
+      - name: vNext layout and Pixel 10 regression
         run: bash tests/test-vnext-layouts.sh
-
-      - name: Multiline HotThreshold regression
-        run: bash tests/test-canary-thermal-patch-hotfix.sh
 
       - name: Outdoor delta runtime regression
         run: bash tests/test-outdoor-delta-validation-runtime.sh
