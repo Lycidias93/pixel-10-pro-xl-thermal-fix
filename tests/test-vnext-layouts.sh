@@ -74,11 +74,11 @@ run_case() {
   THERMAL_BUILD_ID="$build" \
   THERMAL_SOURCE_DIR="$src" \
   THERMAL_DATA_ROOT="$data" \
-    sh "$mod/tools/core/patch-thermal-validated.sh" mod "$profile" "$mod" > "$root/run.log"
+    sh "$mod/tools/core/patch-thermal-validated.sh" mod "$profile" "$mod" | tee "$root/run.log"
 
-  grep -q '^PATCH_THERMAL_DELTA_VALIDATION=pass$' "$root/run.log"
-  grep -q "^family=$expected_family$" "$mod/guard/thermal-layout.env"
-  grep -q "^third=$third$" "$mod/guard/thermal-layout.env"
+  grep -q '^PATCH_THERMAL_DELTA_VALIDATION=pass$' "$root/run.log" || { echo "FAIL delta_validation_$device"; exit 10; }
+  grep -q "^family=$expected_family$" "$mod/guard/thermal-layout.env" || { echo "FAIL layout_family_$device"; cat "$mod/guard/thermal-layout.env"; exit 11; }
+  grep -q "^third=$third$" "$mod/guard/thermal-layout.env" || { echo "FAIL layout_third_$device"; cat "$mod/guard/thermal-layout.env"; exit 12; }
   [[ -s "$mod/system/vendor/etc/thermal_info_config.json" ]]
   [[ -s "$mod/system/vendor/etc/thermal_info_config_charge.json" ]]
   [[ -s "$mod/system/vendor/etc/$third" ]]
