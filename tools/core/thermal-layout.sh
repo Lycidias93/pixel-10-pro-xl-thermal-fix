@@ -39,7 +39,8 @@ thermal_layout_device_family() {
 
 thermal_layout_detect() {
   _tl_dir="$1"
-  _tl_device="${2:-unknown}"
+  _tl_device="${2:-${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}}"
+  [ -n "$_tl_device" ] || _tl_device=unknown
   _tl_family="$(thermal_layout_device_family "$_tl_device")"
   THERMAL_LAYOUT_FAMILY=unsupported
   THERMAL_LAYOUT_THIRD=none
