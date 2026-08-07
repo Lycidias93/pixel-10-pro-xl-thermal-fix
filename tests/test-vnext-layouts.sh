@@ -9,7 +9,6 @@ for code in tokay caiman komodo comet tegu stallion; do
   grep -q "\"$code\"" "$repo_root/supported_versions.json" || { echo "FAIL missing_device_$code"; exit 2; }
 done
 
-# Platform policy: stable Pixel 10 keeps +3, experimental Tensor G4 starts at +1.
 . "$repo_root/tools/core/outdoor-runtime-policy.sh"
 [[ "$(thermal_outdoor_max_delta mustang 17 TEST)" = 3 ]]
 for code in tokay caiman komodo comet tegu stallion; do
@@ -36,21 +35,20 @@ make_module() {
 
 write_fixture() {
   local path="$1"
-  cat > "$path" <<'EOF'
-{
-  "Sensors": [
-    {
-      "Name": "VIRTUAL-SKIN",
-      "HotThreshold": [
-        40,
-        45,
-        "NaN"
-      ],
-      "PollingDelay": 300000
-    }
-  ]
-}
-EOF
+  printf '%s\n' \
+    '{' \
+    '  "Sensors": [' \
+    '    {' \
+    '      "Name": "VIRTUAL-SKIN",' \
+    '      "HotThreshold": [' \
+    '        40,' \
+    '        45,' \
+    '        "NaN"' \
+    '      ],' \
+    '      "PollingDelay": 300000' \
+    '    }' \
+    '  ]' \
+    '}' > "$path"
 }
 
 run_case() {
@@ -89,10 +87,7 @@ run_case() {
   [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 0 ]]
 }
 
-# Allen's 10a family: base + charge + lpm. +1 only in the first prerelease.
 run_case stallion ZP11.260717.006 thermal_info_config_lpm.json outdoor-safe base_charge_lpm
-
-# Pixel 10 regression: even if lpm exists as an auxiliary file, throttling stays authoritative.
 run_case mustang CP2A.260805.005 thermal_info_config_throttling.json outdoor-extended base_charge_throttling thermal_info_config_lpm.json
 
 for script in \
