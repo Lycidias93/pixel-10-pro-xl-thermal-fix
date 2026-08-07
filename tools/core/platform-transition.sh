@@ -15,11 +15,7 @@ prop() {
   _override="$1"
   _name="$2"
   eval "_value=\${$_override:-}"
-  if [ -n "$_value" ]; then
-    printf '%s\n' "$_value"
-  else
-    getprop "$_name" 2>/dev/null || true
-  fi
+  if [ -n "$_value" ]; then printf '%s\n' "$_value"; else getprop "$_name" 2>/dev/null || true; fi
 }
 
 state_get() {
@@ -33,8 +29,7 @@ kv_get() {
 }
 
 cfg_set() {
-  _key="$1"
-  _value="$2"
+  _key="$1"; _value="$2"
   mkdir -p "${CFG%/*}" 2>/dev/null || true
   touch "$CFG"
   _tmp="$CFG.tmp.$$"
@@ -45,15 +40,10 @@ cfg_set() {
 }
 
 transition_set() {
-  _key="$1"
-  _value="$2"
+  _key="$1"; _value="$2"
   mkdir -p "$G"
   _tmp="$TRANSITION.tmp.$$"
-  if [ -r "$TRANSITION" ]; then
-    grep -v "^${_key}=" "$TRANSITION" > "$_tmp" 2>/dev/null || true
-  else
-    printf '%s\n' 'schema=pixel-thermal-platform-transition-v1' > "$_tmp"
-  fi
+  if [ -r "$TRANSITION" ]; then grep -v "^${_key}=" "$TRANSITION" > "$_tmp" 2>/dev/null || true; else printf '%s\n' 'schema=pixel-thermal-platform-transition-v1' > "$_tmp"; fi
   printf '%s=%s\n' "$_key" "$_value" >> "$_tmp"
   chmod 0600 "$_tmp" 2>/dev/null || true
   mv "$_tmp" "$TRANSITION"
@@ -78,18 +68,12 @@ OLD_INCREMENTAL="$(state_get incremental)"
 OLD_FINGERPRINT="$(state_get fingerprint)"
 
 reason=none
-if [ ! -s "$STATE" ]; then
-  reason=install_state_missing
-elif [ "${OLD_DEVICE:-unknown}" != "$DEVICE" ]; then
-  reason=device_changed
-elif [ "${OLD_ANDROID:-unknown}" != "$ANDROID" ]; then
-  reason=android_changed
-elif [ "${OLD_BUILD:-unknown}" != "$BUILD_ID" ]; then
-  reason=build_changed
-elif [ "${OLD_INCREMENTAL:-unknown}" != "$INCREMENTAL" ]; then
-  reason=incremental_changed
-elif [ "${OLD_FINGERPRINT:-unknown}" != "$FINGERPRINT" ]; then
-  reason=fingerprint_changed
+if [ ! -s "$STATE" ]; then reason=install_state_missing
+elif [ "${OLD_DEVICE:-unknown}" != "$DEVICE" ]; then reason=device_changed
+elif [ "${OLD_ANDROID:-unknown}" != "$ANDROID" ]; then reason=android_changed
+elif [ "${OLD_BUILD:-unknown}" != "$BUILD_ID" ]; then reason=build_changed
+elif [ "${OLD_INCREMENTAL:-unknown}" != "$INCREMENTAL" ]; then reason=incremental_changed
+elif [ "${OLD_FINGERPRINT:-unknown}" != "$FINGERPRINT" ]; then reason=fingerprint_changed
 fi
 
 write_observation() {
@@ -118,9 +102,7 @@ write_observation() {
 
 prepare() {
   if [ "$reason" = none ]; then
-    if [ ! -r "$TRANSITION" ]; then
-      write_observation no current
-    fi
+    if [ ! -r "$TRANSITION" ]; then write_observation no current; fi
     printf '%s\n' 'PLATFORM_TRANSITION=none'
     return 0
   fi
@@ -128,29 +110,29 @@ prepare() {
   mkdir -p "$G" "$DATA_ROOT"
   write_observation yes prepared
 
-  # post-fs-data runs before module mounts on Magisk. Remove only this module's
-  # controlled overlays, never sibling modules or unrelated vendor files.
-  rm -f "$MODDIR/system/vendor/etc/thermal_info_config.json" \
-        "$MODDIR/system/vendor/etc/thermal_info_config_charge.json" \
-        "$MODDIR/system/vendor/etc/thermal_info_config_throttling.json" 2>/dev/null || true
+  # Remove only this module's controlled Thermal overlays. The wildcard is
+  # intentional because vNext admits either throttling.json or lpm.json as the
+  # third controlled file depending on device family.
+  rm -f "$MODDIR/system/vendor/etc"/thermal_info_config*.json 2>/dev/null || true
 
-  # A same-build incremental/fingerprint change must not reuse the old stock
-  # snapshot. Preserve other build caches as evidence and rollback diagnostics.
   rm -rf "$DATA_ROOT/originals/$DEVICE/$BUILD_SLUG" 2>/dev/null || true
-
-  # Remove stale validation publications and their legacy links. The validated
-  # materializer recreates all of them atomically on success.
   rm -rf "$VALIDATION_DIR" 2>/dev/null || true
   rm -f "$MODDIR/validation_report.json" \
         "$DATA_ROOT/validation_report.json" \
         "$MODDIR/guard/patch-manifest.tsv" \
         "$MODDIR/guard/outdoor-delta-validation.env" \
+        "$MODDIR/guard/thermal-layout.env" \
         "$DATA_ROOT/outdoor-delta-validation.env" 2>/dev/null || true
 
   cfg_set THERMAL_DISABLED 1
   printf '%s\n' 'PROFILE_STALE_AFTER_OTA=yes' > "$G/profile_stale_after_ota"
-  printf '%s\n' 'REINSTALL_REQUIRED=no' > "$G/reinstall_required"
-  printf '%s\n' "$reason" > "$G/auto_profile_switch_reason"
+  if [ "$(kv_get VNEXT_EXPERIMENTAL_PLATFORM "$CFG")" = 1 ]; then
+    printf '%s\n' 'REINSTALL_REQUIRED=yes' > "$G/reinstall_required"
+    printf '%s\n' experimental_platform_reinstall_required > "$G/auto_profile_switch_reason"
+  else
+    printf '%s\n' 'REINSTALL_REQUIRED=no' > "$G/reinstall_required"
+    printf '%s\n' "$reason" > "$G/auto_profile_switch_reason"
+  fi
 
   printf '%s\n' 'PLATFORM_TRANSITION=prepared'
   printf '%s\n' "PLATFORM_TRANSITION_REASON=$reason"
@@ -175,14 +157,7 @@ complete() {
 }
 
 status() {
-  if [ -r "$TRANSITION" ]; then
-    cat "$TRANSITION"
-  else
-    printf '%s\n' 'schema=pixel-thermal-platform-transition-v1'
-    printf '%s\n' 'transition_pending=no'
-    printf '%s\n' 'phase=absent'
-    printf '%s\n' 'reason=none'
-  fi
+  if [ -r "$TRANSITION" ]; then cat "$TRANSITION"; else printf '%s\n' 'schema=pixel-thermal-platform-transition-v1' 'transition_pending=no' 'phase=absent' 'reason=none'; fi
 }
 
 case "${1:-status}" in
