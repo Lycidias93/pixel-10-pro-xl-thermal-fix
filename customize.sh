@@ -158,9 +158,13 @@ if thermal_supported_platform_check "$SUPPORTED_JSON" "$device" "$android"; then
     config_set AUTO_PROFILE_SWITCH 0
     config_set VNEXT_EXPERIMENTAL_PLATFORM 1
     config_set VNEXT_OTA_POLICY reinstall_required_after_transition
+    config_set PTUNE_OVERRIDE_POLICY blocked_experimental_platform
+    config_set ALLOW_THERMAL_WITH_PTUNE 0
+    config_set RISK_ACK_PTUNE_THERMAL_COLLISION none
     ui_print "! vNext experimental platform"
     ui_print "- Full Bootguard verification is forced"
     ui_print "- Outdoor profile is capped conservatively"
+    ui_print "- pTune coexistence override is blocked"
     ui_print "- Firmware transitions require reinstall"
   else
     config_set CANARY_DIAGNOSTIC_MODE 0
@@ -251,6 +255,15 @@ if [ -s "$MODPATH/install-state.txt" ]; then
     printf '%s\n' "thermal_layout_files=$THERMAL_LAYOUT_FILES_CSV" >> "$MODPATH/install-state.txt"
   fi
   printf '%s\n' "vnext_experimental_platform=$vnext_experimental" >> "$MODPATH/install-state.txt"
+fi
+
+READINESS_HELPER="$MODPATH/tools/debug/vnext-readiness-summary.sh"
+if [ -s "$READINESS_HELPER" ]; then
+  chmod 0755 "$READINESS_HELPER" 2>/dev/null || true
+  READINESS_FILE="$MODPATH/guard/support-readiness.env"
+  MODDIR="$MODPATH" THERMAL_DEVICE="$device" THERMAL_ANDROID="$android" THERMAL_BUILD_ID="$build_id" sh "$READINESS_HELPER" > "$READINESS_FILE" 2>/dev/null || true
+  readiness_state="$(sed -n 's/^readiness_state=//p' "$READINESS_FILE" 2>/dev/null | tail -n 1)"
+  [ -n "$readiness_state" ] && ui_print "- Readiness: $readiness_state"
 fi
 
 thermal_save_install_debug "success" "install_completed"
