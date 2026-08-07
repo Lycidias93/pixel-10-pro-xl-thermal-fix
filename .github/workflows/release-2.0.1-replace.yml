@@ -1,0 +1,98 @@
+name: Replace stable release with 2.0.1
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/release-2.0.1-replace.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      VERSION: 2.0.1
+      OLD_VERSION: 2.0.0
+      ASSET: pixel-10-thermal-memory-control-2.0.1.zip
+      SOURCE_DATE_EPOCH: '1786094700'
+    steps:
+      - name: Checkout exact main head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify stable metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fx 'version=2.0.1' module.prop
+          grep -Fx 'versionCode=1016241' module.prop
+          grep -F '"version": "2.0.1"' update.json
+          grep -F '/releases/download/v2.0.1/pixel-10-thermal-memory-control-2.0.1.zip' update.json
+
+      - name: Run hotfix regression guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-canary-thermal-patch-hotfix.sh
+          bash tests/test-outdoor-delta-validation-runtime.sh
+          bash tests/test-release-package-exclusions.sh
+          bash dev_tools/verify-v2-dynamic-safety.sh
+
+      - name: Build and verify stable asset
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset="$RUNNER_TEMP/$ASSET"
+          SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" bash dev_tools/build-release-module.sh "$asset"
+          sha="$(sha256sum "$asset" | awk '{print $1}')"
+          bytes="$(wc -c < "$asset" | tr -d ' ')"
+          entries="$(unzip -Z1 "$asset" | wc -l | tr -d ' ')"
+          test "$entries" = 56
+          printf 'asset=%s\n' "$asset" >> "$GITHUB_OUTPUT"
+          printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
+          printf 'bytes=%s\n' "$bytes" >> "$GITHUB_OUTPUT"
+          printf 'entries=%s\n' "$entries" >> "$GITHUB_OUTPUT"
+
+      - name: Publish 2.0.1 and verify uploaded bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release delete "v$VERSION" --repo "$REPO" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "v$VERSION" "${{ steps.build.outputs.asset }}#Pixel 10 Thermal & Memory Control $VERSION" \
+            --repo "$REPO" \
+            --target "$GITHUB_SHA" \
+            --title "Pixel 10 Thermal & Memory Control $VERSION" \
+            --notes-file "release-notes/$VERSION.md"
+          remote_digest="$(gh api "repos/$REPO/releases/tags/v$VERSION" --jq '.assets[] | select(.name == env.ASSET) | .digest')"
+          test "$remote_digest" = "sha256:${{ steps.build.outputs.sha }}"
+
+      - name: Remove superseded 2.0.0 release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "v$OLD_VERSION" --repo "$REPO" >/dev/null 2>&1; then
+            gh release delete "v$OLD_VERSION" --repo "$REPO" --yes
+          fi
+          if gh release view "v$OLD_VERSION" --repo "$REPO" >/dev/null 2>&1; then
+            printf '%s\n' 'FAIL old_release_still_present'
+            exit 1
+          fi
+
+      - name: Publication receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'version=%s\n' "$VERSION"
+          printf 'asset=%s\n' "$ASSET"
+          printf 'sha256=%s\n' '${{ steps.build.outputs.sha }}'
+          printf 'bytes=%s\n' '${{ steps.build.outputs.bytes }}'
+          printf 'entries=%s\n' '${{ steps.build.outputs.entries }}'
+          printf 'old_release_deleted=%s\n' "$OLD_VERSION"
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_2_0_1_REPLACEMENT_RELEASE_DONE outcome=success'
