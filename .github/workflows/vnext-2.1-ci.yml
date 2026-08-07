@@ -1,0 +1,57 @@
+name: vNext 2.1 CI
+
+on:
+  push:
+    branches:
+      - vnext-2.1.0-alpha.1
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  vnext:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Shell syntax
+        run: |
+          sh -n customize.sh
+          sh -n action.sh
+          sh -n post-fs-data.sh
+          sh -n service.sh
+          sh -n tools/core/thermal-layout.sh
+          sh -n tools/core/patch-thermal.sh
+          sh -n tools/core/patch-thermal-vnext-core.sh
+          sh -n tools/core/patch-thermal-validated.sh
+          sh -n tools/core/patch-thermal-validated-vnext.sh
+          sh -n tools/bootguard/compat-check.sh
+          sh -n tools/bootguard/compat-check-vnext.sh
+          sh -n tools/menu/install-options-menu.sh
+          sh -n tools/core/platform-transition.sh
+
+      - name: vNext layout regression
+        run: bash tests/test-vnext-layouts.sh
+
+      - name: Multiline HotThreshold regression
+        run: bash tests/test-canary-thermal-patch-hotfix.sh
+
+      - name: Outdoor delta runtime regression
+        run: bash tests/test-outdoor-delta-validation-runtime.sh
+
+      - name: OTA transition regression
+        run: bash tests/test-ota-transition-bootguard.sh
+
+      - name: Build lean prerelease package
+        run: |
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          dev_tools/build-release-module.sh dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip
+
+      - name: Package identity
+        run: |
+          sha256sum dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip
+          unzip -Z1 dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip | sort
