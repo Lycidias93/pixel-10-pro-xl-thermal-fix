@@ -1,13 +1,8 @@
 #!/system/bin/sh
 # Runtime admission for non-stock Thermal profiles.
-# Stock is always admitted. Supported Pixel 10 / Android platform tuples may
-# request up to +3 C, but the local stock-derived materializer and validator
-# remain the final fail-closed authority. Exact build IDs are evidence only.
+# Stable Pixel 10 platforms retain the verified +3 C envelope. Experimental
+# Tensor G4 vNext platforms are capped at +1 C until device runtime evidence expands it.
 
-# Android shell portability shim for the two legacy TSV header writes in
-# patch-thermal.sh. The contents API representation used literal backslash-t
-# sequences; only those exact headers are converted to real tab characters.
-# All other printf calls are delegated byte-for-byte to the shell builtin.
 case "${0##*/}" in
   patch-thermal.sh)
     printf() {
@@ -48,7 +43,14 @@ thermal_outdoor_platform_supported() {
   _device="${1:-unknown}"
   _android="${2:-unknown}"
   case "$_device:$_android" in
-    mustang:17|blazer:17|frankel:17|rango:17) return 0 ;;
+    mustang:17|blazer:17|frankel:17|rango:17|tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+thermal_outdoor_experimental_platform() {
+  case "${1:-unknown}:${2:-unknown}" in
+    tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -57,10 +59,12 @@ thermal_outdoor_max_delta() {
   _device="${1:-unknown}"
   _android="${2:-unknown}"
   _build="${3:-unknown}"
-  if thermal_outdoor_platform_supported "$_device" "$_android"; then
-    printf '%s\n' 3
-  else
+  if ! thermal_outdoor_platform_supported "$_device" "$_android"; then
     printf '%s\n' 0
+  elif thermal_outdoor_experimental_platform "$_device" "$_android"; then
+    printf '%s\n' 1
+  else
+    printf '%s\n' 3
   fi
 }
 
@@ -71,9 +75,12 @@ thermal_outdoor_policy_evidence() {
   case "$_device:$_android:$_build" in
     mustang:17:CP2A.260705.006) printf '%s\n' dev6_postboot_extended_12zones_84values_pass_2026-07-27 ;;
     mustang:17:ZP11.260618.005) printf '%s\n' allen_fix5_clean_flash_all_profiles_boot_2026-07-26 ;;
+    mustang:17:CP2A.260805.005) printf '%s\n' august_hotfix_aio_and_runtime_regression_pass_2026-08-07 ;;
     blazer:17:CP2A.260705.006) printf '%s\n' harish_fix5_extended_13zones_91values_pass_2026-07-26 ;;
     *)
-      if thermal_outdoor_platform_supported "$_device" "$_android"; then
+      if thermal_outdoor_experimental_platform "$_device" "$_android"; then
+        printf '%s\n' vnext_experimental_plus1_local_stock_validation_required
+      elif thermal_outdoor_platform_supported "$_device" "$_android"; then
         printf '%s\n' supported_platform_local_stock_validation_required
       else
         printf '%s\n' unsupported_platform_stock_only
