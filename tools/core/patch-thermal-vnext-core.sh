@@ -85,14 +85,14 @@ normalize_allowed() {
       }
       line=normalize_poll(line)
       if (in_hot) {
-        close=index(line,"]")
-        if (close>0) { line=mask_numbers(substr(line,1,close-1)) substr(line,close); in_hot=0; target=0 }
+        closing=index(line,"]")
+        if (closing>0) { line=mask_numbers(substr(line,1,closing-1)) substr(line,closing); in_hot=0; target=0 }
         else line=mask_numbers(line)
       } else if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
         open=index(line,"[")
         if (open>0) {
-          rest=substr(line,open+1); close=index(rest,"]")
-          if (close>0) { line=substr(line,1,open) mask_numbers(substr(rest,1,close-1)) substr(rest,close); target=0 }
+          rest=substr(line,open+1); closing=index(rest,"]")
+          if (closing>0) { line=substr(line,1,open) mask_numbers(substr(rest,1,closing-1)) substr(rest,closing); target=0 }
           else { line=substr(line,1,open) mask_numbers(rest); in_hot=1 }
         }
       }
@@ -129,14 +129,14 @@ patch_one() {
       }
       line=patch_poll(line)
       if (in_hot) {
-        close=index(line,"]")
-        if (close>0) { line=adjust_numbers(substr(line,1,close-1)) substr(line,close); in_hot=0; target=0 }
+        closing=index(line,"]")
+        if (closing>0) { line=adjust_numbers(substr(line,1,closing-1)) substr(line,closing); in_hot=0; target=0 }
         else line=adjust_numbers(line)
       } else if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
         open=index(line,"[")
         if (open>0) {
-          rest=substr(line,open+1); close=index(rest,"]")
-          if (close>0) { line=substr(line,1,open) adjust_numbers(substr(rest,1,close-1)) substr(rest,close); target=0 }
+          rest=substr(line,open+1); closing=index(rest,"]")
+          if (closing>0) { line=substr(line,1,open) adjust_numbers(substr(rest,1,closing-1)) substr(rest,closing); target=0 }
           else { line=substr(line,1,open) adjust_numbers(rest); in_hot=1 }
         }
       }
@@ -151,9 +151,7 @@ mkdir -p "$DATA_ROOT" "$CACHE_PARENT" "$TARGET_PARENT" "$GUARD_DIR"
 
 cache_valid=1
 [ -s "$MANIFEST" ] || cache_valid=0
-if [ "$cache_valid" -eq 1 ]; then
-  thermal_layout_from_manifest "$MANIFEST" || cache_valid=0
-fi
+if [ "$cache_valid" -eq 1 ]; then thermal_layout_from_manifest "$MANIFEST" || cache_valid=0; fi
 if [ "$cache_valid" -eq 1 ]; then
   _rows=0; _tab="$(printf '\t')"
   while IFS="$_tab" read -r file expected_sha expected_bytes poll300000 extra; do
@@ -177,9 +175,9 @@ fi
 if [ "$cache_valid" -ne 1 ]; then
   rm -rf "$CACHE_STAGE" "$CACHE_OLD"; mkdir -p "$CACHE_STAGE"
   SOURCE_DIR="${THERMAL_SOURCE_DIR:-}"
-  if [ -n "$SOURCE_DIR" ]; then thermal_layout_detect "$SOURCE_DIR" || fail 30 source_layout_unsupported_or_ambiguous; else
+  if [ -n "$SOURCE_DIR" ]; then thermal_layout_detect "$SOURCE_DIR" "$DEVICE" || fail 30 source_layout_unsupported_or_ambiguous; else
     for candidate in /data/adb/magisk/mirror/vendor/etc /data/adb/magisk/mirror/system/vendor/etc /sbin/.magisk/mirror/vendor/etc /sbin/.magisk/mirror/system/vendor/etc /vendor/etc /system/vendor/etc; do
-      if thermal_layout_detect "$candidate"; then SOURCE_DIR="$candidate"; break; fi
+      if thermal_layout_detect "$candidate" "$DEVICE"; then SOURCE_DIR="$candidate"; break; fi
     done
   fi
   [ -n "$SOURCE_DIR" ] || fail 30 stock_source_missing_or_layout_unsupported
