@@ -1,3 +1,14 @@
+# 2.0.1
+
+Stable Dynamic V2 hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.1.zip`, SHA-256 `6517cd106acd063e52596d4fc0f2e561cd019cdaa3712e930fcddaf746d4dbaa`, 330935 bytes.
+
+- Fixes the August/Canary false `rc=63` install rejection by validating both compact and multiline `HotThreshold` arrays without weakening exact per-value delta checks.
+- Keeps the complete 2.0.0 stable Dynamic V2 feature set: stock-derived guarded Thermal overlays, Polling Mod, four Thermal profiles, optional ZRAM 100%, Emerald Hill controls, optional LMKD 1% reload, Bootguard recovery, pTune guards, and P/T/Z/L manager badges.
+- Verifies August Stable `CP2A.260805.005` on Pixel 10 Pro XL (`mustang`) with KernelSU through full post-reboot Bootguard/runtime proof: all three active Thermal files matched the validated overlays, Polling was 22/22 at `5000` with no remaining controlled `300000` values, and ZRAM 100% was active.
+- Records independent Mustang August Canary verification by Allen Chang.
+- Keeps the July Stable `CP2A.260705.006` Magisk regression green with 22/22 Polling replacements and all 12 target zones / 84 threshold values validated.
+- Pixel 10a (`stallion`, Tensor G4) is not included in this release and remains a separate validation task.
+
 # 2.0.0
 
 Stable Dynamic V2 release. Exact asset: `pixel-10-thermal-memory-control-2.0.0.zip`, SHA-256 `b22eb7a5b761711c204db1ea4e375eed1cf9f1cfc39a852411e47db4481348fa`, 330660 bytes.

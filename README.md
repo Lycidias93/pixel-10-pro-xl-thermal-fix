@@ -4,25 +4,25 @@
 
 Dynamic V2 is the active source architecture on `main`.
 
-[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.1) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
 > [!IMPORTANT]
-> **2.0.0 is the current stable release.** It passed repository CI and exact-package verification on a Pixel 10 Pro XL (`mustang`) running Android 17 build `CP2A.260705.006`. Experimental Emerald Hill and LMKD controls remain opt-in.
+> **2.0.1 is the current stable release.** The August hotfix passed full post-reboot Bootguard/runtime verification on a Pixel 10 Pro XL (`mustang`) running Android 17 build `CP2A.260805.005` with KernelSU; August Canary was independently verified, and the July Stable Magisk regression remained green. Experimental Emerald Hill and LMKD controls remain opt-in.
 
 ## Current release
 
 | Item | Value |
 |---|---|
-| Version | `2.0.0` |
-| Version code | `1016240` |
-| Release type | Stable, device-verified Dynamic V2 |
-| Tag | `v2.0.0` |
-| Asset | `pixel-10-thermal-memory-control-2.0.0.zip` |
-| Asset size | `330660` bytes |
-| SHA-256 | `b22eb7a5b761711c204db1ea4e375eed1cf9f1cfc39a852411e47db4481348fa` |
-| Device proof | `mustang / CP2A.260705.006 / Android 17` |
+| Version | `2.0.1` |
+| Version code | `1016241` |
+| Release type | Stable Dynamic V2 hotfix, device-verified |
+| Tag | `v2.0.1` |
+| Asset | `pixel-10-thermal-memory-control-2.0.1.zip` |
+| Asset size | `330935` bytes |
+| SHA-256 | `6517cd106acd063e52596d4fc0f2e561cd019cdaa3712e930fcddaf746d4dbaa` |
+| Device proof | `mustang / CP2A.260805.005 / Android 17 / KernelSU full post-reboot` |
 
-2.0.0 promotes Dynamic V2 to stable with stock-derived thermal materialization, guarded Polling and Outdoor profiles, optional ZRAM 100%, adaptive or experimental Emerald Hill control, the optional LMKD 1% reload path, Bootguard recovery, lightweight unchanged boots, and automatic P/T/Z/L manager badges.
+2.0.1 keeps the full Dynamic V2 stable feature set and fixes independent Outdoor-delta validation for newer compact or multiline `HotThreshold` arrays. The August Stable KernelSU runtime proof confirms the active three-file Thermal overlay, Polling Mod at 22/22 values of `5000`, Bootguard full-pass behavior, and ZRAM 100%; the July Stable Magisk regression remained green.
 
 The stable and test update paths remain independent. Selecting a channel changes only the active update metadata path; it does not download or flash a ZIP.
 
@@ -57,8 +57,9 @@ The main goals are:
 ### Android
 
 - Supported Android major version: **Android 17**
-- Magisk is the reference and actively verified module backend.
-- The installer detects KernelSU, KernelSU Next, SukiSU and APatch-style environments, but they do not currently have the same device-proof coverage as Magisk.
+- Magisk remains a verified reference backend; the July Stable regression passed on Mustang.
+- KernelSU is also device-verified on Mustang with August Stable full post-reboot Bootguard/runtime proof.
+- KernelSU Next, SukiSU and APatch-style environments are detected, but they do not currently have the same device-proof coverage.
 - Minimum installation battery: **15%**
 
 ### Build admission
@@ -131,7 +132,7 @@ These deltas apply only to validated Outdoor target entries. Higher profiles may
 
 ### ZRAM 100%
 
-ZRAM is optional but enabled by default in a fresh 2.0.0 install unless the user selects Disabled.
+ZRAM is optional but enabled by default in a fresh 2.0.1 install unless the user selects Disabled.
 
 When enabled, the module configures:
 
@@ -162,7 +163,7 @@ LMKD is Android's Low Memory Killer Daemon. The experimental option sets:
 ro.lmk.swap_free_low_percentage=1
 ```
 
-2.0.0 uses Magisk system `resetprop` first for this one property, verifies readback, and falls back to `resetprop-rs` only when required. Normal ZRAM properties continue to use `resetprop-rs`.
+2.0.1 uses Magisk system `resetprop` first for this one property, verifies readback, and falls back to `resetprop-rs` only when required. Normal ZRAM properties continue to use `resetprop-rs`.
 
 After the write, the module:
 

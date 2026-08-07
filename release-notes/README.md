@@ -3,7 +3,7 @@
 Release notes are repository documentation and are never included in the flashable Magisk ZIP.
 
 ## Stable
-- [2.0.0](2.0.0.md) — stable device-verified Dynamic V2 release with exact Mustang package proof.
+- [2.0.1](2.0.1.md) — stable Dynamic V2 hotfix with August Stable KernelSU full post-reboot proof, August Canary verification, and July Stable Magisk regression coverage.
 
 ## V2 alpha line
 - [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — public device-tested prerelease with Magisk resetprop-first LMKD evidence and lightweight unchanged boots.
