@@ -2,10 +2,10 @@
 # Interactive Termux launcher for the read-only online Thermal debug collector.
 set -u
 
-ENGINE_COMMIT="ea8f34a70e0a045b6444f7960b94cbdcec6d9f59"
-ENGINE_BLOB="bd63fb145c8cac450e5c1b8aa95c81fa5d7c0de7"
-ENGINE_URL="https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/$ENGINE_COMMIT/tools/debug/collect-thermal-prerelease-online.sh"
-ENGINE_PATH="${TMPDIR:-/data/data/com.termux/files/usr/tmp}/collect-thermal-online.sh"
+ENGINE_COMMIT="1764b4324f1e1647bdc5242e6097ccb8b8aa8a64"
+ENGINE_BLOB="6553a7fa78afc3c6a93e2df8ff6ff8b1e08210b0"
+ENGINE_URL="https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/$ENGINE_COMMIT/tools/debug/collect-thermal-online-v5.sh"
+ENGINE_PATH="${TMPDIR:-/data/data/com.termux/files/usr/tmp}/collect-thermal-online-v5.sh"
 
 choose() {
   _prompt="$1"
@@ -54,7 +54,7 @@ verify_engine() {
   }
 }
 
-printf '%s\n' 'Pixel Thermal online debug collector'
+printf '%s\n' 'Pixel Thermal online debug collector v5'
 printf '%s\n' 'The collector is read-only and does not enable or modify Thermal/Polling.'
 choose 'Collection mode' 1 support runtime
 mode="$CHOICE"
