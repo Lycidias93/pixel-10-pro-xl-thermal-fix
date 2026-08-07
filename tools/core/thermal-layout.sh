@@ -29,8 +29,18 @@ thermal_layout_set() {
   return 0
 }
 
+thermal_layout_device_family() {
+  case "${1:-unknown}" in
+    mustang|blazer|frankel|rango) printf '%s\n' pixel10_g5 ;;
+    tokay|caiman|komodo|comet|tegu|stallion) printf '%s\n' tensor_g4_vnext ;;
+    *) printf '%s\n' unknown ;;
+  esac
+}
+
 thermal_layout_detect() {
   _tl_dir="$1"
+  _tl_device="${2:-unknown}"
+  _tl_family="$(thermal_layout_device_family "$_tl_device")"
   THERMAL_LAYOUT_FAMILY=unsupported
   THERMAL_LAYOUT_THIRD=none
   THERMAL_LAYOUT_COUNT=0
@@ -44,6 +54,28 @@ thermal_layout_detect() {
   _tl_l=no
   [ -s "$_tl_dir/thermal_info_config_throttling.json" ] && _tl_t=yes
   [ -s "$_tl_dir/thermal_info_config_lpm.json" ] && _tl_l=yes
+
+  case "$_tl_family" in
+    pixel10_g5)
+      [ "$_tl_t" = yes ] || return 1
+      thermal_layout_set thermal_info_config_throttling.json
+      return
+    ;;
+    tensor_g4_vnext)
+      if [ "$_tl_l" = yes ]; then
+        _tl_lc="$(thermal_layout_polling_count "$_tl_dir/thermal_info_config_lpm.json")"
+        if [ "$_tl_lc" -gt 0 ] 2>/dev/null || [ "$_tl_t" = no ]; then
+          thermal_layout_set thermal_info_config_lpm.json
+          return
+        fi
+      fi
+      if [ "$_tl_t" = yes ]; then
+        thermal_layout_set thermal_info_config_throttling.json
+        return
+      fi
+      return 1
+    ;;
+  esac
 
   case "$_tl_t:$_tl_l" in
     yes:no) thermal_layout_set thermal_info_config_throttling.json ;;
