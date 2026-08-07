@@ -1,11 +1,11 @@
 #!/data/data/com.termux/files/usr/bin/sh
-# Interactive Termux launcher for the repo-only prerelease debug collector.
+# Interactive Termux launcher for the read-only online Thermal debug collector.
 set -u
 
-ENGINE_COMMIT="189be5c18381702e515b4136ceabfd2fe57f60d2"
-ENGINE_BLOB="bdfbcd280de8bd83150c1777b08e5b677b434ab2"
+ENGINE_COMMIT="ea8f34a70e0a045b6444f7960b94cbdcec6d9f59"
+ENGINE_BLOB="bd63fb145c8cac450e5c1b8aa95c81fa5d7c0de7"
 ENGINE_URL="https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/$ENGINE_COMMIT/tools/debug/collect-thermal-prerelease-online.sh"
-ENGINE_PATH="${TMPDIR:-/data/data/com.termux/files/usr/tmp}/collect-thermal-prerelease-online.sh"
+ENGINE_PATH="${TMPDIR:-/data/data/com.termux/files/usr/tmp}/collect-thermal-online.sh"
 
 choose() {
   _prompt="$1"
@@ -34,6 +34,7 @@ choose() {
 }
 
 download_engine() {
+  rm -f "$ENGINE_PATH" 2>/dev/null || true
   if command -v curl >/dev/null 2>&1; then
     curl -fsSL "$ENGINE_URL" -o "$ENGINE_PATH"
   elif command -v wget >/dev/null 2>&1; then
@@ -53,18 +54,20 @@ verify_engine() {
   }
 }
 
-printf '%s\n' 'Pixel Thermal Alpha 3 Dev 6 debug collector'
-choose 'Scenario' 6 clean-install action-switch boot-failure status-red install-failure unknown
-scenario="$CHOICE"
-choose 'Selected profile' 5 stock outdoor-safe outdoor-plus outdoor-extended unknown
-selected="$CHOICE"
-choose 'Previous profile' 6 none stock outdoor-safe outdoor-plus outdoor-extended unknown
-previous="$CHOICE"
-choose 'Install mode' 4 clean upgrade dirty unknown
+printf '%s\n' 'Pixel Thermal online debug collector'
+printf '%s\n' 'The collector is read-only and does not enable or modify Thermal/Polling.'
+choose 'Collection mode' 1 support runtime
 mode="$CHOICE"
 
-printf '\nCollecting: scenario=%s selected=%s previous=%s mode=%s\n' "$scenario" "$selected" "$previous" "$mode"
-download_engine
-verify_engine
-chmod 0755 "$ENGINE_PATH"
-su -c "sh '$ENGINE_PATH' '$scenario' '$selected' '$previous' '$mode'"
+if [ "$mode" = support ]; then
+  printf '%s\n' 'Support mode: privacy-reduced platform/layout inventory; no logcat or dmesg.'
+else
+  printf '%s\n' 'Runtime mode: adds filtered system/root logs for boot or runtime failures.'
+fi
+
+printf '\nDownloading verified collector into the private Termux temp directory...\n'
+download_engine || exit 4
+verify_engine || exit 5
+chmod 0700 "$ENGINE_PATH"
+printf '%s\n' 'Grant root when prompted.'
+su -c "sh '$ENGINE_PATH' '$mode'"
