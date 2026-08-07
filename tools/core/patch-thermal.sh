@@ -1,21 +1,21 @@
 #!/system/bin/sh
-# Policy-gated entrypoint for the verified Fix 5 dynamic Thermal core.
+# Policy-gated entrypoint for the layout-aware vNext Thermal core.
 set -eu
 
 POLLING_MODE="${1:-mod}"
 OUTDOOR_PROFILE="${2:-stock}"
 MODPATH="${3:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
 POLICY_HELPER="$MODPATH/tools/core/outdoor-runtime-policy.sh"
-FIX5_CORE="$MODPATH/tools/core/patch-thermal-fix5-core.sh"
+VNEXT_CORE="$MODPATH/tools/core/patch-thermal-vnext-core.sh"
 
 [ -r "$POLICY_HELPER" ] || {
   printf '%s\n' 'PATCH_THERMAL=fail'
   printf '%s\n' 'PATCH_THERMAL_REASON=outdoor_runtime_policy_missing'
   exit 20
 }
-[ -r "$FIX5_CORE" ] || {
+[ -r "$VNEXT_CORE" ] || {
   printf '%s\n' 'PATCH_THERMAL=fail'
-  printf '%s\n' 'PATCH_THERMAL_REASON=fix5_core_missing'
+  printf '%s\n' 'PATCH_THERMAL_REASON=vnext_core_missing'
   exit 20
 }
 . "$POLICY_HELPER"
@@ -50,4 +50,4 @@ if ! thermal_outdoor_profile_admitted "$OUTDOOR_PROFILE" "$DEVICE" "$ANDROID" "$
   exit 23
 fi
 
-exec sh "$FIX5_CORE" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH"
+exec sh "$VNEXT_CORE" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH"
