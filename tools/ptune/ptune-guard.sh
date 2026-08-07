@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Pixel 10 Thermal & Memory Control - pTune guard helper.
+# Pixel Thermal & Memory Control - pTune guard helper.
 # Extracted from customize.sh for Test22.
 # Sourced by customize.sh and executed at source time.
 
@@ -11,14 +11,29 @@ RISK_ACK_PTUNE_THERMAL_COLLISION="$(config_get RISK_ACK_PTUNE_THERMAL_COLLISION)
 PTUNE_OVERRIDE_ALLOWED=0
 PTUNE_OVERRIDE_NAME="none"
 PTUNE_RISK_ACK_STATE="not_present"
-if [ "$ALLOW_THERMAL_WITH_PTUNE" = "1" ] && [ "$RISK_ACK_PTUNE_THERMAL_COLLISION" = "I_UNDERSTAND_BOOTLOOP_RISK" ]; then
+
+PTUNE_POLICY_DEVICE="${device:-$(getprop ro.product.device 2>/dev/null || true)}"
+PTUNE_POLICY_ANDROID="${android:-$(getprop ro.build.version.release 2>/dev/null || true)}"
+PTUNE_EXPERIMENTAL_PLATFORM=0
+case "$PTUNE_POLICY_DEVICE:$PTUNE_POLICY_ANDROID" in
+  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) PTUNE_EXPERIMENTAL_PLATFORM=1 ;;
+esac
+
+if [ "$PTUNE_EXPERIMENTAL_PLATFORM" = 1 ]; then
+  ALLOW_THERMAL_WITH_PTUNE=0
+  RISK_ACK_PTUNE_THERMAL_COLLISION=none
+  PTUNE_OVERRIDE_ALLOWED=0
+  PTUNE_OVERRIDE_NAME="blocked_experimental_platform"
+  PTUNE_RISK_ACK_STATE="blocked_experimental_platform"
+  PTUNE_GUARD_MODE="strict"
+elif [ "$ALLOW_THERMAL_WITH_PTUNE" = "1" ] && [ "$RISK_ACK_PTUNE_THERMAL_COLLISION" = "I_UNDERSTAND_BOOTLOOP_RISK" ]; then
   PTUNE_OVERRIDE_ALLOWED=1
   PTUNE_OVERRIDE_NAME="allow_thermal_with_ptune"
   PTUNE_RISK_ACK_STATE="explicit_user_override"
 fi
 if [ "$PTUNE_GUARD_MODE" = "off" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
   ui_print "! pTune off ignored"
-ui_print "! Using strict guard"
+  ui_print "! Using strict guard"
   PTUNE_GUARD_MODE="strict"
 fi
 ptune_installed_path() {
@@ -61,12 +76,15 @@ case "$PTUNE_GUARD_MODE" in
 esac
 if [ -n "$PTUNE_CONFLICT_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
   ui_print "! pTune conflict"
-ui_print "! $PTUNE_CONFLICT_PATH"
+  ui_print "! $PTUNE_CONFLICT_PATH"
+  if [ "$PTUNE_EXPERIMENTAL_PLATFORM" = 1 ]; then
+    ui_print "! pTune coexistence is blocked on experimental Pixel 9 / Pixel 10a targets"
+  fi
   ui_print "! pTune guard mode"
-ui_print "! $PTUNE_GUARD_MODE -> $PTUNE_CONFLICT_MODE"
+  ui_print "! $PTUNE_GUARD_MODE -> $PTUNE_CONFLICT_MODE"
   [ "$PTUNE_KNOWN_BAD" = "no" ] || ui_print "! Known bad pTune state: $PTUNE_KNOWN_BAD"
   ui_print "! Module remains scriptable"
-ui_print "! skip_mount active"
+  ui_print "! skip_mount active"
   mkdir -p "$MODPATH/guard"
   rm -f "$MODPATH/disable" "$MODPATH/remove"
   touch "$MODPATH/skip_mount"
@@ -114,6 +132,7 @@ ui_print "! skip_mount active"
     printf '%s\n' "config_allow_thermal_with_ptune=${ALLOW_THERMAL_WITH_PTUNE:-0}"
     printf '%s\n' "config_override_allowed=$PTUNE_OVERRIDE_ALLOWED"
     printf '%s\n' "risk_ack=$PTUNE_RISK_ACK_STATE"
+    printf '%s\n' "ptune_policy_experimental=$PTUNE_EXPERIMENTAL_PLATFORM"
     printf '%s\n' "ptune_state=active_blocked"
     printf '%s\n' "ptune_installed_path=${PTUNE_INSTALLED_PATH:-none}"
     printf '%s\n' "ptune_active_path=${PTUNE_ACTIVE_PATH:-none}"
@@ -132,6 +151,6 @@ ui_print "! skip_mount active"
   } > "$MODPATH/install-state.txt"
   thermal_save_install_debug "skip_mount" "$PTUNE_CONFLICT_REASON"
   ui_print "Installed with skip_mount"
-ui_print "$PTUNE_CONFLICT_REASON"
+  ui_print "$PTUNE_CONFLICT_REASON"
   exit 0
 fi
