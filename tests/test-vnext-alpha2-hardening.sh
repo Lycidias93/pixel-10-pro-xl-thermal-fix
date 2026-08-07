@@ -5,18 +5,20 @@ repo_root="$(git rev-parse --show-toplevel)"
 menu="$repo_root/tools/menu/install-options-menu.sh"
 guard="$repo_root/tools/ptune/ptune-guard.sh"
 readiness="$repo_root/tools/debug/vnext-readiness-summary.sh"
+policy="$repo_root/tools/core/outdoor-runtime-policy.sh"
 customize="$repo_root/customize.sh"
 service="$repo_root/service.sh"
 module_prop="$repo_root/module.prop"
 update_meta="$repo_root/update-prerelease.json"
 matrix="$repo_root/docs/vnext-device-test-matrix.md"
 
-for file in "$menu" "$guard" "$readiness" "$customize" "$service"; do
+for file in "$menu" "$guard" "$readiness" "$policy" "$customize" "$service"; do
   sh -n "$file"
 done
 
+grep -Fq 'thermal_outdoor_experimental_platform' "$menu"
 for device in tokay caiman komodo comet tegu stallion; do
-  grep -Fq "$device:17" "$menu"
+  grep -Fq "$device:17" "$policy"
   grep -Fq "$device:17" "$guard"
   grep -Fq "$device:17" "$readiness"
   grep -Fq "\`$device\`" "$matrix"
