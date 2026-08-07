@@ -87,29 +87,31 @@ run_case() {
   [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 0 ]]
 }
 
-run_real_pixel10() {
-  local root="$tmp/mustang-real"
+run_repo_stock_fixture() {
+  local root="$tmp/mustang-repo-stock"
   local mod="$root/mod"
   local data="$root/data"
   make_module "$mod"
   mkdir -p "$data"
   THERMAL_DEVICE=mustang \
   THERMAL_ANDROID=17 \
-  THERMAL_BUILD_ID=CP2A.260705.006 \
+  THERMAL_BUILD_ID=REPO_STOCK_FIXTURE \
   THERMAL_SOURCE_DIR="$repo_root/dev_tools/stock" \
   THERMAL_DATA_ROOT="$data" \
     sh "$mod/tools/core/patch-thermal-validated.sh" mod outdoor-extended "$mod" | tee "$root/run.log"
 
-  grep -q '^PATCH_THERMAL_SOURCE_300000=22$' "$root/run.log"
-  grep -q '^PATCH_THERMAL_REPLACEMENTS=22$' "$root/run.log"
-  grep -q '^PATCH_THERMAL_DELTA_TARGET_ZONES=12$' "$root/run.log"
-  grep -q '^PATCH_THERMAL_DELTA_THRESHOLD_VALUES=84$' "$root/run.log"
+  # This checks the repository fixture's actual inventory. Real device evidence
+  # is tracked separately and must not be rewritten to match this fixture.
+  grep -q '^PATCH_THERMAL_SOURCE_300000=23$' "$root/run.log"
+  grep -q '^PATCH_THERMAL_REPLACEMENTS=23$' "$root/run.log"
+  grep -q '^PATCH_THERMAL_DELTA_TARGET_ZONES=13$' "$root/run.log"
+  grep -q '^PATCH_THERMAL_DELTA_THRESHOLD_VALUES=91$' "$root/run.log"
   grep -q '^PATCH_THERMAL_LAYOUT_FAMILY=base_charge_throttling$' "$root/run.log"
 }
 
 run_case stallion ZP11.260717.006 thermal_info_config_lpm.json outdoor-safe base_charge_lpm
 run_case mustang CP2A.260805.005 thermal_info_config_throttling.json outdoor-extended base_charge_throttling thermal_info_config_lpm.json
-run_real_pixel10
+run_repo_stock_fixture
 
 for script in \
   "$repo_root/customize.sh" \
