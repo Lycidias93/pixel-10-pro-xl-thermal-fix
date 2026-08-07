@@ -9,10 +9,11 @@ NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 ZRAM_APPLY="$MODDIR/tools/zram/apply-zram-100p.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 VERIFY_MODE_FILE="$G/verification-mode.env"
+READINESS="$MODDIR/tools/debug/vnext-readiness-summary.sh"
 mkdir -p "$G"
 
 printf 'timestamp_start=%s\n' "$(date +%s 2>/dev/null || echo unknown)" > "$H"
-printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_lmkd_reload_v7' >> "$H"
+printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_lmkd_reload_v8' >> "$H"
 printf '%s\n' 'lmk_swap_low_policy=resolved_after_config' >> "$H"
 
 [ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >> "$H" 2>&1 || true
@@ -20,11 +21,9 @@ if [ -f "$CONFIG_FILE" ]; then
   . "$CONFIG_FILE" 2>/dev/null || true
 fi
 if [ "${LMKD_SWAP_LOW_RELOAD:-0}" = 1 ] && [ "${LMKD_SWAP_LOW_RISK_ACK:-}" = explicit_user_reload ]; then
-  printf "%s
-" "lmk_swap_low_policy=experimental_reload_1pct" >> "$H"
+  printf "%s\n" "lmk_swap_low_policy=experimental_reload_1pct" >> "$H"
 else
-  printf "%s
-" "lmk_swap_low_policy=stock_unmodified" >> "$H"
+  printf "%s\n" "lmk_swap_low_policy=stock_unmodified" >> "$H"
 fi
 
 # Standard lz77eh ZRAM properties may be prepared early. The optional Emerald
@@ -84,6 +83,17 @@ elif [ -s "$MODDIR/tools/bootguard/bootguard-lib.sh" ]; then
   fi
 fi
 
+if [ -s "$READINESS" ]; then
+  readiness_tmp="$G/support-readiness.env.tmp.$$"
+  if MODDIR="$MODDIR" sh "$READINESS" > "$readiness_tmp" 2>/dev/null; then
+    mv "$readiness_tmp" "$G/support-readiness.env" 2>/dev/null || rm -f "$readiness_tmp" 2>/dev/null || true
+  else
+    rm -f "$readiness_tmp" 2>/dev/null || true
+  fi
+  readiness_state="$(sed -n 's/^readiness_state=//p' "$G/support-readiness.env" 2>/dev/null | tail -n 1)"
+  readiness_reason="$(sed -n 's/^compat_reason=//p' "$G/support-readiness.env" 2>/dev/null | tail -n 1)"
+  printf '%s\n' "VNEXT_READINESS state=${readiness_state:-missing} reason=${readiness_reason:-missing}" >> "$H"
+fi
 
 # Android may rewrite selected ZRAM properties after early service startup.
 # Reapply exactly once after verified boot. The consolidated ZRAM helper also
