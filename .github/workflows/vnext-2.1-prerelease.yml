@@ -1,9 +1,7 @@
 name: Publish vNext 2.1 Prerelease
 
 on:
-  push:
-    branches:
-      - vnext-2.1.0-alpha.1
+  workflow_dispatch:
 
 permissions:
   contents: write
