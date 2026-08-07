@@ -62,7 +62,9 @@ has_remembered() {
     LAST_DEBUG_MODE \
     LAST_ZRAM_100P \
     LAST_LMKD_SWAP_LOW_RELOAD \
+    LAST_INSTALL_SUPPORT_SNAPSHOT \
     LMKD_SWAP_LOW_RELOAD \
+    INSTALL_SUPPORT_SNAPSHOT \
     THERMAL_OUTDOOR_PROFILE \
     THERMAL_POLLING_MODE \
     ENABLE_ZRAM_100P; do
@@ -153,7 +155,7 @@ apply_profile() {
   cfg_set THERMAL_OUTDOOR_PROFILE "$_profile"
   cfg_set THERMAL_OUTDOOR_TARGET "$(profile_target "$_profile")"
   cfg_set THERMAL_OUTDOOR_RISK_ACK "$(profile_risk "$_profile")"
-  cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE install_options_runtime_policy_v2
+  cfg_set THERMAL_OUTDOOR_PROFILE_SOURCE install_options_runtime_policy_v3
   cfg_set THERMAL_OUTDOOR_MAX_ADMITTED_DELTA "$POLICY_MAX_DELTA"
   cfg_set THERMAL_OUTDOOR_POLICY_EVIDENCE "$POLICY_EVIDENCE"
   cfg_set LAST_THERMAL_OUTDOOR_PROFILE "$_profile"
@@ -194,6 +196,19 @@ apply_debug() {
       cfg_set DEBUG_MODE 1
       cfg_set debug_mode 1
       cfg_set LAST_DEBUG_MODE verbose
+    ;;
+  esac
+}
+
+apply_support_snapshot() {
+  case "$1" in
+    1|enabled|collect)
+      cfg_set INSTALL_SUPPORT_SNAPSHOT 1
+      cfg_set LAST_INSTALL_SUPPORT_SNAPSHOT enabled
+    ;;
+    *)
+      cfg_set INSTALL_SUPPORT_SNAPSHOT 0
+      cfg_set LAST_INSTALL_SUPPORT_SNAPSHOT disabled
     ;;
   esac
 }
@@ -254,7 +269,7 @@ record_ptune_presence() {
 }
 
 mark_single_pass_complete() {
-  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v1
+  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v2
   cfg_set INSTALL_MENU_PROCESS_COUNT 1
   cfg_set INSTALL_OPTIONS_CONFIRMED 1
 }
@@ -278,6 +293,7 @@ print_summary() {
   mc_msg "LMKD 1% reload: $(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
   mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
   mc_msg "Debug: $(cfg_get LAST_DEBUG_MODE)"
+  mc_msg "Support snapshot: $(cfg_get LAST_INSTALL_SUPPORT_SNAPSHOT)"
   mc_msg "Single menu process: yes"
   mc_msg "----------------------------------------"
 }
@@ -302,6 +318,10 @@ apply_last_settings() {
   _debug="$(cfg_get LAST_DEBUG_MODE)"
   [ -n "$_debug" ] || _debug="$(cfg_get DEBUG_MODE)"
   apply_debug "$_debug"
+
+  _snapshot="$(cfg_get LAST_INSTALL_SUPPORT_SNAPSHOT)"
+  [ -n "$_snapshot" ] || _snapshot=disabled
+  apply_support_snapshot "$_snapshot"
 
   _zram="$(cfg_get LAST_ZRAM_100P)"
   [ -n "$_zram" ] || _zram="$(cfg_get ENABLE_ZRAM_100P)"
@@ -336,12 +356,10 @@ fi
 cfg_set THERMAL_SETTINGS_MODE fresh
 record_ptune_presence
 
-current_polling=mod
 polling_index=0
 mc_cycle2 "Polling Mode" "Mod values" "Stock values" "$polling_index"
 [ "$MC_INDEX" = 1 ] && apply_polling stock || apply_polling mod
 
-current_profile=stock
 safe_label="$(profile_policy_label 1 'Outdoor Safe')"
 plus_label="$(profile_policy_label 2 'Outdoor Plus')"
 ext_label="$(profile_policy_label 3 'Outdoor Ext')"
@@ -354,7 +372,6 @@ mc_cycle4 \
   0
 apply_profile "$(profile_at "$MC_INDEX")"
 
-current_zram=1
 zram_index=1
 mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
 if [ "$MC_INDEX" = 0 ]; then
@@ -373,16 +390,17 @@ lmkd_index=0
 mc_cycle2 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "$lmkd_index"
 [ "$MC_INDEX" = 1 ] && apply_lmkd_reload 1 || apply_lmkd_reload 0
 
-current_ptune=0
-current_ack=none
 ptune_index=1
 mc_cycle2 "pTune Override" "Override ON" "Override OFF" "$ptune_index"
 [ "$MC_INDEX" = 0 ] && apply_ptune 1 || apply_ptune 0
 
-current_debug=1
 debug_index=1
 mc_cycle2 "Debug Logging" "Silent" "Verbose" "$debug_index"
 [ "$MC_INDEX" = 0 ] && apply_debug 0 || apply_debug 1
+
+snapshot_index=0
+mc_cycle2 "Support Snapshot (read-only)" "Skip" "Collect after install" "$snapshot_index"
+[ "$MC_INDEX" = 1 ] && apply_support_snapshot 1 || apply_support_snapshot 0
 
 mark_single_pass_complete
 print_summary
