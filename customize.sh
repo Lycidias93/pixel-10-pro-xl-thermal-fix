@@ -20,7 +20,7 @@ else
 fi
 
 mc_rule
-ui_print "  Pixel 10 Thermal & Memory Control"
+ui_print "  Pixel Thermal & Memory Control"
 mc_rule
 case "$MODULE_VERSION" in
   *-test.*|*alpha*|*beta*|*rc*|*candidate*) ui_print "Prerelease: $MODULE_VERSION" ;;
@@ -128,12 +128,19 @@ fi
 
 SUPPORTED_JSON="$MODPATH/supported_versions.json"
 SUPPORTED_HELPER="$MODPATH/tools/core/supported-build.sh"
+LAYOUT_HELPER="$MODPATH/tools/core/thermal-layout.sh"
 [ -r "$SUPPORTED_HELPER" ] || thermal_abort "! supported-build helper missing"
+[ -r "$LAYOUT_HELPER" ] || thermal_abort "! thermal-layout helper missing"
 . "$SUPPORTED_HELPER"
+. "$LAYOUT_HELPER"
 thermal_supported_validate_file "$SUPPORTED_JSON" || thermal_abort "! supported_versions.json is invalid"
 
 THERMAL_INSTALL_ENABLED=0
 build_evidence="unsupported_platform"
+vnext_experimental=0
+case "$device:$android" in
+  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) vnext_experimental=1 ;;
+esac
 
 if thermal_supported_platform_check "$SUPPORTED_JSON" "$device" "$android"; then
   THERMAL_INSTALL_ENABLED=1
@@ -146,9 +153,26 @@ if thermal_supported_platform_check "$SUPPORTED_JSON" "$device" "$android"; then
     ui_print "- Admission: local stock structure + diff validation"
   fi
   config_set THERMAL_DISABLED 0
-  config_set CANARY_DIAGNOSTIC_MODE 0
+  if [ "$vnext_experimental" = 1 ]; then
+    config_set CANARY_DIAGNOSTIC_MODE 1
+    config_set AUTO_PROFILE_SWITCH 0
+    config_set VNEXT_EXPERIMENTAL_PLATFORM 1
+    config_set VNEXT_OTA_POLICY reinstall_required_after_transition
+    ui_print "! vNext experimental platform"
+    ui_print "- Full Bootguard verification is forced"
+    ui_print "- Outdoor profile is capped conservatively"
+    ui_print "- Firmware transitions require reinstall"
+  else
+    config_set CANARY_DIAGNOSTIC_MODE 0
+    config_set AUTO_PROFILE_SWITCH 1
+    config_set VNEXT_EXPERIMENTAL_PLATFORM 0
+    config_set VNEXT_OTA_POLICY automatic_stock_rematerialization
+  fi
 else
   config_set THERMAL_DISABLED 1
+  config_set CANARY_DIAGNOSTIC_MODE 0
+  config_set AUTO_PROFILE_SWITCH 0
+  config_set VNEXT_EXPERIMENTAL_PLATFORM 0
   ui_print "! Unsupported device or Android version"
   ui_print "- Thermal files will not be installed"
   ui_print "- ZRAM remains available"
@@ -169,7 +193,7 @@ profile_source_build="$build_id"
 profile_source_incremental="$incremental"
 source_report_sha256="dynamic_patching_validated"
 build_state="dynamic_${device}_${build_id}_${incremental}"
-build_guard_mode="dynamic_local_validation"
+build_guard_mode="dynamic_local_validation_vnext"
 
 if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
   profile_state="dynamic_stock_validated_${build_evidence}"
@@ -202,7 +226,11 @@ else
 fi
 
 if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
-  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
+  if ! thermal_layout_load_env "$MODPATH/guard/thermal-layout.env"; then
+    thermal_abort "! Failed to load validated Thermal layout"
+  fi
+  ui_print "- Thermal layout: $THERMAL_LAYOUT_FAMILY"
+  for f in $THERMAL_LAYOUT_FILES; do
     [ -s "$MODPATH/system/vendor/etc/$f" ] || thermal_abort "! Failed to materialize active file: $f"
   done
 fi
@@ -215,10 +243,14 @@ else
   thermal_abort "! Install finalize helper missing"
 fi
 
-# Add dynamic evidence without duplicating the finalizer.
 if [ -s "$MODPATH/install-state.txt" ]; then
   printf '%s\n' "build_guard_mode=$build_guard_mode" >> "$MODPATH/install-state.txt"
   printf '%s\n' "build_evidence=$build_evidence" >> "$MODPATH/install-state.txt"
+  if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
+    printf '%s\n' "thermal_layout_family=$THERMAL_LAYOUT_FAMILY" >> "$MODPATH/install-state.txt"
+    printf '%s\n' "thermal_layout_files=$THERMAL_LAYOUT_FILES_CSV" >> "$MODPATH/install-state.txt"
+  fi
+  printf '%s\n' "vnext_experimental_platform=$vnext_experimental" >> "$MODPATH/install-state.txt"
 fi
 
 thermal_save_install_debug "success" "install_completed"
@@ -229,6 +261,24 @@ else
   ui_print "- Thermal safely disabled for this platform"
 fi
 ui_print "- Android: $android"
+
+if [ "$(config_get INSTALL_SUPPORT_SNAPSHOT)" = 1 ]; then
+  SUPPORT_COLLECTOR="$MODPATH/tools/debug/collect-thermal-online-v5.sh"
+  ui_print ""
+  ui_print "- Support Snapshot: collecting read-only support package"
+  if [ -s "$SUPPORT_COLLECTOR" ]; then
+    chmod 0755 "$SUPPORT_COLLECTOR" 2>/dev/null || true
+    SUPPORT_LOG="$MODPATH/guard/install-support-snapshot.log"
+    if sh "$SUPPORT_COLLECTOR" support > "$SUPPORT_LOG" 2>&1; then
+      tail -n 8 "$SUPPORT_LOG" 2>/dev/null | while IFS= read -r line; do ui_print "- $line"; done
+    else
+      ui_print "! Support Snapshot failed nonfatally"
+      tail -n 5 "$SUPPORT_LOG" 2>/dev/null | while IFS= read -r line; do ui_print "! $line"; done
+    fi
+  else
+    ui_print "! Support Snapshot collector missing"
+  fi
+fi
 
 if [ -d "$MODPATH/tools" ]; then
   chmod -R 0755 "$MODPATH/tools" 2>/dev/null || true
