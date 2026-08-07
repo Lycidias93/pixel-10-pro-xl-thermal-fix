@@ -22,6 +22,10 @@ POLICY_BUILD="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
 [ -n "$POLICY_BUILD" ] || POLICY_BUILD=unknown
 POLICY_MAX_DELTA="$(thermal_outdoor_max_delta "$POLICY_DEVICE" "$POLICY_ANDROID" "$POLICY_BUILD")" || POLICY_MAX_DELTA=0
 POLICY_EVIDENCE="$(thermal_outdoor_policy_evidence "$POLICY_DEVICE" "$POLICY_ANDROID" "$POLICY_BUILD")" || POLICY_EVIDENCE=stock_only_no_nonstock_runtime_evidence
+POLICY_EXPERIMENTAL=no
+if thermal_outdoor_experimental_platform "$POLICY_DEVICE" "$POLICY_ANDROID"; then
+  POLICY_EXPERIMENTAL=yes
+fi
 
 cfg_get() {
   _key="$1"
@@ -117,15 +121,6 @@ profile_risk() {
   esac
 }
 
-profile_index() {
-  case "$1" in
-    outdoor-safe) printf '%s\n' 1 ;;
-    outdoor-plus) printf '%s\n' 2 ;;
-    outdoor-extended) printf '%s\n' 3 ;;
-    *) printf '%s\n' 0 ;;
-  esac
-}
-
 profile_at() {
   case "$1" in
     1) printf '%s\n' outdoor-safe ;;
@@ -169,6 +164,15 @@ apply_polling() {
 }
 
 apply_ptune() {
+  if [ "$POLICY_EXPERIMENTAL" = yes ]; then
+    cfg_set PTUNE_OVERRIDE_MENU off
+    cfg_set ALLOW_THERMAL_WITH_PTUNE 0
+    cfg_set RISK_ACK_PTUNE_THERMAL_COLLISION none
+    cfg_set LAST_PTUNE_OVERRIDE 0
+    cfg_set PTUNE_OVERRIDE_POLICY blocked_experimental_platform
+    return 0
+  fi
+  cfg_set PTUNE_OVERRIDE_POLICY available_guarded
   case "$1" in
     1)
       cfg_set PTUNE_OVERRIDE_MENU on
@@ -292,6 +296,7 @@ print_summary() {
   mc_msg "ZRAM: $(zram_summary_label)"
   mc_msg "LMKD 1% reload: $(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
   mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
+  mc_msg "pTune policy: $(cfg_get PTUNE_OVERRIDE_POLICY)"
   mc_msg "Debug: $(cfg_get LAST_DEBUG_MODE)"
   mc_msg "Support snapshot: $(cfg_get LAST_INSTALL_SUPPORT_SNAPSHOT)"
   mc_msg "Single menu process: yes"
@@ -390,9 +395,14 @@ lmkd_index=0
 mc_cycle2 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "$lmkd_index"
 [ "$MC_INDEX" = 1 ] && apply_lmkd_reload 1 || apply_lmkd_reload 0
 
-ptune_index=1
-mc_cycle2 "pTune Override" "Override ON" "Override OFF" "$ptune_index"
-[ "$MC_INDEX" = 0 ] && apply_ptune 1 || apply_ptune 0
+if [ "$POLICY_EXPERIMENTAL" = yes ]; then
+  apply_ptune 0
+  mc_msg "pTune Override: unavailable on experimental vNext target"
+else
+  ptune_index=1
+  mc_cycle2 "pTune Override" "Override ON" "Override OFF" "$ptune_index"
+  [ "$MC_INDEX" = 0 ] && apply_ptune 1 || apply_ptune 0
+fi
 
 debug_index=1
 mc_cycle2 "Debug Logging" "Silent" "Verbose" "$debug_index"
