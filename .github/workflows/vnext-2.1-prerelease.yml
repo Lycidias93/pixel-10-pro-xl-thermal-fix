@@ -1,0 +1,42 @@
+name: Publish vNext 2.1 Prerelease
+
+on:
+  push:
+    branches:
+      - vnext-2.1.0-alpha.1
+
+permissions:
+  contents: write
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reverify vNext safety gates
+        run: |
+          bash tests/test-vnext-layouts.sh
+          bash tests/test-outdoor-delta-validation-runtime.sh
+          bash tests/test-vnext-ota-transition.sh
+
+      - name: Build and verify prerelease package
+        run: |
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          dev_tools/build-release-module.sh dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip
+          sha256sum dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip
+
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v2.1.0-alpha.1 --yes --cleanup-tag >/dev/null 2>&1 || true
+          gh release create v2.1.0-alpha.1 dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip --prerelease --target "$GITHUB_SHA" --title "Pixel Thermal & Memory Control 2.1.0-alpha.1" --notes-file release-notes/2.1.0-alpha.1.md
+
+      - name: Verify published release identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v2.1.0-alpha.1 --json tagName,isPrerelease,isDraft,targetCommitish,name
+          gh release view v2.1.0-alpha.1 --json assets --jq '.assets[] | [.name,.size,.digest] | @tsv'
