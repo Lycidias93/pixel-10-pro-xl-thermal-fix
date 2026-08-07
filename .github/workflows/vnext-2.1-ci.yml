@@ -40,8 +40,8 @@ jobs:
       - name: Outdoor delta runtime regression
         run: bash tests/test-outdoor-delta-validation-runtime.sh
 
-      - name: OTA transition regression
-        run: bash tests/test-ota-transition-bootguard.sh
+      - name: vNext OTA transition regression
+        run: bash tests/test-vnext-ota-transition.sh
 
       - name: Build lean prerelease package
         run: |
