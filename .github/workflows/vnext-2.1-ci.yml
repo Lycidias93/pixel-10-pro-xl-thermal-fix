@@ -3,7 +3,7 @@ name: vNext 2.1 CI
 on:
   push:
     branches:
-      - vnext-2.1.0-alpha.1
+      - vnext-2.1.0-alpha.2
   pull_request:
     branches:
       - main
@@ -34,6 +34,8 @@ jobs:
           sh -n tools/bootguard/compat-check.sh
           sh -n tools/bootguard/compat-check-vnext.sh
           sh -n tools/menu/install-options-menu.sh
+          sh -n tools/ptune/ptune-guard.sh
+          sh -n tools/debug/vnext-readiness-summary.sh
           sh -n tools/core/platform-transition.sh
 
       - name: vNext layout and Pixel 10 regression
@@ -45,12 +47,16 @@ jobs:
       - name: vNext OTA transition regression
         run: bash tests/test-vnext-ota-transition.sh
 
+      - name: Alpha.2 hardening regression
+        run: bash tests/test-vnext-alpha2-hardening.sh
+
       - name: Build lean prerelease package
         run: |
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
-          dev_tools/build-release-module.sh dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip
+          dev_tools/build-release-module.sh dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip
 
       - name: Package identity
         run: |
-          sha256sum dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip
-          unzip -Z1 dist/pixel-thermal-memory-control-2.1.0-alpha.1.zip | sort
+          sha256sum dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip
+          unzip -Z1 dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip | sort
+          unzip -Z1 dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip | grep -Fx 'tools/debug/vnext-readiness-summary.sh'
