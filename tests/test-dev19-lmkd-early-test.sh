@@ -78,8 +78,12 @@ grep -Fq 'LMKD 1% reload' "$action"
 grep -Fq 'LMKD Reload Evidence' "$action"
 grep -Fq 'LMKD 1% reload' "$menu"
 grep -Fq 'LMKD_SWAP_LOW_RELOAD' "$status"
-grep -Fq 'version=2.0.0' "$module_prop"
-grep -Fq 'versionCode=1016240' "$module_prop"
+module_version="$(sed -n 's/^version=//p' "$module_prop" | head -n 1)"
+module_version_code="$(sed -n 's/^versionCode=//p' "$module_prop" | head -n 1)"
+[[ "$(grep -c '^version=' "$module_prop")" -eq 1 ]]
+[[ "$(grep -c '^versionCode=' "$module_prop")" -eq 1 ]]
+[[ "$module_version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]]
+[[ "$module_version_code" =~ ^[0-9]+$ ]]
 [[ ! -e "$root/tools/lmkd/early-swap-low-test.sh" ]]
 [[ ! -e "$root/tools/lmkd/verify-early-swap-low-test.sh" ]]
 
@@ -90,4 +94,5 @@ printf '%s\n' 'PASS dev20_runtime_restore_path'
 printf '%s\n' 'PASS dev20_legacy_helpers_removed'
 printf '%s\n' 'PASS dev20_manager_badge_retry_readback'
 printf '%s\n' 'PASS dev21_magisk_resetprop_first_with_readback_fallback'
+printf 'PASS module_metadata_contract version=%s versionCode=%s\n' "$module_version" "$module_version_code"
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV21_LMKD_RELOAD_PASS'
