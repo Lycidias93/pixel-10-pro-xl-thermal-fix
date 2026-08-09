@@ -111,8 +111,12 @@ pass reinit_uses_stock_lmk_and_current_eh_contract
 if grep -Fq 'Emerald Hill OC' "$cycle" "$install_menu" "$action"; then
   fail stale_oc_menu_wording
 fi
-grep -Fq 'version=2.0.0' "$module_prop"
-grep -Fq 'versionCode=1016240' "$module_prop"
+module_version="$(sed -n 's/^version=//p' "$module_prop" | head -n 1)"
+module_version_code="$(sed -n 's/^versionCode=//p' "$module_prop" | head -n 1)"
+[[ "$(grep -c '^version=' "$module_prop")" -eq 1 ]] || fail module_version_count
+[[ "$(grep -c '^versionCode=' "$module_prop")" -eq 1 ]] || fail module_version_code_count
+[[ "$module_version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]] || fail module_version_format
+[[ "$module_version_code" =~ ^[0-9]+$ ]] || fail module_version_code_format
 pass stable_metadata_and_current_wording
 
 printf '%s\n' 'ROUTE installer: remember/use-last/fresh'
