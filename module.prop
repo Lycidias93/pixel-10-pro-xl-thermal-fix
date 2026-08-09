@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.1
-versionCode=1016241
+version=2.0.2
+versionCode=1016242
 author=Lycidias93, marx161, Codecity001
-description=Dynamic V2 stable hotfix: multiline HotThreshold support for newer stock Thermal files with guarded Polling, Thermal, ZRAM, Emerald Hill, LMKD, Bootguard, and Action validation.
+description=Dynamic V2 stable hotfix: completes multiline HotThreshold materialization for newer stock Thermal files while retaining guarded Polling, Thermal, ZRAM, Emerald Hill, LMKD, Bootguard, and Action validation.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
