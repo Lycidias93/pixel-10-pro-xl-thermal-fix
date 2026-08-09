@@ -155,9 +155,18 @@ JSON
 prepare_case() {
   local name="$1"
   local case_dir="$work/$name"
-  mkdir -p "$case_dir/module/tools/core" "$case_dir/module/system/vendor" "$case_dir/data"
+  local cache_dir="$case_dir/data/originals/mustang/CP2A.260805.005/vendor/etc"
+  mkdir -p "$case_dir/module/tools/core" "$case_dir/module/system/vendor" "$case_dir/data" "$cache_dir"
   cp -fp "$patcher" "$fix5_core" "$wrapper" "$verify" "$supported" "$state" "$policy" "$case_dir/module/tools/core/"
   cp -fp "$repo_root/supported_versions.json" "$case_dir/module/"
+  cp -fp "$source_dir"/thermal_info_config*.json "$cache_dir/"
+  printf 'file\tsha256\tbytes\tpolling_300000\n' > "$cache_dir/source-manifest.tsv"
+  for f in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
+    sha="$(sha256sum "$cache_dir/$f" | awk '{print $1}')"
+    bytes="$(wc -c < "$cache_dir/$f" | tr -d ' ')"
+    polling="$(grep -o '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$cache_dir/$f" | wc -l | tr -d ' ')"
+    printf '%s\t%s\t%s\t%s\n' "$f" "$sha" "$bytes" "$polling" >> "$cache_dir/source-manifest.tsv"
+  done
   printf '%s\n' "$case_dir"
 }
 
