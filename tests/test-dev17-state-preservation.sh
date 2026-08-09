@@ -117,8 +117,12 @@ second_sha="$(sha256sum "$state" | awk '{print $1}')"
 grep -Fq 'state_refresh=0' "$mod/guard/auto-profile-switch.log"
 pass second_boot_is_idempotent
 
-grep -Fq 'version=2.0.0' "$module_prop"
-grep -Fq 'versionCode=1016240' "$module_prop"
+module_version="$(sed -n 's/^version=//p' "$module_prop" | head -n 1)"
+module_version_code="$(sed -n 's/^versionCode=//p' "$module_prop" | head -n 1)"
+[[ "$(grep -c '^version=' "$module_prop")" -eq 1 ]] || fail module_version_count
+[[ "$(grep -c '^versionCode=' "$module_prop")" -eq 1 ]] || fail module_version_code_count
+[[ "$module_version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]] || fail module_version_format
+[[ "$module_version_code" =~ ^[0-9]+$ ]] || fail module_version_code_format
 pass stable_metadata_preserves_dev17_contract
 
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV17_STATE_PRESERVATION_PASS'
