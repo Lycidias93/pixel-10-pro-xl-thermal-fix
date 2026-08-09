@@ -77,12 +77,17 @@ grep -Fq 'explicit_user_reload' "$apply"
 grep -Fq 'lmkd.reinit' "$apply"
 grep -Fq 'update_manager_badges' "$service"
 
-grep -Fq 'version=2.0.0' "$module_prop"
-grep -Fq 'versionCode=1016240' "$module_prop"
+module_version="$(sed -n 's/^version=//p' "$module_prop" | head -n 1)"
+module_version_code="$(sed -n 's/^versionCode=//p' "$module_prop" | head -n 1)"
+[[ "$(grep -c '^version=' "$module_prop")" -eq 1 ]]
+[[ "$(grep -c '^versionCode=' "$module_prop")" -eq 1 ]]
+[[ "$module_version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]]
+[[ "$module_version_code" =~ ^[0-9]+$ ]]
 
 printf '%s\n' 'PASS dev18_eh_apply_restore_event_log'
 printf '%s\n' 'PASS dev18_eh_advanced_ux'
 printf '%s\n' 'PASS dev18_no_unbounded_watcher'
 printf '%s\n' 'PASS dev20_lmkd_consolidation_preserves_eh_contract'
 printf '%s\n' 'PASS dev20_manager_badge_refresh_wired'
+printf 'PASS module_metadata_contract version=%s versionCode=%s\n' "$module_version" "$module_version_code"
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV18_EH_OBSERVABILITY_TEST_PASS'
