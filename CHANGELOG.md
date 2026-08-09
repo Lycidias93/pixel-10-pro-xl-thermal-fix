@@ -1,3 +1,14 @@
+# 2.0.2
+
+Stable Dynamic V2 multiline materializer hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.2.zip`, SHA-256 `0544da1363bcde62f087e14744dbcdf9da159c8d50204d2ebe605371077034ea`, 335993 bytes.
+
+- Fixes the fail-closed `rc=63` reproduced from the XDA `mustang / CP2A.260805.005` install-failure package when the preserved Outdoor profile selected the August multiline `HotThreshold` path.
+- Completes multiline-aware threshold handling in the Stable materializer and in its allowed-diff normalizer; 2.0.1 had already made the independent delta validator multiline-aware.
+- Adds an August-shape regression across Stock, Outdoor Safe, Outdoor Plus and Outdoor Extended, including 12 target zones / 12 arrays / 84 controlled threshold values for the Outdoor path.
+- Keeps controlled Polling replacement, exact per-value delta validation, sentinel preservation, fail-closed rollback, Bootguard and the full 2.0.1 feature set unchanged.
+- This is not a KernelSU migration issue and is not specific to upgrading from 1.5.1; the previous module was correctly preserved when 2.0.1 failed closed.
+- Pixel 9-series and Pixel 10a remain on the separate 2.1 prerelease line.
+
 # 2.0.1
 
 Stable Dynamic V2 hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.1.zip`, SHA-256 `6517cd106acd063e52596d4fc0f2e561cd019cdaa3712e930fcddaf746d4dbaa`, 330935 bytes.

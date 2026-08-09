@@ -4,25 +4,25 @@
 
 Dynamic V2 is the active source architecture on `main`.
 
-[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.1) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0-alpha.3-dev.21) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.2) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.2) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
 > [!IMPORTANT]
-> **2.0.1 is the current stable release.** The August hotfix passed full post-reboot Bootguard/runtime verification on a Pixel 10 Pro XL (`mustang`) running Android 17 build `CP2A.260805.005` with KernelSU; August Canary was independently verified, and the July Stable Magisk regression remained green. Experimental Emerald Hill and LMKD controls remain opt-in.
+> **2.0.2 is the current stable release.** It fixes the real August multiline `HotThreshold` materialization failure reproduced from the XDA `mustang / CP2A.260805.005` debug package. The Stable regression now covers Stock, Outdoor Safe, Outdoor Plus and Outdoor Extended while preserving exact-delta validation, fail-closed rollback and the existing 2.0.1 runtime baseline. Pixel 9-series and Pixel 10a remain on the separate 2.1 prerelease line.
 
 ## Current release
 
 | Item | Value |
 |---|---|
-| Version | `2.0.1` |
-| Version code | `1016241` |
-| Release type | Stable Dynamic V2 hotfix, device-verified |
-| Tag | `v2.0.1` |
-| Asset | `pixel-10-thermal-memory-control-2.0.1.zip` |
-| Asset size | `330935` bytes |
-| SHA-256 | `6517cd106acd063e52596d4fc0f2e561cd019cdaa3712e930fcddaf746d4dbaa` |
-| Device proof | `mustang / CP2A.260805.005 / Android 17 / KernelSU full post-reboot` |
+| Version | `2.0.2` |
+| Version code | `1016242` |
+| Release type | Stable Dynamic V2 multiline materializer hotfix |
+| Tag | `v2.0.2` |
+| Asset | `pixel-10-thermal-memory-control-2.0.2.zip` |
+| Asset size | `335993` bytes |
+| SHA-256 | `0544da1363bcde62f087e14744dbcdf9da159c8d50204d2ebe605371077034ea` |
+| Regression proof | `mustang / CP2A.260805.005 / Android 17` August multiline fixture, 12 zones / 84 values, all four profiles |
 
-2.0.1 keeps the full Dynamic V2 stable feature set and fixes independent Outdoor-delta validation for newer compact or multiline `HotThreshold` arrays. The August Stable KernelSU runtime proof confirms the active three-file Thermal overlay, Polling Mod at 22/22 values of `5000`, Bootguard full-pass behavior, and ZRAM 100%; the July Stable Magisk regression remained green.
+2.0.2 keeps the complete 2.0.1 Stable Dynamic V2 feature set and closes the remaining August-format gap: both the materializer and the allowed-diff normalizer now handle multiline `HotThreshold` arrays. The XDA failure on `mustang / CP2A.260805.005` was reproduced as a fail-closed `rc=63` and the corrected Stable path now validates all four Thermal profiles, including Outdoor Extended at 12 target zones / 84 threshold values. The published 2.0.2 package retains the independent exact-delta validator, Polling guards, Bootguard recovery and rollback behavior. The earlier 2.0.1 August Stable KernelSU post-reboot proof remains the runtime baseline; 2.0.2 itself is the focused materializer correction.
 
 The stable and test update paths remain independent. Selecting a channel changes only the active update metadata path; it does not download or flash a ZIP.
 
