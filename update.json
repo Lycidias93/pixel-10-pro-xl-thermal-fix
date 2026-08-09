@@ -2,5 +2,5 @@
   "version": "2.0.2",
   "versionCode": 1016242,
   "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v2.0.2/pixel-10-thermal-memory-control-2.0.2.zip",
-  "changelog": "Stable hotfix for the August multiline HotThreshold layout: completes multiline-aware Thermal materialization and allowed-diff normalization, fixing the fail-closed rc=63 seen on Mustang CP2A.260805.005 with Outdoor profiles. Exact-delta validation, Polling guards, Bootguard and rollback behavior remain intact."
+  "changelog": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/release-notes/magisk-stable.md"
 }
