@@ -1,0 +1,32 @@
+name: v2.0.2 Hotfix CI
+
+on:
+  push:
+    branches:
+      - hotfix/v2.0.2-multiline-materializer
+
+permissions:
+  contents: read
+
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Shell syntax
+        run: |
+          sh -n tools/core/patch-thermal-fix5-core.sh
+          sh -n tools/core/patch-thermal-validated.sh
+          sh -n tools/core/verify-outdoor-delta.sh
+      - name: August multiline regression
+        run: bash tests/test-canary-thermal-patch-hotfix.sh
+      - name: Dynamic build admission
+        run: bash tests/test-dynamic-build-admission.sh
+      - name: Outdoor runtime delta regression
+        run: bash tests/test-outdoor-delta-validation-runtime.sh
+      - name: Lean package regression
+        run: |
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          dev_tools/build-release-module.sh dist/pixel-10-thermal-memory-control-2.0.2.zip
