@@ -1,6 +1,9 @@
 name: V2 lean package CI
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
