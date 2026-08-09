@@ -20,11 +20,15 @@ for file in thermal_info_config.json thermal_info_config_charge.json thermal_inf
   printf '%s\n' '{"Sensors":[{"Name":"VIRTUAL-SKIN","PollingDelay":300000,"HotThreshold":["NAN",39.0]}]}' > "$source_dir/$file"
 done
 
-THERMAL_SOURCE_DIR="$source_dir" \
-THERMAL_DATA_ROOT="$data" \
-THERMAL_DEVICE=blazer \
-THERMAL_BUILD_ID=CP2A.260805.005 \
-  sh "$mod/tools/core/patch-thermal-fix5-core.sh" mod outdoor-safe "$mod" > "$work/run.log" 2>&1
+if ! THERMAL_SOURCE_DIR="$source_dir" \
+  THERMAL_DATA_ROOT="$data" \
+  THERMAL_DEVICE=blazer \
+  THERMAL_BUILD_ID=CP2A.260805.005 \
+    sh "$mod/tools/core/patch-thermal-fix5-core.sh" mod outdoor-safe "$mod" > "$work/run.log" 2>&1; then
+  cat "$work/run.log"
+  printf '%s\n' 'FAIL fresh_cache_dynamic_materialization'
+  exit 1
+fi
 
 grep -Fq 'PATCH_THERMAL=pass' "$work/run.log"
 grep -Fq 'PATCH_THERMAL_FILES=3' "$work/run.log"
