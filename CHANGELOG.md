@@ -1,3 +1,12 @@
+# 2.0.3
+
+Stable Dynamic V2 runtime-evidence hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.3.zip`, SHA-256 `f5b8e73cae4218cca4450a8c34f2c311310d98d6a0c72bd934e8c06317bca5f9`, 335897 bytes.
+
+- Fixes the post-reboot `dynamic_materialization_invalid` false negative seen after a successful 2.0.2 KernelSU install on `mustang / CP2A.260805.005`.
+- Runtime status and Bootguard now consume canonical persistent validation evidence under `/data/adb/pixel-10-pro-xl-thermal-fix/validation` directly instead of depending on legacy module-side aliases.
+- Reporter evidence showed the official 2.0.2 package hash, successful install-time validation, 22/22 active Polling values at 5000, `Vendor match: yes`, and `Active values: yes`; the defect was runtime evidence lookup, not Thermal materialization.
+- Keeps the complete 2.0.2 August multiline `HotThreshold` materializer/normalizer fix, exact Outdoor delta checks, Polling guards, active vendor hash verification, and fail-closed recovery unchanged.
+
 # 2.0.2
 
 Stable Dynamic V2 multiline materializer hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.2.zip`, SHA-256 `0544da1363bcde62f087e14744dbcdf9da159c8d50204d2ebe605371077034ea`, 335993 bytes.
