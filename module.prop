@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel 10 Thermal & Memory Control
-version=2.0.3
-versionCode=1016243
+version=2.0.4
+versionCode=1016244
 author=Lycidias93, marx161, Codecity001
-description=Dynamic V2 stable hotfix: makes runtime and Bootguard validation consume canonical persistent evidence directly while retaining the 2.0.2 August multiline Thermal fix and guarded Polling, Thermal, ZRAM, LMKD, and recovery behavior.
+description=Dynamic V2 stable hotfix: fixes fresh-cache Thermal manifest serialization while retaining the 2.0.3 canonical runtime validation fix, August multiline Thermal support, and guarded Polling, Thermal, ZRAM, LMKD, and recovery behavior.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update.json
