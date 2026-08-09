@@ -302,7 +302,7 @@ if [ "$cache_valid" -ne 1 ]; then
     [ -s "$SOURCE_DIR/$required" ] || fail 31 "required_stock_file_missing_$required"
   done
 
-  printf '%s\n' "file\tsha256\tbytes\tpolling_300000" > "$CACHE_STAGE/source-manifest.tsv"
+  printf 'file\tsha256\tbytes\tpolling_300000\n' > "$CACHE_STAGE/source-manifest.tsv"
   source_files=0
   source_polling_total=0
   for file in $CONTROLLED_FILES; do
@@ -355,7 +355,7 @@ if [ -d "$TARGET_DIR" ]; then
   done
 fi
 
-printf '%s\n' "file\tsource_sha256\toutput_sha256\tsource_polling_300000\treplacements\toutput_polling_300000\toutput_polling_5000\tallowed_diff" > "$PATCH_MANIFEST_TMP"
+printf 'file\tsource_sha256\toutput_sha256\tsource_polling_300000\treplacements\toutput_polling_300000\toutput_polling_5000\tallowed_diff\n' > "$PATCH_MANIFEST_TMP"
 printf '%s\n' '{' > "$REPORT_TMP"
 printf '%s\n' '  "schema": "pixel-thermal-dynamic-validation-v3",' >> "$REPORT_TMP"
 printf '  "device": "%s",\n' "$DEVICE" >> "$REPORT_TMP"
