@@ -1,0 +1,41 @@
+name: Update JSON changelog contract
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - update.json
+      - update-prerelease.json
+      - release-notes/magisk-stable.md
+      - release-notes/magisk-prerelease.md
+      - tests/test-update-json-changelog-contract.sh
+      - .github/workflows/update-json-changelog-contract-ci.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - update.json
+      - update-prerelease.json
+      - release-notes/magisk-stable.md
+      - release-notes/magisk-prerelease.md
+      - tests/test-update-json-changelog-contract.sh
+      - .github/workflows/update-json-changelog-contract-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Magisk changelog contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/test-update-json-changelog-contract.sh
