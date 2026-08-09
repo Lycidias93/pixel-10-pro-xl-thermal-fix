@@ -17,7 +17,16 @@ mkdir -p "$mod/tools/core" "$mod/system/vendor" "$source_dir"
 cp -fp "$core" "$supported" "$mod/tools/core/"
 
 for file in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
-  printf '%s\n' '{"Sensors":[{"Name":"VIRTUAL-SKIN","PollingDelay":300000,"HotThreshold":["NAN",39.0]}]}' > "$source_dir/$file"
+  printf '%s\n' \
+    '{' \
+    '  "Sensors": [' \
+    '    {' \
+    '      "Name": "VIRTUAL-SKIN",' \
+    '      "PollingDelay": 300000,' \
+    '      "HotThreshold": ["NAN", 39.0]' \
+    '    }' \
+    '  ]' \
+    '}' > "$source_dir/$file"
 done
 
 if ! THERMAL_SOURCE_DIR="$source_dir" \
