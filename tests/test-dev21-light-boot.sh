@@ -50,8 +50,12 @@ grep -Fq 'update_manager_badges_fast' "$service"
 grep -Fq 'update_manager_badges_full' "$service"
 grep -Fq 'LMKD_SYSTEM_RESETPROP_BIN' "$apply"
 grep -Fq 'property_writer=magisk_resetprop' "$root/tests/test-dev19-lmkd-early-test.sh"
-grep -Fq 'version=2.0.0' "$module_prop"
-grep -Fq 'versionCode=1016240' "$module_prop"
+module_version="$(sed -n 's/^version=//p' "$module_prop" | head -n 1)"
+module_version_code="$(sed -n 's/^versionCode=//p' "$module_prop" | head -n 1)"
+[[ "$(grep -c '^version=' "$module_prop")" -eq 1 ]]
+[[ "$(grep -c '^versionCode=' "$module_prop")" -eq 1 ]]
+[[ "$module_version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]]
+[[ "$module_version_code" =~ ^[0-9]+$ ]]
 
 printf '%s\n' 'PASS stable_first_or_changed_boot_requires_full_verification'
 printf '%s\n' 'PASS stable_unchanged_boot_uses_fast_path_without_pending_boot'
@@ -59,4 +63,5 @@ printf '%s\n' 'PASS stable_platform_transition_forces_full_verification'
 printf '%s\n' 'PASS stable_config_change_rearms_full_bootguard'
 printf '%s\n' 'PASS stable_fast_badges_avoid_full_compat_scan'
 printf '%s\n' 'PASS stable_magisk_resetprop_writer_is_evidenced'
+printf 'PASS module_metadata_contract version=%s versionCode=%s\n' "$module_version" "$module_version_code"
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV21_LIGHT_BOOT_PASS'

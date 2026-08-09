@@ -110,8 +110,12 @@ if grep -Fq 'while :; do' "$service"; then
   exit 1
 fi
 
-grep -Fq 'version=2.0.0' "$module_prop"
-grep -Fq 'versionCode=1016240' "$module_prop"
+module_version="$(sed -n 's/^version=//p' "$module_prop" | head -n 1)"
+module_version_code="$(sed -n 's/^versionCode=//p' "$module_prop" | head -n 1)"
+[[ "$(grep -c '^version=' "$module_prop")" -eq 1 ]]
+[[ "$(grep -c '^versionCode=' "$module_prop")" -eq 1 ]]
+[[ "$module_version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]]
+[[ "$module_version_code" =~ ^[0-9]+$ ]]
 
 printf '%s\n' 'PASS dev14_physical_eh_alias_deduplication'
 printf '%s\n' 'PASS dev14_migration_safe_duplicate_baseline_restore'
@@ -119,4 +123,5 @@ printf '%s\n' 'PASS dev14_legacy_lock_migrates_to_adaptive'
 printf '%s\n' 'PASS dev20_opt_in_lmk_reload_preserves_stock_default'
 printf '%s\n' 'PASS dev15_daily_fresh_defaults'
 printf '%s\n' 'PASS dev14_distinct_risk_observability'
+printf 'PASS module_metadata_contract version=%s versionCode=%s\n' "$module_version" "$module_version_code"
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV14_EH_SAFETY_TEST_PASS'

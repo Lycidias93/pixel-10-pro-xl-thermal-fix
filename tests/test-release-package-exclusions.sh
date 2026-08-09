@@ -28,25 +28,25 @@ grep -Fq 'module_install_mode_reported' "$legacy_collector"
 grep -Fq 'RESULT: PIXEL_THERMAL_OUTDOOR_BOOT_DEBUG_DONE outcome=success workflow_exit_code=0' "$legacy_collector"
 
 sh -n "$prerelease_collector"
-grep -Fq 'SCHEMA="pixel-thermal-prerelease-debug-v3"' "$prerelease_collector"
-grep -Fq 'EXPECTED_VERSION="2.0.0-alpha.3-dev.6"' "$prerelease_collector"
-grep -Fq 'EXPECTED_VERSION_CODE="1016217"' "$prerelease_collector"
-grep -Fq 'EXPECTED_ASSET_SHA256="b6c7d14edc49ddded30094b984b66c0dac40d436360461bb55e5fd630148a0b9"' "$prerelease_collector"
-grep -Fq 'action-switch' "$prerelease_collector"
-grep -Fq 'previous_profile_reported' "$prerelease_collector"
-grep -Fq 'tools/core/patch-thermal-fix5-core.sh' "$prerelease_collector"
-grep -Fq 'pixel_thermal_install_*.txt' "$prerelease_collector"
+grep -Fq 'SCHEMA="pixel-thermal-online-debug-v4"' "$prerelease_collector"
+grep -Fq 'MODE="${1:-support}"' "$prerelease_collector"
+grep -Fq 'support|runtime)' "$prerelease_collector"
+grep -Fq 'privacy=support mode excludes logcat dmesg tombstone contents account lists and app lists' "$prerelease_collector"
+grep -Fq 'decision_gate=compare_layout_delay_keys_targets_and_runtime_before_device_allowlist_or_module_family_change' "$prerelease_collector"
+grep -Fq 'support_enabled_by_this_run=no' "$prerelease_collector"
+grep -Fq 'magisk/mirror/vendor/etc' "$prerelease_collector"
 grep -Fq '/data/adb/ksud.log' "$prerelease_collector"
-grep -Fq 'logcat -L -b all' "$prerelease_collector"
-grep -Fq 'RESULT: PIXEL_THERMAL_PRERELEASE_DEBUG_DONE outcome=success workflow_exit_code=0' "$prerelease_collector"
+grep -Fq '/sys/fs/pstore' "$prerelease_collector"
+grep -Fq 'RESULT: PIXEL_THERMAL_ONLINE_DEBUG_DONE outcome=success workflow_exit_code=0' "$prerelease_collector"
 
 sh -n "$prerelease_launcher"
-grep -Fq 'ENGINE_COMMIT="189be5c18381702e515b4136ceabfd2fe57f60d2"' "$prerelease_launcher"
-grep -Fq 'ENGINE_BLOB="bdfbcd280de8bd83150c1777b08e5b677b434ab2"' "$prerelease_launcher"
-grep -Fq "choose 'Scenario'" "$prerelease_launcher"
-grep -Fq "choose 'Selected profile'" "$prerelease_launcher"
-grep -Fq "choose 'Previous profile'" "$prerelease_launcher"
-grep -Fq "choose 'Install mode'" "$prerelease_launcher"
+grep -Fq 'ENGINE_COMMIT="1764b4324f1e1647bdc5242e6097ccb8b8aa8a64"' "$prerelease_launcher"
+grep -Fq 'ENGINE_BLOB="6553a7fa78afc3c6a93e2df8ff6ff8b1e08210b0"' "$prerelease_launcher"
+grep -Fq 'collect-thermal-online-v5.sh' "$prerelease_launcher"
+grep -Fq "choose 'Collection mode' 1 support runtime" "$prerelease_launcher"
+grep -Fq 'Support mode: privacy-reduced platform/layout inventory; no logcat or dmesg.' "$prerelease_launcher"
+grep -Fq 'Runtime mode: adds filtered system/root logs for boot or runtime failures.' "$prerelease_launcher"
+grep -Fq 'collector_integrity_mismatch' "$prerelease_launcher"
 grep -Fq 'su -c' "$prerelease_launcher"
 if grep -Fq '/dev/tty' "$prerelease_launcher"; then
   printf '%s\n' 'FAIL prerelease_launcher_forces_dev_tty'
@@ -136,8 +136,8 @@ grep -q 'RESULT: PIXEL_THERMAL_LEAN_PACKAGE_BUILD_PASS' "$log_b"
 
 printf 'reproducible_sha256=%s\n' "$(sha256sum "$out_a" | awk '{print $1}')"
 printf '%s\n' 'PASS online_outdoor_collector_syntax_and_contract'
-printf '%s\n' 'PASS online_prerelease_collector_syntax_and_contract'
-printf '%s\n' 'PASS online_prerelease_launcher_internal_prompt_contract'
+printf '%s\n' 'PASS online_thermal_collector_v4_contract'
+printf '%s\n' 'PASS online_thermal_launcher_v5_integrity_and_mode_contract'
 printf '%s\n' 'PASS packaged_debug_collector_v3_contract'
 printf '%s\n' 'PASS installer_debug_evidence_contract'
 printf '%s\n' 'PASS online_collectors_repo_only'
