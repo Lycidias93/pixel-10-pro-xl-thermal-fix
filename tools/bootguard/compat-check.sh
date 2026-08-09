@@ -22,9 +22,11 @@ BUILD_SLUG="$(printf '%s' "$BUILD_ID" | tr -c 'A-Za-z0-9._-' '_')"
 
 CACHE_DIR="$DATA_ROOT/originals/$DEVICE/$BUILD_SLUG/vendor/etc"
 SOURCE_MANIFEST="$CACHE_DIR/source-manifest.tsv"
-PATCH_MANIFEST="$GUARD_DIR/patch-manifest.tsv"
-REPORT_MODULE="$M/validation_report.json"
-REPORT_DATA="$DATA_ROOT/validation_report.json"
+VALIDATION_DIR="$DATA_ROOT/validation"
+VALIDATION_STATE="$VALIDATION_DIR/state.env"
+PATCH_MANIFEST="$VALIDATION_DIR/patch-manifest.tsv"
+REPORT_MODULE="$VALIDATION_DIR/validation-report.json"
+REPORT_DATA="$VALIDATION_DIR/validation-report.json"
 
 CONTROLLED_FILES="
 thermal_info_config.json
