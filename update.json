@@ -1,6 +1,6 @@
 {
-  "version": "2.0.1",
-  "versionCode": 1016241,
-  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v2.0.1/pixel-10-thermal-memory-control-2.0.1.zip",
-  "changelog": "Hotfix for newer August/Canary Thermal files: multiline HotThreshold arrays are now validated correctly without weakening exact delta checks. Verified on Mustang Android 17 August Stable with KernelSU full post-reboot Bootguard/runtime proof and on August Canary; July Stable regression remained green."
+  "version": "2.0.2",
+  "versionCode": 1016242,
+  "zipUrl": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/download/v2.0.2/pixel-10-thermal-memory-control-2.0.2.zip",
+  "changelog": "Stable hotfix for the August multiline HotThreshold layout: completes multiline-aware Thermal materialization and allowed-diff normalization, fixing the fail-closed rc=63 seen on Mustang CP2A.260805.005 with Outdoor profiles. Exact-delta validation, Polling guards, Bootguard and rollback behavior remain intact."
 }
