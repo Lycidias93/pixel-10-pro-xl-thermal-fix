@@ -3,6 +3,7 @@
 Release notes are repository documentation and are never included in the flashable Magisk ZIP.
 
 ## Stable
+- [2.0.4](2.0.4.md) — stable fresh-cache manifest hotfix for Dynamic Thermal materialization.
 - [2.0.3](2.0.3.md) — stable runtime-evidence hotfix using canonical persistent validation state for status and Bootguard.
 - [2.0.2](2.0.2.md) — stable Dynamic V2 hotfix completing multiline `HotThreshold` materialization for current August Thermal files.
 - [2.0.1](2.0.1.md) — stable Dynamic V2 hotfix with August Stable KernelSU full post-reboot proof, August Canary verification, and July Stable Magisk regression coverage.

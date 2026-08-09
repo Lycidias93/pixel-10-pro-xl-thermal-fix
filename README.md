@@ -4,25 +4,25 @@
 
 Dynamic V2 is the active source architecture on `main`.
 
-[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.3) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.2) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.2) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
 
 > [!IMPORTANT]
-> **2.0.3 is the current stable release.** It fixes the post-reboot runtime and Bootguard false `dynamic_materialization_invalid` state by reading canonical persistent validation evidence directly. It includes the complete 2.0.2 August multiline `HotThreshold` materializer fix unchanged. Pixel 9-series and Pixel 10a remain on the separate 2.1 prerelease line.
+> **2.0.4 is the current stable release.** It fixes fresh-cache Dynamic Thermal materialization by writing valid tab-delimited source and patch manifests. It includes the 2.0.3 canonical runtime-evidence fix and the 2.0.2 August multiline `HotThreshold` support unchanged. Pixel 9-series and Pixel 10a remain on the separate 2.1 prerelease line.
 
 ## Current release
 
 | Item | Value |
 |---|---|
-| Version | `2.0.3` |
-| Version code | `1016243` |
-| Release type | Stable Dynamic V2 runtime-evidence hotfix |
-| Tag | `v2.0.3` |
-| Asset | `pixel-10-thermal-memory-control-2.0.3.zip` |
-| Asset size | `335897` bytes |
-| SHA-256 | `f5b8e73cae4218cca4450a8c34f2c311310d98d6a0c72bd934e8c06317bca5f9` |
-| Regression proof | `mustang / CP2A.260805.005 / KernelSU`, official 2.0.2 install PASS, 22/22 active `5000`, vendor match; canonical runtime-evidence path guarded by CI |
+| Version | `2.0.4` |
+| Version code | `1016244` |
+| Release type | Stable Dynamic V2 fresh-cache manifest hotfix |
+| Tag | `v2.0.4` |
+| Asset | `pixel-10-thermal-memory-control-2.0.4.zip` |
+| Asset size | `335896` bytes |
+| SHA-256 | `a3a12742bc7c901ae8cc6a0e6e2dc9fd4d022b20f1bbf20f53674811b999465b` |
+| Regression proof | fresh-cache generation/consumption CI plus `blazer / CP2A.260805.005 / Magisk 30.7` reporter evidence |
 
-2.0.3 keeps the full 2.0.2 Stable feature set and changes runtime evidence lookup: status and Bootguard now validate the canonical persistent files under `/data/adb/pixel-10-pro-xl-thermal-fix/validation` directly instead of relying on legacy aliases. This addresses the XDA post-reboot false negative where the overlay was already active and matched vendor but materialization was reported invalid.
+2.0.4 keeps the complete 2.0.3 Stable feature set and corrects a fresh-cache serialization defect: the source and patch TSV headers now contain real tab delimiters, so the manifest reader cannot mistake the header for a Thermal filename. The failure was isolated from the HARISH / Codecity001 Pixel 10 Pro August Stable package-debug capture and reproduced against the Dynamic V2 materializer.
 
 The stable and test update paths remain independent. Selecting a channel changes only the active update metadata path; it does not download or flash a ZIP.
 

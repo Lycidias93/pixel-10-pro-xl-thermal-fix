@@ -1,3 +1,14 @@
+# 2.0.4
+
+Stable Dynamic V2 fresh-cache manifest hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.4.zip`, SHA-256 `a3a12742bc7c901ae8cc6a0e6e2dc9fd4d022b20f1bbf20f53674811b999465b`, 335896 bytes.
+
+- Fixes Dynamic Thermal materialization when a supported device/build tuple has no existing stock cache.
+- Corrects source-cache and patch-manifest TSV headers from literal `\t` text to real tab delimiters, preventing the header from being consumed as a filename.
+- Adds a fresh-cache regression that generates and consumes both manifests from scratch before release.
+- Reporter evidence: Pixel 10 Pro (`blazer`), Android 17 `CP2A.260805.005`, Magisk 30.7, Polling Mod + Outdoor Safe; the captured 2.0.2 attempt failed before Thermal overlay/validation promotion while the malformed fresh manifest isolated the defect.
+- Thanks to HARISH / Codecity001 for the package-debug capture that exposed this Stable path.
+- Keeps the 2.0.3 canonical runtime-evidence fix, 2.0.2 multiline `HotThreshold` support, exact Outdoor delta checks, Polling guards and fail-closed recovery unchanged.
+
 # 2.0.3
 
 Stable Dynamic V2 runtime-evidence hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.3.zip`, SHA-256 `f5b8e73cae4218cca4450a8c34f2c311310d98d6a0c72bd934e8c06317bca5f9`, 335897 bytes.
