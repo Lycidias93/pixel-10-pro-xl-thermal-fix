@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - hotfix/v2.0.3-canonical-validation-runtime
+      - hotfix/v2.0.4-fresh-cache-manifest
   pull_request:
     branches:
       - main
@@ -23,5 +23,8 @@ jobs:
         run: |
           bash -n tools/bootguard/compat-check.sh
           bash -n tests/test-canonical-validation-compat-contract.sh
+          bash -n tests/test-fresh-cache-manifest-runtime.sh
       - name: Canonical validation compatibility contract
         run: bash tests/test-canonical-validation-compat-contract.sh
+      - name: Fresh-cache manifest runtime regression
+        run: bash tests/test-fresh-cache-manifest-runtime.sh
