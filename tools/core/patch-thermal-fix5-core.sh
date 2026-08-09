@@ -122,22 +122,47 @@ normalize_allowed() {
       }
       return line
     }
-    BEGIN { target = 0 }
+    function mask_numbers(text, out) {
+      out = ""
+      while (match(text, /[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)/)) {
+        out = out substr(text, 1, RSTART - 1) "__HOT_VALUE__"
+        text = substr(text, RSTART + RLENGTH)
+      }
+      return out text
+    }
+    BEGIN { target = 0; in_hot = 0 }
     {
       line = $0
-      if ((line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN/ || line ~ /"Name"[[:space:]]*:[[:space:]]*"cellular-emergency/) && line !~ /OVER-35C/) {
-        target = 1
-      } else if (line ~ /"Name"[[:space:]]*:/) {
-        target = 0
+      if (!in_hot) {
+        if ((line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN/ || line ~ /"Name"[[:space:]]*:[[:space:]]*"cellular-emergency/) && line !~ /OVER-35C/) {
+          target = 1
+        } else if (line ~ /"Name"[[:space:]]*:/) {
+          target = 0
+        }
       }
       line = normalize_poll(line)
-      if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
-        start = index(line, "[")
-        finish = index(line, "]")
-        if (start > 0 && finish > start) {
-          line = substr(line, 1, start) "__HOTTHRESHOLD__" substr(line, finish)
+      if (in_hot) {
+        closing = index(line, "]")
+        if (closing > 0) {
+          line = mask_numbers(substr(line, 1, closing - 1)) substr(line, closing)
+          in_hot = 0
+          target = 0
+        } else {
+          line = mask_numbers(line)
         }
-        target = 0
+      } else if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
+        open = index(line, "[")
+        if (open > 0) {
+          rest = substr(line, open + 1)
+          closing = index(rest, "]")
+          if (closing > 0) {
+            line = substr(line, 1, open) mask_numbers(substr(rest, 1, closing - 1)) substr(rest, closing)
+            target = 0
+          } else {
+            line = substr(line, 1, open) mask_numbers(rest)
+            in_hot = 1
+          }
+        }
       }
       print line
     }
@@ -147,51 +172,69 @@ patch_one() {
   src="$1"
   dst="$2"
   awk -v delta="$DELTA" -v poll_mode="$POLLING_MODE" '
-    BEGIN { target = 0 }
+    function adjust_numbers(text, out, tok, dot, dec, fmt, v) {
+      if (delta == 0) return text
+      out = ""
+      while (match(text, /[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)/)) {
+        tok = substr(text, RSTART, RLENGTH)
+        v = tok + delta
+        if (tok ~ /[.]/) {
+          dot = index(tok, ".")
+          dec = length(tok) - dot
+          fmt = "%." dec "f"
+          tok = sprintf(fmt, v)
+        } else if (v == int(v)) {
+          tok = sprintf("%d", v)
+        } else {
+          tok = sprintf("%.1f", v)
+        }
+        out = out substr(text, 1, RSTART - 1) tok
+        text = substr(text, RSTART + RLENGTH)
+      }
+      return out text
+    }
+    function patch_poll(line, token) {
+      if (poll_mode != "mod") return line
+      while (match(line, /"PollingDelay"[[:space:]]*:[[:space:]]*300000/)) {
+        token = substr(line, RSTART, RLENGTH)
+        sub(/300000$/, "5000", token)
+        line = substr(line, 1, RSTART - 1) token substr(line, RSTART + RLENGTH)
+      }
+      return line
+    }
+    BEGIN { target = 0; in_hot = 0 }
     {
       line = $0
-      if ((line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN/ || line ~ /"Name"[[:space:]]*:[[:space:]]*"cellular-emergency/) && line !~ /OVER-35C/) {
-        target = 1
-      } else if (line ~ /"Name"[[:space:]]*:/) {
-        target = 0
-      }
-
-      if (poll_mode == "mod") {
-        while (match(line, /"PollingDelay"[[:space:]]*:[[:space:]]*300000/)) {
-          token = substr(line, RSTART, RLENGTH)
-          sub(/300000$/, "5000", token)
-          line = substr(line, 1, RSTART - 1) token substr(line, RSTART + RLENGTH)
+      if (!in_hot) {
+        if ((line ~ /"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN/ || line ~ /"Name"[[:space:]]*:[[:space:]]*"cellular-emergency/) && line !~ /OVER-35C/) {
+          target = 1
+        } else if (line ~ /"Name"[[:space:]]*:/) {
+          target = 0
         }
       }
-
-      if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
-        start = index(line, "[")
-        finish = index(line, "]")
-        if (start > 0 && finish > start && delta != 0) {
-          prefix = substr(line, 1, start)
-          suffix = substr(line, finish)
-          content = substr(line, start + 1, finish - start - 1)
-          n = split(content, elements, ",")
-          rebuilt = ""
-          for (i = 1; i <= n; i++) {
-            elem = elements[i]
-            gsub(/^[[:space:]]+|[[:space:]]+$/, "", elem)
-            if (elem ~ /^[+-]?[0-9]+([.][0-9]+)?$/) {
-              new_val = elem + delta
-              if (elem ~ /[.]/) {
-                elem = sprintf("%.1f", new_val)
-              } else if (new_val != int(new_val)) {
-                elem = sprintf("%.1f", new_val)
-              } else {
-                elem = sprintf("%d", new_val)
-              }
-            }
-            rebuilt = rebuilt elem
-            if (i < n) rebuilt = rebuilt ", "
+      line = patch_poll(line)
+      if (in_hot) {
+        closing = index(line, "]")
+        if (closing > 0) {
+          line = adjust_numbers(substr(line, 1, closing - 1)) substr(line, closing)
+          in_hot = 0
+          target = 0
+        } else {
+          line = adjust_numbers(line)
+        }
+      } else if (target && line ~ /"HotThreshold"[[:space:]]*:/) {
+        open = index(line, "[")
+        if (open > 0) {
+          rest = substr(line, open + 1)
+          closing = index(rest, "]")
+          if (closing > 0) {
+            line = substr(line, 1, open) adjust_numbers(substr(rest, 1, closing - 1)) substr(rest, closing)
+            target = 0
+          } else {
+            line = substr(line, 1, open) adjust_numbers(rest)
+            in_hot = 1
           }
-          line = prefix rebuilt suffix
         }
-        target = 0
       }
       print line
     }
@@ -259,7 +302,7 @@ if [ "$cache_valid" -ne 1 ]; then
     [ -s "$SOURCE_DIR/$required" ] || fail 31 "required_stock_file_missing_$required"
   done
 
-  printf '%s\n' "file	sha256	bytes	polling_300000" > "$CACHE_STAGE/source-manifest.tsv"
+  printf '%s\n' "file\tsha256\tbytes\tpolling_300000" > "$CACHE_STAGE/source-manifest.tsv"
   source_files=0
   source_polling_total=0
   for file in $CONTROLLED_FILES; do
@@ -312,7 +355,7 @@ if [ -d "$TARGET_DIR" ]; then
   done
 fi
 
-printf '%s\n' "file	source_sha256	output_sha256	source_polling_300000	replacements	output_polling_300000	output_polling_5000	allowed_diff" > "$PATCH_MANIFEST_TMP"
+printf '%s\n' "file\tsource_sha256\toutput_sha256\tsource_polling_300000\treplacements\toutput_polling_300000\toutput_polling_5000\tallowed_diff" > "$PATCH_MANIFEST_TMP"
 printf '%s\n' '{' > "$REPORT_TMP"
 printf '%s\n' '  "schema": "pixel-thermal-dynamic-validation-v3",' >> "$REPORT_TMP"
 printf '  "device": "%s",\n' "$DEVICE" >> "$REPORT_TMP"
