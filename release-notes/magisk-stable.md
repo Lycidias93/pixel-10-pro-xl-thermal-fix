@@ -1,10 +1,9 @@
-# Pixel 10 Thermal & Memory Control 2.0.2
+# Pixel 10 Thermal & Memory Control 2.0.3
 
 ## Hotfix
 
-• Fixes multiline `HotThreshold` materialization for the newer August Thermal layout.
-• Fixes the matching allowed-diff normalization path.
-• Resolves the fail-closed `rc=63` update/install failure seen with Outdoor profiles on August Stable.
-• Keeps Polling guards, exact Outdoor delta validation, Bootguard and rollback behavior unchanged.
+• Fixes a post-reboot false `dynamic_materialization_invalid` state on validated installs.
+• Runtime status and Bootguard now read the canonical persistent validation evidence directly instead of depending on legacy module symlink aliases.
+• Keeps the 2.0.2 August multiline `HotThreshold` fix, Polling validation, Outdoor delta checks and fail-closed protection unchanged.
 
-Install 2.0.2 over the existing module and reboot. No wipe or config reset is required.
+Install 2.0.3 over the existing module and reboot. No wipe or config reset is required.
