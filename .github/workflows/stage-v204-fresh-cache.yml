@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Fix portable TSV header writes
-        run: python3 -c 'from pathlib import Path; p=Path("tools/core/patch-thermal-fix5-core.sh"); s=p.read_text(); a="  printf '\''%s\\n'\'' \"file\\\\tsha256\\\\tbytes\\\\tpolling_300000\" > \"$CACHE_STAGE/source-manifest.tsv\""; b="  printf '\''file\\tsha256\\tbytes\\tpolling_300000\\n'\'' > \"$CACHE_STAGE/source-manifest.tsv\""; c="printf '\''%s\\n'\'' \"file\\\\tsource_sha256\\\\toutput_sha256\\\\tsource_polling_300000\\\\treplacements\\\\toutput_polling_300000\\\\toutput_polling_5000\\\\tallowed_diff\" > \"$PATCH_MANIFEST_TMP\""; d="printf '\''file\\tsource_sha256\\toutput_sha256\\tsource_polling_300000\\treplacements\\toutput_polling_300000\\toutput_polling_5000\\tallowed_diff\\n'\'' > \"$PATCH_MANIFEST_TMP\""; assert a in s and c in s; p.write_text(s.replace(a,b,1).replace(c,d,1))'
+        run: python3 -c 'from pathlib import Path; p=Path("tools/core/patch-thermal-fix5-core.sh"); s=p.read_text(); a="  printf '\''%s\\n'\'' \"file\\tsha256\\tbytes\\tpolling_300000\" > \"$CACHE_STAGE/source-manifest.tsv\""; b="  printf '\''file\\tsha256\\tbytes\\tpolling_300000\\n'\'' > \"$CACHE_STAGE/source-manifest.tsv\""; c="printf '\''%s\\n'\'' \"file\\tsource_sha256\\toutput_sha256\\tsource_polling_300000\\treplacements\\toutput_polling_300000\\toutput_polling_5000\\tallowed_diff\" > \"$PATCH_MANIFEST_TMP\""; d="printf '\''file\\tsource_sha256\\toutput_sha256\\tsource_polling_300000\\treplacements\\toutput_polling_300000\\toutput_polling_5000\\tallowed_diff\\n'\'' > \"$PATCH_MANIFEST_TMP\""; assert a in s and c in s; p.write_text(s.replace(a,b,1).replace(c,d,1))'
       - name: Commit runtime fix
         run: |
           git config user.name "Lycidias93"
