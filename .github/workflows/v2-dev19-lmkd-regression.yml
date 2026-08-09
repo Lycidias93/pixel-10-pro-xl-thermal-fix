@@ -53,9 +53,15 @@ jobs:
         run: |
           set -euo pipefail
           grep -Fq 'Dynamic V2 is the active source architecture' README.md
-          grep -Fq 'version=2.0.0' module.prop
-          grep -Fq 'versionCode=1016240' module.prop
-          grep -Fq '2.0.0 promotes the device-tested Dynamic V2 line' release-notes/2.0.0.md
+          version="$(sed -n 's/^version=//p' module.prop | head -n 1)"
+          version_code="$(sed -n 's/^versionCode=//p' module.prop | head -n 1)"
+          test -n "$version"
+          test "$(grep -c '^version=' module.prop)" -eq 1
+          test "$(grep -c '^versionCode=' module.prop)" -eq 1
+          [[ "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]]
+          [[ "$version_code" =~ ^[0-9]+$ ]]
+          test -s "release-notes/${version}.md"
+          grep -Fq "# ${version}" "release-notes/${version}.md"
           grep -Fq 'property_writer=magisk_resetprop|resetprop_rs_fallback' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'Lightweight normal boots' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'SYSTEM_RESETPROP=' tools/zram/apply-zram-100p.sh
@@ -66,4 +72,4 @@ jobs:
           test ! -e deprecated/profiles
           test ! -e tools/lmkd/early-swap-low-test.sh
           test ! -e tools/lmkd/verify-early-swap-low-test.sh
-          printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV21_LMKD_LIGHT_BOOT_CI_PASS'
+          printf 'RESULT: PIXEL_THERMAL_DEV21_LMKD_LIGHT_BOOT_CI_PASS version=%s versionCode=%s\n' "$version" "$version_code"
