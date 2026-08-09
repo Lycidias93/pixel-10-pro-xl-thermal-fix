@@ -44,14 +44,110 @@ JSON
 cat > "$source_dir/thermal_info_config_throttling.json" <<'JSON'
 {
   "Sensors": [
-    {"Name": "VIRTUAL-SKIN", "PollingDelay": 300000, "HotThreshold": ["NAN", 39, 43, 45, 46.5, 52, 55.0]},
-    {"Name": "VIRTUAL-SKIN-HINT", "PollingDelay": 300000, "HotThreshold": ["NAN", 37.0, 43.0, 45.0, 46.5, 52.0, 55.0]},
-    {"Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM", "PollingDelay": 300000, "HotThreshold": ["NAN", 37.0, 39.0, "NAN", "NAN", "NAN", "NAN"]},
-    {"Name": "VIRTUAL-SKIN-CPU-MID", "PollingDelay": 300000, "HotThreshold": ["NAN", 39.0, 41.0, "NAN", "NAN", "NAN", "NAN"]},
-    {"Name": "VIRTUAL-SKIN-CPU-ODPM", "PollingDelay": 300000, "HotThreshold": ["NAN", 39.0, 41.0, "NAN", "NAN", "NAN", "NAN"]},
-    {"Name": "VIRTUAL-SKIN-CPU-HIGH", "PollingDelay": 300000, "HotThreshold": ["NAN", 41.0, 43.0, "NAN", "NAN", "NAN", "NAN"]},
-    {"Name": "VIRTUAL-SKIN-SOC", "PollingDelay": 300000, "HotThreshold": ["NAN", 37.0, 39.0, 41.0, 45.0, 46.5, 52.0]},
-    {"Name": "VIRTUAL-SKIN-SOC-EXTREME", "PollingDelay": 300000, "HotThreshold": ["NAN", "NAN", "NAN", 45.0, 46.0, "NAN", "NAN"]}
+    {
+      "Name": "VIRTUAL-SKIN",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        39,
+        43,
+        45,
+        46.5,
+        52,
+        55.0
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-HINT",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        37.0,
+        43.0,
+        45.0,
+        46.5,
+        52.0,
+        55.0
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        37.0,
+        39.0,
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN"
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CPU-MID",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        39.0,
+        41.0,
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN"
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CPU-ODPM",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        39.0,
+        41.0,
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN"
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CPU-HIGH",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        41.0,
+        43.0,
+        "NAN",
+        "NAN",
+        "NAN",
+        "NAN"
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SOC",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        37.0,
+        39.0,
+        41.0,
+        45.0,
+        46.5,
+        52.0
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SOC-EXTREME",
+      "PollingDelay": 300000,
+      "HotThreshold": [
+        "NAN",
+        "NAN",
+        "NAN",
+        45.0,
+        46.0,
+        "NAN",
+        "NAN"
+      ]
+    }
   ]
 }
 JSON
@@ -71,7 +167,7 @@ for profile in stock outdoor-safe outdoor-plus outdoor-extended; do
   THERMAL_DATA_ROOT="$case_dir/data" \
   THERMAL_DEVICE=mustang \
   THERMAL_ANDROID=17 \
-  THERMAL_BUILD_ID=ZP11.260618.005 \
+  THERMAL_BUILD_ID=CP2A.260805.005 \
     sh "$case_dir/module/tools/core/patch-thermal-validated.sh" mod "$profile" "$case_dir/module" > "$case_dir/run.log"
 
   grep -Fq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$case_dir/run.log"
@@ -82,10 +178,16 @@ for profile in stock outdoor-safe outdoor-plus outdoor-extended; do
   grep -Fq '"Name": "DISPLAY-SKIN", "PollingDelay": 5000, "HotThreshold": ["NAN", 40.0, 45.0, 50.0, 55.0' "$case_dir/module/system/vendor/etc/thermal_info_config.json"
 done
 
-grep -Fq '"NAN", 42, 46, 48, 49.5, 55, 58.0' "$work/outdoor-extended/module/system/vendor/etc/thermal_info_config_throttling.json"
+throttling="$work/outdoor-extended/module/system/vendor/etc/thermal_info_config_throttling.json"
+grep -Fq '      "HotThreshold": [' "$throttling"
+grep -Fq '        42,' "$throttling"
+grep -Fq '        46,' "$throttling"
+grep -Fq '        49.5,' "$throttling"
+grep -Fq '        58.0' "$throttling"
 grep -Fq '"Name": "cellular-emergency", "PollingDelay": 5000, "HotThreshold": ["NAN", 43.0, 48.0, 53.0, 55.0, 57.0, 58.0]' "$work/outdoor-extended/module/system/vendor/etc/thermal_info_config_charge.json"
 
 printf '%s\n' 'PASS fix5_dynamic_inventory_12_arrays_84_values'
+printf '%s\n' 'PASS multiline_hotthreshold_materialization_august_shape'
 printf '%s\n' 'PASS all_profiles_materialize_on_canary_fixture'
 printf '%s\n' 'PASS downstream_virtual_skin_and_cellular_shift_in_lockstep'
 printf '%s\n' 'PASS over_35c_trigger_and_non_targets_unchanged'
