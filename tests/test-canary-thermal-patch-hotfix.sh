@@ -163,12 +163,16 @@ prepare_case() {
 
 for profile in stock outdoor-safe outdoor-plus outdoor-extended; do
   case_dir="$(prepare_case "$profile")"
-  THERMAL_SOURCE_DIR="$source_dir" \
-  THERMAL_DATA_ROOT="$case_dir/data" \
-  THERMAL_DEVICE=mustang \
-  THERMAL_ANDROID=17 \
-  THERMAL_BUILD_ID=CP2A.260805.005 \
-    sh "$case_dir/module/tools/core/patch-thermal-validated.sh" mod "$profile" "$case_dir/module" > "$case_dir/run.log"
+  if ! THERMAL_SOURCE_DIR="$source_dir" \
+    THERMAL_DATA_ROOT="$case_dir/data" \
+    THERMAL_DEVICE=mustang \
+    THERMAL_ANDROID=17 \
+    THERMAL_BUILD_ID=CP2A.260805.005 \
+      sh "$case_dir/module/tools/core/patch-thermal-validated.sh" mod "$profile" "$case_dir/module" > "$case_dir/run.log" 2>&1; then
+    cat "$case_dir/run.log"
+    printf '%s\n' "FAIL profile_$profile"
+    exit 1
+  fi
 
   grep -Fq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$case_dir/run.log"
   grep -Fq 'PATCH_THERMAL_DELTA_TARGET_ZONES=12' "$case_dir/run.log"
