@@ -21,7 +21,7 @@ jobs:
           sh -n tools/core/patch-thermal-validated.sh
           sh -n tools/core/verify-outdoor-delta.sh
       - name: August multiline regression
-        run: bash tests/test-canary-thermal-patch-hotfix.sh
+        run: bash -x tests/test-canary-thermal-patch-hotfix.sh
       - name: Dynamic build admission
         run: bash tests/test-dynamic-build-admission.sh
       - name: Outdoor runtime delta regression
