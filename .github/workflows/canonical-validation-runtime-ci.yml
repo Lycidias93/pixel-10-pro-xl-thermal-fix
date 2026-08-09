@@ -1,0 +1,27 @@
+name: Canonical validation runtime CI
+
+on:
+  push:
+    branches:
+      - main
+      - hotfix/v2.0.3-canonical-validation-runtime
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax
+        run: |
+          bash -n tools/bootguard/compat-check.sh
+          bash -n tests/test-canonical-validation-compat-contract.sh
+      - name: Canonical validation compatibility contract
+        run: bash tests/test-canonical-validation-compat-contract.sh
