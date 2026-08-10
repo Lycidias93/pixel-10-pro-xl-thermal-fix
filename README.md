@@ -229,25 +229,25 @@ An unchanged, previously verified normal boot uses the **fast** path:
 - load selected settings;
 - apply ZRAM, LMKD and Emerald Hill state;
 - perform lightweight live readbacks;
-- refresh the manager badges;
+- refresh the manager status;
 - exit.
 
 There is no permanent module verification service. **Verbose Debug intentionally forces full verification on every boot.** Switch Debug Logging to Silent after testing to enable the unchanged-boot fast path.
 
-### Automatic manager badges
+### Automatic manager status
 
-The Magisk description is refreshed after boot and after Action changes:
+The Magisk description is refreshed after boot and after Action changes using full feature names instead of letter abbreviations:
 
 ```text
-P:🟢 5000 | T:🟢 outdoor-ext | Z:🟢 100p | L:🟢 1pct-active
+Polling 🟢 5s | Thermal 🟢 Outdoor Extended +3°C | ZRAM 🟢 100% | Memory Killer 🟢 1% active
 ```
 
-| Badge | Meaning |
+| Status item | Meaning |
 |---|---|
-| `P` | Polling mode and active value |
-| `T` | Thermal profile |
-| `Z` | ZRAM state |
-| `L` | LMKD policy and reload state |
+| **Polling** | Thermal polling mode and effective interval |
+| **Thermal** | Active thermal profile and Outdoor delta |
+| **ZRAM** | Compressed-memory state and configured size |
+| **Memory Killer** | LMKD policy state in user-facing wording |
 
 | Color | Meaning |
 |---|---|
@@ -256,7 +256,7 @@ P:🟢 5000 | T:🟢 outdoor-ext | Z:🟢 100p | L:🟢 1pct-active
 | 🔴 | Failed, unsafe, unsupported, or disabled by a guard |
 | ⚪ | Stock or off |
 
-The compact `Z` badge shows ZRAM state, not the Emerald Hill submode. Check **Action → Advanced → Emerald Hill mode** for Adaptive versus max lock.
+The ZRAM status shows ZRAM state, not the Emerald Hill submode. Check **Action → Advanced → Emerald Hill mode** for Adaptive versus max lock.
 
 ## Installation
 
@@ -303,6 +303,15 @@ Verbose Debug is useful for the first test cycle but causes full verification at
 - With Debug set to Silent and no settings/build changes, a later unchanged boot should report `boot_verification_mode=fast`.
 - A changed build, changed config, transition, or failed readback automatically returns to full verification.
 
+### Test/support snapshot after reboot
+
+You do **not** need to find support information while flashing. After the reboot:
+
+1. Open Magisk and the module's **Action** menu.
+2. Open **Debug → Feature Status** for a readable Polling, Thermal, ZRAM and Memory Killer overview.
+3. Open **Debug → Support Snapshot (ZIP)** to create the bounded debug archive in your Download folder.
+4. For testing or support, send the Feature Status screenshot/text together with that ZIP.
+
 ## Magisk Action dashboard
 
 Open **Action** on the module card. The menu uses the same Volume Up/Volume Down controls.
@@ -317,10 +326,10 @@ Thermal and ZRAM layout changes are materialized safely and may require a reboot
 
 ### Debug
 
-- **Status:** refresh and print detailed source, overlay, Polling, Thermal, ZRAM, LMKD, pTune and Bootguard state.
-- **Collect ZIP:** create a bounded debug archive.
+- **Feature Status:** refresh and print the readable Polling, Thermal, ZRAM and Memory Killer status plus validation details.
+- **Support Snapshot (ZIP):** create a bounded debug archive for testing or support.
 - **EH Event Log:** show recent Emerald Hill apply/restore evidence.
-- **LMKD Reload Evidence:** show writer, method, PID, property and service proof.
+- **Memory Killer Evidence:** show the underlying LMKD writer, method, PID, property and service proof.
 - **Debug Logging:** toggle Silent or Verbose.
 
 ### Advanced
@@ -335,7 +344,7 @@ The Action dashboard does not perform a network refresh during normal startup.
 
 ## Runtime verification
 
-The easiest check is **Action → Debug → Status**.
+The easiest check is **Action → Debug → Feature Status**.
 
 A direct compatibility check is also available:
 
@@ -353,7 +362,7 @@ ACTIVE_POLLING_VALID=yes
 SAFE_TO_REBOOT=yes
 ```
 
-For LMKD, **Action → Debug → LMKD Reload Evidence** should show:
+For the experimental Memory Killer setting, **Action → Debug → Memory Killer Evidence** should show the underlying LMKD evidence:
 
 ```text
 reload_result=success
@@ -378,7 +387,7 @@ A source commit does not automatically publish a release or move either channel.
 
 ## Debugging and issue reports
 
-Create a debug archive from Action or run:
+Create a **Support Snapshot (ZIP)** from **Action → Debug → Support Snapshot (ZIP)** or run:
 
 ```sh
 su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/bootguard/collect-debug.sh
@@ -408,7 +417,8 @@ A useful issue report includes:
 - whether pTune is installed or active;
 - whether Debug is Silent or Verbose;
 - install autosave log;
-- debug ZIP or relevant bounded evidence;
+- Feature Status screenshot/text;
+- Support Snapshot ZIP or relevant bounded evidence;
 - exact reproduction steps and whether a reboot was involved.
 
 ## Recovery and rollback
