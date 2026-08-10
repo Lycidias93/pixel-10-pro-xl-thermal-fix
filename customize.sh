@@ -229,6 +229,14 @@ else
   ui_print "- Thermal safely disabled for this platform"
 fi
 ui_print "- Android: $android"
+ui_print ""
+mc_rule
+ui_print "After reboot"
+ui_print "- Magisk > module > Action > Debug"
+ui_print "- Feature Status: readable runtime overview"
+ui_print "- Support Snapshot (ZIP): testing/support file"
+ui_print "- Snapshot is saved in Download"
+mc_rule
 
 if [ -d "$MODPATH/tools" ]; then
   chmod -R 0755 "$MODPATH/tools" 2>/dev/null || true
