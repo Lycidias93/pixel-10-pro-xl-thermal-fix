@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# P/T/Z manager status backed by Dynamic V2 manifests and active values.
+# User-facing manager status backed by Dynamic V2 manifests and active values.
 
 ID="${ID:-pixel-10-pro-xl-thermal-fix}"
 ADB_ROOT="${THERMAL_ADB_ROOT:-/data/adb}"
@@ -278,11 +278,43 @@ status_collect() {
     fi
   fi
 
-  case "$thermal_value" in
-    outdoor-extended) thermal_value=outdoor-ext ;;
+  polling_display="$polling_value"
+  case "$polling_value" in
+    5000) polling_display="5s" ;;
+    stock) polling_display="Stock" ;;
+    mod-pending) polling_display="5s pending reboot" ;;
+    disabled) polling_display="Disabled" ;;
   esac
 
-  desc="description=P:$polling_icon $polling_value | T:$thermal_icon $thermal_value | Z:$zram_icon $zram_value | L:$lmk_icon $lmk_value | Action: settings/debug"
+  thermal_display="$thermal_value"
+  case "$thermal_profile" in
+    stock) thermal_display="Stock" ;;
+    outdoor-safe) thermal_display="Outdoor Safe +1°C" ;;
+    outdoor-plus) thermal_display="Outdoor Plus +2°C" ;;
+    outdoor-extended) thermal_display="Outdoor Extended +3°C" ;;
+  esac
+  case "$thermal_state" in
+    *needs_reboot) thermal_display="$thermal_display pending reboot" ;;
+    disabled_by_platform_guard) thermal_display="Disabled" ;;
+    dynamic_materialization_invalid|unsafe_*) thermal_display="Unavailable" ;;
+  esac
+
+  zram_display="$zram_value"
+  case "$zram_value" in
+    100p) zram_display="100%" ;;
+    100p-pending) zram_display="100% pending" ;;
+    off) zram_display="Off" ;;
+  esac
+
+  memory_killer_display="$lmk_value"
+  case "$lmk_value" in
+    stock) memory_killer_display="Stock" ;;
+    1pct-active) memory_killer_display="1% active" ;;
+    reload-pending) memory_killer_display="1% pending" ;;
+    reload-failed) memory_killer_display="Failed" ;;
+  esac
+
+  desc="description=Polling $polling_icon $polling_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Memory Killer $lmk_icon $memory_killer_display | Action: details/support"
 
   {
     printf '%s\n' "SOURCE_ICON=$source_icon"
@@ -301,6 +333,7 @@ status_collect() {
     printf '%s\n' "POLLING_STATE=$polling_state"
     printf '%s\n' "POLLING_MODE=$polling_mode"
     printf '%s\n' "POLLING_EFFECTIVE=$polling_value"
+    printf '%s\n' "POLLING_DISPLAY=$polling_display"
     printf '%s\n' "SOURCE_POLLING_300000=$source_polling"
     printf '%s\n' "REPLACEMENTS=$replacements"
     printf '%s\n' "OVERLAY_POLLING_300000=$overlay_300000"
@@ -311,6 +344,7 @@ status_collect() {
     printf '%s\n' "THERMAL_ICON=$thermal_icon"
     printf '%s\n' "THERMAL_STATE=$thermal_state"
     printf '%s\n' "THERMAL_PROFILE=$thermal_profile"
+    printf '%s\n' "THERMAL_DISPLAY=$thermal_display"
     printf '%s\n' "SELECTED_PROFILE=$selected_profile"
     printf '%s\n' "ZRAM_ICON=$zram_icon"
     printf '%s\n' "ZRAM_STATE=$zram_state"
@@ -322,6 +356,7 @@ status_collect() {
     printf '%s\n' "ZRAM_SWAP_ACTIVE=$zram_swap_active"
     printf '%s\n' "ZRAM_RUNTIME_ACTIVE=$zram_runtime_active"
     printf '%s\n' "ZRAM_DISKSIZE=$zram_disk_size"
+    printf '%s\n' "ZRAM_DISPLAY=$zram_display"
     printf '%s\n' "MODULE_OVERLAY_READY=$overlay_ready"
     printf '%s\n' "ACTIVE_VENDOR_MATCH=$active_match"
     printf '%s\n' "SAFE_TO_REBOOT=$safe_to_reboot"
@@ -331,6 +366,9 @@ status_collect() {
     printf '%s\n' "POLLING_VALUE=$polling_value"
     printf '%s\n' "THERMAL_VALUE=$thermal_value"
     printf '%s\n' "ZRAM_VALUE=$zram_value"
+    printf '%s\n' "MEMORY_KILLER_ICON=$lmk_icon"
+    printf '%s\n' "MEMORY_KILLER_STATE=$lmk_state"
+    printf '%s\n' "MEMORY_KILLER_DISPLAY=$memory_killer_display"
     printf '%s\n' "LMKD_TEST_ICON=$lmk_icon"
     printf '%s\n' "LMKD_TEST_STATE=$lmk_state"
     printf '%s\n' "LMKD_TEST_ENABLED=$lmk_test_enabled"
@@ -346,12 +384,14 @@ status_collect() {
 
   {
     printf '%s\n' "Pixel 10 Thermal & Memory Control"
-    printf '%s\n' "Source:  $source_icon  $source_state"
-    printf '%s\n' "Polling: $polling_icon  $polling_state"
-    printf '%s\n' "Thermal: $thermal_icon  $thermal_state"
-    printf '%s\n' "ZRAM:    $zram_icon  $zram_state"
-    printf '%s\n' "LMKD:    $lmk_icon  $lmk_state"
+    printf '%s\n' "Feature Status"
+    printf '%s\n' "Polling:       $polling_icon $polling_display"
+    printf '%s\n' "Thermal:       $thermal_icon $thermal_display"
+    printf '%s\n' "ZRAM:          $zram_icon $zram_display"
+    printf '%s\n' "Memory Killer: $lmk_icon $memory_killer_display"
     printf '%s\n' ""
+    printf '%s\n' "Validation details"
+    printf '%s\n' "Source: $source_icon $source_state"
     printf '%s\n' "profile=$thermal_profile"
     printf '%s\n' "source_polling_300000=$source_polling"
     printf '%s\n' "replacements=$replacements"
@@ -385,21 +425,23 @@ status_print() {
   get_status_kv() {
     grep -E "^$1=" "$STATUS_FILE" 2>/dev/null | tail -n 1 | sed "s/^$1=//"
   }
-  printf '%s\n' "Status"
-  printf '%s\n' "Source:  $(get_status_kv SOURCE_ICON) $(get_status_kv SOURCE_STATE)"
-  printf '%s\n' "Polling: $(get_status_kv POLLING_ICON) $(get_status_kv POLLING_STATE)"
-  printf '%s\n' "Thermal: $(get_status_kv THERMAL_ICON) $(get_status_kv THERMAL_STATE)"
-  printf '%s\n' "ZRAM:    $(get_status_kv ZRAM_ICON) $(get_status_kv ZRAM_STATE)"
+  printf '%s\n' "Feature Status"
+  printf '%s\n' "Polling:       $(get_status_kv POLLING_ICON) $(get_status_kv POLLING_DISPLAY)"
+  printf '%s\n' "Thermal:       $(get_status_kv THERMAL_ICON) $(get_status_kv THERMAL_DISPLAY)"
+  printf '%s\n' "ZRAM:          $(get_status_kv ZRAM_ICON) $(get_status_kv ZRAM_DISPLAY)"
+  printf '%s\n' "Memory Killer: $(get_status_kv MEMORY_KILLER_ICON) $(get_status_kv MEMORY_KILLER_DISPLAY)"
   printf '%s\n' ""
-  printf '%s\n' "Source 300000: $(get_status_kv SOURCE_POLLING_300000)"
-  printf '%s\n' "Replacements:  $(get_status_kv REPLACEMENTS)"
-  printf '%s\n' "Overlay 5000:  $(get_status_kv OVERLAY_POLLING_5000)"
-  printf '%s\n' "Active 5000:   $(get_status_kv ACTIVE_POLLING_5000)"
-  printf '%s\n' "Materialized:  $(get_status_kv MATERIALIZATION_VALID)"
-  printf '%s\n' "Vendor match:  $(get_status_kv ACTIVE_VENDOR_MATCH)"
-  printf '%s\n' "Active values: $(get_status_kv ACTIVE_POLLING_VALID)"
-  printf '%s\n' "Reboot safe:   $(get_status_kv SAFE_TO_REBOOT)"
-  printf '%s\n' "Reason:        $(get_status_kv COMPAT_REASON)"
+  printf '%s\n' "Validation details"
+  printf '%s\n' "Source:         $(get_status_kv SOURCE_ICON) $(get_status_kv SOURCE_STATE)"
+  printf '%s\n' "Source 300000:  $(get_status_kv SOURCE_POLLING_300000)"
+  printf '%s\n' "Replacements:   $(get_status_kv REPLACEMENTS)"
+  printf '%s\n' "Overlay 5000:   $(get_status_kv OVERLAY_POLLING_5000)"
+  printf '%s\n' "Active 5000:    $(get_status_kv ACTIVE_POLLING_5000)"
+  printf '%s\n' "Materialized:   $(get_status_kv MATERIALIZATION_VALID)"
+  printf '%s\n' "Vendor match:   $(get_status_kv ACTIVE_VENDOR_MATCH)"
+  printf '%s\n' "Active values:  $(get_status_kv ACTIVE_POLLING_VALID)"
+  printf '%s\n' "Reboot safe:    $(get_status_kv SAFE_TO_REBOOT)"
+  printf '%s\n' "Reason:         $(get_status_kv COMPAT_REASON)"
 }
 
 case "${1:-print}" in
