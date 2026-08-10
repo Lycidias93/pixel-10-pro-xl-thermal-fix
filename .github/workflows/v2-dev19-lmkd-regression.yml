@@ -61,7 +61,7 @@ jobs:
           [[ "$version" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][0-9A-Za-z.-]+)?$ ]]
           [[ "$version_code" =~ ^[0-9]+$ ]]
           test -s "release-notes/${version}.md"
-          grep -Fq "# ${version}" "release-notes/${version}.md"
+          grep -Fq "# Pixel 10 Thermal & Memory Control ${version}" "release-notes/${version}.md"
           grep -Fq 'property_writer=magisk_resetprop|resetprop_rs_fallback' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'Lightweight normal boots' release-notes/2.0.0-alpha.3-dev.21.md
           grep -Fq 'SYSTEM_RESETPROP=' tools/zram/apply-zram-100p.sh

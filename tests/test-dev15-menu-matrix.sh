@@ -8,12 +8,15 @@ cycle="$root/tools/menu/menu-cycle.sh"
 layout="$root/tools/zram/materialize-zram-choice.sh"
 disable_ptune="$root/tools/ptune/disable-ptune-override.sh"
 reinit="$root/tools/zram/reinit-zram-100p.sh"
+status_lib="$root/tools/debug/status-lib.sh"
+status_cached="$root/tools/debug/status-cached-print.sh"
+customize="$root/customize.sh"
 module_prop="$root/module.prop"
 
 fail() { printf 'FAIL %s\n' "$*"; exit 1; }
 pass() { printf 'PASS %s\n' "$*"; }
 
-for file in "$install_menu" "$action" "$cycle" "$layout" "$disable_ptune" "$reinit"; do
+for file in "$install_menu" "$action" "$cycle" "$layout" "$disable_ptune" "$reinit" "$status_lib" "$status_cached" "$customize"; do
   bash -n "$file" || fail "syntax file=$file"
 done
 pass menu_and_helper_syntax
@@ -54,7 +57,7 @@ for route in \
   'ui_menu5 "Thermal max+' \
   'ui_menu3 "ZRAM 100%" "Enable 100p (adaptive EH)" "Disable" "Back"' \
   'ui_menu3 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock" "Back"' \
-  'ui_menu6 "Debug" "Status" "Collect ZIP" "EH Event Log" "LMKD Reload Evidence" "Debug Logging" "Back"' \
+  'ui_menu6 "Debug" "Feature Status" "Support Snapshot (ZIP)" "EH Event Log" "Memory Killer Evidence" "Debug Logging" "Back"' \
   'ui_menu6 "Advanced" "Emerald Hill mode" "LMKD 1% reload" "pTune Status" "pTune Override" "Update Channel" "Back"' \
   'ui_menu3 "pTune Risk" "Keep OFF" "Enable risk" "Back"' \
   'ui_menu3 "Update Channel" "Use Stable" "Use Test" "Back"'; do
@@ -72,6 +75,21 @@ grep -Fq 'sh "$ZRAM_LAYOUT" disable' "$action"
 grep -Fq 'action_cycle_pending_reboot' "$action"
 grep -Fq 'Existing configuration kept' "$action"
 pass action_zram_transaction_wiring
+
+grep -Fq 'desc="description=Polling ' "$status_lib" || fail readable_manager_description_missing
+if grep -Fq 'description=P:' "$status_lib"; then
+  fail abbreviated_manager_badges_present
+fi
+grep -Fq 'Thermal $thermal_icon $thermal_display' "$status_lib" || fail thermal_full_label_missing
+grep -Fq 'ZRAM $zram_icon $zram_display' "$status_lib" || fail zram_full_label_missing
+grep -Fq 'Memory Killer $lmk_icon $memory_killer_display' "$status_lib" || fail memory_killer_full_label_missing
+grep -Fq 'MEMORY_KILLER_DISPLAY=' "$status_lib" || fail memory_killer_display_state_missing
+grep -Fq 'Feature Status' "$status_cached" || fail feature_status_heading_missing
+grep -Fq 'Memory Killer:' "$status_cached" || fail memory_killer_cached_status_missing
+grep -Fq 'Support Snapshot (ZIP)' "$action" || fail support_snapshot_action_missing
+grep -Fq 'Feature Status: readable runtime overview' "$customize" || fail installer_feature_status_guidance_missing
+grep -Fq 'Support Snapshot (ZIP): testing/support file' "$customize" || fail installer_support_snapshot_guidance_missing
+pass readable_status_and_support_ux_contract
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -128,7 +146,7 @@ printf '%s\n' 'ROUTE installer: ptune on/off'
 printf '%s\n' 'ROUTE installer: debug silent/verbose'
 printf '%s\n' 'ROUTE action: settings/debug/advanced/exit'
 printf '%s\n' 'ROUTE action settings: polling/thermal/zram/back'
-printf '%s\n' 'ROUTE action debug: status/collect/eh-log/lmkd-reload-evidence/toggle/back'
+printf '%s\n' 'ROUTE action debug: feature-status/support-snapshot/eh-log/memory-killer-evidence/toggle/back'
 printf '%s\n' 'ROUTE action advanced: eh-mode/lmkd-reload/ptune-status/ptune-override/update-channel/back'
 printf '%s\n' 'ROUTE action leafs: back/timeout preserve state'
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV15_MENU_MATRIX_PASS'

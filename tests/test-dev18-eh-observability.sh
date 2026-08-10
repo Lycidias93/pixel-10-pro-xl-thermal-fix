@@ -60,7 +60,7 @@ grep -Fq 'restore_events=1' "$tmp/state/status.env"
 
 grep -Fq 'Experimental max lock is under Advanced' "$dashboard"
 grep -Fq 'ui_menu6 "Advanced" "Emerald Hill mode"' "$dashboard"
-grep -Fq 'ui_menu6 "Debug" "Status" "Collect ZIP" "EH Event Log"' "$dashboard"
+grep -Fq 'ui_menu6 "Debug" "Feature Status" "Support Snapshot (ZIP)" "EH Event Log"' "$dashboard"
 grep -Fq 'EXPERIMENTAL max lock' "$dashboard"
 grep -Fq 'Adaptive (daily default)' "$dashboard"
 
