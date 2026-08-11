@@ -126,15 +126,15 @@ metric_file() (
   c_orig="$2"
   c_copy="$3"
   [ -r "$c_copy" ] || exit 0
-  c_total="$(grep -Eo '"'"'PollingDelay"'"'[[:space:]]*:[[:space:]]*[0-9]+' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
-  c_300000="$(grep -Eo '"'"'PollingDelay"'"'[[:space:]]*:[[:space:]]*300000([^0-9]|$)' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
-  c_5000="$(grep -Eo '"'"'PollingDelay"'"'[[:space:]]*:[[:space:]]*5000([^0-9]|$)' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
-  c_30000="$(grep -Eo '"'"'PollingDelay"'"'[[:space:]]*:[[:space:]]*30000([^0-9]|$)' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
-  c_hot="$(grep -Eo '"'"'HotThreshold"'"'[[:space:]]*:' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
-  c_targets="$(grep -E '"'"'Name"'"'[[:space:]]*:[[:space:]]*"'"'(VIRTUAL-SKIN|cellular-emergency)' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
-  c_values="$(grep -Eo '"'"'PollingDelay"'"'[[:space:]]*:[[:space:]]*[0-9]+' "$c_copy" 2>/dev/null | sed -E 's/.*:[[:space:]]*//' | sort -n | uniq -c | awk 'BEGIN{f=1}{if(!f)printf ",";printf "%s:%s",$2,$1;f=0}END{print ""}')"
+  c_total="$(grep -Eo '"PollingDelay"[[:space:]]*:[[:space:]]*[0-9]+' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
+  c_300000="$(grep -Eo '"PollingDelay"[[:space:]]*:[[:space:]]*300000([^0-9]|$)' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
+  c_5000="$(grep -Eo '"PollingDelay"[[:space:]]*:[[:space:]]*5000([^0-9]|$)' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
+  c_30000="$(grep -Eo '"PollingDelay"[[:space:]]*:[[:space:]]*30000([^0-9]|$)' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
+  c_hot="$(grep -Eo '"HotThreshold"[[:space:]]*:' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
+  c_targets="$(grep -E '"Name"[[:space:]]*:[[:space:]]*"(VIRTUAL-SKIN|cellular-emergency)"' "$c_copy" 2>/dev/null | wc -l | tr -d ' ')"
+  c_values="$(grep -Eo '"PollingDelay"[[:space:]]*:[[:space:]]*[0-9]+' "$c_copy" 2>/dev/null | sed -E 's/.*:[[:space:]]*//' | sort -n | uniq -c | awk 'BEGIN{f=1}{if(!f)printf ",";printf "%s:%s",$2,$1;f=0}END{print ""}')"
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$c_label" "$c_orig" "${c_total:-0}" "${c_300000:-0}" "${c_5000:-0}" "${c_30000:-0}" "${c_hot:-0}" "${c_targets:-0}" "${c_values:-none}" >> "$COLLECT/thermal/metrics.tsv"
-  grep -Eo '"'"'[A-Za-z0-9_]*(Delay|Interval)[A-Za-z0-9_]*"'"'[[:space:]]*:[[:space:]]*[0-9]+' "$c_copy" 2>/dev/null | sed -E 's/^"([^"]+)"[[:space:]]*:[[:space:]]*([0-9]+)$/\1 \2/' | sort | uniq -c | while read -r c_count c_key c_value; do
+  grep -Eo '"[A-Za-z0-9_]*(Delay|Interval)[A-Za-z0-9_]*"[[:space:]]*:[[:space:]]*[0-9]+' "$c_copy" 2>/dev/null | sed -E 's/^"([^"]+)"[[:space:]]*:[[:space:]]*([0-9]+)$/\1 \2/' | sort | uniq -c | while read -r c_count c_key c_value; do
     [ -n "$c_key" ] || continue
     printf '%s\t%s\t%s\t%s\t%s\n' "$c_label" "$c_orig" "$c_key" "$c_value" "$c_count" >> "$COLLECT/thermal/delay-key-values.tsv"
   done
