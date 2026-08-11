@@ -57,13 +57,17 @@ case "$last" in
 esac
 
 if [ "$enabled" = 0 ]; then
-  if [ "$oc" != 0 ] || [ "$eh_ack" = explicit_user_enable_max_lock ]; then
-    oc=0
-    eh_ack=disabled_by_user
-    cfg_set ZRAM_EMERALD_OC 0
-    cfg_set ZRAM_EH_RISK_ACK disabled_by_user
-    cfg_set LAST_ZRAM_100P disabled
-  fi
+  oc=0
+  eh_ack=disabled_by_user
+  lmkd_reload=0
+  lmkd_reload_ack=none
+  cfg_set ZRAM_EMERALD_OC 0
+  cfg_set ZRAM_EH_RISK_ACK disabled_by_user
+  cfg_set LAST_ZRAM_100P disabled
+  cfg_set LMKD_SWAP_LOW_RELOAD 0
+  cfg_set LMKD_SWAP_LOW_RISK_ACK none
+  cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+  rm -f "${MODDIR:-/data/adb/modules/$ID}/system/vendor/etc/fstab.zram.100p" 2>/dev/null || true
 fi
 
 if [ "$oc" = 1 ]; then

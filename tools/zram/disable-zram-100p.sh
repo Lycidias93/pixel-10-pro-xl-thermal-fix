@@ -22,16 +22,15 @@ cfg_set() {
 [ -r "$LAYOUT" ] || { printf '%s\n' "RESULT: ZRAM_DISABLE_FAIL reason=layout_helper_missing"; exit 2; }
 MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$LAYOUT" disable >/dev/null
 
-if [ -r "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
-  MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/zram/apply-zram-100p.sh" restore >/dev/null 2>&1 || true
-fi
-
 cfg_set ENABLE_ZRAM_100P 0
 cfg_set ZRAM_EMERALD_OC 0
 cfg_set ZRAM_RESTART_MMD 0
 cfg_set ZRAM_RISK_ACK disabled_by_user
 cfg_set ZRAM_EH_RISK_ACK disabled_by_user
 cfg_set LAST_ZRAM_100P disabled
+cfg_set LMKD_SWAP_LOW_RELOAD 0
+cfg_set LMKD_SWAP_LOW_RISK_ACK none
+cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
 
-printf '%s\n' "ZRAM 100p disabled in config, properties restored, and module layout removed. Reboot restores stock ZRAM layout."
+printf '%s\n' "ZRAM 100p disabled in config and module layout removed. Reboot restores stock ZRAM layout."
 printf '%s\n' "RESULT: PIXEL_THERMAL_ZRAM_100P_DISABLE_DONE layout=removed eh=adaptive"

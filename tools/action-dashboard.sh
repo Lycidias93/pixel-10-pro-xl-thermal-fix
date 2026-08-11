@@ -415,21 +415,18 @@ set_zram() {
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_disable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
       fi
-      if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
-        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" \
-          sh "$MODDIR/tools/zram/apply-zram-100p.sh" restore >/dev/null 2>&1 || true
-      fi
       cfg_set ENABLE_ZRAM_100P 0
       cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_RESTART_MMD 0
       cfg_set ZRAM_RISK_ACK disabled_by_user
       cfg_set ZRAM_EH_RISK_ACK disabled_by_user
       cfg_set LAST_ZRAM_100P disabled
-      printf '%s
-' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      cfg_set LMKD_SWAP_LOW_RELOAD 0
+      cfg_set LMKD_SWAP_LOW_RISK_ACK none
+      cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
       msg "- ZRAM: disabled"
-      msg "- Properties cleared and EH restored"
-      msg "- Reboot restores stock layout"
+      msg "- Reboot required for stock layout"
     ;;
     *) msg "Back."; return 0 ;;
   esac

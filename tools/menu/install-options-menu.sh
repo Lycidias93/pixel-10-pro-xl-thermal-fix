@@ -307,9 +307,13 @@ apply_last_settings() {
   [ -n "$_zram" ] || _zram="$(cfg_get ENABLE_ZRAM_100P)"
   apply_zram "$_zram"
 
-  _lmkd="$(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
-  [ -n "$_lmkd" ] || _lmkd=disabled
-  apply_lmkd_reload "$_lmkd"
+  if [ "$_zram" = disabled ] || [ "$(cfg_get ENABLE_ZRAM_100P)" = 0 ]; then
+    apply_lmkd_reload 0
+  else
+    _lmkd="$(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
+    [ -n "$_lmkd" ] || _lmkd=disabled
+    apply_lmkd_reload "$_lmkd"
+  fi
 
   mark_single_pass_complete
   mc_msg ""
@@ -359,6 +363,7 @@ zram_index=1
 mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
 if [ "$MC_INDEX" = 0 ]; then
   apply_zram disabled
+  apply_lmkd_reload 0
 else
   oc_index=0
   mc_cycle2 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock (heat/battery)" "$oc_index"
@@ -367,11 +372,10 @@ else
   else
     apply_zram enabled_max_lock
   fi
+  lmkd_index=0
+  mc_cycle2 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "$lmkd_index"
+  [ "$MC_INDEX" = 1 ] && apply_lmkd_reload 1 || apply_lmkd_reload 0
 fi
-
-lmkd_index=0
-mc_cycle2 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "$lmkd_index"
-[ "$MC_INDEX" = 1 ] && apply_lmkd_reload 1 || apply_lmkd_reload 0
 
 current_ptune=0
 current_ack=none

@@ -40,11 +40,9 @@ if [ "${ENABLE_ZRAM_100P:-0}" = 1 ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_en
     printf '%s\n' 'SERVICE_ZRAM result=apply_script_absent' >> "$H"
   fi
 else
-  printf '%s SERVICE_ZRAM action=restore enabled=%s ack=%s\n' \
+  printf '%s SERVICE_ZRAM action=skip enabled=%s ack=%s\n' \
     "$(date -Is 2>/dev/null || date)" "${ENABLE_ZRAM_100P:-0}" "${ZRAM_RISK_ACK:-unset}" >> "$L"
-  if [ -r "$ZRAM_APPLY" ]; then
-    sh "$ZRAM_APPLY" restore >> "$H" 2>&1 || true
-  fi
+  rm -f "$MODDIR/system/vendor/etc/fstab.zram.100p" 2>/dev/null || true
 fi
 
 printf '%s SERVICE_START action=runtime_apply optional_zram_supported=true\n' "$(date -Is 2>/dev/null || date)" >> "$L"
