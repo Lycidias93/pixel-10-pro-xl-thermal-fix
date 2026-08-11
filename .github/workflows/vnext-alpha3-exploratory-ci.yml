@@ -35,10 +35,11 @@ jobs:
           bash -n tools/debug/status-cached-print.sh
           bash -n tools/debug/collect-thermal-online-v5.sh
           bash -n tests/test-dev15-menu-matrix.sh
+          bash -n tests/test-vnext-alpha3-hardening.sh
           bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-vnext-alpha3-hardening.sh
           bash tests/test-dynamic-build-admission.sh
           bash tests/test-single-install-menu.sh
-          bash tests/test-vnext-alpha2-hardening.sh
           bash tests/test-vnext-layouts.sh
           bash tests/test-vnext-ota-transition.sh
           bash tests/test-zram-eh-dev12.sh
