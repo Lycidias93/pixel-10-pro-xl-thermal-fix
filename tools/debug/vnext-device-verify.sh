@@ -1,9 +1,17 @@
 #!/system/bin/sh
 # Repository-owned, collect-all vNext device verifier.
-# Usage as root: sh tools/debug/vnext-device-verify.sh baseline|post-disable|post-reenable
+# Usage: sh tools/debug/vnext-device-verify.sh baseline|post-disable|post-reenable
+# The verifier self-enters Magisk/root when invoked from Termux.
 
 ID="pixel-10-pro-xl-thermal-fix"
-PHASE="${1:-baseline}"
+ROOT_PHASE=0
+if [ "${1:-}" = --root ]; then
+  ROOT_PHASE=1
+  PHASE="${2:-baseline}"
+else
+  PHASE="${1:-baseline}"
+fi
+case "$0" in /*) SELF="$0" ;; *) SELF="$(pwd)/$0" ;; esac
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 DATA_ROOT="${THERMAL_DATA_ROOT:-/data/adb/$ID}"
 CONFIG_FILE="$DATA_ROOT/config.env"
@@ -43,13 +51,26 @@ stop_now() {
 case "$PHASE" in baseline|post-disable|post-reenable) ;; *) stop_now invalid_phase 2 ;; esac
 
 say "task=pixel_thermal_vnext_device_verify"
-say "verifier_version=v1"
+say "verifier_version=v2"
 say "phase=$PHASE"
 say "mutation_allowed=evidence_files_only"
 say "module_config_mutation=no"
 say "network_change=no"
 
-[ "$(id -u 2>/dev/null)" = 0 ] || stop_now root_required 3
+if [ "$ROOT_PHASE" != 1 ] && [ "$(id -u 2>/dev/null || printf 1)" != 0 ]; then
+  SU_BIN="$(command -v su 2>/dev/null || true)"
+  if [ -z "$SU_BIN" ] || [ ! -x "$SU_BIN" ]; then
+    for candidate in /data/data/com.termux/files/usr/bin/su /system/bin/su /system/xbin/su /sbin/su /debug_ramdisk/su; do
+      if [ -x "$candidate" ]; then SU_BIN="$candidate"; break; fi
+    done
+  fi
+  [ -n "$SU_BIN" ] && [ -x "$SU_BIN" ] || stop_now su_missing 3
+  "$SU_BIN" -c "/system/bin/sh $SELF --root $PHASE"
+  root_rc=$?
+  exit "$root_rc"
+fi
+[ "$(id -u 2>/dev/null || printf 1)" = 0 ] || stop_now root_transition_failed 4
+say "root_transition=pass"
 pass_check root_uid0
 
 battery_level=""
@@ -66,10 +87,10 @@ if [ -z "$battery_level" ] && [ -r /sys/class/power_supply/battery/capacity ]; t
   battery_level="$(cat /sys/class/power_supply/battery/capacity 2>/dev/null | awk 'NF == 1 && $1 ~ /^[0-9]+$/ && $1 >= 0 && $1 <= 100 { print $1; exit }')"
   [ -n "$battery_level" ] && battery_method=root_sysfs
 fi
-[ -n "$battery_level" ] || stop_now battery_unavailable 4
+[ -n "$battery_level" ] || stop_now battery_unavailable 5
 say "battery_method=$battery_method"
 say "battery_level=$battery_level"
-[ "$battery_level" -ge 15 ] 2>/dev/null || stop_now battery_below_15 5
+[ "$battery_level" -ge 15 ] 2>/dev/null || stop_now battery_below_15 6
 pass_check battery_gate
 
 say "== identity =="
@@ -146,7 +167,8 @@ else
 fi
 
 if [ -r /proc/swaps ]; then
-  while IFS= read -r swapdev; do
+  swap_list="$(awk 'NR > 1 && $1 ~ /\/zram[0-9]+$/ { print $1 }' /proc/swaps 2>/dev/null)"
+  for swapdev in $swap_list; do
     [ -n "$swapdev" ] || continue
     name="${swapdev##*/}"
     case "$name" in zram[0-9]*) ;; *) continue ;; esac
@@ -160,9 +182,7 @@ if [ -r /proc/swaps ]; then
     if [ -r "$sysfs/comp_algorithm" ]; then comp="$(cat "$sysfs/comp_algorithm" 2>/dev/null | tr -d '\r\n')"; fi
     case "$disksize" in ''|0|*[!0-9]*) ;; *) positive_zram_count=$((positive_zram_count + 1)) ;; esac
     say "zram_device=$name swap_path=$swapdev disksize_bytes=$disksize comp_algorithm=$comp"
-  done <<EOF_SWAPS
-$(awk 'NR > 1 && $1 ~ /\/zram[0-9]+$/ { print $1 }' /proc/swaps 2>/dev/null)
-EOF_SWAPS
+  done
 else
   EVIDENCE=partial
   fail_check proc_swaps_unreadable
