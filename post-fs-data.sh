@@ -7,6 +7,7 @@ L="$G/bootguard.log"
 BOOTGUARD="$MODDIR/tools/bootguard/bootguard-lib.sh"
 TRANSITION="$MODDIR/tools/core/platform-transition.sh"
 AUTO_SWITCH="$MODDIR/tools/core/auto-profile-switch.sh"
+ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 mkdir -p "$G"
 
 log(){ printf '%s %s\n' "$(date -Is 2>/dev/null || date)" "$*" >> "$L"; }
@@ -29,8 +30,40 @@ fi
 [ -e "$MODDIR/remove" ] && { log "GUARD_BLOCK reason=remove_present source=user_marker action=no_change"; exit 0; }
 [ -e "$MODDIR/disable" ] && { log "GUARD_BLOCK reason=bootguard_or_user_disable action=no_mount"; exit 0; }
 
-# post-fs-data runs before Magisk module mounts. Quarantine any stale thermal
-# overlay and force a stock recapture whenever the platform tuple changed.
+# Action changes the persistent choice only. post-fs-data is the safe pre-mount
+# point that makes the module fstab layout match that choice.
+if [ -s "$ZRAM_LAYOUT" ]; then
+  if MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CFG" sh "$ZRAM_LAYOUT" reconcile >> "$L" 2>&1; then
+    log "ZRAM_LAYOUT_RECONCILE result=success enabled=$(getcfg ENABLE_ZRAM_100P)"
+  else
+    log "ZRAM_LAYOUT_RECONCILE result=failed action=force_stock"
+    cfg_set ENABLE_ZRAM_100P 0
+    cfg_set ZRAM_EMERALD_OC 0
+    cfg_set ZRAM_RESTART_MMD 0
+    cfg_set ZRAM_RISK_ACK disabled_by_guard
+    cfg_set ZRAM_EH_RISK_ACK disabled_by_guard
+    cfg_set LAST_ZRAM_100P disabled
+    cfg_set LMKD_SWAP_LOW_RELOAD 0
+    cfg_set LMKD_SWAP_LOW_RISK_ACK none
+    cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+    rm -f "$MODDIR/system/vendor/etc/fstab.zram.100p" 2>/dev/null || true
+    if [ -e "$MODDIR/system/vendor/etc/fstab.zram.100p" ]; then
+      touch "$MODDIR/skip_mount"
+      log "ZRAM_LAYOUT_RECONCILE result=fail_closed reason=stale_layout_not_removable action=skip_mount"
+      exit 0
+    fi
+  fi
+else
+  cfg_set ENABLE_ZRAM_100P 0
+  cfg_set ZRAM_RISK_ACK disabled_by_guard
+  cfg_set LMKD_SWAP_LOW_RELOAD 0
+  cfg_set LMKD_SWAP_LOW_RISK_ACK none
+  rm -f "$MODDIR/system/vendor/etc/fstab.zram.100p" 2>/dev/null || true
+  log "ZRAM_LAYOUT_RECONCILE result=helper_missing action=force_stock"
+fi
+
+# Quarantine stale thermal overlays and force a stock recapture whenever the
+# platform tuple changed.
 if [ -s "$TRANSITION" ]; then
   MODDIR="$MODDIR" CONFIG_FILE="$CFG" sh "$TRANSITION" prepare >> "$L" 2>&1 || {
     rm -f "$MODDIR/system/vendor/etc"/thermal_info_config*.json 2>/dev/null || true
