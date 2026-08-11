@@ -525,12 +525,12 @@ update_channel_loop() {
 
 show_lmkd_evidence() {
   msg ""
-  msg "LMKD reload evidence"
+  msg "Memory Killer evidence"
   msg "----------------------------------------"
   if [ -r "$LMKD_RELOAD_EVIDENCE" ]; then
     cat "$LMKD_RELOAD_EVIDENCE" 2>/dev/null || true
   else
-    msg "No LMKD reload evidence recorded yet."
+    msg "No Memory Killer evidence recorded yet."
   fi
   msg "----------------------------------------"
 }
@@ -628,7 +628,7 @@ write_dashboard_performance() {
 
 debug_loop() {
   while :; do
-    ui_menu6 "Debug" "Status" "Collect ZIP" "EH Event Log" "LMKD Reload Evidence" "Debug Logging" "Back" 0
+    ui_menu6 "Debug" "Feature Status" "Support Snapshot (ZIP)" "EH Event Log" "Memory Killer Evidence" "Debug Logging" "Back" 0
     [ "$UI_REASON" = "timeout" ] && return 0
     case "$UI_INDEX" in
       0) refresh_status; show_status; sleep 2 ;;
