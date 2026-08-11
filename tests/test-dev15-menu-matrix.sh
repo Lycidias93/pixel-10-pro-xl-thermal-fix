@@ -33,8 +33,8 @@ pass readable_status_support_contract
 
 # ZRAM memory properties stay on resetprop-rs -n. setprop is allowed only for
 # Android init/service trigger properties such as lmkd.reinit/ctl.*.
-grep -Fq 'RESET="${ZRAM_RESETPROP_BIN:-$MODDIR/tools/resetprop-rs}"' "$apply" || fail resetprop_helper_missing
-grep -Fq '"$RESET" -n "$key" "$value"' "$apply" || fail resetprop_n_write_missing
+grep -Fq 'RESET="$MODDIR/tools/resetprop-rs"' "$apply" || fail resetprop_helper_missing
+grep -Fq '"$RESET" -n "$key" "$val"' "$apply" || fail resetprop_n_write_missing
 if grep -Eq 'setprop[[:space:]]+(vendor\.zram|mmd\.zram)' "$apply"; then
   fail zram_memory_setprop_present
 fi
