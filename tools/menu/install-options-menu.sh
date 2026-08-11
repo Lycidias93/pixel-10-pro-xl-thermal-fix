@@ -226,6 +226,9 @@ apply_zram() {
       cfg_set ZRAM_RISK_ACK disabled_by_user
       cfg_set ZRAM_EH_RISK_ACK disabled_by_user
       cfg_set LAST_ZRAM_100P disabled
+      cfg_set LMKD_SWAP_LOW_RELOAD 0
+      cfg_set LMKD_SWAP_LOW_RISK_ACK none
+      cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
     ;;
     enabled_max_lock)
       cfg_set ENABLE_ZRAM_100P 1
@@ -249,6 +252,12 @@ apply_zram() {
 apply_lmkd_reload() {
   case "$1" in
     1|enabled)
+      if [ "$(cfg_get ENABLE_ZRAM_100P)" != 1 ] || [ "$(cfg_get ZRAM_RISK_ACK)" != explicit_user_enable ]; then
+        cfg_set LMKD_SWAP_LOW_RELOAD 0
+        cfg_set LMKD_SWAP_LOW_RISK_ACK none
+        cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+        return 0
+      fi
       cfg_set LMKD_SWAP_LOW_RELOAD 1
       cfg_set LMKD_SWAP_LOW_RISK_ACK explicit_user_reload
       cfg_set LAST_LMKD_SWAP_LOW_RELOAD enabled
@@ -294,7 +303,11 @@ print_summary() {
   mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
   mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
   mc_msg "ZRAM: $(zram_summary_label)"
-  mc_msg "LMKD 1% reload: $(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
+  if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ]; then
+    mc_msg "Memory Killer 1%: $(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
+  else
+    mc_msg "Memory Killer: unavailable (ZRAM disabled)"
+  fi
   mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
   mc_msg "pTune policy: $(cfg_get PTUNE_OVERRIDE_POLICY)"
   mc_msg "Debug: $(cfg_get LAST_DEBUG_MODE)"
@@ -332,9 +345,13 @@ apply_last_settings() {
   [ -n "$_zram" ] || _zram="$(cfg_get ENABLE_ZRAM_100P)"
   apply_zram "$_zram"
 
-  _lmkd="$(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
-  [ -n "$_lmkd" ] || _lmkd=disabled
-  apply_lmkd_reload "$_lmkd"
+  if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ] && [ "$(cfg_get ZRAM_RISK_ACK)" = explicit_user_enable ]; then
+    _lmkd="$(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
+    [ -n "$_lmkd" ] || _lmkd=disabled
+    apply_lmkd_reload "$_lmkd"
+  else
+    apply_lmkd_reload 0
+  fi
 
   mark_single_pass_complete
   mc_msg ""
@@ -389,11 +406,11 @@ else
   else
     apply_zram enabled_max_lock
   fi
-fi
 
-lmkd_index=0
-mc_cycle2 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "$lmkd_index"
-[ "$MC_INDEX" = 1 ] && apply_lmkd_reload 1 || apply_lmkd_reload 0
+  lmkd_index=0
+  mc_cycle2 "Memory Killer" "Stock" "EXPERIMENTAL 1%" "$lmkd_index"
+  [ "$MC_INDEX" = 1 ] && apply_lmkd_reload 1 || apply_lmkd_reload 0
+fi
 
 if [ "$POLICY_EXPERIMENTAL" = yes ]; then
   apply_ptune 0
