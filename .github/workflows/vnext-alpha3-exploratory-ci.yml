@@ -1,0 +1,72 @@
+name: vNext alpha.3 exploratory CI
+
+on:
+  push:
+    branches:
+      - repo-maintenance/vnext-alpha3-zram-fix-20260811
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
+
+      - name: Alpha3 shell and regression contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n post-fs-data.sh
+          bash -n service.sh
+          bash -n tools/action-dashboard.sh
+          bash -n tools/menu/install-options-menu.sh
+          bash -n tools/zram/materialize-zram-choice.sh
+          bash -n tools/zram/config-normalize.sh
+          bash -n tools/zram/apply-zram-100p.sh
+          bash -n tools/debug/status-lib.sh
+          bash -n tools/debug/status-cached-print.sh
+          bash -n tools/debug/collect-thermal-online-v5.sh
+          bash -n tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dynamic-build-admission.sh
+          bash tests/test-single-install-menu.sh
+          bash tests/test-canary-thermal-patch-hotfix.sh
+          bash tests/test-action-thermal-transaction.sh
+          bash tests/test-zram-eh-dev12.sh
+          bash tests/test-dev19-lmkd-early-test.sh
+
+      - name: Build alpha3 device-test ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version=//p' module.prop | head -n 1)"
+          test "$version" = 2.1.0-alpha.3
+          mkdir -p dist
+          zip_path="dist/pixel-thermal-memory-control-${version}-device-test.zip"
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          dev_tools/build-release-module.sh "$zip_path" | tee dist/build-metadata.txt
+          dev_tools/verify-release-module.sh "$zip_path"
+          sha256sum "$zip_path" | tee dist/device-test.sha256.txt
+          unzip -Z1 "$zip_path" > dist/package-entries.txt
+          printf '%s\n' 'RESULT: PIXEL_THERMAL_VNEXT_ALPHA3_EXPLORATORY_BUILD_PASS'
+
+      - name: Upload alpha3 device-test ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-vnext-alpha3-device-test-${{ github.sha }}
+          path: |
+            dist/pixel-thermal-memory-control-2.1.0-alpha.3-device-test.zip
+            dist/build-metadata.txt
+            dist/device-test.sha256.txt
+            dist/package-entries.txt
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
