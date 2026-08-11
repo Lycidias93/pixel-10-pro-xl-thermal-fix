@@ -257,6 +257,32 @@ prop_set() {
   if [ "$DEBUG" = 1 ]; then log "set $key=$val"; fi
 }
 
+prop_del() {
+  key="$1"
+  if [ -x "$SYSTEM_RESETPROP" ] || command -v "$SYSTEM_RESETPROP" >/dev/null 2>&1; then
+    "$SYSTEM_RESETPROP" -d "$key" >/dev/null 2>&1 || true
+  fi
+  if [ -x "$RESET" ]; then
+    "$RESET" -d "$key" >/dev/null 2>&1 || true
+  fi
+  if [ "$DEBUG" = 1 ]; then log "del $key"; fi
+}
+
+restore_zram_properties() {
+  prop_del mm.zram.maintenance.first_delay_seconds
+  prop_del mm.zram.maintenance.periodic_delay_seconds
+  prop_del mmd.zram.writeback.max_idle_seconds
+  prop_del mmd.zram.comp_algorithm
+  prop_del mmd.zram.enabled
+  prop_del mmd.zram.size
+  prop_del vendor.zram.size
+  prop_del persist.device_config.vendor_system_native_boot.zram_size
+  prop_del persist.vendor.boot.zram.size
+  if [ -r "$EH_CONTROL" ]; then
+    MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+  fi
+}
+
 case "$SWAPPINESS" in
   ''|*[!0-9]*) SWAPPINESS=100 ;;
   *) [ "$SWAPPINESS" -le 200 ] 2>/dev/null || SWAPPINESS=100 ;;
@@ -266,6 +292,12 @@ case "$THP_MODE" in stock|always|madvise|never) ;; *) THP_MODE=stock ;; esac
 if [ "$MODE" = lmkd_restore ]; then
   restore_lmkd_policy
   log 'RESULT: ZRAM_APPLY_DONE mode=lmkd_restore backup_state=runtime_only'
+  exit 0
+fi
+
+if [ "$MODE" = restore ] || [ "$MODE" = disable ]; then
+  restore_zram_properties
+  log 'RESULT: ZRAM_APPLY_DONE mode=restore properties_cleared=yes eh=adaptive'
   exit 0
 fi
 

@@ -7,7 +7,7 @@ set -eu
 ID="${ID:-pixel-10-pro-xl-thermal-fix}"
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 CONFIG_FILE="${ZRAM_CONFIG_FILE:-/data/adb/$ID/config.env}"
-STATE_DIR="${ZRAM_EH_STATE_DIR:-/data/adb/$ID/zram-eh}"
+STATE_DIR="${ZRAM_EH_STATE_DIR:-${CONFIG_FILE%/*}/zram-eh}"
 BASELINE_FILE="$STATE_DIR/baseline.tsv"
 STATUS_FILE="$STATE_DIR/status.env"
 EVENT_LOG="${ZRAM_EH_EVENT_LOG:-$STATE_DIR/events.log}"

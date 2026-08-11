@@ -17,7 +17,7 @@ cfg_set() { k="$1"; v="$2"; mkdir -p "$CONFIG_DIR" 2>/dev/null || true; touch "$
 cfg_get() { k="$1"; [ -r "$CONFIG_FILE" ] || return 0; grep -E "^${k}=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^${k}=//" | tr -d '\r'; }
 
 enable_zram() { MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$LAYOUT" enable >/dev/null; cfg_set ENABLE_ZRAM_100P 1; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 1; cfg_set ZRAM_RISK_ACK explicit_user_enable; cfg_set ZRAM_EH_RISK_ACK none; cfg_set LAST_ZRAM_100P enabled_standard; msg "- Selected: ZRAM enabled (adaptive EH)"; msg "- Reboot required for layout guarantee"; }
-disable_zram() { MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$LAYOUT" disable >/dev/null; cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set ZRAM_EH_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled; msg "- Selected: ZRAM disabled"; msg "- Reboot required"; }
+disable_zram() { MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$LAYOUT" disable >/dev/null; [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ] && MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/zram/apply-zram-100p.sh" restore >/dev/null 2>&1 || true; cfg_set ENABLE_ZRAM_100P 0; cfg_set ZRAM_EMERALD_OC 0; cfg_set ZRAM_RESTART_MMD 0; cfg_set ZRAM_RISK_ACK disabled_by_user; cfg_set ZRAM_EH_RISK_ACK disabled_by_user; cfg_set LAST_ZRAM_100P disabled; msg "- Selected: ZRAM disabled"; msg "- Reboot required"; }
 
 apply_last_zram_and_exit() {
   last_dbg="$(cfg_get LAST_DEBUG_MODE)"

@@ -56,6 +56,16 @@ case "$last" in
   ;;
 esac
 
+if [ "$enabled" = 0 ]; then
+  if [ "$oc" != 0 ] || [ "$eh_ack" = explicit_user_enable_max_lock ]; then
+    oc=0
+    eh_ack=disabled_by_user
+    cfg_set ZRAM_EMERALD_OC 0
+    cfg_set ZRAM_EH_RISK_ACK disabled_by_user
+    cfg_set LAST_ZRAM_100P disabled
+  fi
+fi
+
 if [ "$oc" = 1 ]; then
   if [ "$last" != enabled_max_lock ] || [ "$eh_ack" != explicit_user_enable_max_lock ]; then
     oc=0

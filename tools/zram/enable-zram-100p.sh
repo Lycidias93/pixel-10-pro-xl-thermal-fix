@@ -3,7 +3,7 @@ set -eu
 
 ID="pixel-10-pro-xl-thermal-fix"
 CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
-CONFIG_FILE="$CONFIG_DIR/config.env"
+CONFIG_FILE="${ZRAM_CONFIG_FILE:-$CONFIG_DIR/config.env}"
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 

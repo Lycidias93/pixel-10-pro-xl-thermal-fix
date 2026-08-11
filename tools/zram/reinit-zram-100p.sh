@@ -101,15 +101,27 @@ main() {
   printf 'comp_algorithm=%s\n\n' "$(cat "$ZRAM_SYS/comp_algorithm" 2>/dev/null || echo unknown)"
 
   printf '%s\n' '== set props =='
-  setprop mm.zram.maintenance.first_delay_seconds "$BIGMAX"
-  setprop mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
-  setprop mmd.zram.writeback.max_idle_seconds "$BIGMAX"
-  setprop mmd.zram.comp_algorithm lz77eh
-  setprop mmd.zram.enabled true
-  setprop mmd.zram.size 100%
-  setprop vendor.zram.size 100p
-  setprop persist.device_config.vendor_system_native_boot.zram_size 100p
-  setprop persist.vendor.boot.zram.size 100p
+  if [ -x "$MODDIR/tools/resetprop-rs" ]; then
+    "$MODDIR/tools/resetprop-rs" -n mm.zram.maintenance.first_delay_seconds "$BIGMAX" || true
+    "$MODDIR/tools/resetprop-rs" -n mm.zram.maintenance.periodic_delay_seconds "$BIGMAX" || true
+    "$MODDIR/tools/resetprop-rs" -n mmd.zram.writeback.max_idle_seconds "$BIGMAX" || true
+    "$MODDIR/tools/resetprop-rs" -n mmd.zram.comp_algorithm lz77eh || true
+    "$MODDIR/tools/resetprop-rs" -n mmd.zram.enabled true || true
+    "$MODDIR/tools/resetprop-rs" -n mmd.zram.size 100% || true
+    "$MODDIR/tools/resetprop-rs" -n vendor.zram.size 100p || true
+    "$MODDIR/tools/resetprop-rs" -n persist.device_config.vendor_system_native_boot.zram_size 100p || true
+    "$MODDIR/tools/resetprop-rs" -n persist.vendor.boot.zram.size 100p || true
+  else
+    setprop mm.zram.maintenance.first_delay_seconds "$BIGMAX"
+    setprop mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
+    setprop mmd.zram.writeback.max_idle_seconds "$BIGMAX"
+    setprop mmd.zram.comp_algorithm lz77eh
+    setprop mmd.zram.enabled true
+    setprop mmd.zram.size 100%
+    setprop vendor.zram.size 100p
+    setprop persist.device_config.vendor_system_native_boot.zram_size 100p
+    setprop persist.vendor.boot.zram.size 100p
+  fi
   printf '%s\n' 'lmk_swap_low_policy=stock_unmodified'
 
   swappiness="${ZRAM_SWAPPINESS:-100}"
