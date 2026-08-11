@@ -38,8 +38,9 @@ jobs:
           bash tests/test-dev15-menu-matrix.sh
           bash tests/test-dynamic-build-admission.sh
           bash tests/test-single-install-menu.sh
-          bash tests/test-canary-thermal-patch-hotfix.sh
-          bash tests/test-action-thermal-transaction.sh
+          bash tests/test-vnext-alpha2-hardening.sh
+          bash tests/test-vnext-layouts.sh
+          bash tests/test-vnext-ota-transition.sh
           bash tests/test-zram-eh-dev12.sh
           bash tests/test-dev19-lmkd-early-test.sh
 
