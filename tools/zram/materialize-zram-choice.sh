@@ -1,14 +1,17 @@
 #!/system/bin/sh
-# Idempotent ZRAM fstab materializer shared by install, Action and helpers.
+# ZRAM fstab materializer. Active-module Action changes are config-only and
+# reconciled from post-fs-data before the module system tree is mounted.
 set -eu
 
 ID="${ID:-pixel-10-pro-xl-thermal-fix}"
-MODDIR="${MODDIR:-/data/adb/modules/$ID}"
-CONFIG_FILE="${ZRAM_CONFIG_FILE:-/data/adb/$ID/config.env}"
+ADB_ROOT="${THERMAL_ADB_ROOT:-/data/adb}"
+MODDIR="${MODDIR:-$ADB_ROOT/modules/$ID}"
+CONFIG_FILE="${ZRAM_CONFIG_FILE:-$ADB_ROOT/$ID/config.env}"
 ACTIVE_DIR="${ZRAM_ACTIVE_DIR:-$MODDIR/system/vendor/etc}"
 SRC="${ZRAM_FSTAB_SRC:-$MODDIR/tools/zram/fstab.zram.100p}"
 DST="$ACTIVE_DIR/fstab.zram.100p"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
+LIVE_MODDIR="${ZRAM_LIVE_MODDIR:-$ADB_ROOT/modules/$ID}"
 MODE="${1:-status}"
 TMP=""
 
@@ -16,6 +19,11 @@ cleanup_tmp() {
   [ -n "$TMP" ] && rm -f "$TMP" 2>/dev/null || true
 }
 trap cleanup_tmp EXIT HUP INT TERM
+
+cfg_get() {
+  [ -r "$CONFIG_FILE" ] || return 0
+  grep -E "^$1=" "$CONFIG_FILE" 2>/dev/null | tail -n 1 | sed "s/^$1=//" | tr -d '\r'
+}
 
 files_equal() {
   left="$1"
@@ -37,38 +45,60 @@ layout_fail() {
   exit "$code"
 }
 
-case "$MODE" in
-  enable)
-    [ -s "$SRC" ] || layout_fail template_missing 2
-    mkdir -p "$ACTIVE_DIR" || layout_fail active_dir_create_failed 3
+materialize_enable() {
+  [ -s "$SRC" ] || layout_fail template_missing 2
+  mkdir -p "$ACTIVE_DIR" || layout_fail active_dir_create_failed 3
 
-    if files_equal "$SRC" "$DST"; then
-      chmod 0644 "$DST" 2>/dev/null || true
-      printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=enable materialized=yes action=kept_existing path=$DST"
+  if files_equal "$SRC" "$DST"; then
+    chmod 0644 "$DST" 2>/dev/null || true
+    printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=yes action=kept_existing path=$DST"
+    return 0
+  fi
+
+  TMP="$ACTIVE_DIR/.fstab.zram.100p.new.$$"
+  rm -f "$TMP" 2>/dev/null || true
+  cp -f "$SRC" "$TMP" || layout_fail temporary_copy_failed 4
+  chmod 0644 "$TMP" 2>/dev/null || true
+  files_equal "$SRC" "$TMP" || layout_fail temporary_verify_failed 5
+
+  if [ -e "$DST" ]; then
+    rm -f "$DST" || layout_fail destination_remove_failed 6
+  fi
+  mv -f "$TMP" "$DST" || layout_fail destination_move_failed 7
+  TMP=""
+  files_equal "$SRC" "$DST" || layout_fail destination_verify_failed 8
+  printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=yes action=materialized path=$DST"
+}
+
+materialize_disable() {
+  rm -f "$DST" || layout_fail destination_remove_failed 9
+  if [ -r "$EH_CONTROL" ]; then
+    MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+  fi
+  [ ! -e "$DST" ] || layout_fail destination_present 10
+  printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=no action=removed path=$DST"
+}
+
+case "$MODE" in
+  enable|disable)
+    # Action runs against /data/adb/modules after the module tree is mounted.
+    # Never mutate that live system tree. The caller commits config and the
+    # next post-fs-data pass performs the layout change before mounting.
+    if [ "$MODDIR" = "$LIVE_MODDIR" ]; then
+      [ "$MODE" != enable ] || [ -s "$SRC" ] || layout_fail template_missing 2
+      printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=deferred action=pre_mount_reconcile_required path=$DST"
       exit 0
     fi
-
-    TMP="$ACTIVE_DIR/.fstab.zram.100p.new.$$"
-    rm -f "$TMP" 2>/dev/null || true
-    cp -f "$SRC" "$TMP" || layout_fail temporary_copy_failed 4
-    chmod 0644 "$TMP" 2>/dev/null || true
-    files_equal "$SRC" "$TMP" || layout_fail temporary_verify_failed 5
-
-    if [ -e "$DST" ]; then
-      rm -f "$DST" || layout_fail destination_remove_failed 6
-    fi
-    mv -f "$TMP" "$DST" || layout_fail destination_move_failed 7
-    TMP=""
-    files_equal "$SRC" "$DST" || layout_fail destination_verify_failed 8
-    printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=enable materialized=yes action=materialized path=$DST"
+    [ "$MODE" = enable ] && materialize_enable || materialize_disable
   ;;
-  disable)
-    rm -f "$DST" || layout_fail destination_remove_failed 9
-    if [ -r "$EH_CONTROL" ]; then
-      MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+  reconcile)
+    enabled="$(cfg_get ENABLE_ZRAM_100P)"
+    ack="$(cfg_get ZRAM_RISK_ACK)"
+    if [ "$enabled" = 1 ] && [ "$ack" = explicit_user_enable ]; then
+      materialize_enable
+    else
+      materialize_disable
     fi
-    [ ! -e "$DST" ] || layout_fail destination_present 10
-    printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=disable materialized=no action=removed path=$DST"
   ;;
   status)
     if [ -s "$DST" ]; then
