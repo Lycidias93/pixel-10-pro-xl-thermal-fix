@@ -11,7 +11,7 @@ thermal_install_zram() {
 
   case "$thermal_zram_enabled" in
     1)
-      if ! MODDIR="$MODPATH" ZRAM_ACTIVE_DIR="$active_dir" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_MATERIALIZE_NOW=1 \
+      if ! MODDIR="$MODPATH" ZRAM_ACTIVE_DIR="$active_dir" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_MATERIALIZE_NOW=1 ZRAM_MATERIALIZE_CALLER=install-zram \
         sh "$thermal_zram_materializer" enable > "$thermal_zram_log" 2>&1; then
         tail -n 4 "$thermal_zram_log" 2>/dev/null | while IFS= read -r thermal_zram_line; do
           ui_print "! $thermal_zram_line"
@@ -24,7 +24,7 @@ thermal_install_zram() {
       ui_print "- Materialized ZRAM 100p layout"
     ;;
     *)
-      if ! MODDIR="$MODPATH" ZRAM_ACTIVE_DIR="$active_dir" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_MATERIALIZE_NOW=1 \
+      if ! MODDIR="$MODPATH" ZRAM_ACTIVE_DIR="$active_dir" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_MATERIALIZE_NOW=1 ZRAM_MATERIALIZE_CALLER=install-zram \
         sh "$thermal_zram_materializer" disable > "$thermal_zram_log" 2>&1; then
         tail -n 4 "$thermal_zram_log" 2>/dev/null | while IFS= read -r thermal_zram_line; do
           ui_print "! $thermal_zram_line"
