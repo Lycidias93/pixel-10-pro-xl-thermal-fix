@@ -37,9 +37,11 @@ jobs:
           bash -n tools/debug/vnext-device-verify.sh
           bash -n tests/test-dev15-menu-matrix.sh
           bash -n tests/test-vnext-alpha3-hardening.sh
+          bash -n tests/test-vnext-alpha3-zram-defer-contract.sh
           bash -n tests/test-vnext-device-verify-contract.sh
           bash tests/test-dev15-menu-matrix.sh
           bash tests/test-vnext-alpha3-hardening.sh
+          bash tests/test-vnext-alpha3-zram-defer-contract.sh
           bash tests/test-vnext-device-verify-contract.sh
           bash tests/test-dynamic-build-admission.sh
           bash tests/test-single-install-menu.sh
