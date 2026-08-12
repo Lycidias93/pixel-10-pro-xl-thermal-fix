@@ -11,8 +11,8 @@ ACTIVE_DIR="${ZRAM_ACTIVE_DIR:-$MODDIR/system/vendor/etc}"
 SRC="${ZRAM_FSTAB_SRC:-$MODDIR/tools/zram/fstab.zram.100p}"
 DST="$ACTIVE_DIR/fstab.zram.100p"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
-LIVE_MODDIR="${ZRAM_LIVE_MODDIR:-$ADB_ROOT/modules/$ID}"
 MODE="${1:-status}"
+MATERIALIZE_NOW="${ZRAM_MATERIALIZE_NOW:-0}"
 TMP=""
 
 cleanup_tmp() {
@@ -81,10 +81,10 @@ materialize_disable() {
 
 case "$MODE" in
   enable|disable)
-    # Action runs against /data/adb/modules after the module tree is mounted.
-    # Never mutate that live system tree. The caller commits config and the
-    # next post-fs-data pass performs the layout change before mounting.
-    if [ "$MODDIR" = "$LIVE_MODDIR" ]; then
+    # Runtime Action/helper calls are deferred by default. Only the installer
+    # may opt into immediate layout mutation with ZRAM_MATERIALIZE_NOW=1.
+    # This avoids relying on path equality across Magisk/KernelSU mount views.
+    if [ "$MATERIALIZE_NOW" != 1 ]; then
       [ "$MODE" != enable ] || [ -s "$SRC" ] || layout_fail template_missing 2
       printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=deferred action=pre_mount_reconcile_required path=$DST"
       exit 0
