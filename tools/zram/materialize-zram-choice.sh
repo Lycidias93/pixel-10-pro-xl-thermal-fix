@@ -13,6 +13,7 @@ DST="$ACTIVE_DIR/fstab.zram.100p"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 MODE="${1:-status}"
 MATERIALIZE_NOW="${ZRAM_MATERIALIZE_NOW:-0}"
+MATERIALIZE_CALLER="${ZRAM_MATERIALIZE_CALLER:-runtime}"
 TMP=""
 
 cleanup_tmp() {
@@ -41,7 +42,7 @@ files_equal() {
 layout_fail() {
   reason="$1"
   code="$2"
-  printf '%s\n' "RESULT: ZRAM_LAYOUT_FAIL mode=$MODE reason=$reason source=$SRC path=$DST"
+  printf '%s\n' "RESULT: ZRAM_LAYOUT_FAIL mode=$MODE reason=$reason source=$SRC path=$DST caller=$MATERIALIZE_CALLER"
   exit "$code"
 }
 
@@ -51,7 +52,7 @@ materialize_enable() {
 
   if files_equal "$SRC" "$DST"; then
     chmod 0644 "$DST" 2>/dev/null || true
-    printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=yes action=kept_existing path=$DST"
+    printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=yes action=kept_existing path=$DST caller=$MATERIALIZE_CALLER"
     return 0
   fi
 
@@ -67,7 +68,7 @@ materialize_enable() {
   mv -f "$TMP" "$DST" || layout_fail destination_move_failed 7
   TMP=""
   files_equal "$SRC" "$DST" || layout_fail destination_verify_failed 8
-  printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=yes action=materialized path=$DST"
+  printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=yes action=materialized path=$DST caller=$MATERIALIZE_CALLER"
 }
 
 materialize_disable() {
@@ -76,17 +77,17 @@ materialize_disable() {
     MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
   fi
   [ ! -e "$DST" ] || layout_fail destination_present 10
-  printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=no action=removed path=$DST"
+  printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=no action=removed path=$DST caller=$MATERIALIZE_CALLER"
 }
 
 case "$MODE" in
   enable|disable)
-    # Runtime Action/helper calls are deferred by default. Only the installer
-    # may opt into immediate layout mutation with ZRAM_MATERIALIZE_NOW=1.
-    # This avoids relying on path equality across Magisk/KernelSU mount views.
-    if [ "$MATERIALIZE_NOW" != 1 ]; then
-      [ "$MODE" != enable ] || [ -s "$SRC" ] || layout_fail template_missing 2
-      printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=deferred action=pre_mount_reconcile_required path=$DST"
+    # Runtime Action/helper calls are always config-only. Immediate layout
+    # mutation requires both the explicit flag and the installer-only caller
+    # token. This prevents leaked/stale environment flags from turning an
+    # Action selection into a write against the active mounted module tree.
+    if [ "$MATERIALIZE_NOW" != 1 ] || [ "$MATERIALIZE_CALLER" != install-zram ]; then
+      printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=deferred action=pre_mount_reconcile_required path=$DST caller=$MATERIALIZE_CALLER"
       exit 0
     fi
     [ "$MODE" = enable ] && materialize_enable || materialize_disable
