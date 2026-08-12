@@ -4,6 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 helper="$repo_root/tools/zram/materialize-zram-choice.sh"
 installer="$repo_root/tools/zram/install-zram.sh"
+action="$repo_root/action.sh"
 src="$repo_root/tools/zram/fstab.zram.100p"
 
 tmp="$(mktemp -d)"
@@ -30,6 +31,17 @@ out="$(MODDIR="$tmp/path-alias-not-live" ZRAM_ACTIVE_DIR="$active" ZRAM_FSTAB_SR
 grep -Fq 'materialized=deferred action=pre_mount_reconcile_required' <<<"$out"
 grep -Fxq 'sentinel-live-layout' "$active/fstab.zram.100p"
 
+# Magisk may launch Action with stale installer variables in its environment.
+# action.sh must shadow both variables before any Action helper is entered.
+test "$(grep -c 'ZRAM_MATERIALIZE_NOW=0 ZRAM_MATERIALIZE_CALLER=action-' "$action")" -eq 2
+export ZRAM_MATERIALIZE_NOW=1
+export ZRAM_MATERIALIZE_CALLER=install-zram
+out="$(MODDIR="$tmp/path-alias-not-live" ZRAM_ACTIVE_DIR="$active" ZRAM_FSTAB_SRC="$src" ZRAM_CONFIG_FILE="$config" ZRAM_MATERIALIZE_NOW=0 ZRAM_MATERIALIZE_CALLER=action-dashboard sh "$helper" disable)"
+unset ZRAM_MATERIALIZE_NOW ZRAM_MATERIALIZE_CALLER
+grep -Fq 'materialized=deferred action=pre_mount_reconcile_required' <<<"$out"
+grep -Fq 'caller=action-dashboard' <<<"$out"
+grep -Fxq 'sentinel-live-layout' "$active/fstab.zram.100p"
+
 # Only install-time code may request immediate layout mutation, and it needs
 # both the explicit mutation flag and the installer-only caller token.
 chmod 0755 "$active"
@@ -51,6 +63,7 @@ cmp -s "$src" "$active/fstab.zram.100p"
 
 printf '%s\n' 'PASS action_runtime_always_deferred_independent_of_path_identity'
 printf '%s\n' 'PASS leaked_materialize_flag_cannot_mutate_without_installer_token'
+printf '%s\n' 'PASS action_entry_shadows_stale_installer_environment'
 printf '%s\n' 'PASS installer_immediate_mutation_requires_flag_and_caller_token'
 printf '%s\n' 'PASS post_fs_data_reconcile_remains_authoritative'
 printf '%s\n' 'RESULT: VNEXT_ALPHA3_ZRAM_DEFER_CONTRACT_PASS'
