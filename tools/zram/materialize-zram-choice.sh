@@ -14,6 +14,7 @@ EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
 MODE="${1:-status}"
 MATERIALIZE_NOW="${ZRAM_MATERIALIZE_NOW:-0}"
 MATERIALIZE_CALLER="${ZRAM_MATERIALIZE_CALLER:-runtime}"
+INSTALL_STAGE_ROOT="$ADB_ROOT/modules_update/$ID"
 TMP=""
 
 cleanup_tmp() {
@@ -37,6 +38,13 @@ files_equal() {
   left_sha="$(sha256sum "$left" 2>/dev/null | awk '{print $1}')"
   right_sha="$(sha256sum "$right" 2>/dev/null | awk '{print $1}')"
   [ -n "$left_sha" ] && [ "$left_sha" = "$right_sha" ]
+}
+
+install_stage_identity() {
+  case "$MODDIR" in
+    "$INSTALL_STAGE_ROOT"|"$INSTALL_STAGE_ROOT"/*) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 layout_fail() {
@@ -83,10 +91,11 @@ materialize_disable() {
 case "$MODE" in
   enable|disable)
     # Runtime Action/helper calls are always config-only. Immediate layout
-    # mutation requires both the explicit flag and the installer-only caller
-    # token. This prevents leaked/stale environment flags from turning an
-    # Action selection into a write against the active mounted module tree.
-    if [ "$MATERIALIZE_NOW" != 1 ] || [ "$MATERIALIZE_CALLER" != install-zram ]; then
+    # mutation is install-only and requires three independent gates: explicit
+    # mutation flag, installer caller token, and the real modules_update path.
+    # This makes stale/inherited installer variables harmless on an active
+    # /data/adb/modules tree even if the Action environment is contaminated.
+    if [ "$MATERIALIZE_NOW" != 1 ] || [ "$MATERIALIZE_CALLER" != install-zram ] || ! install_stage_identity; then
       printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=deferred action=pre_mount_reconcile_required path=$DST caller=$MATERIALIZE_CALLER"
       exit 0
     fi
