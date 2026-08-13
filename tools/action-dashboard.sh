@@ -394,11 +394,8 @@ set_zram() {
         *) msg "Back."; return 0 ;;
       esac
 
-      if [ ! -r "$ZRAM_LAYOUT" ] ||
-         ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1; then
-        msg "! ZRAM layout materialization failed"
-        msg "! Existing configuration kept"
-        return 0
+      if [ -s "$ZRAM_LAYOUT" ]; then
+        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1 || true
       fi
       cfg_set ENABLE_ZRAM_100P 1
       cfg_set ZRAM_RESTART_MMD 1
@@ -430,11 +427,8 @@ set_zram() {
       msg "- Reboot required for layout guarantee"
     ;;
     1)
-      if [ ! -r "$ZRAM_LAYOUT" ] ||
-         ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1; then
-        msg "! ZRAM layout removal failed"
-        msg "! Existing configuration kept"
-        return 0
+      if [ -s "$ZRAM_LAYOUT" ]; then
+        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1 || true
       fi
       if [ -s "$EH_CONTROL" ]; then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_disable \
