@@ -104,7 +104,30 @@ choose_zram_mode() {
   zram_idx="$MC_INDEX"; zram_reason="$MC_REASON"; zram_steps="$MC_STEPS"
   [ "$LOG" != "/dev/null" ] && { echo "zram_choice_index=$zram_idx"; echo "zram_confirm_reason=$zram_reason"; echo "zram_steps=$zram_steps"; echo; } >> "$LOG" 2>&1
   msg ""; msg "Confirmed:"
-  if [ "$zram_idx" = "1" ]; then msg "ZRAM enabled (adaptive EH)"; enable_zram; zram_choice="enable_standard"; else msg "ZRAM disabled"; disable_zram; zram_choice="disable"; fi
+  if [ "$zram_idx" = "1" ]; then
+    msg "ZRAM enabled (adaptive EH)"
+    enable_zram
+    cur_lmkd="$(cfg_get LMKD_SWAP_LOW_RELOAD)"; case "$cur_lmkd" in 1) lmkd_idx=1 ;; *) lmkd_idx=0 ;; esac
+    mc_cycle2 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "$lmkd_idx"
+    lmkd_idx="$MC_INDEX"
+    if [ "$lmkd_idx" = "1" ]; then
+      cfg_set LMKD_SWAP_LOW_RELOAD 1
+      cfg_set LMKD_SWAP_LOW_RISK_ACK explicit_user_reload
+      cfg_set LAST_LMKD_SWAP_LOW_RELOAD enabled
+      msg "- LMKD: EXPERIMENTAL 1% reload"
+      zram_choice="enable_standard_lmkd_reload"
+    else
+      cfg_set LMKD_SWAP_LOW_RELOAD 0
+      cfg_set LMKD_SWAP_LOW_RISK_ACK none
+      cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+      msg "- LMKD: stock"
+      zram_choice="enable_standard"
+    fi
+  else
+    msg "ZRAM disabled"
+    disable_zram
+    zram_choice="disable"
+  fi
   msg "----------------------------------------"
 }
 

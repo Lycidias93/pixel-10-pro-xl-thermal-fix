@@ -376,6 +376,24 @@ set_zram() {
 
   case "$UI_INDEX" in
     0)
+      cur_l="$(cfg_get LMKD_SWAP_LOW_RELOAD)"
+      case "$cur_l" in 1) l_idx=1 ;; *) l_idx=0 ;; esac
+      ui_menu3 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "Back" "$l_idx"
+      [ "$UI_REASON" = "timeout" ] && return 0
+      case "$UI_INDEX" in
+        0)
+          lmkd_reload=0
+          lmkd_ack=none
+          last_lmkd=disabled
+        ;;
+        1)
+          lmkd_reload=1
+          lmkd_ack=explicit_user_reload
+          last_lmkd=enabled
+        ;;
+        *) msg "Back."; return 0 ;;
+      esac
+
       if [ ! -r "$ZRAM_LAYOUT" ] ||
          ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1; then
         msg "! ZRAM layout materialization failed"
@@ -388,6 +406,9 @@ set_zram() {
       cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_EH_RISK_ACK none
       cfg_set LAST_ZRAM_100P enabled_standard
+      cfg_set LMKD_SWAP_LOW_RELOAD "$lmkd_reload"
+      cfg_set LMKD_SWAP_LOW_RISK_ACK "$lmkd_ack"
+      cfg_set LAST_LMKD_SWAP_LOW_RELOAD "$last_lmkd"
       if [ -s "$EH_CONTROL" ]; then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_enable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
@@ -398,9 +419,13 @@ set_zram() {
           msg "! Runtime apply failed; reboot path remains configured"
         fi
       fi
-      printf '%s
-' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
       msg "- ZRAM: enabled with adaptive EH"
+      if [ "$lmkd_reload" = 1 ]; then
+        msg "- LMKD: EXPERIMENTAL 1% reload"
+      else
+        msg "- LMKD: disabled (stock)"
+      fi
       msg "- Experimental max lock is under Advanced"
       msg "- Reboot required for layout guarantee"
     ;;
