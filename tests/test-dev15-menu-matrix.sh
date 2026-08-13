@@ -96,10 +96,21 @@ trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/mod/tools/zram" "$tmp/mod/system/vendor/etc" "$tmp/config"
 cp "$layout" "$tmp/mod/tools/zram/materialize-zram-choice.sh"
 printf '%s\n' template > "$tmp/mod/tools/zram/fstab.zram.100p"
-MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config/config.env" sh "$layout" enable > "$tmp/layout-enable.log"
-[[ -s "$tmp/mod/system/vendor/etc/fstab.zram.100p" ]] || fail layout_enable_missing
+
+# Reconcile enable creates fstab
+printf '%s\n' 'ENABLE_ZRAM_100P=1' 'ZRAM_RISK_ACK=explicit_user_enable' > "$tmp/config/config.env"
+MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config/config.env" sh "$layout" reconcile > "$tmp/layout-enable.log"
+[[ -s "$tmp/mod/system/vendor/etc/fstab.zram.100p" ]] || fail reconcile_enable_missing
+
+# Live runtime disable is deferred
 MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config/config.env" sh "$layout" disable > "$tmp/layout-disable.log"
-[[ ! -e "$tmp/mod/system/vendor/etc/fstab.zram.100p" ]] || fail layout_disable_present
+grep -Fq 'action=pre_mount_reconcile_required' "$tmp/layout-disable.log" || fail live_disable_not_deferred
+[[ -s "$tmp/mod/system/vendor/etc/fstab.zram.100p" ]] || fail live_disable_mutated_mounted_tree
+
+# Reconcile disable removes fstab
+printf '%s\n' 'ENABLE_ZRAM_100P=0' 'ZRAM_RISK_ACK=disabled_by_user' > "$tmp/config/config.env"
+MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config/config.env" sh "$layout" reconcile > "$tmp/layout-reconcile-disable.log"
+[[ ! -e "$tmp/mod/system/vendor/etc/fstab.zram.100p" ]] || fail reconcile_disable_present
 pass zram_layout_enable_disable_transaction
 
 printf '%s\n' \
