@@ -3,10 +3,10 @@ name: vNext 2.1 CI
 on:
   push:
     branches:
-      - vnext-2.1.0-alpha.2
+      - vnext-2.1.0-alpha.3
   pull_request:
     branches:
-      - main
+      - vnext-2.1.0-alpha.2
 
 permissions:
   contents: read
@@ -14,11 +14,15 @@ permissions:
 jobs:
   vnext:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y zip unzip
 
       - name: Shell syntax
         run: |
@@ -34,29 +38,70 @@ jobs:
           sh -n tools/bootguard/compat-check.sh
           sh -n tools/bootguard/compat-check-vnext.sh
           sh -n tools/menu/install-options-menu.sh
+          sh -n tools/menu/zram-menu.sh
           sh -n tools/ptune/ptune-guard.sh
           sh -n tools/debug/vnext-readiness-summary.sh
+          sh -n tools/debug/vnext-device-verify.sh
+          sh -n tools/debug/status-lib.sh
+          sh -n tools/debug/status-cached-print.sh
+          sh -n tools/debug/collect-thermal-online-v5.sh
           sh -n tools/core/platform-transition.sh
+          sh -n tools/zram/materialize-zram-choice.sh
+          sh -n tools/zram/config-normalize.sh
+          sh -n tools/zram/disable-zram-100p.sh
 
-      - name: vNext layout and Pixel 10 regression
-        run: bash tests/test-vnext-layouts.sh
-
-      - name: Outdoor delta runtime regression
-        run: bash tests/test-outdoor-delta-validation-runtime.sh
-
-      - name: vNext OTA transition regression
-        run: bash tests/test-vnext-ota-transition.sh
-
-      - name: Alpha.2 hardening regression
-        run: bash tests/test-vnext-alpha2-hardening.sh
-
-      - name: Build lean prerelease package
+      - name: vNext device expansion and runtime regressions
         run: |
+          set -euo pipefail
+          bash tests/test-vnext-layouts.sh
+          bash tests/test-outdoor-delta-validation-runtime.sh
+          bash tests/test-vnext-ota-transition.sh
+          bash tests/test-vnext-alpha2-hardening.sh
+          bash tests/test-vnext-alpha3-hardening.sh
+          bash tests/test-vnext-alpha3-zram-defer-contract.sh
+          bash tests/test-vnext-device-verify-contract.sh
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev19-lmkd-early-test.sh
+          bash tests/test-dynamic-build-admission.sh
+          bash tests/test-single-install-menu.sh
+          bash tests/test-zram-eh-dev12.sh
+
+      - name: Verify single vNext device family matrix
+        run: |
+          set -euo pipefail
+          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do
+            grep -Fq "\"$device\"" supported_versions.json
+          done
+          grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.3'
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
+
+      - name: Build byte-identical device-verified prerelease package
+        env:
+          SOURCE_DATE_EPOCH: '1786701251'
+          DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
+        run: |
+          set -euo pipefail
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
-          dev_tools/build-release-module.sh dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip
+          zip_path='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
+          dev_tools/build-release-module.sh "$zip_path" | tee dist/build-metadata.txt
+          dev_tools/verify-release-module.sh "$zip_path"
+          actual="$(sha256sum "$zip_path" | awk '{print $1}')"
+          test "$actual" = "$DEVICE_VERIFIED_SHA256"
+          sha256sum "$zip_path" | tee dist/prerelease.sha256.txt
+          unzip -Z1 "$zip_path" | sort > dist/package-entries.txt
+          grep -Fxq 'tools/debug/vnext-device-verify.sh' dist/package-entries.txt
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_DEVICE_VERIFIED_PACKAGE_IDENTITY_PASS'
 
-      - name: Package identity
-        run: |
-          sha256sum dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip
-          unzip -Z1 dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip | sort
-          unzip -Z1 dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip | grep -Fx 'tools/debug/vnext-readiness-summary.sh'
+      - name: Upload clean alpha.3 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-thermal-vnext-alpha3-clean-${{ github.sha }}
+          path: |
+            dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip
+            dist/build-metadata.txt
+            dist/prerelease.sha256.txt
+            dist/package-entries.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
