@@ -162,7 +162,10 @@ update_manager_badges_full() {
   [ -s "$status_lib" ] || return 1
   sh "$status_lib" update >> "$H" 2>&1 || true
   desc="$(sed -n 's/^description=//p' "$MODDIR/module.prop" 2>/dev/null | tail -n 1)"
-  case "$desc" in P:*' | T:'*' | Z:'*' | L:'*) write_manager_description "$desc" ;; *) return 1 ;; esac
+  case "$desc" in
+    'Polling '*' | Thermal '*' | ZRAM '*' | Memory Killer '*) write_manager_description "$desc" ;;
+    *) return 1 ;;
+  esac
 }
 
 update_manager_badges_fast() {
@@ -171,36 +174,43 @@ update_manager_badges_fast() {
   profile="$(cfg_fast THERMAL_OUTDOOR_PROFILE)"; [ -n "$profile" ] || profile=stock
   thermal_disabled="$(cfg_fast THERMAL_DISABLED)"; [ -n "$thermal_disabled" ] || thermal_disabled=0
   if [ "$thermal_disabled" = 1 ]; then
-    p_icon="$red"; p_value=disabled; t_icon="$red"; t_value=disabled
+    p_icon="$red"; p_value=Disabled; t_icon="$red"; t_value=Disabled
   else
     if [ "$polling" = stock ]; then
-      p_icon="$white"; p_value=stock
+      p_icon="$white"; p_value=Stock
     elif grep -Eq '"PollingDelay"[[:space:]]*:[[:space:]]*5000([^0-9]|$)' /vendor/etc/thermal_info_config.json /vendor/etc/thermal_info_config_charge.json /vendor/etc/thermal_info_config_throttling.json 2>/dev/null; then
-      p_icon="$green"; p_value=5000
+      p_icon="$green"; p_value=5s
     else
-      p_icon="$yellow"; p_value=mod-pending
+      p_icon="$yellow"; p_value='5s pending reboot'
     fi
-    if [ "$profile" = stock ]; then t_icon="$white"; t_value=stock; else t_icon="$green"; t_value="$profile"; fi
+    case "$profile" in
+      stock) t_icon="$white"; t_value=Stock ;;
+      outdoor-safe) t_icon="$green"; t_value='Outdoor Safe +1°C' ;;
+      outdoor-plus) t_icon="$green"; t_value='Outdoor Plus +2°C' ;;
+      outdoor-extended) t_icon="$green"; t_value='Outdoor Extended +3°C' ;;
+      *) t_icon="$yellow"; t_value="$profile" ;;
+    esac
   fi
 
   z_enabled="$(cfg_fast ENABLE_ZRAM_100P)"; z_ack="$(cfg_fast ZRAM_RISK_ACK)"
   if [ "$z_enabled" = 1 ] && [ "$z_ack" = explicit_user_enable ]; then
-    z_icon="$yellow"; z_value=100p-pending
-    if grep -Eq '(^|[[:space:]])/dev/block/zram[0-9]+[[:space:]]' /proc/swaps 2>/dev/null && [ "$(cat /sys/block/zram0/disksize 2>/dev/null || printf 0)" -gt 0 ] 2>/dev/null; then z_icon="$green"; z_value=100p; fi
+    z_icon="$yellow"; z_value='100% pending'
+    if grep -Eq '(^|[[:space:]])/dev/block/zram[0-9]+[[:space:]]' /proc/swaps 2>/dev/null && [ "$(cat /sys/block/zram0/disksize 2>/dev/null || printf 0)" -gt 0 ] 2>/dev/null; then z_icon="$green"; z_value='100%'; fi
   else
-    z_icon="$white"; z_value=off
+    z_icon="$white"; z_value=Off
   fi
 
   l_enabled="$(cfg_fast LMKD_SWAP_LOW_RELOAD)"; l_ack="$(cfg_fast LMKD_SWAP_LOW_RISK_ACK)"
   l_state="${CONFIG_FILE%/*}/lmkd-reload.env"
-  if [ "$l_enabled" = 1 ] && [ "$l_ack" = explicit_user_reload ]; then
-    l_icon="$yellow"; l_value=reload-pending
-    if [ "$(kv_fast reload_result "$l_state")" = success ] && [ "$(kv_fast property_after "$l_state")" = 1 ] && [ "$(kv_fast lmkd_service_after "$l_state")" = running ]; then l_icon="$green"; l_value=1pct-active; fi
+  if [ "$z_enabled" != 1 ] || [ "$z_ack" != explicit_user_enable ]; then
+    l_icon="$white"; l_value='Unavailable'
+  elif [ "$l_enabled" = 1 ] && [ "$l_ack" = explicit_user_reload ]; then
+    l_icon="$yellow"; l_value='1% pending'
+    if [ "$(kv_fast reload_result "$l_state")" = success ] && [ "$(kv_fast property_after "$l_state")" = 1 ] && [ "$(kv_fast lmkd_service_after "$l_state")" = running ]; then l_icon="$green"; l_value='1% active'; fi
   else
-    l_icon="$white"; l_value=stock
+    l_icon="$white"; l_value=Stock
   fi
-  [ "$t_value" = outdoor-extended ] && t_value=outdoor-ext
-  write_manager_description "P:$p_icon $p_value | T:$t_icon $t_value | Z:$z_icon $z_value | L:$l_icon $l_value | Action: settings/debug"
+  write_manager_description "Polling $p_icon $p_value | Thermal $t_icon $t_value | ZRAM $z_icon $z_value | Memory Killer $l_icon $l_value | Action: details/support"
 }
 
 if [ "$verify_mode" = fast ]; then

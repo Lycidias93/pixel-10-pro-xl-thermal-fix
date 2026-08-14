@@ -376,11 +376,26 @@ set_zram() {
 
   case "$UI_INDEX" in
     0)
-      if [ ! -r "$ZRAM_LAYOUT" ] ||
-         ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1; then
-        msg "! ZRAM layout materialization failed"
-        msg "! Existing configuration kept"
-        return 0
+      cur_l="$(cfg_get LMKD_SWAP_LOW_RELOAD)"
+      case "$cur_l" in 1) l_idx=1 ;; *) l_idx=0 ;; esac
+      ui_menu3 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "Back" "$l_idx"
+      [ "$UI_REASON" = "timeout" ] && return 0
+      case "$UI_INDEX" in
+        0)
+          lmkd_reload=0
+          lmkd_ack=none
+          last_lmkd=disabled
+        ;;
+        1)
+          lmkd_reload=1
+          lmkd_ack=explicit_user_reload
+          last_lmkd=enabled
+        ;;
+        *) msg "Back."; return 0 ;;
+      esac
+
+      if [ -s "$ZRAM_LAYOUT" ]; then
+        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1 || true
       fi
       cfg_set ENABLE_ZRAM_100P 1
       cfg_set ZRAM_RESTART_MMD 1
@@ -388,6 +403,9 @@ set_zram() {
       cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_EH_RISK_ACK none
       cfg_set LAST_ZRAM_100P enabled_standard
+      cfg_set LMKD_SWAP_LOW_RELOAD "$lmkd_reload"
+      cfg_set LMKD_SWAP_LOW_RISK_ACK "$lmkd_ack"
+      cfg_set LAST_LMKD_SWAP_LOW_RELOAD "$last_lmkd"
       if [ -s "$EH_CONTROL" ]; then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_enable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
@@ -398,18 +416,19 @@ set_zram() {
           msg "! Runtime apply failed; reboot path remains configured"
         fi
       fi
-      printf '%s
-' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
       msg "- ZRAM: enabled with adaptive EH"
+      if [ "$lmkd_reload" = 1 ]; then
+        msg "- LMKD: EXPERIMENTAL 1% reload"
+      else
+        msg "- LMKD: disabled (stock)"
+      fi
       msg "- Experimental max lock is under Advanced"
       msg "- Reboot required for layout guarantee"
     ;;
     1)
-      if [ ! -r "$ZRAM_LAYOUT" ] ||
-         ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1; then
-        msg "! ZRAM layout removal failed"
-        msg "! Existing configuration kept"
-        return 0
+      if [ -s "$ZRAM_LAYOUT" ]; then
+        MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1 || true
       fi
       if [ -s "$EH_CONTROL" ]; then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_disable \
@@ -421,10 +440,12 @@ set_zram() {
       cfg_set ZRAM_RISK_ACK disabled_by_user
       cfg_set ZRAM_EH_RISK_ACK disabled_by_user
       cfg_set LAST_ZRAM_100P disabled
-      printf '%s
-' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+      cfg_set LMKD_SWAP_LOW_RELOAD 0
+      cfg_set LMKD_SWAP_LOW_RISK_ACK none
+      cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+      printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
       msg "- ZRAM: disabled"
-      msg "- Reboot required"
+      msg "- Reboot required for stock layout"
     ;;
     *) msg "Back."; return 0 ;;
   esac
@@ -525,12 +546,12 @@ update_channel_loop() {
 
 show_lmkd_evidence() {
   msg ""
-  msg "LMKD reload evidence"
+  msg "Memory Killer evidence"
   msg "----------------------------------------"
   if [ -r "$LMKD_RELOAD_EVIDENCE" ]; then
     cat "$LMKD_RELOAD_EVIDENCE" 2>/dev/null || true
   else
-    msg "No LMKD reload evidence recorded yet."
+    msg "No Memory Killer evidence recorded yet."
   fi
   msg "----------------------------------------"
 }
@@ -628,7 +649,7 @@ write_dashboard_performance() {
 
 debug_loop() {
   while :; do
-    ui_menu6 "Debug" "Status" "Collect ZIP" "EH Event Log" "LMKD Reload Evidence" "Debug Logging" "Back" 0
+    ui_menu6 "Debug" "Feature Status" "Support Snapshot (ZIP)" "EH Event Log" "Memory Killer Evidence" "Debug Logging" "Back" 0
     [ "$UI_REASON" = "timeout" ] && return 0
     case "$UI_INDEX" in
       0) refresh_status; show_status; sleep 2 ;;

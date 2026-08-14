@@ -174,10 +174,12 @@ fi
 
 write_action_performance
 
+# Action is runtime/config-only for ZRAM layout decisions. Explicitly shadow any
+# stale installer environment inherited from Magisk before entering Action UI.
 if [ -s "$MODDIR/tools/action-dashboard.sh" ]; then
-  sh "$MODDIR/tools/action-dashboard.sh"
+  ZRAM_MATERIALIZE_NOW=0 ZRAM_MATERIALIZE_CALLER=action-dashboard sh "$MODDIR/tools/action-dashboard.sh"
 elif [ -s "$MODDIR/tools/menu/zram-menu.sh" ]; then
-  sh "$MODDIR/tools/menu/zram-menu.sh" action
+  ZRAM_MATERIALIZE_NOW=0 ZRAM_MATERIALIZE_CALLER=action-zram-menu sh "$MODDIR/tools/menu/zram-menu.sh" action
 else
   msg "! Action helpers missing"
   exit 1

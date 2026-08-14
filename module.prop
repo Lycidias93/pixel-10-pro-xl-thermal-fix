@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel Thermal & Memory Control
-version=2.1.0-alpha.2
-versionCode=1016251
+version=2.1.0-alpha.3
+versionCode=1016252
 author=Lycidias93, marx161, Codecity001
-description=vNext prerelease: experimental Pixel 9 series and Pixel 10a support with layout-aware validation, +1 C cap, blocked pTune coexistence, full Bootguard verification, readiness evidence, and read-only Support Snapshot.
+description=vNext alpha.3 test: Pixel 9/10a support plus pre-mount ZRAM layout reconciliation, ZRAM-gated Memory Killer options, readable status, and repaired Support Snapshot.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update-prerelease.json

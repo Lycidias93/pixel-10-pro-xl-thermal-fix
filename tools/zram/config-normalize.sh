@@ -1,6 +1,6 @@
 #!/system/bin/sh
-# Normalize Dev.14 ZRAM settings and migrate every legacy Emerald Hill lock
-# state to the safe adaptive hardware-acceleration default.
+# Normalize ZRAM settings, migrate legacy Emerald Hill state, and enforce the
+# invariant that the optional LMKD experiment exists only with ZRAM enabled.
 set -eu
 
 ID="${ID:-pixel-10-pro-xl-thermal-fix}"
@@ -24,12 +24,14 @@ cfg_set() {
 }
 
 enabled="$(cfg_get ENABLE_ZRAM_100P)"
+zram_ack="$(cfg_get ZRAM_RISK_ACK)"
 oc="$(cfg_get ZRAM_EMERALD_OC)"
 last="$(cfg_get LAST_ZRAM_100P)"
 eh_ack="$(cfg_get ZRAM_EH_RISK_ACK)"
 migrated=none
 
 case "$enabled" in 0|1) ;; *) enabled='' ;; esac
+case "$zram_ack" in explicit_user_enable|disabled_by_user) ;; *) zram_ack='' ;; esac
 case "$oc" in 0|1) ;; *) oc=0; cfg_set ZRAM_EMERALD_OC 0 ;; esac
 case "$eh_ack" in explicit_user_enable_max_lock|none|disabled_by_user) ;; *) eh_ack=none; cfg_set ZRAM_EH_RISK_ACK none ;; esac
 
@@ -98,15 +100,14 @@ case "$swappiness" in
   ;;
 esac
 
-
-# Dev.20 consolidates LMKD handling into apply-zram-100p.sh. Migrate the old
-# early-test choice once, then disable the obsolete keys and evidence path.
+# LMKD handling is consolidated in apply-zram-100p.sh. Migrate the old early
+# test once, then hard-disable LMKD whenever ZRAM itself is not explicitly on.
 lmkd_reload="$(cfg_get LMKD_SWAP_LOW_RELOAD)"
 lmkd_reload_ack="$(cfg_get LMKD_SWAP_LOW_RISK_ACK)"
 old_lmkd_enabled="$(cfg_get LMKD_EARLY_SWAP_LOW_TEST)"
 old_lmkd_ack="$(cfg_get LMKD_EARLY_SWAP_LOW_RISK_ACK)"
 if [ -z "$lmkd_reload" ]; then
-  if [ "$old_lmkd_enabled" = 1 ] && [ "$old_lmkd_ack" = explicit_user_test ]; then
+  if [ "$enabled" = 1 ] && [ "$zram_ack" = explicit_user_enable ] && [ "$old_lmkd_enabled" = 1 ] && [ "$old_lmkd_ack" = explicit_user_test ]; then
     lmkd_reload=1
     lmkd_reload_ack=explicit_user_reload
     cfg_set LAST_LMKD_SWAP_LOW_RELOAD enabled
@@ -120,10 +121,19 @@ if [ -z "$lmkd_reload" ]; then
 fi
 case "$lmkd_reload" in 0|1) ;; *) lmkd_reload=0; cfg_set LMKD_SWAP_LOW_RELOAD 0 ;; esac
 case "$lmkd_reload_ack" in explicit_user_reload|none) ;; *) lmkd_reload_ack=none; cfg_set LMKD_SWAP_LOW_RISK_ACK none ;; esac
+
+if [ "$enabled" != 1 ] || [ "$zram_ack" != explicit_user_enable ]; then
+  lmkd_reload=0
+  lmkd_reload_ack=none
+  cfg_set LMKD_SWAP_LOW_RELOAD 0
+  cfg_set LMKD_SWAP_LOW_RISK_ACK none
+  cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+fi
+
 cfg_set LMKD_EARLY_SWAP_LOW_TEST 0
 cfg_set LMKD_EARLY_SWAP_LOW_RISK_ACK none
 cfg_set LAST_LMKD_EARLY_SWAP_LOW_TEST disabled
 rm -rf "${CONFIG_FILE%/*}/lmkd-test" 2>/dev/null || true
 
-printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE oc=$oc last=${last:-unset} eh_ack=${eh_ack:-none} migrated=$migrated target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS) lmkd_reload=$lmkd_reload lmkd_ack=$lmkd_reload_ack"
+printf '%s\n' "RESULT: ZRAM_CONFIG_NORMALIZE_DONE enabled=${enabled:-unset} zram_ack=${zram_ack:-none} oc=$oc last=${last:-unset} eh_ack=${eh_ack:-none} migrated=$migrated target=$(cfg_get ZRAM_EH_TARGET_FREQ) thp=$(cfg_get ZRAM_THP_MODE) swappiness=$(cfg_get ZRAM_SWAPPINESS) lmkd_reload=$lmkd_reload lmkd_ack=$lmkd_reload_ack"
 exit 0
