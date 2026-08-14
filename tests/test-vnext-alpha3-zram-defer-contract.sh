@@ -5,6 +5,9 @@ repo_root="$(git rev-parse --show-toplevel)"
 helper="$repo_root/tools/zram/materialize-zram-choice.sh"
 installer="$repo_root/tools/zram/install-zram.sh"
 action="$repo_root/action.sh"
+dashboard="$repo_root/tools/action-dashboard.sh"
+zram_menu="$repo_root/tools/menu/zram-menu.sh"
+disable_helper="$repo_root/tools/zram/disable-zram-100p.sh"
 src="$repo_root/tools/zram/fstab.zram.100p"
 id="pixel-10-pro-xl-thermal-fix"
 
@@ -47,6 +50,22 @@ grep -Fq 'materialized=deferred action=pre_mount_reconcile_required' <<<"$out"
 grep -Fq 'caller=action-dashboard' <<<"$out"
 grep -Fxq 'sentinel-live-layout' "$active/fstab.zram.100p"
 
+# The real Action/UI paths are config-first. Layout-helper failure must never
+# abort saving the user's ZRAM choice; post-fs-data reconcile owns the layout.
+grep -Fq 'sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1 || true' "$dashboard"
+grep -Fq 'sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1 || true' "$dashboard"
+! grep -Fq '! ZRAM layout materialization failed' "$dashboard"
+! grep -Fq '! ZRAM layout removal failed' "$dashboard"
+! grep -Fq '! Existing configuration kept' "$dashboard"
+grep -Fq 'cfg_set LMKD_SWAP_LOW_RELOAD 0' "$dashboard"
+grep -Fq 'cfg_set LMKD_SWAP_LOW_RISK_ACK none' "$dashboard"
+grep -Fq 'cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled' "$dashboard"
+grep -Fq 'sh "$LAYOUT" disable >/dev/null 2>&1 || true' "$zram_menu"
+grep -Fq 'cfg_set LMKD_SWAP_LOW_RELOAD 0' "$zram_menu"
+grep -Fq 'cfg_set LMKD_SWAP_LOW_RELOAD 0' "$disable_helper"
+grep -Fq 'cfg_set LMKD_SWAP_LOW_RISK_ACK none' "$disable_helper"
+grep -Fq 'cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled' "$disable_helper"
+
 # Only install-time code on the real modules_update identity may request
 # immediate layout mutation, and it still needs flag + installer caller token.
 chmod 0755 "$stage"
@@ -76,6 +95,8 @@ cmp -s "$src" "$active/fstab.zram.100p"
 printf '%s\n' 'PASS active_runtime_always_deferred'
 printf '%s\n' 'PASS leaked_complete_installer_environment_cannot_mutate_active_tree'
 printf '%s\n' 'PASS action_entry_shadows_stale_installer_environment'
+printf '%s\n' 'PASS action_runtime_layout_failures_are_nonblocking_config_first'
+printf '%s\n' 'PASS zram_disable_immediately_clears_memory_killer_selection'
 printf '%s\n' 'PASS installer_immediate_mutation_requires_flag_caller_and_stage_identity'
 printf '%s\n' 'PASS wrong_path_identity_remains_deferred'
 printf '%s\n' 'PASS post_fs_data_reconcile_remains_authoritative'

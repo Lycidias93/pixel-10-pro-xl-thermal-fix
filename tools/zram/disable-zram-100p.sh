@@ -3,7 +3,7 @@ set -eu
 
 ID="pixel-10-pro-xl-thermal-fix"
 CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
-CONFIG_FILE="$CONFIG_DIR/config.env"
+CONFIG_FILE="${ZRAM_CONFIG_FILE:-$CONFIG_DIR/config.env}"
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 
@@ -28,6 +28,9 @@ cfg_set ZRAM_RESTART_MMD 0
 cfg_set ZRAM_RISK_ACK disabled_by_user
 cfg_set ZRAM_EH_RISK_ACK disabled_by_user
 cfg_set LAST_ZRAM_100P disabled
+cfg_set LMKD_SWAP_LOW_RELOAD 0
+cfg_set LMKD_SWAP_LOW_RISK_ACK none
+cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
 
-printf '%s\n' "ZRAM 100p disabled in config and module layout removed. Reboot required for stock layout."
+printf '%s\n' "ZRAM 100p disabled in config and module layout removed. Reboot restores stock ZRAM layout."
 printf '%s\n' "RESULT: PIXEL_THERMAL_ZRAM_100P_DISABLE_DONE layout=removed eh=adaptive"
