@@ -9,35 +9,109 @@ permissions:
 jobs:
   prerelease:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Bind alpha.3 publication coordinates
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.3'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.3'
+          test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016252'
+          test -s release-notes/2.1.0-alpha.3.md
+
       - name: Reverify vNext safety gates
         run: |
+          set -euo pipefail
           bash tests/test-vnext-layouts.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
           bash tests/test-vnext-ota-transition.sh
           bash tests/test-vnext-alpha2-hardening.sh
+          bash tests/test-vnext-alpha3-hardening.sh
+          bash tests/test-vnext-alpha3-zram-defer-contract.sh
+          bash tests/test-vnext-device-verify-contract.sh
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev19-lmkd-early-test.sh
+          bash tests/test-dynamic-build-admission.sh
+          bash tests/test-single-install-menu.sh
+          bash tests/test-zram-eh-dev12.sh
 
-      - name: Build and verify prerelease package
+      - name: Verify single device-family prerelease matrix
         run: |
+          set -euo pipefail
+          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do
+            grep -Fq "\"$device\"" supported_versions.json
+          done
+          grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
+
+      - name: Build exact device-verified prerelease asset
+        env:
+          SOURCE_DATE_EPOCH: '1786701251'
+          DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
+        run: |
+          set -euo pipefail
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
-          dev_tools/build-release-module.sh dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip
-          sha256sum dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip
+          asset='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
+          dev_tools/build-release-module.sh "$asset" | tee dist/build-metadata.txt
+          dev_tools/verify-release-module.sh "$asset"
+          actual="$(sha256sum "$asset" | awk '{print $1}')"
+          test "$actual" = "$DEVICE_VERIFIED_SHA256"
+          bytes="$(wc -c < "$asset" | tr -d ' ')"
+          test "$bytes" = '346491'
+          printf 'asset_sha256=%s\nasset_bytes=%s\n' "$actual" "$bytes"
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_RELEASE_ASSET_IDENTITY_PASS'
 
-      - name: Publish GitHub prerelease
+      - name: Fail closed on tag or release collision
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete v2.1.0-alpha.2 --yes --cleanup-tag >/dev/null 2>&1 || true
-          gh release create v2.1.0-alpha.2 dist/pixel-thermal-memory-control-2.1.0-alpha.2.zip --prerelease --target "$GITHUB_SHA" --title "Pixel Thermal & Memory Control 2.1.0-alpha.2" --notes-file release-notes/2.1.0-alpha.2.md
+          set -euo pipefail
+          if gh release view v2.1.0-alpha.3 >/dev/null 2>&1; then
+            printf '%s\n' 'FAIL release_already_exists'
+            exit 20
+          fi
+          if git ls-remote --exit-code --tags origin refs/tags/v2.1.0-alpha.3 >/dev/null 2>&1; then
+            printf '%s\n' 'FAIL tag_already_exists'
+            exit 21
+          fi
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_RELEASE_COLLISION_PREFLIGHT_PASS'
 
-      - name: Verify published release identity
+      - name: Draft, verify, publish and reverify prerelease
         env:
           GH_TOKEN: ${{ github.token }}
+          DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
         run: |
-          gh release view v2.1.0-alpha.2 --json tagName,isPrerelease,isDraft,targetCommitish,name
-          gh release view v2.1.0-alpha.2 --json assets --jq '.assets[] | [.name,.size,.digest] | @tsv'
+          set -euo pipefail
+          tag='v2.1.0-alpha.3'
+          asset='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
+          created=0
+          published=0
+          cleanup() {
+            rc=$?
+            if [ "$rc" -ne 0 ] && [ "$created" -eq 1 ] && [ "$published" -eq 0 ]; then
+              gh release delete "$tag" --yes --cleanup-tag >/dev/null 2>&1 || true
+            fi
+            exit "$rc"
+          }
+          trap cleanup EXIT
+          gh release create "$tag" "$asset" --draft --prerelease --target "$GITHUB_SHA" --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
+          created=1
+          test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'true'
+          test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
+          gh release edit "$tag" --draft=false --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
+          published=1
+          trap - EXIT
+          test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'false'
+          test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
+          test "$(git rev-list -n1 "$tag")" = "$GITHUB_SHA"
+          mkdir -p dist/public-verify
+          gh release download "$tag" --pattern 'pixel-thermal-memory-control-2.1.0-alpha.3.zip' --dir dist/public-verify
+          public_sha="$(sha256sum dist/public-verify/pixel-thermal-memory-control-2.1.0-alpha.3.zip | awk '{print $1}')"
+          test "$public_sha" = "$DEVICE_VERIFIED_SHA256"
+          printf 'public_asset_sha256=%s\n' "$public_sha"
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_PRERELEASE_VERIFY_PASS'
