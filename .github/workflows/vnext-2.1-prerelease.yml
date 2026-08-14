@@ -55,6 +55,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          mkdir -p dist
           asset='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
           dev_tools/build-release-module.sh "$asset" | tee dist/build-metadata.txt
           dev_tools/verify-release-module.sh "$asset"
