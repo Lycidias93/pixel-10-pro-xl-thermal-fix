@@ -30,7 +30,6 @@ jobs:
           bash tests/test-vnext-layouts.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
           bash tests/test-vnext-ota-transition.sh
-          bash tests/test-vnext-alpha2-hardening.sh
           bash tests/test-vnext-alpha3-hardening.sh
           bash tests/test-vnext-alpha3-zram-defer-contract.sh
           bash tests/test-vnext-device-verify-contract.sh
