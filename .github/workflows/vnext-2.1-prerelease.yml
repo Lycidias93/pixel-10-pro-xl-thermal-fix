@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   prerelease:
@@ -71,9 +71,10 @@ jobs:
 
       - name: Fail closed on tag or release collision
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           set -euo pipefail
+          test -n "$GH_TOKEN"
           if gh release view v2.1.0-alpha.3 >/dev/null 2>&1; then
             printf '%s\n' 'FAIL release_already_exists'
             exit 20
@@ -86,7 +87,7 @@ jobs:
 
       - name: Draft, verify, publish and reverify prerelease
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           set -euo pipefail
           tag='v2.1.0-alpha.3'
