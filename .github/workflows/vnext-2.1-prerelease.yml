@@ -1,4 +1,4 @@
-name: Publish vNext 2.1 Prerelease
+name: Finalize vNext 2.1.0-alpha.3 Prerelease
 
 on:
   workflow_dispatch:
@@ -12,127 +12,67 @@ permissions:
   contents: write
 
 jobs:
-  prerelease:
+  finalize:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     env:
-      DEVICE_VERIFIED_BASE: '1a2a59809a1fbeea0a6c7eae2fece6c897150df2'
-      DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
+      RELEASE_TAG: 'v2.1.0-alpha.3'
+      RELEASE_TARGET: '86131a21829c1717871420d82817ac25efa8977a'
+      RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.3.zip'
+      RELEASE_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
+      RELEASE_BYTES: '346491'
     steps:
-      - name: Checkout full history
+      - name: Checkout current single vNext line
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Bind alpha.3 publication coordinates
+      - name: Verify public prerelease identity
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.3'
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.3'
-          test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016252'
-          test -s release-notes/2.1.0-alpha.3.md
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
+          test "$remote_tag" = "$RELEASE_TARGET"
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = 'false'
+          test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = 'true'
+          test "$(gh release view "$RELEASE_TAG" --json targetCommitish --jq '.targetCommitish')" = "$RELEASE_TARGET"
+          digest="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .digest")"
+          size="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .size")"
+          test "$digest" = "sha256:$RELEASE_SHA256"
+          test "$size" = "$RELEASE_BYTES"
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_IDENTITY_PASS'
 
-      - name: Prove runtime tree unchanged since device-verified base
+      - name: Verify prerelease update channel
         run: |
           set -euo pipefail
-          git diff --name-only "$DEVICE_VERIFIED_BASE" "$GITHUB_SHA" > "$RUNNER_TEMP/alpha3-changed.txt"
-          test -s "$RUNNER_TEMP/alpha3-changed.txt"
-          if grep -Fvx '.github/workflows/vnext-2.1-prerelease.yml' "$RUNNER_TEMP/alpha3-changed.txt" | grep -q .; then
-            printf '%s\n' 'FAIL non_workflow_change_since_device_verified_base'
-            cat "$RUNNER_TEMP/alpha3-changed.txt"
-            exit 22
-          fi
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_DEVICE_VERIFIED_TREE_EQUIVALENCE_PASS'
+          grep -Fq '"version": "2.1.0-alpha.3"' update-prerelease.json
+          grep -Fq '"versionCode": 1016252' update-prerelease.json
+          grep -Fq '/v2.1.0-alpha.3/pixel-thermal-memory-control-2.1.0-alpha.3.zip' update-prerelease.json
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PRERELEASE_CHANNEL_PASS'
 
-      - name: Reverify vNext safety gates
-        run: |
-          set -euo pipefail
-          bash tests/test-vnext-layouts.sh
-          bash tests/test-outdoor-delta-validation-runtime.sh
-          bash tests/test-vnext-ota-transition.sh
-          bash tests/test-vnext-alpha3-hardening.sh
-          bash tests/test-vnext-alpha3-zram-defer-contract.sh
-          bash tests/test-vnext-device-verify-contract.sh
-          bash tests/test-dev15-menu-matrix.sh
-          bash tests/test-dev19-lmkd-early-test.sh
-          bash tests/test-dynamic-build-admission.sh
-          bash tests/test-single-install-menu.sh
-          bash tests/test-zram-eh-dev12.sh
-
-      - name: Verify single device-family prerelease matrix
-        run: |
-          set -euo pipefail
-          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do
-            grep -Fq "\"$device\"" supported_versions.json
-          done
-          grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
-
-      - name: Build exact device-verified prerelease asset
-        env:
-          SOURCE_DATE_EPOCH: '1786701251'
-        run: |
-          set -euo pipefail
-          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
-          mkdir -p dist
-          asset='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
-          dev_tools/build-release-module.sh "$asset" | tee dist/build-metadata.txt
-          dev_tools/verify-release-module.sh "$asset"
-          actual="$(sha256sum "$asset" | awk '{print $1}')"
-          test "$actual" = "$DEVICE_VERIFIED_SHA256"
-          bytes="$(wc -c < "$asset" | tr -d ' ')"
-          test "$bytes" = '346491'
-          printf 'asset_sha256=%s\nasset_bytes=%s\n' "$actual" "$bytes"
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_RELEASE_ASSET_IDENTITY_PASS'
-
-      - name: Fail closed on tag or release collision
+      - name: Sync public release notes and credits
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if gh release view v2.1.0-alpha.3 >/dev/null 2>&1; then
-            printf '%s\n' 'FAIL release_already_exists'
-            exit 20
-          fi
-          if git ls-remote --exit-code --tags origin refs/tags/v2.1.0-alpha.3 >/dev/null 2>&1; then
-            printf '%s\n' 'FAIL tag_already_exists'
-            exit 21
-          fi
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_RELEASE_COLLISION_PREFLIGHT_PASS'
+          grep -Fq '## Credits' release-notes/2.1.0-alpha.3.md
+          grep -Fq 'Harish / Codecity001' release-notes/2.1.0-alpha.3.md
+          grep -Fq 'Allen Chang' release-notes/2.1.0-alpha.3.md
+          grep -Fq 'JoshuaDoes / pTune' release-notes/2.1.0-alpha.3.md
+          gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
+          gh release view "$RELEASE_TAG" --json body --jq -r '.body' > "$RUNNER_TEMP/public-release-body.md"
+          cmp -s release-notes/2.1.0-alpha.3.md "$RUNNER_TEMP/public-release-body.md"
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_CREDITS_SYNC_PASS'
 
-      - name: Draft, verify, publish and reverify prerelease
+      - name: Final public verification
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          tag='v2.1.0-alpha.3'
-          asset='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
-          created=0
-          published=0
-          cleanup() {
-            rc=$?
-            if [ "$rc" -ne 0 ] && [ "$created" -eq 1 ] && [ "$published" -eq 0 ]; then
-              gh release delete "$tag" --yes --cleanup-tag >/dev/null 2>&1 || true
-            fi
-            exit "$rc"
-          }
-          trap cleanup EXIT
-          gh release create "$tag" "$asset" --draft --prerelease --target "$GITHUB_SHA" --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
-          created=1
-          test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'true'
-          test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          test "$(gh release view "$tag" --json targetCommitish --jq '.targetCommitish')" = "$GITHUB_SHA"
-          gh release edit "$tag" --draft=false --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
-          published=1
-          trap - EXIT
-          test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'false'
-          test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          test "$(git rev-list -n1 "$tag")" = "$GITHUB_SHA"
-          mkdir -p dist/public-verify
-          gh release download "$tag" --pattern 'pixel-thermal-memory-control-2.1.0-alpha.3.zip' --dir dist/public-verify
-          public_sha="$(sha256sum dist/public-verify/pixel-thermal-memory-control-2.1.0-alpha.3.zip | awk '{print $1}')"
-          public_bytes="$(wc -c < dist/public-verify/pixel-thermal-memory-control-2.1.0-alpha.3.zip | tr -d ' ')"
-          test "$public_sha" = "$DEVICE_VERIFIED_SHA256"
-          test "$public_bytes" = '346491'
-          printf 'public_asset_sha256=%s\npublic_asset_bytes=%s\n' "$public_sha" "$public_bytes"
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = 'false'
+          test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = 'true'
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
+          test "$remote_tag" = "$RELEASE_TARGET"
           printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_PRERELEASE_VERIFY_PASS'
