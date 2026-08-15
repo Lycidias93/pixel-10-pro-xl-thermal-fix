@@ -2,6 +2,11 @@ name: Publish vNext 2.1 Prerelease
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - vnext-2.1.0-alpha.3
+    paths:
+      - .github/workflows/vnext-2.1-prerelease.yml
 
 permissions:
   contents: write
@@ -10,16 +15,20 @@ jobs:
   prerelease:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      TARGET_COMMIT: '1a2a59809a1fbeea0a6c7eae2fece6c897150df2'
+      DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
     steps:
-      - name: Checkout full history
+      - name: Checkout exact release target
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: '1a2a59809a1fbeea0a6c7eae2fece6c897150df2'
 
       - name: Bind alpha.3 publication coordinates
         run: |
           set -euo pipefail
-          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.3'
+          test "$(git rev-parse HEAD)" = "$TARGET_COMMIT"
           test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.3'
           test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016252'
           test -s release-notes/2.1.0-alpha.3.md
@@ -51,7 +60,6 @@ jobs:
       - name: Build exact device-verified prerelease asset
         env:
           SOURCE_DATE_EPOCH: '1786701251'
-          DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
         run: |
           set -euo pipefail
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
@@ -84,7 +92,6 @@ jobs:
       - name: Draft, verify, publish and reverify prerelease
         env:
           GH_TOKEN: ${{ github.token }}
-          DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
         run: |
           set -euo pipefail
           tag='v2.1.0-alpha.3'
@@ -99,19 +106,23 @@ jobs:
             exit "$rc"
           }
           trap cleanup EXIT
-          gh release create "$tag" "$asset" --draft --prerelease --target "$GITHUB_SHA" --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
+          gh release create "$tag" "$asset" --draft --prerelease --target "$TARGET_COMMIT" --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
           created=1
           test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'true'
           test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
+          test "$(gh release view "$tag" --json targetCommitish --jq '.targetCommitish')" = "$TARGET_COMMIT"
           gh release edit "$tag" --draft=false --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
           published=1
           trap - EXIT
           test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'false'
           test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          test "$(git rev-list -n1 "$tag")" = "$GITHUB_SHA"
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$tag" | awk '{print $1}')"
+          test "$remote_tag" = "$TARGET_COMMIT"
           mkdir -p dist/public-verify
           gh release download "$tag" --pattern 'pixel-thermal-memory-control-2.1.0-alpha.3.zip' --dir dist/public-verify
           public_sha="$(sha256sum dist/public-verify/pixel-thermal-memory-control-2.1.0-alpha.3.zip | awk '{print $1}')"
+          public_bytes="$(wc -c < dist/public-verify/pixel-thermal-memory-control-2.1.0-alpha.3.zip | tr -d ' ')"
           test "$public_sha" = "$DEVICE_VERIFIED_SHA256"
-          printf 'public_asset_sha256=%s\n' "$public_sha"
+          test "$public_bytes" = '346491'
+          printf 'public_asset_sha256=%s\npublic_asset_bytes=%s\n' "$public_sha" "$public_bytes"
           printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_PRERELEASE_VERIFY_PASS'
