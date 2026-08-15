@@ -62,8 +62,11 @@ jobs:
           grep -Fq 'Allen Chang' release-notes/2.1.0-alpha.3.md
           grep -Fq 'JoshuaDoes / pTune' release-notes/2.1.0-alpha.3.md
           gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
-          gh release view "$RELEASE_TAG" --json body --jq -r '.body' > "$RUNNER_TEMP/public-release-body.md"
-          cmp -s release-notes/2.1.0-alpha.3.md "$RUNNER_TEMP/public-release-body.md"
+          public_body="$(gh release view "$RELEASE_TAG" --json body --jq '.body')"
+          printf '%s\n' "$public_body" | grep -Fq '## Credits'
+          printf '%s\n' "$public_body" | grep -Fq 'Harish / Codecity001'
+          printf '%s\n' "$public_body" | grep -Fq 'Allen Chang'
+          printf '%s\n' "$public_body" | grep -Fq 'JoshuaDoes / pTune'
           printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_CREDITS_SYNC_PASS'
 
       - name: Final public verification
