@@ -89,28 +89,38 @@ jobs:
           fi
           printf '%s\n' 'RESULT: VNEXT_ALPHA3_RELEASE_COLLISION_PREFLIGHT_PASS'
 
-      - name: Draft, verify, publish and reverify prerelease
+      - name: Create exact target tag, draft, publish and reverify prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           tag='v2.1.0-alpha.3'
           asset='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
-          created=0
+          tag_created=0
+          release_created=0
           published=0
           cleanup() {
             rc=$?
-            if [ "$rc" -ne 0 ] && [ "$created" -eq 1 ] && [ "$published" -eq 0 ]; then
-              gh release delete "$tag" --yes --cleanup-tag >/dev/null 2>&1 || true
+            if [ "$rc" -ne 0 ] && [ "$published" -eq 0 ]; then
+              if [ "$release_created" -eq 1 ]; then
+                gh release delete "$tag" --yes >/dev/null 2>&1 || true
+              fi
+              if [ "$tag_created" -eq 1 ]; then
+                git push origin ":refs/tags/$tag" >/dev/null 2>&1 || true
+              fi
             fi
             exit "$rc"
           }
           trap cleanup EXIT
-          gh release create "$tag" "$asset" --draft --prerelease --target "$TARGET_COMMIT" --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
-          created=1
+          git tag "$tag" "$TARGET_COMMIT"
+          git push origin "refs/tags/$tag"
+          tag_created=1
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$tag" | awk '{print $1}')"
+          test "$remote_tag" = "$TARGET_COMMIT"
+          gh release create "$tag" "$asset" --draft --prerelease --verify-tag --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
+          release_created=1
           test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'true'
           test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          test "$(gh release view "$tag" --json targetCommitish --jq '.targetCommitish')" = "$TARGET_COMMIT"
           gh release edit "$tag" --draft=false --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
           published=1
           trap - EXIT
