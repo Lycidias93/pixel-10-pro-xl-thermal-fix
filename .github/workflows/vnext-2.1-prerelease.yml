@@ -2,31 +2,47 @@ name: Publish vNext 2.1 Prerelease
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - vnext-2.1.0-alpha.3
+    paths:
+      - .github/workflows/vnext-2.1-prerelease.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   prerelease:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      TARGET_COMMIT: '1a2a59809a1fbeea0a6c7eae2fece6c897150df2'
+      DEVICE_VERIFIED_BASE: '1a2a59809a1fbeea0a6c7eae2fece6c897150df2'
       DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
     steps:
-      - name: Checkout exact release target
+      - name: Checkout full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: '1a2a59809a1fbeea0a6c7eae2fece6c897150df2'
 
       - name: Bind alpha.3 publication coordinates
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$TARGET_COMMIT"
+          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.3'
           test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.3'
           test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016252'
           test -s release-notes/2.1.0-alpha.3.md
+
+      - name: Prove runtime tree unchanged since device-verified base
+        run: |
+          set -euo pipefail
+          git diff --name-only "$DEVICE_VERIFIED_BASE" "$GITHUB_SHA" > "$RUNNER_TEMP/alpha3-changed.txt"
+          test -s "$RUNNER_TEMP/alpha3-changed.txt"
+          if grep -Fvx '.github/workflows/vnext-2.1-prerelease.yml' "$RUNNER_TEMP/alpha3-changed.txt" | grep -q .; then
+            printf '%s\n' 'FAIL non_workflow_change_since_device_verified_base'
+            cat "$RUNNER_TEMP/alpha3-changed.txt"
+            exit 22
+          fi
+          printf '%s\n' 'RESULT: VNEXT_ALPHA3_DEVICE_VERIFIED_TREE_EQUIVALENCE_PASS'
 
       - name: Reverify vNext safety gates
         run: |
@@ -71,10 +87,9 @@ jobs:
 
       - name: Fail closed on tag or release collision
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          test -n "$GH_TOKEN"
           if gh release view v2.1.0-alpha.3 >/dev/null 2>&1; then
             printf '%s\n' 'FAIL release_already_exists'
             exit 20
@@ -87,7 +102,7 @@ jobs:
 
       - name: Draft, verify, publish and reverify prerelease
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           tag='v2.1.0-alpha.3'
@@ -102,18 +117,17 @@ jobs:
             exit "$rc"
           }
           trap cleanup EXIT
-          gh release create "$tag" "$asset" --draft --prerelease --target "$TARGET_COMMIT" --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
+          gh release create "$tag" "$asset" --draft --prerelease --target "$GITHUB_SHA" --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
           created=1
           test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'true'
           test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          test "$(gh release view "$tag" --json targetCommitish --jq '.targetCommitish')" = "$TARGET_COMMIT"
+          test "$(gh release view "$tag" --json targetCommitish --jq '.targetCommitish')" = "$GITHUB_SHA"
           gh release edit "$tag" --draft=false --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
           published=1
           trap - EXIT
           test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'false'
           test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          remote_tag="$(git ls-remote --tags origin "refs/tags/$tag" | awk '{print $1}')"
-          test "$remote_tag" = "$TARGET_COMMIT"
+          test "$(git rev-list -n1 "$tag")" = "$GITHUB_SHA"
           mkdir -p dist/public-verify
           gh release download "$tag" --pattern 'pixel-thermal-memory-control-2.1.0-alpha.3.zip' --dir dist/public-verify
           public_sha="$(sha256sum dist/public-verify/pixel-thermal-memory-control-2.1.0-alpha.3.zip | awk '{print $1}')"
