@@ -78,8 +78,8 @@ grep -Fq 'LMKD 1% reload' "$action"
 grep -Fq 'Memory Killer Evidence' "$action"
 grep -Fq 'mc_cycle2 "Memory Killer" "Stock" "EXPERIMENTAL 1%"' "$menu"
 grep -Fq 'LMKD_SWAP_LOW_RELOAD' "$status"
-grep -Fq 'version=2.1.0-alpha.3' "$module_prop"
-grep -Fq 'versionCode=1016252' "$module_prop"
+grep -Fq 'version=2.1.0-alpha.4-dev.1' "$module_prop"
+grep -Fq 'versionCode=1016253' "$module_prop"
 [[ ! -e "$root/tools/lmkd/early-swap-low-test.sh" ]]
 [[ ! -e "$root/tools/lmkd/verify-early-swap-low-test.sh" ]]
 
@@ -90,5 +90,5 @@ printf '%s\n' 'PASS runtime_restore_path'
 printf '%s\n' 'PASS legacy_helpers_removed'
 printf '%s\n' 'PASS manager_status_retry_readback'
 printf '%s\n' 'PASS magisk_resetprop_first_with_readback_fallback'
-printf '%s\n' 'PASS alpha3_memory_killer_ux_contract'
-printf '%s\n' 'RESULT: PIXEL_THERMAL_ALPHA3_LMKD_RELOAD_PASS'
+printf '%s\n' 'PASS alpha4_dev_memory_killer_ux_contract'
+printf '%s\n' 'RESULT: PIXEL_THERMAL_ALPHA4_DEV_LMKD_RELOAD_PASS'
