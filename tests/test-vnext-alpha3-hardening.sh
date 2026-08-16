@@ -38,11 +38,12 @@ grep -Fq 'readiness_state=runtime_verified' "$readiness"
 grep -Fq 'support-readiness.env' "$service"
 grep -Fq 'VNEXT_READINESS state=' "$service"
 
-grep -Fq 'version=2.1.0-alpha.3' "$module_prop"
-grep -Fq 'versionCode=1016252' "$module_prop"
-# Exploratory alpha.3 must not publish itself through the prerelease channel.
-grep -Fq '"version": "2.1.0-alpha.2"' "$update_meta"
-! grep -Fq '2.1.0-alpha.3' "$update_meta"
+grep -Fq 'version=2.1.0-alpha.4-dev.1' "$module_prop"
+grep -Fq 'versionCode=1016253' "$module_prop"
+# Development candidates must never move the public prerelease feed before
+# their device-test/release gate is explicitly completed.
+grep -Fq '"version": "2.1.0-alpha.3"' "$update_meta"
+! grep -Fq '2.1.0-alpha.4' "$update_meta"
 
 grep -Fq '"komodo": {' "$supported"
 grep -Fq '"CP2A.260805.005"' "$supported"
@@ -56,7 +57,7 @@ grep -Fq 'runtime_verified' "$matrix"
 
 printf '%s\n' 'PASS experimental_ptune_override_guarded'
 printf '%s\n' 'PASS vnext_readiness_state_wired'
-printf '%s\n' 'PASS alpha3_identity_not_published'
+printf '%s\n' 'PASS alpha4_dev_identity_not_published'
 printf '%s\n' 'PASS komodo_august_runtime_evidence_recorded'
 printf '%s\n' 'PASS readable_status_and_zram_gated_memory_killer'
 printf '%s\n' 'RESULT: VNEXT_ALPHA3_HARDENING_PASS'

@@ -12,6 +12,7 @@ LAYOUT_ENV="$MODDIR/guard/thermal-layout.env"
 INSTALL_STATE="$MODDIR/install-state.txt"
 ACTION_PERF="$MODDIR/guard/action-performance.env"
 ZRAM_NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
+WEBUI_LAUNCHER="$MODDIR/tools/webui/launch.sh"
 
 now_ms() {
   awk '{printf "%d\n", $1 * 1000}' /proc/uptime 2>/dev/null || printf '%s\n' 0
@@ -174,8 +175,16 @@ fi
 
 write_action_performance
 
-# Action is runtime/config-only for ZRAM layout decisions. Explicitly shadow any
-# stale installer environment inherited from Magisk before entering Action UI.
+if [ -x "$WEBUI_LAUNCHER" ]; then
+  msg "- Opening standalone WebUI"
+  if MODULE_DIR="$MODDIR" sh "$WEBUI_LAUNCHER"; then
+    exit 0
+  fi
+  msg "! WebUI launch failed; opening legacy Action menu"
+fi
+
+# The legacy volume-key dashboard remains the rollback/fallback path. Action is
+# runtime/config-only for ZRAM layout decisions.
 if [ -s "$MODDIR/tools/action-dashboard.sh" ]; then
   ZRAM_MATERIALIZE_NOW=0 ZRAM_MATERIALIZE_CALLER=action-dashboard sh "$MODDIR/tools/action-dashboard.sh"
 elif [ -s "$MODDIR/tools/menu/zram-menu.sh" ]; then

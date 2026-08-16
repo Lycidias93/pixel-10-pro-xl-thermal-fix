@@ -6,7 +6,8 @@ on:
       - vnext-2.1.0-alpha.3
   pull_request:
     branches:
-      - vnext-2.1.0-alpha.2
+      - vnext-2.1.0-alpha.3
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,15 +15,37 @@ permissions:
 jobs:
   vnext:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Checkout pinned WebUI core
+        uses: actions/checkout@v4
+        with:
+          repository: Lycidias93/android-root-module-webui-template
+          ref: bc00322bba34ea27cd40cbee9a76190ce39d16e5
+          path: .webui-core
+          fetch-depth: 1
+
+      - name: Setup Go for standalone WebUI server
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: .webui-core/go.mod
+          cache: false
+
       - name: Install build dependencies
-        run: sudo apt-get update && sudo apt-get install -y zip unzip
+        run: sudo apt-get update && sudo apt-get install -y python3 zip unzip
+
+      - name: Verify pinned WebUI core
+        run: |
+          set -euo pipefail
+          test "$(git -C .webui-core rev-parse HEAD)" = "$(sed -n 's/^template_commit=//p' webui.lock)"
+          test "$(tr -d '\r\n' < .webui-core/CORE_VERSION)" = "$(sed -n 's/^core_version=//p' webui.lock)"
+          (cd .webui-core && ./scripts/verify.sh)
+          node --test .webui-core/scripts/webui-race-regression.test.mjs
 
       - name: Shell syntax
         run: |
@@ -30,6 +53,10 @@ jobs:
           sh -n action.sh
           sh -n post-fs-data.sh
           sh -n service.sh
+          sh -n bin/module-control
+          sh -n tools/webui/launch.sh
+          sh -n tools/control/pixel-control.sh
+          sh -n tools/zram/page-cluster-control.sh
           sh -n tools/core/thermal-layout.sh
           sh -n tools/core/patch-thermal.sh
           sh -n tools/core/patch-thermal-vnext-core.sh
@@ -49,6 +76,8 @@ jobs:
           sh -n tools/zram/materialize-zram-choice.sh
           sh -n tools/zram/config-normalize.sh
           sh -n tools/zram/disable-zram-100p.sh
+          bash -n dev_tools/build-release-module.sh
+          bash -n dev_tools/verify-release-module.sh
 
       - name: vNext device expansion and runtime regressions
         run: |
@@ -64,6 +93,8 @@ jobs:
           bash tests/test-dynamic-build-admission.sh
           bash tests/test-single-install-menu.sh
           bash tests/test-zram-eh-dev12.sh
+          bash tests/test-page-cluster-control.sh
+          bash tests/test-webui-integration.sh
 
       - name: Verify single vNext device family matrix
         run: |
@@ -72,35 +103,35 @@ jobs:
             grep -Fq "\"$device\"" supported_versions.json
           done
           grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.3'
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.4-dev.1'
+          printf '%s\n' 'RESULT: VNEXT_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
 
-      - name: Build byte-identical device-verified prerelease package
+      - name: Build WebUI device-test candidate
         env:
-          SOURCE_DATE_EPOCH: '1786701251'
-          DEVICE_VERIFIED_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
+          WEBUI_CORE_DIR: ${{ github.workspace }}/.webui-core
         run: |
           set -euo pipefail
-          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh dev_tools/validate-package.py
           mkdir -p dist
-          zip_path='dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip'
+          version="$(sed -n 's/^version=//p' module.prop | head -n1)"
+          zip_path="dist/pixel-thermal-memory-control-${version}.zip"
           dev_tools/build-release-module.sh "$zip_path" | tee dist/build-metadata.txt
           dev_tools/verify-release-module.sh "$zip_path"
-          actual="$(sha256sum "$zip_path" | awk '{print $1}')"
-          test "$actual" = "$DEVICE_VERIFIED_SHA256"
-          sha256sum "$zip_path" | tee dist/prerelease.sha256.txt
+          python3 dev_tools/validate-package.py "$zip_path"
+          sha256sum "$zip_path" | tee dist/device-test.sha256.txt
           unzip -Z1 "$zip_path" | sort > dist/package-entries.txt
-          grep -Fxq 'tools/debug/vnext-device-verify.sh' dist/package-entries.txt
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_DEVICE_VERIFIED_PACKAGE_IDENTITY_PASS'
+          grep -Fxq 'bin/webui-server-arm64' dist/package-entries.txt
+          grep -Fxq 'webroot/race-guard.js' dist/package-entries.txt
+          printf '%s\n' 'RESULT: VNEXT_WEBUI_DEVICE_TEST_PACKAGE_PASS'
 
-      - name: Upload clean alpha.3 candidate
+      - name: Upload WebUI device-test candidate
         uses: actions/upload-artifact@v4
         with:
-          name: pixel-thermal-vnext-alpha3-clean-${{ github.sha }}
+          name: pixel-thermal-vnext-webui-${{ github.sha }}
           path: |
-            dist/pixel-thermal-memory-control-2.1.0-alpha.3.zip
+            dist/pixel-thermal-memory-control-2.1.0-alpha.4-dev.1.zip
             dist/build-metadata.txt
-            dist/prerelease.sha256.txt
+            dist/device-test.sha256.txt
             dist/package-entries.txt
           if-no-files-found: error
           retention-days: 14

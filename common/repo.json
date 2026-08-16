@@ -1,0 +1,17 @@
+{
+  "homepage": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix",
+  "support": "https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues",
+  "readme": "https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/vnext-2.1.0-alpha.3/README.md",
+  "license": "GPL-3.0-only",
+  "categories": ["Thermal", "Memory", "System", "Tweaks"],
+  "devices": [
+    "Pixel 10", "Pixel 10 Pro", "Pixel 10 Pro XL", "Pixel 10 Pro Fold", "Pixel 10a",
+    "Pixel 9", "Pixel 9 Pro", "Pixel 9 Pro XL", "Pixel 9 Pro Fold", "Pixel 9a"
+  ],
+  "arch": ["arm64-v8a"],
+  "note": {
+    "title": "Dynamic stock-derived Pixel 9/10 thermal and memory control",
+    "message": "Android 17 only. Thermal overlays are generated from locally validated stock files. Pixel 9/9a and Pixel 10a remain conservative experimental platforms until device evidence is complete. ZRAM, LMKD, Emerald Hill and page-cluster experiments stay explicitly gated.",
+    "color": "blue"
+  }
+}

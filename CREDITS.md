@@ -13,6 +13,13 @@ Reference threads provided by user:
 
 # Credits
 
+## Pixel Thermal vNext WebUI / Alpha 4 development line
+
+- **Drizzy07x / Drizzy11 — Supercharger Pixel 9 Series**: WebUI interaction-race and regression-test inspiration from `Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26`, specifically status-readiness gating, duplicate-action prevention, task completion handling, and stale/out-of-order response protection. The shared WebUI core uses a clean generic adaptation; Supercharger's static Thermal profiles, Pixel 9 tuning, VM/network tweaks, IRQ masks, GPU floors, app optimizer, maintenance domain logic, and root-manager JavaScript exec bridge are not imported.
+- **Lycidias93 / Android Root Module Standalone WebUI Template**: standalone loopback browser transport, one-time bootstrap-to-HttpOnly-session flow, typed allowlisted API, capability-driven UI, bounded jobs/logs/inventory, and the pinned `0.3.1` WebUI core used by this development line.
+
+The Supercharger source is MIT-licensed. The matching copyright/permission notice is retained in the shared template and copied into device-test/release packages that consume the adapted WebUI core.
+
 ## Pixel Thermal V2 Alpha 3 development line
 
 - **Allen Chang**: July Canary screenshot, installation/failure evidence and stock Thermal files showing the unsupported-build guard disabling Thermal while ZRAM stayed active and later exposing the Canary Outdoor-profile boot failure. This evidence drove the correction that treats exact build IDs as evidence rather than the Dynamic V2 activation gate and supported the exact-target Thermal safety work.
