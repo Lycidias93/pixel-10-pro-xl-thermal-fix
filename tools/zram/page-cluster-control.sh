@@ -24,7 +24,7 @@ current_value() {
   [ -r "$PAGE_CLUSTER_PATH" ] && tr -d '\r\n' < "$PAGE_CLUSTER_PATH" 2>/dev/null || true
 }
 
-active_swap() {
+active_zram_swap() {
   [ -r "$SWAPS_FILE" ] || return 1
   first=1
   while IFS= read -r line; do
@@ -32,7 +32,12 @@ active_swap() {
       first=0
       continue
     fi
-    [ -n "$line" ] && return 0
+    [ -n "$line" ] || continue
+    set -- $line
+    swap_path="${1:-}"
+    case "$swap_path" in
+      /dev/block/zram[0-9]*|/dev/zram[0-9]*|zram[0-9]*) return 0 ;;
+    esac
   done < "$SWAPS_FILE"
   return 1
 }
@@ -57,7 +62,7 @@ write_status() {
     printf 'before=%s\n' "${before:-unknown}"
     printf 'after=%s\n' "${after:-unknown}"
     printf 'applied_by_module=%s\n' "$applied"
-    printf 'swap_active=%s\n' "$(active_swap && printf yes || printf no)"
+    printf 'zram_swap_active=%s\n' "$(active_zram_swap && printf yes || printf no)"
   } > "$tmp"
   chmod 0600 "$tmp" 2>/dev/null || true
   mv "$tmp" "$STATUS_FILE"
@@ -87,6 +92,7 @@ show_status() {
   printf 'PAGE_CLUSTER_EVIDENCE_BOOT=%s\n' "${stamped_boot:-none}"
   printf 'PAGE_CLUSTER_CURRENT_BOOT=%s\n' "$current_boot"
   printf 'PAGE_CLUSTER_APPLIED_BY_MODULE=%s\n' "${applied:-no}"
+  printf 'PAGE_CLUSTER_ZRAM_SWAP_ACTIVE=%s\n' "$(active_zram_swap && printf yes || printf no)"
 }
 
 apply_zero() {
@@ -95,9 +101,9 @@ apply_zero() {
     printf '%s\n' 'RESULT: PAGE_CLUSTER_ZERO_BLOCKED reason=zram_not_explicitly_enabled'
     return 2
   fi
-  if ! active_swap; then
-    write_status blocked active_swap_required '' "$(current_value)" "$(current_value)" no
-    printf '%s\n' 'RESULT: PAGE_CLUSTER_ZERO_BLOCKED reason=no_active_swap'
+  if ! active_zram_swap; then
+    write_status blocked active_zram_required '' "$(current_value)" "$(current_value)" no
+    printf '%s\n' 'RESULT: PAGE_CLUSTER_ZERO_BLOCKED reason=no_active_zram_swap'
     return 3
   fi
   [ -e "$PAGE_CLUSTER_PATH" ] && [ -w "$PAGE_CLUSTER_PATH" ] || {
