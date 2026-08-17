@@ -67,6 +67,19 @@ else
   thermal_abort() { abort "$*"; }
 fi
 
+# Magisk/KernelSU/APatch installers may normalize ZIP file modes while staging.
+# Re-assert executable permissions for the standalone WebUI runtime exactly as
+# required by the pinned shared WebUI template. Fail closed if the package is
+# incomplete or the permission readback does not become executable.
+WEBUI_SERVER="$MODPATH/bin/webui-server-arm64"
+WEBUI_CONTROL="$MODPATH/bin/module-control"
+[ -s "$WEBUI_SERVER" ] || thermal_abort "! WebUI server missing from package"
+[ -s "$WEBUI_CONTROL" ] || thermal_abort "! WebUI module-control missing from package"
+set_perm "$WEBUI_SERVER" 0 0 0755
+set_perm "$WEBUI_CONTROL" 0 0 0755
+[ -x "$WEBUI_SERVER" ] || thermal_abort "! WebUI server executable permission failed"
+[ -x "$WEBUI_CONTROL" ] || thermal_abort "! WebUI module-control executable permission failed"
+
 ui_print "- Device: ${model:-unknown} (${device:-unknown})"
 ui_print "- Android: ${android:-unknown} (SDK ${android_sdk:-unknown})"
 ui_print "- Build: ${build_id:-unknown}"
