@@ -1,6 +1,6 @@
 # Alpha4 WebUI device verification — 2026-08-17
 
-Status: device verification in progress; final WebUI gate pending reinstall/reboot of the corrected candidate.
+Status: device verification in progress; corrected candidate reinstall passed, final post-reboot WebUI/runtime gate pending.
 
 ## Device
 
@@ -64,6 +64,29 @@ Pinned WebUI core: `bc00322bba34ea27cd40cbee9a76190ce39d16e5` / `0.3.1`
 Corrected `bin/module-control` SHA-256: `73f994e0e5db83c2cc7488748c32926137637cfe3e4a66ff928d97c4a6980de2`
 WebUI server SHA-256: `563b0592087dd418ca064fac2b18064035dc600f754806dcc4f83a039fdf2ec7`
 
+## Corrected candidate reinstall — pre-reboot PASS
+
+Normal Magisk reinstall completed on 2026-08-17 at approximately 16:20 local time.
+
+Observed install evidence:
+
+- installer autosave result: `success` / `install_completed`;
+- installed package SHA-256 exactly matched the corrected CI candidate: `7d40f28ffdc16f422e3aede08200b6e82297cd0144a6c9dea59cdf0860d7f2a9`;
+- package bytes matched: `2670186`;
+- target identity remained Mustang / Android 17 / `CP2A.260805.005` / incremental `15828068` with exact build evidence;
+- Dynamic Thermal validation passed for all three controlled files;
+- Polling replacements remained 22/22 with no remaining 300000 values and 22 output 5000 values;
+- Outdoor Extended +3 C validation passed across 3 files / 12 target zones / 84 threshold values;
+- ZRAM selection remained enabled and its 100p layout was materialized;
+- generated support snapshot completed successfully with SHA-256 `2ccca18a46440179dbe2c81f3d2a767edce5d759019825cd8b2a2615d509c29a`;
+- staged and currently active Thermal overlays were byte-identical for all three controlled Mustang files;
+- active runtime before reboot remained healthy: Bootguard full pass, dynamic manifests verified, active vendor match yes, active polling valid, ZRAM 100% active with `lz77eh`, LMKD 1% verified, and `SAFE_TO_REBOOT=yes`;
+- active and staged module flags `disable`, `skip_mount`, and `remove` were absent.
+
+The corrected installer has fail-closed 0755 readback checks for both `bin/webui-server-arm64` and `bin/module-control`. Reaching the successful installer completion marker therefore proves the staged corrected candidate passed the WebUI executable-permission gate during normal installation.
+
+The support collector intentionally does not package the WebUI binaries themselves, so execute-bit state is bound to the installer fail-closed evidence rather than inferred from the support archive.
+
 ## Remaining gate
 
-Install the corrected candidate through the normal root-module installer and reboot. Final acceptance requires the same Thermal/ZRAM/LMKD/Bootguard checks plus WebUI self-test/API PASS with installer-provided executable permissions. No alpha4 prerelease promotion is allowed before that final device gate passes.
+Reboot into the corrected candidate. Final acceptance requires the same Thermal/ZRAM/LMKD/Bootguard checks plus WebUI self-test/API PASS after boot with the installer-provided executable permissions and cache-first status path. No alpha4 prerelease promotion is allowed before that final device gate passes.
