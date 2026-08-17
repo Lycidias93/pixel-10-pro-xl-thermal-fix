@@ -3,10 +3,10 @@ name: vNext 2.1 CI
 on:
   push:
     branches:
-      - vnext-2.1.0-alpha.3
+      - vnext-2.1.0-alpha.4
   pull_request:
     branches:
-      - vnext-2.1.0-alpha.3
+      - vnext-2.1.0-alpha.4
   workflow_dispatch:
 
 permissions:
