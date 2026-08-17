@@ -33,6 +33,10 @@ refresh_status() {
   [ -r "$STATUS_LIB" ] && MODDIR="$MODDIR" sh "$STATUS_LIB" update >/dev/null 2>&1 || true
 }
 
+ensure_status_cache() {
+  [ -s "$STATUS_ENV" ] || refresh_status
+}
+
 request_file_allowed() {
   path="$1"
   case "$path" in "$RUNTIME_DIR"/requests/*.json) ;; *) return 1 ;; esac
@@ -59,7 +63,7 @@ EOF_CAP
 }
 
 print_status() {
-  refresh_status
+  ensure_status_cache
   device="$(getprop ro.product.device 2>/dev/null || true)"
   model="$(getprop ro.product.model 2>/dev/null || true)"
   android="$(getprop ro.build.version.release 2>/dev/null || true)"
@@ -128,6 +132,7 @@ run_action_file() {
     printf '{"ok":false,"action":"%s","dry_run":false,"error":"%s","command_exit_code":%s}\n' "$name" "$(json_escape "$output")" "$rc" >&2
     return "$rc"
   fi
+  refresh_status
   printf '{"ok":true,"action":"%s","dry_run":false,"message":"%s"}\n' "$name" "$(json_escape "$output")"
 }
 
