@@ -21,6 +21,18 @@ grep -Fq 'set_perm "$WEBUI_SERVER" 0 0 0755' customize.sh
 grep -Fq 'set_perm "$WEBUI_CONTROL" 0 0 0755' customize.sh
 grep -Fq '[ -x "$WEBUI_SERVER" ] || thermal_abort "! WebUI server executable permission failed"' customize.sh
 grep -Fq '[ -x "$WEBUI_CONTROL" ] || thermal_abort "! WebUI module-control executable permission failed"' customize.sh
+# The live WebUI status endpoint must not repeat the expensive full Thermal
+# compatibility scan on every GET. Boot/service owns the verified cache; a
+# missing cache may rebuild it, and completed mutations refresh it explicitly.
+grep -Fq 'ensure_status_cache() {' bin/module-control
+status_body="$(sed -n '/^print_status() {/,/^}/p' bin/module-control)"
+printf '%s\n' "$status_body" | grep -Fq 'ensure_status_cache'
+if printf '%s\n' "$status_body" | grep -Fxq '  refresh_status'; then
+  echo 'FAIL: WebUI status GET performs unconditional full refresh' >&2
+  exit 1
+fi
+action_body="$(sed -n '/^run_action_file() {/,/^}/p' bin/module-control)"
+printf '%s\n' "$action_body" | grep -Fq 'refresh_status'
 if grep -Eq 'ksu\.exec|apatch\.exec|magisk\.exec|webui\.exec|Android\.exec|eval\(|new Function' bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh; then
   echo 'FAIL: unrestricted WebUI/root exec bridge found' >&2
   exit 1
