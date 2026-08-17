@@ -15,6 +15,12 @@ grep -Fq '"page-cluster-zero"' bin/module-control
 grep -Fq 'confirmation_text":"PAGECLUSTER"' bin/module-control
 grep -Fq 'dynamic_stock_thermal_validation' bin/module-control
 grep -Fq 'ZRAM_MATERIALIZE_NOW=0' tools/control/pixel-control.sh
+# Root-module managers may normalize ZIP modes during staging. The consumer
+# must re-assert the executable bits required by the pinned WebUI template.
+grep -Fq 'set_perm "$WEBUI_SERVER" 0 0 0755' customize.sh
+grep -Fq 'set_perm "$WEBUI_CONTROL" 0 0 0755' customize.sh
+grep -Fq '[ -x "$WEBUI_SERVER" ] || thermal_abort "! WebUI server executable permission failed"' customize.sh
+grep -Fq '[ -x "$WEBUI_CONTROL" ] || thermal_abort "! WebUI module-control executable permission failed"' customize.sh
 if grep -Eq 'ksu\.exec|apatch\.exec|magisk\.exec|webui\.exec|Android\.exec|eval\(|new Function' bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh; then
   echo 'FAIL: unrestricted WebUI/root exec bridge found' >&2
   exit 1
