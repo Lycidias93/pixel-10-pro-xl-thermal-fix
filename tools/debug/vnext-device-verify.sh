@@ -111,7 +111,7 @@ if [ -r "$MODULE_PROP" ]; then
   module_version_code="$(kv_file versionCode "$MODULE_PROP")"
   say "module_version=${module_version:-unknown}"
   say "module_version_code=${module_version_code:-unknown}"
-  case "$module_version" in 2.1.0-alpha.3) pass_check alpha3_version ;; *) fail_check "unexpected_module_version=${module_version:-missing}" ;; esac
+  case "$module_version" in 2.1.0-alpha.4-dev.1) pass_check alpha4_dev1_version ;; *) fail_check "unexpected_module_version=${module_version:-missing}" ;; esac
 else
   EVIDENCE=partial
   fail_check module_prop_missing
@@ -262,7 +262,7 @@ support_path=""
 if [ -s "$COLLECTOR" ]; then
   collector_log="/data/local/tmp/pixel_thermal_vnext_device_verify_$$.collector.log"
   thermal_arg="${thermal:-stock}"
-  MODDIR="$MODDIR" /system/bin/sh "$COLLECTOR" "device_verify_$PHASE" "$thermal_arg" unknown alpha3_device_test > "$collector_log" 2>&1
+  MODDIR="$MODDIR" /system/bin/sh "$COLLECTOR" "device_verify_$PHASE" "$thermal_arg" unknown alpha4_dev1_device_test > "$collector_log" 2>&1
   collector_rc=$?
   cat "$collector_log" 2>/dev/null || true
   support_path="$(sed -n 's/^Created: //p' "$collector_log" 2>/dev/null | tail -n 1 | tr -d '\r')"
