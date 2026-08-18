@@ -67,7 +67,13 @@ fi
 command -v go >/dev/null 2>&1 || { printf '%s\n' 'FAIL go_missing_for_webui_server'; exit 14; }
 
 mkdir -p "$stage/webroot" "$stage/bin" "$stage/webui-third-party"
-for path in index.html app.js app.css race-guard.js race-guard.css v03.js; do
+webui_assets=(
+  index.html app.js app.css
+  race-guard.js race-guard.css
+  observability.js observability.css
+  v03.js v04.js
+)
+for path in "${webui_assets[@]}"; do
   [[ -s "$core_dir/module/webroot/$path" ]] || { printf 'FAIL webui_core_file_missing path=%s\n' "$path"; exit 15; }
   cp -p "$core_dir/module/webroot/$path" "$stage/webroot/$path"
 done
@@ -89,7 +95,10 @@ required=(
   tools/core/thermal-layout.sh tools/core/patch-thermal-vnext-core.sh tools/core/patch-thermal-validated-vnext.sh tools/core/patch-thermal-validated.sh
   tools/bootguard/compat-check-vnext.sh tools/bootguard/compat-check.sh tools/debug/collect-thermal-online-v5.sh
   tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh
-  bin/module-control bin/webui-server-arm64 webroot/index.html webroot/race-guard.js common/repo.json webui.lock
+  bin/module-control bin/webui-server-arm64
+  webroot/index.html webroot/app.js webroot/app.css
+  webroot/race-guard.js webroot/race-guard.css webroot/observability.js webroot/observability.css webroot/v03.js webroot/v04.js
+  common/repo.json webui.lock
 )
 for path in "${required[@]}"; do
   [[ -s "$stage/$path" ]] || { printf 'FAIL required_runtime_file_missing path=%s\n' "$path"; exit 3; }
