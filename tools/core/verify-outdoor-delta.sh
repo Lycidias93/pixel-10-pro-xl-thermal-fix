@@ -1,6 +1,12 @@
 #!/system/bin/sh
 set -eu
 
+# JSON numeric syntax is locale-independent and always uses a decimal point.
+# Keep the independent AWK verifier on the POSIX numeric locale as well so
+# decimal parsing/comparison cannot depend on the host language settings.
+LC_ALL=C
+export LC_ALL
+
 SOURCE_FILE="${1:-}"
 OUTPUT_FILE="${2:-}"
 EXPECTED_DELTA="${3:-}"
