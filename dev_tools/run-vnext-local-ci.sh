@@ -26,7 +26,17 @@ actual_workflow_blob="$(git hash-object "$workflow_file")"
 
 branch="$(git branch --show-current 2>/dev/null || true)"
 [ "$branch" = "$expected_branch" ] || fail "unexpected_branch=$branch expected=$expected_branch"
-[ -z "$(git status --porcelain)" ] || fail "working_tree_dirty"
+
+# The pinned WebUI core is intentionally checked out as a nested Git repository
+# at .webui-core by both GitHub Actions and the quota-independent local runner.
+# Ignore exactly that declared build input while remaining fail-closed for every
+# other tracked or untracked working-tree change.
+dirty_status="$(git status --porcelain --untracked-files=all | grep -Ev '^\?\? \.webui-core(/|$)' || true)"
+[ -z "$dirty_status" ] || {
+  printf '%s\n' "$dirty_status" >&2
+  fail "working_tree_dirty"
+}
+
 version="$(sed -n 's/^version=//p' module.prop | head -n 1)"
 [ "$version" = "$expected_version" ] || fail "unexpected_version=$version expected=$expected_version"
 
