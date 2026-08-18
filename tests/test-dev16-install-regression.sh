@@ -5,15 +5,26 @@ root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
 layout="$root/tools/zram/materialize-zram-choice.sh"
 install_zram="$root/tools/zram/install-zram.sh"
 collector="$root/tools/bootguard/collect-debug-v3.sh"
+menu_cycle="$root/tools/menu/menu-cycle.sh"
 module_prop="$root/module.prop"
 
 fail() { printf 'FAIL %s\n' "$*"; exit 1; }
 pass() { printf 'PASS %s\n' "$*"; }
 
-for file in "$layout" "$install_zram" "$collector"; do
+for file in "$layout" "$install_zram" "$collector" "$menu_cycle"; do
   bash -n "$file" || fail "syntax file=$file"
 done
 pass dev16_shell_syntax
+
+# The installer volume-key reader must bound getevent itself. Wrapping a shell
+# pipeline with timeout can leave getevent alive with the command-substitution
+# pipe open after the wrapper shell exits, hanging CLI installs indefinitely.
+grep -Fq 'timeout "$MC_TIMEOUT_SECONDS" getevent -ql' "$menu_cycle" || fail menu_getevent_direct_timeout_missing
+if grep -Fq 'timeout "$MC_TIMEOUT_SECONDS" sh -c' "$menu_cycle"; then
+  fail menu_timeout_shell_wrapper_regressed
+fi
+grep -Fq 'if ! command -v timeout >/dev/null 2>&1; then echo timeout; return 0; fi' "$menu_cycle" || fail menu_timeout_unavailable_fail_safe_missing
+pass installer_volume_key_timeout_is_bounded
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
