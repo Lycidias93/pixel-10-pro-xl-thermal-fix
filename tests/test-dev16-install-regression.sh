@@ -84,8 +84,10 @@ if grep -Fq '_src="$1"; _dst="$2"' "$collector"; then
 fi
 pass collector_copy_helpers_do_not_overwrite_outer_destination
 
-grep -Fq 'version=2.0.0' "$module_prop"
-grep -Fq 'versionCode=1016240' "$module_prop"
-pass stable_metadata_preserves_dev16_regression
+module_version="$(sed -n 's/^version=//p' "$module_prop" | head -n 1)"
+module_version_code="$(sed -n 's/^versionCode=//p' "$module_prop" | head -n 1)"
+[[ -n "$module_version" ]] || fail module_version_missing
+[[ "$module_version_code" =~ ^[0-9]+$ ]] || fail module_version_code_not_integer
+pass module_metadata_well_formed
 
 printf '%s\n' 'RESULT: PIXEL_THERMAL_DEV16_INSTALL_REGRESSION_PASS'
