@@ -38,8 +38,8 @@ grep -Fq 'readiness_state=runtime_verified' "$readiness"
 grep -Fq 'support-readiness.env' "$service"
 grep -Fq 'VNEXT_READINESS state=' "$service"
 
-grep -Fq 'version=2.1.0-alpha.4-dev.1' "$module_prop"
-grep -Fq 'versionCode=1016253' "$module_prop"
+grep -Fq 'version=2.1.0-alpha.4-dev.2' "$module_prop"
+grep -Fq 'versionCode=1016254' "$module_prop"
 # Development candidates must never move the public prerelease feed before
 # their device-test/release gate is explicitly completed.
 grep -Fq '"version": "2.1.0-alpha.3"' "$update_meta"
