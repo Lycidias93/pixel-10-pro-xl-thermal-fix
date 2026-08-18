@@ -6,7 +6,7 @@ cd "$repo_root"
 
 expected_branch="vnext-2.1.0-alpha.4"
 expected_version="2.1.0-alpha.4-dev.2"
-expected_workflow_blob="40274fe5f8c6faa76fbb2ca8311813d62b5e1223"
+expected_workflow_blob="002d6f17c42649753281e9a88b6e3387b8b37fb8"
 expected_core_commit="cb991dc8d7d982defbe5e34c5c0e0908efa9b236"
 expected_core_version="0.6.0"
 workflow_file=".github/workflows/vnext-2.1-ci.yml"
@@ -62,7 +62,7 @@ for file in \
   tools/core/thermal-layout.sh tools/core/patch-thermal.sh tools/core/patch-thermal-vnext-core.sh \
   tools/core/patch-thermal-validated.sh tools/core/patch-thermal-validated-vnext.sh \
   tools/bootguard/compat-check.sh tools/bootguard/compat-check-vnext.sh \
-  tools/menu/install-options-menu.sh tools/menu/zram-menu.sh tools/ptune/ptune-guard.sh \
+  tools/menu/menu-cycle.sh tools/menu/install-options-menu.sh tools/menu/zram-menu.sh tools/ptune/ptune-guard.sh \
   tools/debug/vnext-readiness-summary.sh tools/debug/vnext-device-verify.sh \
   tools/debug/status-lib.sh tools/debug/status-cached-print.sh tools/debug/collect-thermal-online-v5.sh \
   tools/core/platform-transition.sh tools/zram/materialize-zram-choice.sh \
@@ -83,6 +83,7 @@ for test_file in \
   tests/test-vnext-alpha3-zram-defer-contract.sh \
   tests/test-vnext-device-verify-contract.sh \
   tests/test-dev15-menu-matrix.sh \
+  tests/test-dev16-install-regression.sh \
   tests/test-dev19-lmkd-early-test.sh \
   tests/test-dynamic-build-admission.sh \
   tests/test-single-install-menu.sh \
