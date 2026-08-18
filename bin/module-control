@@ -58,7 +58,7 @@ json_string() {
 
 print_capabilities() {
   cat <<EOF_CAP
-{"schema":"root-module-webui.capabilities.v1","module":{"id":"$ID","name":"$(json_escape "$MODULE_NAME")","version":"$(json_escape "$MODULE_VERSION")"},"features":{"config":false,"logs":true,"actions":true,"jobs":true,"inventory":true},"config_fields":[],"actions":[{"name":"polling-mod","label":"Polling · Module values","description":"Materialize the current validated Thermal profile with admitted 5s PollingDelay changes.","risk":"caution","supports_dry_run":true},{"name":"polling-stock","label":"Polling · Stock values","description":"Rematerialize the current Thermal profile while preserving stock polling values.","risk":"safe","supports_dry_run":true},{"name":"thermal-stock","label":"Thermal · Stock","description":"Return admitted Outdoor thresholds to stock while keeping the selected polling mode.","risk":"safe","supports_dry_run":true},{"name":"thermal-outdoor-safe","label":"Thermal · Outdoor Safe +1°C","description":"Validated +1°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-plus","label":"Thermal · Outdoor Plus +2°C","description":"Validated +2°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-extended","label":"Thermal · Outdoor Extended +3°C","description":"Maximum admitted Outdoor target delta; device/build policy may block it.","risk":"caution","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill and stock Memory Killer; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Memory Killer/Emerald Hill experiments.","risk":"caution","supports_dry_run":true},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"lmkd-stock","label":"Memory Killer · Stock","description":"Disable the experimental 1% LMKD swap-free threshold and attempt runtime restore.","risk":"safe","supports_dry_run":true},{"name":"lmkd-1pct","label":"Memory Killer · EXPERIMENTAL 1%","description":"Requires module ZRAM 100%; applies the guarded LMKD reload path.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"LMKD"},{"name":"page-cluster-stock","label":"ZRAM page-cluster · Stock/runtime restore","description":"Restore the same-boot baseline only when this module owns the current experimental write.","risk":"safe","supports_dry_run":true},{"name":"page-cluster-zero","label":"ZRAM page-cluster · EXPERIMENTAL 0","description":"Runtime-only experiment requiring active module ZRAM/swap; captures baseline and verifies readback.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"PAGECLUSTER"}],"jobs":[{"name":"support-snapshot","label":"Create Support Snapshot","description":"Run the existing bounded support collector and report the generated archive path.","risk":"safe"}],"inventories":[{"name":"device-matrix","label":"Supported Pixel family","description":"Single Pixel 9/9a/10/10a vNext device matrix."},{"name":"validation","label":"Current validation evidence","description":"Current stock-source, overlay and runtime verification summary."}]}
+{"schema":"root-module-webui.capabilities.v1","module":{"id":"$ID","name":"$(json_escape "$MODULE_NAME")","version":"$(json_escape "$MODULE_VERSION")"},"features":{"config":false,"logs":true,"actions":true,"jobs":true,"inventory":true},"config_fields":[],"actions":[{"name":"polling-mod","label":"Polling · Module values","description":"Materialize the current validated Thermal profile with admitted 5s PollingDelay changes.","risk":"caution","supports_dry_run":true},{"name":"polling-stock","label":"Polling · Stock values","description":"Rematerialize the current Thermal profile while preserving stock polling values.","risk":"safe","supports_dry_run":true},{"name":"thermal-stock","label":"Thermal · Stock","description":"Return admitted Outdoor thresholds to stock while keeping the selected polling mode.","risk":"safe","supports_dry_run":true},{"name":"thermal-outdoor-safe","label":"Thermal · Outdoor Safe +1°C","description":"Validated +1°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-plus","label":"Thermal · Outdoor Plus +2°C","description":"Validated +2°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-extended","label":"Thermal · Outdoor Extended +3°C","description":"Maximum admitted Outdoor target delta; device/build policy may block it.","risk":"caution","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill and stock Memory Killer; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Memory Killer/Emerald Hill experiments.","risk":"caution","supports_dry_run":true},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"lmkd-stock","label":"Memory Killer · Stock","description":"Disable the experimental 1% LMKD swap-free threshold and attempt runtime restore.","risk":"safe","supports_dry_run":true},{"name":"lmkd-1pct","label":"Memory Killer · EXPERIMENTAL 1%","description":"Requires module ZRAM 100%; applies the guarded LMKD reload path.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"LMKD"},{"name":"page-cluster-stock","label":"ZRAM page-cluster · Stock/runtime restore","description":"Restore the same-boot baseline only when this module owns the current experimental write.","risk":"safe","supports_dry_run":true},{"name":"page-cluster-zero","label":"ZRAM page-cluster · EXPERIMENTAL 0","description":"Runtime-only experiment requiring active module ZRAM/swap; captures baseline and verifies readback.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"PAGECLUSTER"}],"jobs":[{"name":"support-snapshot","label":"Create Support Snapshot","description":"Run the existing bounded support collector and report the generated archive path.","risk":"safe"}],"inventories":[{"name":"device-matrix","label":"Supported Pixel family","description":"Single Pixel 9/9a/10/10a vNext device matrix."},{"name":"validation","label":"Latest verified validation evidence","description":"Latest verified stock-source, overlay and runtime status; WebUI view switching never reruns the expensive validator."}]}
 EOF_CAP
 }
 
@@ -77,15 +77,71 @@ print_status() {
   vendor_match="$(env_value ACTIVE_VENDOR_MATCH "$STATUS_ENV")"
   reboot_safe="$(env_value SAFE_TO_REBOOT "$STATUS_ENV")"
   build_evidence="$(env_value BUILD_EVIDENCE "$STATUS_ENV")"
+  polling_mode="$(env_value THERMAL_POLLING_MODE "$CONFIG_FILE")"; [ -n "$polling_mode" ] || polling_mode=mod
+  thermal_profile="$(env_value THERMAL_OUTDOOR_PROFILE "$CONFIG_FILE")"; [ -n "$thermal_profile" ] || thermal_profile=stock
+  thermal_disabled="$(env_value THERMAL_DISABLED "$CONFIG_FILE")"; [ -n "$thermal_disabled" ] || thermal_disabled=0
+  zram_enabled="$(env_value ENABLE_ZRAM_100P "$CONFIG_FILE")"; [ -n "$zram_enabled" ] || zram_enabled=0
+  zram_ack="$(env_value ZRAM_RISK_ACK "$CONFIG_FILE")"
+  eh_max="$(env_value ZRAM_EMERALD_OC "$CONFIG_FILE")"; [ -n "$eh_max" ] || eh_max=0
+  lmkd_enabled="$(env_value LMKD_SWAP_LOW_RELOAD "$CONFIG_FILE")"; [ -n "$lmkd_enabled" ] || lmkd_enabled=0
   reboot_required=no
   [ "$(cat "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true)" = yes ] && reboot_required=yes
-  page_current=unavailable; page_effective=stock; page_owned=no
+
+  page_current=unavailable; page_effective=stock; page_owned=no; page_zram_swap=no
   if [ -r "$PAGE_CLUSTER" ]; then
     page_status="$(ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$PAGE_CLUSTER" status 2>/dev/null || true)"
     page_current="$(printf '%s\n' "$page_status" | sed -n 's/^PAGE_CLUSTER_CURRENT=//p' | tail -n 1)"
     page_effective="$(printf '%s\n' "$page_status" | sed -n 's/^PAGE_CLUSTER_EFFECTIVE=//p' | tail -n 1)"
     page_owned="$(printf '%s\n' "$page_status" | sed -n 's/^PAGE_CLUSTER_APPLIED_BY_MODULE=//p' | tail -n 1)"
+    page_zram_swap="$(printf '%s\n' "$page_status" | sed -n 's/^PAGE_CLUSTER_ZRAM_SWAP_ACTIVE=//p' | tail -n 1)"
   fi
+
+  active_json=''
+  blocked_json=''
+  add_active() {
+    [ -z "$active_json" ] || active_json="$active_json,"
+    active_json="$active_json\"$(json_escape "$1")\""
+  }
+  add_blocked() {
+    [ -z "$blocked_json" ] || blocked_json="$blocked_json,"
+    blocked_json="$blocked_json\"$(json_escape "$1")\":\"$(json_escape "$2")\""
+  }
+
+  case "$polling_mode" in stock) add_active polling-stock ;; *) add_active polling-mod ;; esac
+  if [ "$thermal_disabled" = 1 ]; then
+    for action_name in thermal-stock thermal-outdoor-safe thermal-outdoor-plus thermal-outdoor-extended; do
+      add_blocked "$action_name" 'Thermal controls are disabled by the current validation/policy state.'
+    done
+  else
+    case "$thermal_profile" in
+      outdoor-safe) add_active thermal-outdoor-safe ;;
+      outdoor-plus) add_active thermal-outdoor-plus ;;
+      outdoor-extended) add_active thermal-outdoor-extended ;;
+      *) add_active thermal-stock ;;
+    esac
+  fi
+
+  if [ "$zram_enabled" = 1 ]; then
+    add_active zram-enable
+    if [ "$eh_max" = 1 ]; then add_active eh-max; else add_active eh-adaptive; fi
+  else
+    add_active zram-disable
+    add_blocked eh-adaptive 'Enable module ZRAM 100% first.'
+    add_blocked eh-max 'Enable module ZRAM 100% first.'
+  fi
+  if [ "$lmkd_enabled" = 1 ]; then add_active lmkd-1pct; else add_active lmkd-stock; fi
+  if [ "$zram_enabled" != 1 ] || [ "$zram_ack" != explicit_user_enable ]; then
+    add_blocked lmkd-1pct 'Enable module ZRAM 100% first.'
+    add_blocked page-cluster-zero 'Enable module ZRAM 100% first.'
+  elif [ "$page_zram_swap" != yes ]; then
+    add_blocked page-cluster-zero 'An active module ZRAM swap device is required.'
+  fi
+  if [ "$page_effective" = experimental_zero ] && [ "$page_owned" = yes ]; then
+    add_active page-cluster-zero
+  else
+    add_active page-cluster-stock
+  fi
+
   printf '{"ok":true,"module":{"id":"%s","name":"%s","version":"%s"},' "$ID" "$(json_escape "$MODULE_NAME")" "$(json_escape "$MODULE_VERSION")"
   printf '"summary":['
   printf '{"label":"Device","value":"%s (%s)","level":"good"},' "$(json_escape "${model:-unknown}")" "$(json_escape "${device:-unknown}")"
@@ -95,6 +151,7 @@ print_status() {
   printf '{"label":"Memory Killer","value":"%s","level":"muted"},' "$(json_escape "${lmkd:-unknown}")"
   printf '{"label":"Reboot required","value":"%s","level":"%s"}' "$reboot_required" "$([ "$reboot_required" = yes ] && printf caution || printf good)"
   printf '],'
+  printf '"action_state":{"active":[%s],"blocked":{%s}},' "$active_json" "$blocked_json"
   printf '"runtime":{"device":"%s","model":"%s","android":"%s","build_id":"%s","build_evidence":"%s","source_state":"%s","materialization_valid":"%s","active_vendor_match":"%s","safe_to_reboot":"%s","page_cluster_current":"%s","page_cluster_effective":"%s","page_cluster_owned":"%s"},' \
     "$(json_escape "$device")" "$(json_escape "$model")" "$(json_escape "$android")" "$(json_escape "$build")" "$(json_escape "$build_evidence")" "$(json_escape "$source_state")" "$(json_escape "$materialized")" "$(json_escape "$vendor_match")" "$(json_escape "$reboot_safe")" "$(json_escape "$page_current")" "$(json_escape "$page_effective")" "$(json_escape "$page_owned")"
   printf '"safety":{"loopback_only":true,"arbitrary_shell_blocked":true,"typed_actions_only":true,"dynamic_stock_thermal_validation":true,"zram_config_first":true,"lmkd_requires_zram":true,"page_cluster_runtime_only":true,"boot_dependency_absent":true}}\n'
@@ -156,7 +213,7 @@ print_inventory() {
 EOF_MATRIX
       ;;
     validation)
-      refresh_status
+      ensure_status_cache
       printf '{"ok":true,"name":"validation","columns":["check","value"],"items":['
       first=1
       for key in SOURCE_STATE BUILD_EVIDENCE MATERIALIZATION_VALID ACTIVE_VENDOR_MATCH SAFE_TO_REBOOT POLLING_DISPLAY THERMAL_DISPLAY ZRAM_DISPLAY MEMORY_KILLER_DISPLAY; do
