@@ -17,8 +17,8 @@ grep -Fq 'warning_count=' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_PASS' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_FAIL' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_STOP' "$verify"
-grep -Fq '2.1.0-alpha.4-dev.1) pass_check alpha4_dev1_version' "$verify"
-grep -Fq 'alpha4_dev1_device_test' "$verify"
+grep -Fq '2.1.0-alpha.4-dev.2) pass_check alpha4_dev2_version' "$verify"
+grep -Fq 'alpha4_dev2_device_test' "$verify"
 
 grep -Fq "swap_list=\"\$(awk 'NR > 1 && \$1 ~ /\\/zram[0-9]+$/ { print \$1 }' /proc/swaps 2>/dev/null)\"" "$verify"
 grep -Fq 'sysfs="/sys/block/$name"' "$verify"
@@ -38,7 +38,7 @@ printf '%s\n' 'PASS repository_owned_phase_aware_verifier'
 printf '%s\n' 'PASS self_rooting_termux_entrypoint'
 printf '%s\n' 'PASS dynamic_zram_instance_discovery'
 printf '%s\n' 'PASS config_aware_memory_killer_matrix'
-printf '%s\n' 'PASS alpha4_dev1_identity_and_collector_tag'
+printf '%s\n' 'PASS alpha4_dev2_identity_and_collector_tag'
 printf '%s\n' 'PASS collect_all_non_safety_failures'
 printf '%s\n' 'PASS no_heredoc_or_herestring'
 printf '%s\n' 'RESULT: VNEXT_DEVICE_VERIFY_CONTRACT_PASS'
