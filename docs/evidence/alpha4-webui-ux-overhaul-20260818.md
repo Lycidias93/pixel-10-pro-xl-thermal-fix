@@ -1,6 +1,6 @@
 # Alpha4 WebUI UX overhaul — 2026-08-18
 
-State: REPO_IMPLEMENTED / CI_VISIBILITY_PENDING / DEVICE_TEST_PENDING
+State: REPO_IMPLEMENTED / CI_QUOTA_EXHAUSTED / DEVICE_TEST_PENDING
 
 ## Primary user evidence
 
@@ -72,6 +72,8 @@ The public Alpha3 prerelease/update feed was not changed.
 
 Repository head at the end of implementation: `b601c41127e772e9c80c8989cc44219e389bb723`.
 
-The GitHub connector available to this ChatGPT turn did not expose Action check-runs for the commit through the attempted workflow/check status surfaces. Per the project Audit Loop Breaker, no additional CI polling/transport branch was opened. Automatic branch CI remains the next authoritative gate; after green CI the generated dev.2 artifact must be installed and the focused mobile Inventory/Actions behavior reverified on Mustang.
+The account-level GitHub Actions included allowance is exhausted for the current billing cycle: `2,000 min used / 2,000 min included`, with reset shown for 2026-09-01. This is the relevant reason the expected branch CI gate is not currently available through the normal included-minute path. The earlier connector visibility failure was a secondary observation only and must not be treated as the CI root cause. Whether billable overage is permitted depends on the configured Actions budget; the supplied account screenshot does not itself prove that budget setting.
+
+Per the project Audit Loop Breaker, no further CI polling branch is opened while the account quota state is known. Once Actions execution is available again, branch CI remains the authoritative repository gate; after green CI the generated dev.2 artifact must be installed and the focused mobile Inventory/Actions behavior reverified on Mustang.
 
 No Pixel runtime mutation was performed by this UX-overhaul task.
