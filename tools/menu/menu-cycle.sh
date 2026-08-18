@@ -40,12 +40,9 @@ mc_rule() {
 
 mc_read_key() {
   if ! command -v getevent >/dev/null 2>&1; then echo timeout; return 0; fi
-  _ev=""
-  if command -v timeout >/dev/null 2>&1; then
-    _ev="$(timeout "$MC_TIMEOUT_SECONDS" sh -c 'getevent -ql 2>/dev/null | grep -m 1 -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN"' 2>/dev/null || true)"
-  else
-    _ev="$(getevent -ql 2>/dev/null | grep -m 1 -E "KEY_VOLUMEUP|KEY_VOLUMEDOWN" 2>/dev/null || true)"
-  fi
+  if ! command -v timeout >/dev/null 2>&1; then echo timeout; return 0; fi
+
+  _ev="$(timeout "$MC_TIMEOUT_SECONDS" getevent -ql 2>/dev/null | grep -m 1 -E 'KEY_VOLUMEUP|KEY_VOLUMEDOWN' 2>/dev/null || true)"
   case "$_ev" in
     *KEY_VOLUMEUP*) sleep "$MC_DEBOUNCE_SECONDS" 2>/dev/null || true; echo up ;;
     *KEY_VOLUMEDOWN*) sleep "$MC_DEBOUNCE_SECONDS" 2>/dev/null || true; echo down ;;
