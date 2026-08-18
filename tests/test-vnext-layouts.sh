@@ -15,6 +15,12 @@ for code in tokay caiman komodo comet tegu stallion; do
   [[ "$(thermal_outdoor_max_delta "$code" 17 TEST)" = 1 ]] || { echo "FAIL outdoor_cap_$code"; exit 3; }
 done
 
+# JSON numeric output must be invariant to the caller's locale. The policy
+# entrypoint owns this contract so every downstream AWK/sprintf invocation
+# sees the POSIX decimal point on Android, GitHub runners and DietPi hosts.
+grep -Fqx 'LC_ALL=C' "$repo_root/tools/core/patch-thermal.sh" || { echo 'FAIL thermal_locale_pin_missing'; exit 4; }
+grep -Fqx 'export LC_ALL' "$repo_root/tools/core/patch-thermal.sh" || { echo 'FAIL thermal_locale_export_missing'; exit 4; }
+
 make_module() {
   local dst="$1"
   mkdir -p "$dst/tools/core" "$dst/tools/bootguard" "$dst/tools/debug" "$dst/guard" "$dst/system/vendor/etc"
