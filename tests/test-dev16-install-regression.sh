@@ -28,10 +28,14 @@ pass installer_volume_key_timeout_is_bounded
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/mod/tools/zram" "$tmp/mod/system/vendor/etc" "$tmp/config" "$tmp/bin"
-cp "$layout" "$tmp/mod/tools/zram/materialize-zram-choice.sh"
-printf '%s\n' template > "$tmp/mod/tools/zram/fstab.zram.100p"
-printf '%s\n' template > "$tmp/mod/system/vendor/etc/fstab.zram.100p"
+id="pixel-10-pro-xl-thermal-fix"
+adb_root="$tmp/adb"
+stage="$adb_root/modules_update/$id"
+config="$tmp/config/config.env"
+mkdir -p "$stage/tools/zram" "$stage/system/vendor/etc" "$tmp/config" "$tmp/bin"
+cp "$layout" "$stage/tools/zram/materialize-zram-choice.sh"
+printf '%s\n' template > "$stage/tools/zram/fstab.zram.100p"
+printf '%s\n' template > "$stage/system/vendor/etc/fstab.zram.100p"
 
 cat > "$tmp/bin/mv" <<'EOF'
 #!/usr/bin/env bash
@@ -47,25 +51,29 @@ exec /bin/mv "$@"
 EOF
 chmod +x "$tmp/bin/mv"
 
-MV_TRACE="$tmp/mv.trace" PATH="$tmp/bin:$PATH" MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config/config.env" \
-  sh "$layout" enable > "$tmp/identical.log"
+run_install_layout() {
+  MV_TRACE="$tmp/mv.trace" PATH="$tmp/bin:$PATH" \
+    THERMAL_ADB_ROOT="$adb_root" MODDIR="$stage" ZRAM_CONFIG_FILE="$config" \
+    ZRAM_MATERIALIZE_NOW=1 ZRAM_MATERIALIZE_CALLER=install-zram \
+    sh "$layout" enable
+}
+
+run_install_layout > "$tmp/identical.log"
 grep -Fq 'action=kept_existing' "$tmp/identical.log"
 [[ ! -e "$tmp/mv.trace" ]] || fail identical_layout_attempted_replace
 pass preseeded_identical_layout_is_noop
 
-printf '%s\n' stale > "$tmp/mod/system/vendor/etc/fstab.zram.100p"
-MV_TRACE="$tmp/mv.trace" PATH="$tmp/bin:$PATH" MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config/config.env" \
-  sh "$layout" enable > "$tmp/replace.log"
+printf '%s\n' stale > "$stage/system/vendor/etc/fstab.zram.100p"
+run_install_layout > "$tmp/replace.log"
 grep -Fq 'action=materialized' "$tmp/replace.log"
-cmp -s "$tmp/mod/tools/zram/fstab.zram.100p" "$tmp/mod/system/vendor/etc/fstab.zram.100p"
+cmp -s "$stage/tools/zram/fstab.zram.100p" "$stage/system/vendor/etc/fstab.zram.100p"
 grep -Fq 'existed=no' "$tmp/mv.trace"
 pass differing_layout_removed_before_atomic_move
 
-rm -f "$tmp/mv.trace" "$tmp/mod/system/vendor/etc/fstab.zram.100p"
-MV_TRACE="$tmp/mv.trace" PATH="$tmp/bin:$PATH" MODDIR="$tmp/mod" ZRAM_CONFIG_FILE="$tmp/config/config.env" \
-  sh "$layout" enable > "$tmp/missing.log"
+rm -f "$tmp/mv.trace" "$stage/system/vendor/etc/fstab.zram.100p"
+run_install_layout > "$tmp/missing.log"
 grep -Fq 'action=materialized' "$tmp/missing.log"
-cmp -s "$tmp/mod/tools/zram/fstab.zram.100p" "$tmp/mod/system/vendor/etc/fstab.zram.100p"
+cmp -s "$stage/tools/zram/fstab.zram.100p" "$stage/system/vendor/etc/fstab.zram.100p"
 pass missing_layout_materializes
 
 grep -Fq 'install-zram-layout.log' "$install_zram"
