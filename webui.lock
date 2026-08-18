@@ -1,5 +1,5 @@
 template_repo=Lycidias93/android-root-module-webui-template
-template_commit=bc00322bba34ea27cd40cbee9a76190ce39d16e5
-core_version=0.3.1
+template_commit=cb991dc8d7d982defbe5e34c5c0e0908efa9b236
+core_version=0.6.0
 integration=external_pinned_build_input
 supercharger_reference=Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26
