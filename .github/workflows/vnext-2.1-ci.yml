@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: bc00322bba34ea27cd40cbee9a76190ce39d16e5
+          ref: cb991dc8d7d982defbe5e34c5c0e0908efa9b236
           path: .webui-core
           fetch-depth: 1
 
@@ -78,6 +78,7 @@ jobs:
           sh -n tools/zram/disable-zram-100p.sh
           bash -n dev_tools/build-release-module.sh
           bash -n dev_tools/verify-release-module.sh
+          python3 -m py_compile dev_tools/validate-package.py
 
       - name: vNext device expansion and runtime regressions
         run: |
@@ -103,7 +104,7 @@ jobs:
             grep -Fq "\"$device\"" supported_versions.json
           done
           grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.4-dev.1'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.4-dev.2'
           printf '%s\n' 'RESULT: VNEXT_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
 
       - name: Build WebUI device-test candidate
@@ -120,8 +121,14 @@ jobs:
           python3 dev_tools/validate-package.py "$zip_path"
           sha256sum "$zip_path" | tee dist/device-test.sha256.txt
           unzip -Z1 "$zip_path" | sort > dist/package-entries.txt
-          grep -Fxq 'bin/webui-server-arm64' dist/package-entries.txt
-          grep -Fxq 'webroot/race-guard.js' dist/package-entries.txt
+          for asset in \
+            bin/webui-server-arm64 \
+            webroot/app.js webroot/app.css \
+            webroot/race-guard.js webroot/race-guard.css \
+            webroot/observability.js webroot/observability.css \
+            webroot/v03.js webroot/v04.js; do
+            grep -Fxq "$asset" dist/package-entries.txt
+          done
           printf '%s\n' 'RESULT: VNEXT_WEBUI_DEVICE_TEST_PACKAGE_PASS'
 
       - name: Upload WebUI device-test candidate
@@ -129,7 +136,7 @@ jobs:
         with:
           name: pixel-thermal-vnext-webui-${{ github.sha }}
           path: |
-            dist/pixel-thermal-memory-control-2.1.0-alpha.4-dev.1.zip
+            dist/pixel-thermal-memory-control-2.1.0-alpha.4-dev.2.zip
             dist/build-metadata.txt
             dist/device-test.sha256.txt
             dist/package-entries.txt
