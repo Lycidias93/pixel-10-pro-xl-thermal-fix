@@ -2,6 +2,14 @@
 # Policy-gated entrypoint for the layout-aware vNext Thermal core.
 set -eu
 
+# Thermal JSON numbers always use a dot as the decimal separator. AWK sprintf()
+# follows the caller's numeric locale on Linux (for example de_DE.UTF-8 on
+# DietPi), so pin the entire patch/validation subprocess tree to the POSIX
+# locale before any numeric transformation. Android already behaves this way;
+# making it explicit keeps host CI byte-identical to device execution.
+LC_ALL=C
+export LC_ALL
+
 POLLING_MODE="${1:-mod}"
 OUTDOOR_PROFILE="${2:-stock}"
 MODPATH="${3:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
