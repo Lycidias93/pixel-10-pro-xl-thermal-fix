@@ -64,6 +64,7 @@ jobs:
           sh -n tools/core/patch-thermal-validated-vnext.sh
           sh -n tools/bootguard/compat-check.sh
           sh -n tools/bootguard/compat-check-vnext.sh
+          sh -n tools/menu/menu-cycle.sh
           sh -n tools/menu/install-options-menu.sh
           sh -n tools/menu/zram-menu.sh
           sh -n tools/ptune/ptune-guard.sh
@@ -90,6 +91,7 @@ jobs:
           bash tests/test-vnext-alpha3-zram-defer-contract.sh
           bash tests/test-vnext-device-verify-contract.sh
           bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev16-install-regression.sh
           bash tests/test-dev19-lmkd-early-test.sh
           bash tests/test-dynamic-build-admission.sh
           bash tests/test-single-install-menu.sh
