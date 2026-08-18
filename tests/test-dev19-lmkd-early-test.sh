@@ -78,8 +78,8 @@ grep -Fq 'LMKD 1% reload' "$action"
 grep -Fq 'Memory Killer Evidence' "$action"
 grep -Fq 'mc_cycle2 "Memory Killer" "Stock" "EXPERIMENTAL 1%"' "$menu"
 grep -Fq 'LMKD_SWAP_LOW_RELOAD' "$status"
-grep -Fq 'version=2.1.0-alpha.4-dev.1' "$module_prop"
-grep -Fq 'versionCode=1016253' "$module_prop"
+grep -Fq 'version=2.1.0-alpha.4-dev.2' "$module_prop"
+grep -Fq 'versionCode=1016254' "$module_prop"
 [[ ! -e "$root/tools/lmkd/early-swap-low-test.sh" ]]
 [[ ! -e "$root/tools/lmkd/verify-early-swap-low-test.sh" ]]
 
