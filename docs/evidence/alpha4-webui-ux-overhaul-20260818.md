@@ -1,6 +1,6 @@
 # Alpha4 WebUI UX overhaul — 2026-08-18
 
-State: REPO_IMPLEMENTED / CI_QUOTA_EXHAUSTED / DEVICE_TEST_PENDING
+State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_RUNNER_READY / DEVICE_TEST_PENDING
 
 ## Primary user evidence
 
@@ -68,12 +68,18 @@ Package validators, CI asset assertions, WebUI integration regression checks, mo
 
 The public Alpha3 prerelease/update feed was not changed.
 
+## GitHub Actions quota and local CI fallback
+
+The account-level GitHub Actions included allowance is exhausted for the current billing cycle: `2,000 min used / 2,000 min included`, with reset shown for 2026-09-01. This is the relevant reason the normal GitHub-hosted CI gate is currently unavailable through the included-minute path. The earlier connector visibility failure was only a secondary observation and is not the CI root cause.
+
+A quota-independent runner is now repository-owned at `dev_tools/run-vnext-local-ci.sh`. It is deliberately bound to the current `vnext-2.1-ci.yml` Git blob (`40274fe5f8c6faa76fbb2ca8311813d62b5e1223`), WebUI core commit `cb991dc8d7d982defbe5e34c5c0e0908efa9b236`, core version `0.6.0`, branch `vnext-2.1.0-alpha.4`, and module version `2.1.0-alpha.4-dev.2`. Workflow drift therefore fails closed instead of silently diverging from GitHub CI.
+
+The local runner executes the same functional gates represented by the vNext workflow: pinned WebUI-core verification and race regressions, shell/Python syntax checks, the vNext regression suite, Pixel family matrix verification, deterministic device-test package build, package hygiene, required WebUI asset checks, SHA-256 generation, and the final local-CI PASS marker. The intended first execution host is pi4 in a fresh `/var/tmp` checkout so no existing Codex/worktree is modified.
+
 ## Verification state
 
-Repository head at the end of implementation: `b601c41127e772e9c80c8989cc44219e389bb723`.
+Current repository head after adding the local runner: `ee3e504b0000d4a151047fe6111fd6a09b035414` before this documentation-only follow-up commit.
 
-The account-level GitHub Actions included allowance is exhausted for the current billing cycle: `2,000 min used / 2,000 min included`, with reset shown for 2026-09-01. This is the relevant reason the expected branch CI gate is not currently available through the normal included-minute path. The earlier connector visibility failure was a secondary observation only and must not be treated as the CI root cause. Whether billable overage is permitted depends on the configured Actions budget; the supplied account screenshot does not itself prove that budget setting.
+Next authoritative gate while GitHub-hosted minutes remain exhausted: run the repository-owned local CI on pi4, copy the generated dev.2 ZIP back to the Pixel, verify transfer SHA-256, then install it and reverify the focused mobile Inventory/Actions behavior on Mustang. Once GitHub-hosted execution is available again, the normal branch workflow can provide an additional parity check; it is no longer required to block work during the quota window.
 
-Per the project Audit Loop Breaker, no further CI polling branch is opened while the account quota state is known. Once Actions execution is available again, branch CI remains the authoritative repository gate; after green CI the generated dev.2 artifact must be installed and the focused mobile Inventory/Actions behavior reverified on Mustang.
-
-No Pixel runtime mutation was performed by this UX-overhaul task.
+No Pixel runtime mutation was performed by this UX-overhaul/local-CI preparation task.
