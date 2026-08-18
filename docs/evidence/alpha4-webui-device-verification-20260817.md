@@ -1,6 +1,6 @@
-# Alpha4 WebUI device verification — 2026-08-17
+# Alpha4 WebUI device verification — 2026-08-17/18
 
-Status: device verification in progress; corrected candidate reinstall passed, final post-reboot WebUI/runtime gate pending.
+Status: COMPLETE — corrected Alpha4 dev.1 candidate is device-verified on Mustang. Final post-reboot WebUI/runtime gate passed on 2026-08-18 with complete evidence, zero failures and zero warnings.
 
 ## Device
 
@@ -87,6 +87,32 @@ The corrected installer has fail-closed 0755 readback checks for both `bin/webui
 
 The support collector intentionally does not package the WebUI binaries themselves, so execute-bit state is bound to the installer fail-closed evidence rather than inferred from the support archive.
 
-## Remaining gate
+## Final post-reboot acceptance — PASS
 
-Reboot into the corrected candidate. Final acceptance requires the same Thermal/ZRAM/LMKD/Bootguard checks plus WebUI self-test/API PASS after boot with the installer-provided executable permissions and cache-first status path. No alpha4 prerelease promotion is allowed before that final device gate passes.
+Final verification ran on 2026-08-18 at approximately 14:42 local time after reboot into the corrected candidate.
+
+Final device evidence:
+
+- `modules_update` was consumed;
+- exact runtime identity passed: Mustang / Android 17 / build `CP2A.260805.005` / incremental `15828068`;
+- active module version `2.1.0-alpha.4-dev.1`, versionCode `1016253`;
+- no `disable`, `skip_mount`, or `remove` flags;
+- WebUI runtime content and execute permissions matched the corrected package;
+- WebUI server self-test passed in 4 seconds;
+- `module-control status` and capabilities passed with loopback-only, typed-action, dynamic-stock-validation, ZRAM-first, LMKD-requires-ZRAM, page-cluster-runtime-only, and no-boot-dependency safety flags;
+- Bootguard runtime verification passed;
+- vNext readiness was `runtime_verified`;
+- Polling active at 5 s;
+- Thermal active as Outdoor Extended +3 C;
+- Dynamic source/manifests verified with 22 source 300000 values, 22 replacements, 22 active 5000 values, materialized yes, active vendor match yes, reboot safe yes;
+- ZRAM 100% active on `/dev/block/zram0`, disksize `16331833344`, algorithm `lz77eh`;
+- ZRAM module layout present and post-boot property reapply passed;
+- LMKD experimental 1% evidence matched the current boot, reload succeeded, property writer was `magisk_resetprop`, and service was running;
+- support snapshot creation passed with SHA-256 `a9c9bd7214fa0591bf27f6524b690d3e0e6bf2f59f1dbae18b017d1e09df7158`;
+- repository verifier finished `failure_count=0`, `warning_count=0`, `evidence_collection=complete`;
+- final controller marker: `RESULT: PIXEL_THERMAL_ALPHA4_FINAL_VERIFY_PASS workflow_exit_code=0`;
+- no module configuration or network mutation occurred during final verification.
+
+## Final verdict
+
+Mustang Alpha4 dev.1 device verification is complete. The corrected candidate is accepted for this device/build combination. No additional Pixel runtime verification is required for this candidate before prerelease packaging/promotion work proceeds.
