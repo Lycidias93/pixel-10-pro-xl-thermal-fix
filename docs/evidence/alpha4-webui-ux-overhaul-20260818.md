@@ -1,6 +1,6 @@
 # Alpha4 WebUI UX overhaul — 2026-08-18
 
-State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_RUNNER_READY / DEVICE_TEST_PENDING
+State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / DEVICE_TEST_READY
 
 ## Primary user evidence
 
@@ -72,14 +72,56 @@ The public Alpha3 prerelease/update feed was not changed.
 
 The account-level GitHub Actions included allowance is exhausted for the current billing cycle: `2,000 min used / 2,000 min included`, with reset shown for 2026-09-01. This is the relevant reason the normal GitHub-hosted CI gate is currently unavailable through the included-minute path. The earlier connector visibility failure was only a secondary observation and is not the CI root cause.
 
-A quota-independent runner is now repository-owned at `dev_tools/run-vnext-local-ci.sh`. It is deliberately bound to the current `vnext-2.1-ci.yml` Git blob (`40274fe5f8c6faa76fbb2ca8311813d62b5e1223`), WebUI core commit `cb991dc8d7d982defbe5e34c5c0e0908efa9b236`, core version `0.6.0`, branch `vnext-2.1.0-alpha.4`, and module version `2.1.0-alpha.4-dev.2`. Workflow drift therefore fails closed instead of silently diverging from GitHub CI.
+A quota-independent runner is repository-owned at `dev_tools/run-vnext-local-ci.sh`. It is deliberately bound to the current `vnext-2.1-ci.yml` Git blob (`40274fe5f8c6faa76fbb2ca8311813d62b5e1223`), WebUI core commit `cb991dc8d7d982defbe5e34c5c0e0908efa9b236`, core version `0.6.0`, branch `vnext-2.1.0-alpha.4`, and module version `2.1.0-alpha.4-dev.2`. Workflow drift therefore fails closed instead of silently diverging from GitHub CI.
 
-The local runner executes the same functional gates represented by the vNext workflow: pinned WebUI-core verification and race regressions, shell/Python syntax checks, the vNext regression suite, Pixel family matrix verification, deterministic device-test package build, package hygiene, required WebUI asset checks, SHA-256 generation, and the final local-CI PASS marker. The intended first execution host is pi4 in a fresh `/var/tmp` checkout so no existing Codex/worktree is modified.
+The local runner executes the same functional gates represented by the vNext workflow: pinned WebUI-core verification and race regressions, shell/Python syntax checks, the vNext regression suite, Pixel family matrix verification, deterministic device-test package build, package hygiene, required WebUI asset checks, SHA-256 generation, and the final local-CI PASS marker.
+
+## Local-CI self-heal findings
+
+The first local-CI bring-up exposed orchestration and portability defects that were repaired without weakening any runtime safety gate:
+
+1. The runner initially classified its declared `.webui-core/` checkout as a dirty tree; the dirty-tree contract now excludes only that pinned nested build input.
+2. The handoff initially changed the runner's tracked execute bit with `chmod`; the handoff now invokes the committed `100644` runner through `/bin/bash` without modifying the checkout.
+3. DietPi `de_DE.UTF-8` plus `mawk` exposed locale-dependent decimal formatting in Thermal JSON. The materializer and the independent outdoor-delta verifier now bind numeric processing to `LC_ALL=C`, keeping JSON decimal points deterministic while preserving the strict byte-diff safety guard.
+4. One LMKD regression still asserted the old dev.1 identity and was updated to dev.2 / `1016254`.
+
+These were host-CI portability/orchestration issues; the underlying Alpha4 dev.1 Thermal core had already been device-verified. The locale fix improves deterministic host/device parity and is now regression-bound.
+
+## Local-CI PASS — 2026-08-18
+
+Authoritative pi4 local-CI run completed successfully with zero GitHub Actions minutes:
+
+- repo head: `dc5f1345a630198ec0c0c9df7ed807bfc25bd57c`
+- workflow blob: `40274fe5f8c6faa76fbb2ca8311813d62b5e1223`
+- WebUI core commit: `cb991dc8d7d982defbe5e34c5c0e0908efa9b236`
+- WebUI core version: `0.6.0`
+- candidate: `pixel-thermal-memory-control-2.1.0-alpha.4-dev.2.zip`
+- candidate SHA-256: `5bfea75d4b7c3be03aba4a34eeb1bbd33b4d402771cfc082ca966098f3f653aa`
+- candidate bytes: `2,974,503`
+- package entries: `82`
+- Android copy path: `/storage/emulated/0/Download/pixel-thermal-memory-control-2.1.0-alpha.4-dev.2-pi4-local-ci-dc5f1345a630198ec0c0c9df7ed807bfc25bd57c.zip`
+- `github_actions_minutes_used=0`
+
+Passed gates include:
+
+- pinned WebUI core Go/contract/static/integration verification;
+- all four race-regression tests;
+- shell/Python syntax checks;
+- Stallion, Mustang and repository-stock Thermal layout/delta regressions;
+- OTA transition, ZRAM defer, LMKD reload, dynamic-build admission, single-install menu, Emerald Hill, page-cluster and WebUI integration regressions;
+- device-family matrix;
+- deterministic package build and second-pass package verification;
+- package hygiene, entry-count and size budgets;
+- required WebUI assets.
+
+Final markers:
+
+- `RESULT: PIXEL_THERMAL_VNEXT_LOCAL_CI_PASS workflow_exit_code=0`
+- `RESULT: PI4_ALPHA4_DEV2_LOCAL_CI_REMOTE_PASS`
+- `RESULT: PIXEL_THERMAL_ALPHA4_DEV2_PI4_LOCAL_CI_PASS`
 
 ## Verification state
 
-Current repository head after adding the local runner: `ee3e504b0000d4a151047fe6111fd6a09b035414` before this documentation-only follow-up commit.
+Alpha4 dev.2 is repository/build verified and ready for the Mustang device gate. The next authoritative step is to verify the transferred ZIP hash on the Pixel, install the exact candidate, run the focused pre-reboot gate, reboot only after that gate passes, and then perform the final post-reboot runtime/WebUI verification including the Inventory and Actions UX behavior that motivated this task.
 
-Next authoritative gate while GitHub-hosted minutes remain exhausted: run the repository-owned local CI on pi4, copy the generated dev.2 ZIP back to the Pixel, verify transfer SHA-256, then install it and reverify the focused mobile Inventory/Actions behavior on Mustang. Once GitHub-hosted execution is available again, the normal branch workflow can provide an additional parity check; it is no longer required to block work during the quota window.
-
-No Pixel runtime mutation was performed by this UX-overhaul/local-CI preparation task.
+No Pixel runtime mutation was performed by the local-CI task itself.
