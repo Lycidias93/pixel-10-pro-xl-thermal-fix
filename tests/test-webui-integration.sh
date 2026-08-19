@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 grep -Fqx 'core_version=0.6.0' webui.lock
-grep -Fqx 'template_commit=cb991dc8d7d982defbe5e34c5c0e0908efa9b236' webui.lock
+grep -Fqx 'template_commit=7cf49cafb99664dc2772679bf12c4a8e693b46e8' webui.lock
 grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done
 for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do grep -Fq "\"$device\"" supported_versions.json; done
@@ -15,6 +15,17 @@ grep -Fq '"page-cluster-zero"' bin/module-control
 grep -Fq 'confirmation_text":"PAGECLUSTER"' bin/module-control
 grep -Fq 'dynamic_stock_thermal_validation' bin/module-control
 grep -Fq 'ZRAM_MATERIALIZE_NOW=0' tools/control/pixel-control.sh
+
+# The launcher must tolerate the short fork->exec window before the native
+# server becomes identifiable through /proc/$pid/cmdline. Identity remains a
+# hard post-ready check and the ready file must belong to the spawned PID.
+grep -Fq 'pid_alive "$SERVER_PID" || break' tools/webui/launch.sh
+if grep -Fq 'is_our_pid "$SERVER_PID" || break' tools/webui/launch.sh; then
+  echo 'FAIL: WebUI launcher still has pre-ready cmdline race' >&2
+  exit 1
+fi
+grep -Fq 'is_our_pid "$SERVER_PID" || fail server_identity_mismatch' tools/webui/launch.sh
+grep -Fq '[ "$READY_PID" = "$SERVER_PID" ] || fail server_pid_mismatch' tools/webui/launch.sh
 
 # Root-module managers may normalize ZIP modes during staging. The consumer
 # must re-assert the executable bits required by the pinned WebUI template.
