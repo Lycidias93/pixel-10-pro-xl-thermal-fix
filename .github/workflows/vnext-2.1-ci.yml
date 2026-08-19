@@ -106,10 +106,10 @@ jobs:
             grep -Fq "\"$device\"" supported_versions.json
           done
           grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.4-dev.2'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.4'
           printf '%s\n' 'RESULT: VNEXT_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
 
-      - name: Build WebUI device-test candidate
+      - name: Build prerelease candidate
         env:
           WEBUI_CORE_DIR: ${{ github.workspace }}/.webui-core
         run: |
@@ -121,7 +121,7 @@ jobs:
           dev_tools/build-release-module.sh "$zip_path" | tee dist/build-metadata.txt
           dev_tools/verify-release-module.sh "$zip_path"
           python3 dev_tools/validate-package.py "$zip_path"
-          sha256sum "$zip_path" | tee dist/device-test.sha256.txt
+          sha256sum "$zip_path" | tee dist/prerelease.sha256.txt
           unzip -Z1 "$zip_path" | sort > dist/package-entries.txt
           for asset in \
             bin/webui-server-arm64 \
@@ -131,16 +131,16 @@ jobs:
             webroot/v03.js webroot/v04.js; do
             grep -Fxq "$asset" dist/package-entries.txt
           done
-          printf '%s\n' 'RESULT: VNEXT_WEBUI_DEVICE_TEST_PACKAGE_PASS'
+          printf '%s\n' 'RESULT: VNEXT_ALPHA4_PACKAGE_PASS'
 
-      - name: Upload WebUI device-test candidate
+      - name: Upload prerelease candidate
         uses: actions/upload-artifact@v4
         with:
-          name: pixel-thermal-vnext-webui-${{ github.sha }}
+          name: pixel-thermal-vnext-alpha4-${{ github.sha }}
           path: |
-            dist/pixel-thermal-memory-control-2.1.0-alpha.4-dev.2.zip
+            dist/pixel-thermal-memory-control-2.1.0-alpha.4.zip
             dist/build-metadata.txt
-            dist/device-test.sha256.txt
+            dist/prerelease.sha256.txt
             dist/package-entries.txt
           if-no-files-found: error
           retention-days: 14

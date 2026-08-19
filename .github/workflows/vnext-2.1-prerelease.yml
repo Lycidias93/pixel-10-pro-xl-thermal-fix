@@ -1,81 +1,153 @@
-name: Finalize vNext 2.1.0-alpha.3 Prerelease
+name: Publish vNext 2.1.0-alpha.4 Prerelease
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - vnext-2.1.0-alpha.3
+      - vnext-2.1.0-alpha.4
     paths:
       - .github/workflows/vnext-2.1-prerelease.yml
+      - .github/workflows/vnext-2.1-ci.yml
+      - module.prop
+      - update-prerelease.json
+      - release-notes/2.1.0-alpha.4.md
 
 permissions:
   contents: write
 
 jobs:
-  finalize:
+  publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     env:
-      RELEASE_TAG: 'v2.1.0-alpha.3'
-      RELEASE_TARGET: '86131a21829c1717871420d82817ac25efa8977a'
-      RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.3.zip'
-      RELEASE_SHA256: '31a3679ba90fc1ea6b4d2267e5ef9b2dfed9c725399a7744bc7b56df04ac8583'
-      RELEASE_BYTES: '346491'
+      RELEASE_TAG: 'v2.1.0-alpha.4'
+      RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.4.zip'
     steps:
-      - name: Checkout current single vNext line
+      - name: Checkout release source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Verify public prerelease identity
+      - name: Checkout pinned WebUI core
+        uses: actions/checkout@v4
+        with:
+          repository: Lycidias93/android-root-module-webui-template
+          ref: 7cf49cafb99664dc2772679bf12c4a8e693b46e8
+          path: .webui-core
+          fetch-depth: 1
+
+      - name: Setup Go for standalone WebUI server
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: .webui-core/go.mod
+          cache: false
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y python3 zip unzip
+
+      - name: Verify public source identity
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.4'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.4'
+          test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016254'
+          grep -Fq '"version": "2.1.0-alpha.4"' update-prerelease.json
+          grep -Fq '"versionCode": 1016254' update-prerelease.json
+          grep -Fq '/v2.1.0-alpha.4/pixel-thermal-memory-control-2.1.0-alpha.4.zip' update-prerelease.json
+          grep -Fq '## What changed since 2.1.0-alpha.3' release-notes/2.1.0-alpha.4.md
+          grep -Fq '## Compatibility and safety' release-notes/2.1.0-alpha.4.md
+          ! grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries' release-notes/2.1.0-alpha.4.md
+
+      - name: Verify pinned WebUI core
+        run: |
+          set -euo pipefail
+          test "$(git -C .webui-core rev-parse HEAD)" = "$(sed -n 's/^template_commit=//p' webui.lock)"
+          test "$(tr -d '\r\n' < .webui-core/CORE_VERSION)" = "$(sed -n 's/^core_version=//p' webui.lock)"
+          (cd .webui-core && ./scripts/verify.sh)
+          node --test .webui-core/scripts/webui-race-regression.test.mjs
+
+      - name: Release regression gate
+        run: |
+          set -euo pipefail
+          sh -n customize.sh
+          sh -n action.sh
+          sh -n post-fs-data.sh
+          sh -n service.sh
+          sh -n bin/module-control
+          sh -n tools/webui/launch.sh
+          sh -n tools/control/pixel-control.sh
+          sh -n tools/zram/page-cluster-control.sh
+          bash tests/test-vnext-layouts.sh
+          bash tests/test-outdoor-delta-validation-runtime.sh
+          bash tests/test-vnext-ota-transition.sh
+          bash tests/test-vnext-alpha3-hardening.sh
+          bash tests/test-vnext-alpha3-zram-defer-contract.sh
+          bash tests/test-vnext-device-verify-contract.sh
+          bash tests/test-dev15-menu-matrix.sh
+          bash tests/test-dev16-install-regression.sh
+          bash tests/test-dev19-lmkd-early-test.sh
+          bash tests/test-dynamic-build-admission.sh
+          bash tests/test-single-install-menu.sh
+          bash tests/test-zram-eh-dev12.sh
+          bash tests/test-page-cluster-control.sh
+          bash tests/test-webui-integration.sh
+          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do
+            grep -Fq "\"$device\"" supported_versions.json
+          done
+
+      - name: Build and verify public prerelease asset
+        env:
+          WEBUI_CORE_DIR: ${{ github.workspace }}/.webui-core
+        run: |
+          set -euo pipefail
+          chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh dev_tools/validate-package.py
+          mkdir -p dist
+          zip_path="dist/$RELEASE_ASSET"
+          dev_tools/build-release-module.sh "$zip_path"
+          dev_tools/verify-release-module.sh "$zip_path"
+          python3 dev_tools/validate-package.py "$zip_path"
+          sha256sum "$zip_path" > dist/release.sha256.txt
+          unzip -Z1 "$zip_path" | sort > dist/package-entries.txt
+          grep -Fxq 'bin/webui-server-arm64' dist/package-entries.txt
+          grep -Fxq 'bin/module-control' dist/package-entries.txt
+          grep -Fxq 'tools/webui/launch.sh' dist/package-entries.txt
+
+      - name: Publish or reconcile GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.3'
+          release_sha="$GITHUB_SHA"
           remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
-          test "$remote_tag" = "$RELEASE_TARGET"
+          if [ -z "$remote_tag" ]; then
+            git tag "$RELEASE_TAG" "$release_sha"
+            git push origin "$RELEASE_TAG"
+          else
+            test "$remote_tag" = "$release_sha"
+          fi
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = 'false'
+            test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = 'true'
+            gh release upload "$RELEASE_TAG" "dist/$RELEASE_ASSET" --clobber
+            gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.4' --notes-file release-notes/2.1.0-alpha.4.md
+          else
+            gh release create "$RELEASE_TAG" "dist/$RELEASE_ASSET" --target "$release_sha" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.4' --notes-file release-notes/2.1.0-alpha.4.md
+          fi
+
+      - name: Verify public prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
           test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = 'false'
           test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          test "$(gh release view "$RELEASE_TAG" --json targetCommitish --jq '.targetCommitish')" = "$RELEASE_TARGET"
-          digest="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .digest")"
-          size="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .size")"
-          test "$digest" = "sha256:$RELEASE_SHA256"
-          test "$size" = "$RELEASE_BYTES"
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_IDENTITY_PASS'
-
-      - name: Verify prerelease update channel
-        run: |
-          set -euo pipefail
-          grep -Fq '"version": "2.1.0-alpha.3"' update-prerelease.json
-          grep -Fq '"versionCode": 1016252' update-prerelease.json
-          grep -Fq '/v2.1.0-alpha.3/pixel-thermal-memory-control-2.1.0-alpha.3.zip' update-prerelease.json
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PRERELEASE_CHANNEL_PASS'
-
-      - name: Sync public release notes and credits
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          grep -Fq '## Credits' release-notes/2.1.0-alpha.3.md
-          grep -Fq 'Harish / Codecity001' release-notes/2.1.0-alpha.3.md
-          grep -Fq 'Allen Chang' release-notes/2.1.0-alpha.3.md
-          grep -Fq 'JoshuaDoes / pTune' release-notes/2.1.0-alpha.3.md
-          gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.3' --notes-file release-notes/2.1.0-alpha.3.md
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
+          test "$remote_tag" = "$GITHUB_SHA"
+          local_sha="$(sha256sum "dist/$RELEASE_ASSET" | awk '{print $1}')"
+          release_digest="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .digest")"
+          test "$release_digest" = "sha256:$local_sha"
           public_body="$(gh release view "$RELEASE_TAG" --json body --jq '.body')"
-          printf '%s\n' "$public_body" | grep -Fq '## Credits'
-          printf '%s\n' "$public_body" | grep -Fq 'Harish / Codecity001'
-          printf '%s\n' "$public_body" | grep -Fq 'Allen Chang'
-          printf '%s\n' "$public_body" | grep -Fq 'JoshuaDoes / pTune'
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_CREDITS_SYNC_PASS'
-
-      - name: Final public verification
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = 'false'
-          test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = 'true'
-          remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
-          test "$remote_tag" = "$RELEASE_TARGET"
-          printf '%s\n' 'RESULT: VNEXT_ALPHA3_PUBLIC_PRERELEASE_VERIFY_PASS'
+          printf '%s\n' "$public_body" | grep -Fq '## What changed since 2.1.0-alpha.3'
+          ! printf '%s\n' "$public_body" | grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries'
+          printf '%s\n' 'RESULT: VNEXT_ALPHA4_PUBLIC_PRERELEASE_VERIFY_PASS'

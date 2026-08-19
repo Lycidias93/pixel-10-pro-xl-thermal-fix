@@ -1,7 +1,7 @@
 id=pixel-10-pro-xl-thermal-fix
 name=Pixel Thermal & Memory Control
-version=2.1.0-alpha.4-dev.2
+version=2.1.0-alpha.4
 versionCode=1016254
 author=Lycidias93, marx161, Codecity001
-description=vNext alpha.4 dev: stateful standalone loopback WebUI on the single Pixel 9/9a/10/10a line, cached inventories, explicit active controls, shared validated actions, package hygiene, and guarded runtime experiments.
+description=vNext alpha.4 prerelease: standalone loopback WebUI, fast cached status/inventory, clear active controls, stock-derived Thermal profiles, ZRAM 100%, and guarded memory experiments across the single Pixel 9/9a/10/10a line.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update-prerelease.json
