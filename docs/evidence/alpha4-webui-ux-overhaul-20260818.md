@@ -1,6 +1,6 @@
 # Alpha4 WebUI UX overhaul — 2026-08-18
 
-State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_DEVICE_PASS / PUBLIC_ALPHA4_PROMOTION_READY
+State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_DEVICE_PASS / ACTION_WEBUI_OPEN_FAIL / PUBLIC_ALPHA4_PROMOTION_BLOCKED
 
 ## Primary user evidence
 
@@ -168,6 +168,23 @@ Post-reboot evidence:
 - final marker `RESULT: PIXEL_THERMAL_ALPHA4_DEV2_POSTBOOT_FINAL_VERIFY_PASS`;
 - bound cgrun receipt outcome `success`, command exit `0`.
 
+## Post-gate user-facing Action regression — 2026-08-19
+
+A later real Magisk Action invocation at approximately 21:30 local exposed a WebUI-launch failure that the earlier self-test did not exercise.
+
+Observed Action output:
+
+- build evidence remained `exact verified`;
+- Action preparation completed in `1020 ms`;
+- standalone WebUI launch began;
+- launcher returned `ERROR: server_not_ready` and `RESULT: PIXEL_WEBUI_OPEN_FAILED outcome=command_failed command_exit_code=1 workflow_exit_code=1 reason=server_not_ready`;
+- fallback to the legacy Action menu succeeded;
+- fallback Feature Status remained fully green: Polling 5s, Outdoor Extended +3 C, ZRAM 100%, Memory Killer 1% active, dynamic manifests verified, 22/22 polling replacements, materialized/vendor/active validation all yes, reboot safe yes.
+
+This is newer evidence than the 21:18 Support Snapshot and invalidates the earlier promotion-ready conclusion. The Thermal/ZRAM/LMKD runtime PASS remains valid; the failure is isolated to the user-facing standalone WebUI startup path.
+
+Source review identifies a concrete startup-race candidate in `tools/webui/launch.sh`: immediately after spawning the server in the background, the readiness loop requires `is_our_pid "$SERVER_PID"` before granting any exec-transition grace. A child observed between shell fork and final server exec can therefore be misclassified as dead before it has a chance to create `server.ready.json`. This source defect is consistent with the empty pre-failure server-log tail and the immediate `server_not_ready` fallback, but the exact failed-process state must be bound with the private runtime `server.log`/PID/ready evidence before treating that mechanism as proven root cause.
+
 ## Verification state
 
-Alpha4 dev.2 is repository/build verified and fully device-verified after reboot on the exact rebuilt Mustang candidate. The WebUI/runtime gate that blocked Alpha4 promotion is green. Public Alpha4 publication/update-channel promotion is now technically ready as a separate release action; it was not performed by this evidence update.
+Alpha4 dev.2 remains repository/build verified and its post-reboot Thermal/ZRAM/LMKD/backend self-test gate is green, but the real user-facing Action → standalone-browser path is **not** accepted. Public Alpha4 publication/update-channel promotion is blocked until the launch failure is diagnosed, fixed in the shared WebUI template plus Pixel consumer as required by the template-sync policy, rebuilt, and reverified on-device through the real Action path.
