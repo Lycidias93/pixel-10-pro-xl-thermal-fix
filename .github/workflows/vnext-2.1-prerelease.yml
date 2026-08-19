@@ -11,6 +11,16 @@ on:
       - module.prop
       - update-prerelease.json
       - release-notes/2.1.0-alpha.4.md
+      - action.sh
+      - customize.sh
+      - post-fs-data.sh
+      - service.sh
+      - supported_versions.json
+      - webui.lock
+      - bin/**
+      - tools/**
+      - tests/**
+      - dev_tools/**
 
 permissions:
   contents: write
@@ -77,6 +87,7 @@ jobs:
           sh -n tools/webui/launch.sh
           sh -n tools/control/pixel-control.sh
           sh -n tools/zram/page-cluster-control.sh
+          sh -n tools/debug/vnext-device-verify.sh
           bash tests/test-vnext-layouts.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
           bash tests/test-vnext-ota-transition.sh
