@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 grep -Fqx 'core_version=0.6.0' webui.lock
-grep -Fqx 'template_commit=ad320375775a90bf23948908ed138fdaa480a8fe' webui.lock
+grep -Fqx 'template_commit=7cf49cafb99664dc2772679bf12c4a8e693b46e8' webui.lock
 grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done
 for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do grep -Fq "\"$device\"" supported_versions.json; done
