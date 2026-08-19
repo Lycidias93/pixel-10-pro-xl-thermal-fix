@@ -24,6 +24,12 @@ TOKEN_FILE="$RUNTIME_DIR/bootstrap.token"
 LOG_FILE="$RUNTIME_DIR/server.log"
 SERVER_PID=""
 
+pid_alive() {
+  pid=$1
+  case "$pid" in ""|*[!0-9]*) return 1 ;; esac
+  kill -0 "$pid" 2>/dev/null
+}
+
 is_our_pid() {
   pid=$1
   case "$pid" in ""|*[!0-9]*) return 1 ;; esac
@@ -94,10 +100,16 @@ chmod 0600 "$PID_FILE"
 count=0
 while [ "$count" -lt 75 ]; do
   [ -s "$READY_FILE" ] && break
-  is_our_pid "$SERVER_PID" || break
+  pid_alive "$SERVER_PID" || break
   count=$((count + 1)); sleep 0.2
 done
 [ -s "$READY_FILE" ] || { tail -n 20 "$LOG_FILE" 2>/dev/null || true; fail server_not_ready; }
+
+is_our_pid "$SERVER_PID" || fail server_identity_mismatch
+READY_PID=$(sed -n 's/.*"pid":[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$READY_FILE" | head -n 1)
+case "$READY_PID" in ""|*[!0-9]*) fail invalid_server_pid ;; esac
+[ "$READY_PID" = "$SERVER_PID" ] || fail server_pid_mismatch
+
 PORT=$(sed -n 's/.*"port":[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$READY_FILE" | head -n 1)
 case "$PORT" in ""|*[!0-9]*) fail invalid_server_port ;; esac
 [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || fail invalid_server_port
