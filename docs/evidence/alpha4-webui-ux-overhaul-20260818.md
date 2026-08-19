@@ -1,6 +1,6 @@
 # Alpha4 WebUI UX overhaul — 2026-08-18
 
-State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_DEVICE_PASS / ACTION_WEBUI_OPEN_FAIL / PUBLIC_ALPHA4_PROMOTION_BLOCKED
+State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_DEVICE_PASS / ACTION_WEBUI_OPEN_PASS / PUBLIC_ALPHA4_PROMOTION_TECHNICALLY_READY
 
 ## Primary user evidence
 
@@ -181,10 +181,32 @@ Observed Action output:
 - fallback to the legacy Action menu succeeded;
 - fallback Feature Status remained fully green: Polling 5s, Outdoor Extended +3 C, ZRAM 100%, Memory Killer 1% active, dynamic manifests verified, 22/22 polling replacements, materialized/vendor/active validation all yes, reboot safe yes.
 
-This is newer evidence than the 21:18 Support Snapshot and invalidates the earlier promotion-ready conclusion. The Thermal/ZRAM/LMKD runtime PASS remains valid; the failure is isolated to the user-facing standalone WebUI startup path.
+This was newer evidence than the 21:18 Support Snapshot and invalidated the earlier promotion-ready conclusion. Thermal/ZRAM/LMKD runtime PASS remained valid; the failure was isolated to the user-facing standalone WebUI startup path.
 
-Source review identifies a concrete startup-race candidate in `tools/webui/launch.sh`: immediately after spawning the server in the background, the readiness loop requires `is_our_pid "$SERVER_PID"` before granting any exec-transition grace. A child observed between shell fork and final server exec can therefore be misclassified as dead before it has a chance to create `server.ready.json`. This source defect is consistent with the empty pre-failure server-log tail and the immediate `server_not_ready` fallback, but the exact failed-process state must be bound with the private runtime `server.log`/PID/ready evidence before treating that mechanism as proven root cause.
+Source review and a 500-iteration local stress reproduction then proved the startup race in `tools/webui/launch.sh`: the old pre-ready `/proc/<pid>/cmdline` identity check could observe the child before final exec and break readiness prematurely. The shared template and Pixel consumer were fixed so the pre-ready phase checks liveness only; executable identity plus ready-file PID equality are enforced after readiness. The shared fix was merged at `7cf49cafb99664dc2772679bf12c4a8e693b46e8`, the Pixel fix at squash merge `df0e7e91f5b31c59f57dc9c13f4d873691d1b216`, and GitHub CI run `32295207554` passed.
+
+## Action regression closure — 2026-08-20
+
+The exact rebuilt candidate SHA-256 `94a84f9031b8231cf8e9ef7483959db728aefca35cb738c45202f29f0621c7b4` was staged and activated. After the real reboot, boot ID changed to `9ef82fde-2fde-4c0e-a40d-7c7b475553fe` and the new launcher/server bytes were active.
+
+A real Magisk Action invocation then passed end-to-end:
+
+- active module `2.1.0-alpha.4-dev.2` / `1016254`;
+- active launcher SHA-256 `cfdcafe76d1fd4f90debdcae8a680c94f6c17a892251ee67ca66accf5de036bb`;
+- active server SHA-256 `9a3e439e0a2211ad9478584326087d014bea6c1ac777173df78d80c26d006b21`;
+- Action return code `0`;
+- Action prep `3040 ms`;
+- standalone WebUI opened in the default browser;
+- ready JSON was valid and server identity matched;
+- health endpoint PASS;
+- status endpoint PASS with Polling `5s`, Outdoor Extended `+3°C`, ZRAM `100%`, LMKD `1% active`, reboot required `no`;
+- `real_action_browser_start=pass`;
+- `server_ready_identity=pass`;
+- `health_endpoint=pass`;
+- `thermal_zram_lmkd_status=pass`;
+- `RESULT: PIXEL_THERMAL_ALPHA4_ACTION_RACE_FIX_POSTBOOT_PASS`;
+- bound cgrun receipt outcome `success`, command exit `0`.
 
 ## Verification state
 
-Alpha4 dev.2 remains repository/build verified and its post-reboot Thermal/ZRAM/LMKD/backend self-test gate is green, but the real user-facing Action → standalone-browser path is **not** accepted. Public Alpha4 publication/update-channel promotion is blocked until the launch failure is diagnosed, fixed in the shared WebUI template plus Pixel consumer as required by the template-sync policy, rebuilt, and reverified on-device through the real Action path.
+Alpha4 dev.2 is repository/build verified, Thermal/ZRAM/LMKD runtime verified, and the real user-facing Action → standalone-browser path is now device accepted after the startup-race fix. `PUBLIC_ALPHA4_PROMOTION_TECHNICALLY_READY=yes` is evidence-backed. No public Alpha4 release or update-channel mutation was performed by this verification/evidence closure.
