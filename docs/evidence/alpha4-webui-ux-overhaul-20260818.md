@@ -1,6 +1,6 @@
 # Alpha4 WebUI UX overhaul — 2026-08-18
 
-State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_DEVICE_PASS / ACTION_WEBUI_OPEN_PASS / PUBLIC_ALPHA4_PROMOTION_TECHNICALLY_READY
+State: REPO_IMPLEMENTED / GITHUB_CI_PASS / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_DEVICE_PASS / ACTION_WEBUI_OPEN_PASS / PUBLIC_ALPHA4_PROMOTION_TECHNICALLY_READY
 
 ## Primary user evidence
 
@@ -68,13 +68,15 @@ Package validators, CI asset assertions, WebUI integration regression checks, mo
 
 The public Alpha3 prerelease/update feed was not changed.
 
-## GitHub Actions quota and local CI fallback
+## Historical GitHub Actions quota and local CI fallback
 
-The account-level GitHub Actions included allowance is exhausted for the current billing cycle: `2,000 min used / 2,000 min included`, with reset shown for 2026-09-01. This is the relevant reason the normal GitHub-hosted CI gate is currently unavailable through the included-minute path. The earlier connector visibility failure was only a secondary observation and is not the CI root cause.
+At the time of the local-CI fallback, the account-level GitHub Actions included allowance was exhausted for that billing-cycle view: `2,000 min used / 2,000 min included`, with reset shown for 2026-09-01. That observation was a point-in-time availability state, not a permanent capability classification.
 
 A quota-independent runner is repository-owned at `dev_tools/run-vnext-local-ci.sh`. It is deliberately bound to the current `vnext-2.1-ci.yml` Git blob, WebUI core commit `cb991dc8d7d982defbe5e34c5c0e0908efa9b236`, core version `0.6.0`, branch `vnext-2.1.0-alpha.4`, and module version `2.1.0-alpha.4-dev.2`. Workflow drift therefore fails closed instead of silently diverging from GitHub CI.
 
 The local runner executes the same functional gates represented by the vNext workflow: pinned WebUI-core verification and race regressions, shell/Python syntax checks, the vNext regression suite, Pixel family matrix verification, deterministic device-test package build, package hygiene, required WebUI asset checks, SHA-256 generation, and the final local-CI PASS marker.
+
+Later GitHub-hosted CI became available for the startup-race fix and run `32295207554` passed. Actions availability is therefore treated dynamically as `available | quota-blocked | unknown`, never as permanently exhausted.
 
 ## Local-CI self-heal findings
 
