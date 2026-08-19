@@ -1,6 +1,6 @@
 # Alpha4 WebUI UX overhaul — 2026-08-18
 
-State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_PENDING
+State: REPO_IMPLEMENTED / GITHUB_CI_QUOTA_EXHAUSTED / PI4_LOCAL_CI_PASS / PRE_REBOOT_DEVICE_PASS / POST_REBOOT_DEVICE_PASS / PUBLIC_ALPHA4_PROMOTION_READY
 
 ## Primary user evidence
 
@@ -144,6 +144,30 @@ The first pre-reboot verifier falsely treated the new live `module.prop` as a ru
 - `reboot_performed=no`;
 - `RESULT: PIXEL_THERMAL_ALPHA4_DEV2_INSTALL_PRE_REBOOT_PASS`.
 
+## Pixel post-reboot final gate — 2026-08-19
+
+The controlled reboot activated the staged dev.2 runtime and the final bound verifier completed successfully on Pixel 10 Pro XL `mustang`, Android 17 build `CP2A.260805.005`.
+
+Post-reboot evidence:
+
+- boot completed with boot ID `0656a74c-b444-4014-ae4e-3e3f4e5212c8`;
+- active module identity `2.1.0-alpha.4-dev.2` / `1016254`;
+- staged-update marker was consumed and cleared; `disable`, `remove`, and `skip_mount` flags absent;
+- active WebUI server SHA-256 `42ba503ab979920e4ab0fffba41246ea01ccbc2c681b80fb548f342dd0ecf381`;
+- active `module-control` SHA-256 `8a36260d8f6928bc5742221ae294f3e27814a1a4f756ae7f53d021b03783a351`;
+- complete WebUI asset set present and both executables retained expected permissions;
+- WebUI server self-test PASS;
+- status JSON PASS with expected dev.2 version and action states for Polling, Outdoor Extended, ZRAM, Emerald Hill, LMKD, and page-cluster;
+- typed capabilities, device inventory and cached validation inventory all PASS;
+- repository-owned device verifier `baseline` PASS;
+- active runtime remained Polling `mod`, Thermal `outdoor-extended`, ZRAM 100% adaptive and Memory Killer 1%;
+- active `/dev/block/zram0` size `16331833344` bytes with `lz77eh`;
+- LMKD same-boot reload evidence PASS with `property_after=1`, writer `magisk_resetprop`, service running;
+- Support Snapshot `/sdcard/Download/pixel_thermal_packaged_debug_mustang_CP2A.260805.005_device_verify_baseline_20260819_211846.zip` SHA-256 `457b6b973656403480d013b51ca7d7d6c03f0caa9474e562e13eba5ee1b20e70`;
+- `evidence_collection=complete`, `failure_count=0`, `warning_count=0`, `post_reboot_verdict=pass`;
+- final marker `RESULT: PIXEL_THERMAL_ALPHA4_DEV2_POSTBOOT_FINAL_VERIFY_PASS`;
+- bound cgrun receipt outcome `success`, command exit `0`.
+
 ## Verification state
 
-Alpha4 dev.2 is repository/build verified and has passed the focused Mustang pre-reboot device gate. The next authoritative step is one controlled reboot followed by post-reboot runtime and WebUI verification. Public Alpha4 promotion remains blocked until that post-reboot gate is green.
+Alpha4 dev.2 is repository/build verified and fully device-verified after reboot on the exact rebuilt Mustang candidate. The WebUI/runtime gate that blocked Alpha4 promotion is green. Public Alpha4 publication/update-channel promotion is now technically ready as a separate release action; it was not performed by this evidence update.
