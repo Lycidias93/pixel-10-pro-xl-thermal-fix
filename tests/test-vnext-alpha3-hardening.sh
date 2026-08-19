@@ -38,12 +38,13 @@ grep -Fq 'readiness_state=runtime_verified' "$readiness"
 grep -Fq 'support-readiness.env' "$service"
 grep -Fq 'VNEXT_READINESS state=' "$service"
 
-grep -Fq 'version=2.1.0-alpha.4-dev.2' "$module_prop"
+grep -Fq 'version=2.1.0-alpha.4' "$module_prop"
 grep -Fq 'versionCode=1016254' "$module_prop"
-# Development candidates must never move the public prerelease feed before
-# their device-test/release gate is explicitly completed.
-grep -Fq '"version": "2.1.0-alpha.3"' "$update_meta"
-! grep -Fq '2.1.0-alpha.4' "$update_meta"
+# A promoted public prerelease must bind its branch-local release metadata to
+# the same public version before the publisher is allowed to create the tag.
+grep -Fq '"version": "2.1.0-alpha.4"' "$update_meta"
+grep -Fq '"versionCode": 1016254' "$update_meta"
+grep -Fq '/v2.1.0-alpha.4/pixel-thermal-memory-control-2.1.0-alpha.4.zip' "$update_meta"
 
 grep -Fq '"komodo": {' "$supported"
 grep -Fq '"CP2A.260805.005"' "$supported"
@@ -57,7 +58,7 @@ grep -Fq 'runtime_verified' "$matrix"
 
 printf '%s\n' 'PASS experimental_ptune_override_guarded'
 printf '%s\n' 'PASS vnext_readiness_state_wired'
-printf '%s\n' 'PASS alpha4_dev_identity_not_published'
+printf '%s\n' 'PASS alpha4_public_release_identity_bound'
 printf '%s\n' 'PASS komodo_august_runtime_evidence_recorded'
 printf '%s\n' 'PASS readable_status_and_zram_gated_memory_killer'
-printf '%s\n' 'RESULT: VNEXT_ALPHA3_HARDENING_PASS'
+printf '%s\n' 'RESULT: VNEXT_ALPHA4_PUBLIC_HARDENING_PASS'
