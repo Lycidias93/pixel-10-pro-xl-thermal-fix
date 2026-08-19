@@ -1,51 +1,41 @@
-# Pixel 10 Thermal & Memory Control
+# Pixel Thermal & Memory Control
 
-**Dynamic V2 Magisk module for guarded Pixel 10 thermal profiles, stock-derived runtime validation, optional ZRAM tuning, controlled LMKD experiments, Bootguard recovery, and an interactive Action dashboard.**
+**Dynamic V2 root-module tuning for supported Pixel 10 / 10a and Pixel 9 / 9a devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone browser WebUI.**
 
-Dynamic V2 is the active source architecture on `main`.
-
-[Latest stable](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.2) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues) · [Release notes](release-notes/README.md) · [Changelog](CHANGELOG.md) · [Credits](CREDITS.md)
+[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.4) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
 > [!IMPORTANT]
-> **2.0.4 is the current stable release.** It fixes fresh-cache Dynamic Thermal materialization by writing valid tab-delimited source and patch manifests. It includes the 2.0.3 canonical runtime-evidence fix and the 2.0.2 August multiline `HotThreshold` support unchanged. Pixel 9-series and Pixel 10a remain on the separate 2.1 prerelease line.
+> **2.0.4 remains the current stable release. 2.1.0-alpha.4 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha4 is for users who intentionally want the expanded Pixel 9 / 9a / 10a vNext line and the new standalone WebUI.
 
-## Current release
+## Current public releases
 
-| Item | Value |
-|---|---|
-| Version | `2.0.4` |
-| Version code | `1016244` |
-| Release type | Stable Dynamic V2 fresh-cache manifest hotfix |
-| Tag | `v2.0.4` |
-| Asset | `pixel-10-thermal-memory-control-2.0.4.zip` |
-| Asset size | `335896` bytes |
-| SHA-256 | `a3a12742bc7c901ae8cc6a0e6e2dc9fd4d022b20f1bbf20f53674811b999465b` |
-| Regression proof | fresh-cache generation/consumption CI plus `blazer / CP2A.260805.005 / Magisk 30.7` reporter evidence |
+| Channel | Version | Main purpose |
+|---|---|---|
+| Stable | `2.0.4` | Pixel 10-family Dynamic V2 stable line with current Thermal materialization hotfixes |
+| Prerelease | `2.1.0-alpha.4` | Standalone browser WebUI, expanded Pixel 9 / 9a / 10a support line, clearer controls and current Alpha4 reliability fixes |
 
-2.0.4 keeps the complete 2.0.3 Stable feature set and corrects a fresh-cache serialization defect: the source and patch TSV headers now contain real tab delimiters, so the manifest reader cannot mistake the header for a Thermal filename. The failure was isolated from the HARISH / Codecity001 Pixel 10 Pro August Stable package-debug capture and reproduced against the Dynamic V2 materializer.
+Stable and prerelease update channels are independent. Switching channel changes only the module update metadata path; it does not automatically flash a ZIP.
 
-The stable and test update paths remain independent. Selecting a channel changes only the active update metadata path; it does not download or flash a ZIP.
+## Alpha4 highlights
 
-## What the module is designed to do
+Compared with the previous public `2.1.0-alpha.3` prerelease, Alpha4 adds and improves the parts users interact with directly:
 
-The module combines two guarded control areas:
+- **Magisk Action opens a standalone browser WebUI** for normal control and status work.
+- **Active settings are shown directly** instead of requiring users to infer state from the old text dashboard.
+- **Polling, Thermal, ZRAM, Emerald Hill, LMKD and ZRAM page-cluster controls** are exposed through typed guarded actions.
+- **Inventory switching is fast and cache-first**, avoiding repeated deep validation just to change views.
+- **The intermittent `server_not_ready` Action startup failure is fixed.**
+- **The installer volume-key timeout hang is fixed.**
+- **Thermal numeric validation is locale-stable**, including devices using non-English system locales.
+- **Mobile layout, action cards, tabs and blocked/active states are clearer** on narrow screens.
 
-1. **Thermal policy overlays** built from the device's own stock configuration.
-2. **Optional memory controls** for ZRAM, Emerald Hill acceleration, and LMKD behavior.
+See [2.1.0-alpha.4 release notes](release-notes/2.1.0-alpha.4.md) for the public changelog.
 
-The main goals are:
+## Supported devices
 
-- keep monthly firmware compatibility without shipping a separate static profile for every build;
-- change only explicitly admitted values in three stock thermal files;
-- improve thermal-response timing and offer controlled Outdoor threshold profiles;
-- provide optional compressed-memory headroom;
-- make every risky memory option explicit, reversible, and evidence-backed;
-- fail closed on unsupported platforms, invalid overlays, pTune conflicts, or unhealthy boots;
-- avoid a permanent monitoring daemon or repeated background verification on unchanged normal boots.
+### Stable 2.0.4
 
-## Supported platforms
-
-### Devices
+Stable currently targets the Android 17 Pixel 10 family:
 
 | Codename | Device |
 |---|---|
@@ -54,449 +44,147 @@ The main goals are:
 | `frankel` | Pixel 10 |
 | `rango` | Pixel 10 Pro Fold |
 
-### Android
+### Prerelease 2.1.0-alpha.4
 
-- Supported Android major version: **Android 17**
-- Magisk remains a verified reference backend; the July Stable regression passed on Mustang.
-- KernelSU is also device-verified on Mustang with August Stable full post-reboot Bootguard/runtime proof.
-- KernelSU Next, SukiSU and APatch-style environments are detected, but they do not currently have the same device-proof coverage.
-- Minimum installation battery: **15%**
+Alpha4 carries one Android 17 vNext line for:
 
-### Build admission
-
-Exact build IDs are evidence, not the only activation gate.
-
-| Evidence state | Meaning |
-|---|---|
-| `exact_verified` | The device/build tuple already has exact repository evidence. |
-| `dynamic_unverified` | The codename and Android version are supported; the module validates the device's local stock files before creating an overlay. |
-| `unsupported_platform` | Unknown codename or unsupported Android version; Thermal remains disabled while optional ZRAM can remain available. |
-
-A new monthly or Canary build on a supported device does not need a repository update merely to open Action. It must still pass local stock-structure, controlled-diff, manifest, exact-delta, and active-runtime validation.
-
-<details>
-<summary>Currently registered exact build IDs</summary>
-
-- **Mustang:** `CP1A.260505.005`, `CP21.260330.011`, `CP2A.260605.012`, `CP2A.260705.006`, `CP31.260522.006`, `CP31.260618.005`
-- **Blazer:** `CP1A.260505.005`, `CP21.260330.011`, `CP2A.260605.012`, `CP2A.260705.006`, `CP31.260522.006`, `CP31.260618.005`, `ZP11.260618.005`
-- **Frankel:** `CP1A.260505.005`, `CP21.260330.011`, `CP2A.260605.012`, `CP2A.260705.006`, `CP31.260522.006`, `CP31.260618.005`, `ZP11.260618.005`
-- **Rango:** `CP1A.260505.005`, `CP21.260330.011`, `CP2A.260605.012`, `CP2A.260705.006`, `CP31.260522.006`, `CP31.260618.005`
-
-</details>
-
-## Dynamic thermal architecture
-
-The module reads and validates the device's own stock copies of:
-
-- `thermal_info_config.json`
-- `thermal_info_config_charge.json`
-- `thermal_info_config_throttling.json`
-
-It then:
-
-1. captures source hashes and structural evidence;
-2. creates a controlled overlay from those local stock files;
-3. changes only admitted Polling and Outdoor targets;
-4. independently verifies exact deltas and generated manifests;
-5. promotes the validated result into the module overlay;
-6. verifies the active `/vendor/etc` files after reboot;
-7. records a last-good state for Bootguard.
-
-The module does **not** replace the stock thermal HAL, remove emergency/shutdown protections, or globally disable Android thermal management.
-
-### Firmware and platform transitions
-
-When the Android build or platform tuple changes, the early boot path quarantines stale thermal overlays, recaptures current stock files, and rematerializes only after validation. A failed transition sets `skip_mount` or disables Thermal rather than mounting an overlay from the wrong firmware.
-
-## Feature reference
-
-### Polling Mode
-
-| Mode | Operation | Goal and likely effect |
+| Codename | Device | vNext policy |
 |---|---|---|
-| Module values | Changes admitted `PollingDelay: 300000` values to `5000` in the three controlled files. | Evaluates relevant thermal policy more frequently and can react sooner to temperature changes. It may add a small amount of polling work. |
-| Stock values | Preserves the stock polling values. | Maximum stock behavior and lowest module-added polling activity. |
+| `mustang` | Pixel 10 Pro XL | standard vNext |
+| `blazer` | Pixel 10 Pro | standard vNext |
+| `frankel` | Pixel 10 | standard vNext |
+| `rango` | Pixel 10 Pro Fold | standard vNext |
+| `stallion` | Pixel 10a | experimental, conservative Thermal policy |
+| `tokay` | Pixel 9 | experimental, conservative Thermal policy |
+| `caiman` | Pixel 9 Pro | experimental, conservative Thermal policy |
+| `komodo` | Pixel 9 Pro XL | experimental, conservative Thermal policy |
+| `comet` | Pixel 9 Pro Fold | experimental, conservative Thermal policy |
+| `tegu` | Pixel 9a | experimental, conservative Thermal policy |
 
-Only the admitted `PollingDelay` entries are changed. Stock passive-delay behavior while throttling remains untouched.
+Pixel 9-series and Pixel 10a targets remain intentionally conservative: local stock-layout validation is mandatory, pTune Thermal coexistence override is blocked on those experimental targets, and their current admitted Outdoor increase is capped at `+1 °C` where applicable.
 
-### Thermal profiles
+## What the module changes
 
-| Profile | Controlled Outdoor delta | Intended use | Trade-off |
-|---|---:|---|---|
-| Stock | `+0 °C` | Original device thresholds | Stock performance and temperature behavior |
-| Outdoor Safe | `+1 °C` | Conservative extra headroom | Slightly more heat may be allowed before selected throttling |
-| Outdoor Plus | `+2 °C` | Stronger sustained-performance bias | Higher surface temperature and battery use are possible |
-| Outdoor Extended | `+3 °C` | Maximum admitted profile | Highest heat/performance trade-off in the current policy |
+The module combines guarded Thermal and memory controls while retaining fail-closed behavior.
 
-These deltas apply only to validated Outdoor target entries. Higher profiles may delay selected throttling responses, which can improve sustained performance or brightness at the cost of additional heat and power use. They do not intentionally change emergency, shutdown, USB, charging, speaker, or unrelated thermal limits.
+### Thermal
+
+The Dynamic V2 path derives supported overlays from the device's own stock Thermal configuration, validates the generated result, and only then allows it to become active.
+
+User-selectable controls include:
+
+- **Polling Mode:** module values or stock values.
+- **Thermal Profile:** Stock, Outdoor Safe, Outdoor Plus or Outdoor Extended where the device policy allows it.
+- **Firmware transition handling:** stale overlays are rejected and rematerialized from current stock evidence rather than blindly reused.
+
+The module does **not** replace the Pixel Thermal HAL, globally disable Android thermal management, or intentionally alter emergency/shutdown protections.
 
 ### ZRAM 100%
 
-ZRAM is optional but enabled by default in a fresh 2.0.1 install unless the user selects Disabled.
+Optional ZRAM 100% provides approximately total-RAM compressed-memory capacity, uses `lz77eh` when available, sets the intended memory properties, and verifies active swap/non-zero disksize after boot.
 
-When enabled, the module configures:
+### Emerald Hill
 
-- ZRAM target size `100p` / approximately total physical RAM;
-- `lz77eh` compression when exposed by the platform;
-- `vm.swappiness=100`;
-- early property application and one postboot reapply;
-- active-swap and non-zero-disksize verification.
+- **Adaptive** is the normal daily mode.
+- **EXPERIMENTAL max lock** raises the minimum accelerator frequency to the validated maximum OPP and is expected to use more power and create more heat.
 
-The configured size is capacity, not pre-filled memory. The goal is to provide more compressed-memory headroom and reduce avoidable app reloads under pressure. Compression consumes CPU time, and very heavy memory pressure can still reduce responsiveness.
+### LMKD 1%
 
-### Emerald Hill mode
+The experimental LMKD option sets `ro.lmk.swap_free_low_percentage=1`, verifies the property, and uses the supported reload/restart path. It does not disable LMKD and does not prevent Android from killing applications for other memory-pressure reasons.
 
-Emerald Hill controls the devfreq path used by the ZRAM acceleration hardware.
+### ZRAM page-cluster
 
-| Mode | Behavior | Goal and impact |
-|---|---|---|
-| Adaptive | Leaves normal devfreq scaling active. | Recommended daily mode; balances compression performance, heat, and battery use. |
-| **EXPERIMENTAL max lock** | Raises the minimum frequency to the maximum validated hardware OPP and verifies readback. | Can reduce compression latency under pressure, but higher heat and battery use are expected. |
+Alpha4 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation.
 
-The max lock is separate from normal ZRAM and is found under **Action → Advanced → Emerald Hill mode**. It is not a CPU or GPU overclock. Apply and restore events are recorded with boot ID, caller, physical node, original minimum, target, and readback. A failed apply restores adaptive operation.
+## Alpha4 WebUI
 
-### LMKD 1% reload
+Open the module card in Magisk and tap **Action**. Alpha4 starts a local loopback WebUI and opens it in the browser.
 
-LMKD is Android's Low Memory Killer Daemon. The experimental option sets:
+The interface provides:
 
-```text
-ro.lmk.swap_free_low_percentage=1
-```
+- current feature status and active values;
+- fast cached Inventory views;
+- guarded controls for supported runtime/configuration actions;
+- preview/confirmation for actions that require it;
+- bounded logs and support information;
+- clear active, blocked and unavailable states.
 
-2.0.1 uses Magisk system `resetprop` first for this one property, verifies readback, and falls back to `resetprop-rs` only when required. Normal ZRAM properties continue to use `resetprop-rs`.
+The WebUI uses a standalone localhost server with a typed allowlisted control surface. It does not expose an unrestricted shell/JavaScript execution bridge.
 
-After the write, the module:
+If WebUI startup cannot complete safely, the module retains the legacy Action path as a fallback instead of silently bypassing the launcher checks.
 
-1. prefers the targeted AOSP `lmkd.reinit` path;
-2. verifies acknowledgement and service state;
-3. uses a verified LMKD restart only as fallback;
-4. records property writer, property before/after, method, PID, service state, boot ID, and result.
-
-The goal is to make LMKD treat swap as critically low only below 1% free swap, roughly when ZRAM is 99% used. This can reduce kills caused by that specific swap-starvation threshold. It does **not** disable LMKD, and Android can still kill processes because of PSI pressure, thrashing, low memory, or other policies.
-
-Requirements and boundaries:
-
-- disabled by default;
-- requires ZRAM 100%;
-- requires explicit acknowledgement;
-- works at boot and from Action;
-- no separate permanent LMKD helper daemon;
-- restore may require a reboot when the original property cannot be proven safely.
-
-See the [AOSP LMKD documentation](https://source.android.com/docs/core/perf/lmkd) for the broader Android memory-management model.
-
-### pTune conflict guard
-
-pTune can touch overlapping thermal or memory controls. The default guard:
-
-- detects installed or staged pTune modules;
-- blocks the Thermal overlay when an active conflict exists;
-- keeps ZRAM independently available where safe;
-- exposes pTune status in Action;
-- requires an explicit high-risk acknowledgement for coexistence;
-- blocks known-bad pTune states from using the override.
-
-The override is intentionally off by default. Enabling or disabling it requires reinstall/reflash so the mount decision is made during the guarded boot path.
-
-### Bootguard
-
-Bootguard evaluates the previous boot before mounting the current overlay and records a signed last-good state.
-
-It can:
-
-- detect a previous pending or incomplete boot;
-- increment bounded failure counters;
-- set `disable` and `skip_mount` after the configured threshold;
-- preserve current stock behavior when validation fails;
-- verify the active overlay and thermal service before marking success;
-- escalate from the lightweight path back to full verification after any relevant change.
-
-### Full and lightweight boots
-
-A **full** verification runs after:
-
-- first installation;
-- module update;
-- Android firmware/build change;
-- configuration or overlay change;
-- pending platform transition;
-- previous pending boot;
-- missing or invalid last-good evidence;
-- debug or Canary mode.
-
-An unchanged, previously verified normal boot uses the **fast** path:
-
-- load selected settings;
-- apply ZRAM, LMKD and Emerald Hill state;
-- perform lightweight live readbacks;
-- refresh the manager status;
-- exit.
-
-There is no permanent module verification service. **Verbose Debug intentionally forces full verification on every boot.** Switch Debug Logging to Silent after testing to enable the unchanged-boot fast path.
-
-### Automatic manager status
-
-The Magisk description is refreshed after boot and after Action changes using full feature names instead of letter abbreviations:
-
-```text
-Polling 🟢 5s | Thermal 🟢 Outdoor Extended +3°C | ZRAM 🟢 100% | Memory Killer 🟢 1% active
-```
-
-| Status item | Meaning |
-|---|---|
-| **Polling** | Thermal polling mode and effective interval |
-| **Thermal** | Active thermal profile and Outdoor delta |
-| **ZRAM** | Compressed-memory state and configured size |
-| **Memory Killer** | LMKD policy state in user-facing wording |
-
-| Color | Meaning |
-|---|---|
-| 🟢 | Active and verified |
-| 🟡 | Configured or validated but waiting for reboot/runtime confirmation |
-| 🔴 | Failed, unsafe, unsupported, or disabled by a guard |
-| ⚪ | Stock or off |
-
-The ZRAM status shows ZRAM state, not the Emerald Hill submode. Check **Action → Advanced → Emerald Hill mode** for Adaptive versus max lock.
-
-## Installation
+## Installation and updating
 
 ### Requirements
 
-- supported Pixel 10 device;
+- supported device for the selected channel;
 - Android 17;
-- Magisk or a compatible module manager;
-- at least 15% battery;
-- a known way to disable modules from recovery or safe mode;
-- no unreviewed active pTune conflict.
+- Magisk or a compatible root-module manager;
+- at least 15% battery for normal module installation;
+- no unreviewed active pTune conflict;
+- a known module-disable/recovery path before experimenting with Thermal or memory settings.
 
-### Install steps
+### Stable
 
-1. Download `pixel-10-thermal-memory-control-2.0.0.zip` from the [2.0.0 stable release](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.0).
-2. Verify the SHA-256 shown in [Current release](#current-release).
-3. Install the ZIP from Magisk.
-4. Use the volume-key menu:
-   - **Volume Up:** next option
-   - **Volume Down:** select
-   - **30-second timeout:** keep the currently shown option
-   - **Power key:** not used
-5. Choose saved settings or fresh choices.
-6. Review the final install summary.
-7. Reboot.
+Download the latest stable package from [v2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4), install it from the module manager, and reboot.
 
-### Fresh-install defaults
+### Prerelease
 
-| Setting | Default |
-|---|---|
-| Polling | Module values |
-| Thermal | Stock |
-| ZRAM | Enabled |
-| Emerald Hill | Adaptive |
-| LMKD 1% reload | Disabled |
-| pTune override | Off |
-| Debug logging | Verbose |
+Download the Alpha4 package from [v2.1.0-alpha.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.4), install it from the module manager, and reboot before judging the new runtime state.
 
-Verbose Debug is useful for the first test cycle but causes full verification at every boot. For normal use, change it to Silent from **Action → Debug → Debug Logging**.
+Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` now points to Alpha4.
 
-### First boot expectations
+## Status and support
 
-- The first boot after install/update should report `boot_verification_mode=full`.
-- With Debug set to Silent and no settings/build changes, a later unchanged boot should report `boot_verification_mode=fast`.
-- A changed build, changed config, transition, or failed readback automatically returns to full verification.
+After reboot, use the Alpha4 WebUI to check the active feature state. For a support report, create a **Support Snapshot** from the module UI and include the device model, Android/build ID, module version, selected settings and exact reproduction steps.
 
-### Test/support snapshot after reboot
+The support snapshot is intended to collect bounded diagnostic evidence. Review any archive before posting it publicly.
 
-You do **not** need to find support information while flashing. After the reboot:
+## Safety boundaries
 
-1. Open Magisk and the module's **Action** menu.
-2. Open **Debug → Feature Status** for a readable Polling, Thermal, ZRAM and Memory Killer overview.
-3. Open **Debug → Support Snapshot (ZIP)** to create the bounded debug archive in your Download folder.
-4. For testing or support, send the Feature Status screenshot/text together with that ZIP.
+- Unknown or unsupported platforms fail closed for Thermal changes.
+- Experimental Pixel 9 / 9a / 10a targets use the stricter conservative vNext policy.
+- pTune conflict protection remains authoritative.
+- ZRAM, LMKD, Emerald Hill max lock and page-cluster experiments remain independently controlled and reversible where the platform permits it.
+- A failed validation or incompatible firmware transition does not justify blindly mounting an old Thermal overlay.
+- The module does not silently disable emergency/shutdown Thermal protection.
 
-## Magisk Action dashboard
+## Recovery
 
-Open **Action** on the module card. The menu uses the same Volume Up/Volume Down controls.
+Normal rollback:
 
-### Settings
-
-- **Polling Mode:** Module or stock values.
-- **Thermal Profile:** Stock, Outdoor Safe, Outdoor Plus, or Outdoor Extended.
-- **ZRAM 100%:** enable or disable the ZRAM layout and runtime properties.
-
-Thermal and ZRAM layout changes are materialized safely and may require a reboot for the active vendor mount/layout guarantee.
-
-### Debug
-
-- **Feature Status:** refresh and print the readable Polling, Thermal, ZRAM and Memory Killer status plus validation details.
-- **Support Snapshot (ZIP):** create a bounded debug archive for testing or support.
-- **EH Event Log:** show recent Emerald Hill apply/restore evidence.
-- **Memory Killer Evidence:** show the underlying LMKD writer, method, PID, property and service proof.
-- **Debug Logging:** toggle Silent or Verbose.
-
-### Advanced
-
-- **Emerald Hill mode:** Adaptive or experimental max lock.
-- **LMKD 1% reload:** Stock or experimental 1%.
-- **pTune Status:** detected path, enabled state, version and known-bad state.
-- **pTune Override:** explicit coexistence risk control.
-- **Update Channel:** Stable or Test metadata path.
-
-The Action dashboard does not perform a network refresh during normal startup.
-
-## Runtime verification
-
-The easiest check is **Action → Debug → Feature Status**.
-
-A direct compatibility check is also available:
-
-```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/bootguard/compat-check.sh
-```
-
-Healthy Thermal runtime markers include:
-
-```text
-DYNAMIC_MATERIALIZATION_VALID=yes
-MODULE_OVERLAY_READY=yes
-ACTIVE_VENDOR_MATCH=yes
-ACTIVE_POLLING_VALID=yes
-SAFE_TO_REBOOT=yes
-```
-
-For the experimental Memory Killer setting, **Action → Debug → Memory Killer Evidence** should show the underlying LMKD evidence:
-
-```text
-reload_result=success
-property_after=1
-property_writer=magisk_resetprop
-lmkd_service_after=running
-```
-
-`property_writer=resetprop_rs_fallback` is also valid when the system writer is unavailable and the readback succeeds.
-
-## Update channels
-
-Use **Action → Advanced → Update Channel**.
-
-- **Stable:** follows the separately maintained stable metadata.
-- **Test:** follows public prereleases such as 2.0.0.
-- Switching changes `updateJson` only.
-- It does not download, install, or flash anything.
-- Refresh Magisk's update check after switching.
-
-A source commit does not automatically publish a release or move either channel. Tags, assets, and channel changes remain separate publication steps.
-
-## Debugging and issue reports
-
-Create a **Support Snapshot (ZIP)** from **Action → Debug → Support Snapshot (ZIP)** or run:
-
-```sh
-su -c /data/adb/modules/pixel-10-pro-xl-thermal-fix/tools/bootguard/collect-debug.sh
-```
-
-The archive can include:
-
-- device, Android and build identity;
-- selected configuration;
-- install state and validation manifests;
-- active and generated thermal hashes;
-- Bootguard and platform-transition state;
-- ZRAM runtime state;
-- Emerald Hill event evidence;
-- LMKD property/reload evidence;
-- pTune state;
-- bounded current and previous-boot diagnostics.
-
-Review the archive before posting it publicly.
-
-A useful issue report includes:
-
-- device model and codename;
-- Android version, build ID and incremental;
-- module version;
-- fresh or remembered install choices;
-- whether pTune is installed or active;
-- whether Debug is Silent or Verbose;
-- install autosave log;
-- Feature Status screenshot/text;
-- Support Snapshot ZIP or relevant bounded evidence;
-- exact reproduction steps and whether a reboot was involved.
-
-## Recovery and rollback
-
-### Normal rollback
-
-1. Disable or remove the module in Magisk.
+1. Disable or remove the module in the root-module manager.
 2. Reboot.
 
-### Emergency disable
+Emergency Magisk disable:
 
 ```sh
 su -c 'touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/disable'
 su -c reboot
 ```
 
-### Mount-only emergency bypass
+Mount-only diagnostic bypass:
 
 ```sh
 su -c 'touch /data/adb/modules/pixel-10-pro-xl-thermal-fix/skip_mount'
 su -c reboot
 ```
 
-`disable` prevents the module from running. `skip_mount` keeps the module files available for diagnosis while preventing the overlay mount.
+## WebUI foundation and credits
 
-### Uninstall cleanup
+Alpha4 consumes the shared **Android Root Module Standalone WebUI Template** maintained by Lycidias93, pinned to WebUI Core `0.6.0` for the released Alpha4 source.
 
-Removing the module in Magisk and rebooting should remove:
+That shared core documents clean adaptations or design references from:
 
-- `/data/adb/modules/pixel-10-pro-xl-thermal-fix`
-- `/data/adb/pixel-10-pro-xl-thermal-fix`
+- **Coolapk-Code9527 / F2FS-Optimizer** — localhost lifecycle and Action-launch concepts;
+- **KOWX712 / ksu-webui-demo** — compact vanilla-JavaScript WebUI concepts;
+- **barsikus007 / ksu-webui-module-template** — multi-manager packaging/template concepts;
+- **AuroraNasa / AMMF2** — logging/theme/localization/component reference concepts;
+- **Drizzy07x / Drizzy11 / Supercharger Pixel 9 Series** — readiness, duplicate-action and stale-response regression patterns;
+- **AshBorn / AshReXcue / AshLooper** — design reference only for unsaved-change/session diagnostics; no GPL-covered implementation is imported.
 
-The module uninstaller explicitly removes its persistent data and guard state; the module manager removes the active module directory.
-
-## What the module does not do
-
-- It does not overclock the CPU or GPU.
-- It does not replace the Pixel thermal HAL.
-- It does not disable emergency or shutdown thermal protection.
-- It does not remove all throttling.
-- It does not disable LMKD or guarantee that apps will never be killed.
-- It does not continuously verify the device in the background.
-- It does not use a permanent screen-on, polling, LMKD, or Emerald Hill watcher.
-- It does not silently allow an active pTune conflict.
-- It does not apply a Thermal overlay to an unsupported device or Android major version.
-- It does not treat a repository test as proof for every Pixel 10 model and firmware.
-
-## Evidence boundaries
-
-2.0.0 has detailed postboot evidence on Pixel 10 Pro XL (`mustang`) and external Pixel 10 Pro (`blazer`) testing. Platform support for `frankel` and `rango` is implemented, but each new device/build combination still benefits from fresh on-device evidence.
-
-A green CI run proves repository behavior, packaging, fixtures, and static contracts. It does not replace installation, reboot, active-vendor, ZRAM, LMKD, pTune, or hardware evidence.
-
-## Repository and development
-
-- `main` is the canonical Dynamic V2 source.
-- `v2` is retained as a protected rollback/reference branch.
-- Documentation-only maintenance may use one short-lived branch.
-- Non-trivial features are proven on test branches, reconstructed from the latest target branch into approximately one to four logical commits, and fully retested on that exact cleaned head before merge.
-- Runtime, installation, boot, or hardware-dependent changes require fresh device verification after reconstruction.
-- Flashable ZIPs are deterministic and exclude repository-only documentation, tests, fixtures, workflows, and nested archives.
-
-See [Development and integration workflow](docs/DEVELOPMENT_WORKFLOW.md).
-
-## Credits
-
-Created and maintained by **Lycidias93**, based on earlier work by **marx161**.
-
-Current Dynamic V2 development and testing includes major contributions and evidence from:
-
-- **Harish / Codecity001**
-- **Allen Chang**
-- **JoshuaDoes / pTune**
-- **marx161**
-- community testers and existing project contributors
-
-See [CREDITS.md](CREDITS.md) for detailed attribution.
+The Alpha4 module also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](LICENSE). Shared WebUI upstream provenance and license boundaries are documented in [CREDITS.md](CREDITS.md) and in the shared WebUI template's `UPSTREAMS.md` / `NOTICE` files.
