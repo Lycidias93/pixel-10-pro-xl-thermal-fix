@@ -1,6 +1,6 @@
 # Alpha4 Action WebUI startup-race fix — 2026-08-19
 
-State: ROOT_CAUSE_REPRODUCED / SHARED_TEMPLATE_FIX_MERGED / PIXEL_FIX_MERGED / GITHUB_CI_PASS / DEVICE_ACTION_REVERIFY_PENDING / PUBLIC_ALPHA4_PROMOTION_BLOCKED
+State: ROOT_CAUSE_REPRODUCED / SHARED_TEMPLATE_FIX_MERGED / PIXEL_FIX_MERGED / GITHUB_CI_PASS / DEVICE_ACTION_REVERIFY_PASS / PUBLIC_ALPHA4_PROMOTION_TECHNICALLY_READY
 
 ## Device regression
 
@@ -54,8 +54,31 @@ CI artifact ID: `9380982777`
 
 Because the CI synthetic merge and the actual squash merge have the same Git tree, this artifact is source-tree-bound to the merged Alpha4 vNext state despite the different commit topology.
 
-## Remaining gate
+## Device Action reverify closure — 2026-08-20
 
-The earlier Thermal/ZRAM/LMKD post-reboot PASS remains useful evidence, but the rebuilt package contains changed WebUI launcher/server bytes and is not device-accepted by that earlier run. The exact bound candidate must therefore be installed and activated, and the real standalone Action/browser startup path must pass on Mustang before Alpha4 promotion can be restored.
+The exact bound candidate was staged on Mustang and activated by a real reboot. The first postboot verifier invocation before that reboot correctly stopped with `modules_update_not_consumed`; no restage was performed. After the reboot, boot ID changed from `0656a74c-b444-4014-ae4e-3e3f4e5212c8` to `9ef82fde-2fde-4c0e-a40d-7c7b475553fe`, proving a new boot boundary and consumption of the staged Magisk update.
 
-Public Alpha4 publication and update-channel promotion remain blocked until that focused postboot device gate passes.
+Final device evidence:
+
+- device/build: Pixel 10 Pro XL `mustang`, Android 17, `CP2A.260805.005`;
+- battery: `58%`;
+- active module: `2.1.0-alpha.4-dev.2` / `1016254`;
+- active launcher SHA-256: `cfdcafe76d1fd4f90debdcae8a680c94f6c17a892251ee67ca66accf5de036bb`;
+- active WebUI server SHA-256: `9a3e439e0a2211ad9478584326087d014bea6c1ac777173df78d80c26d006b21`;
+- active `module-control` SHA-256: `8a36260d8f6928bc5742221ae294f3e27814a1a4f756ae7f53d021b03783a351`;
+- active `webui.lock` SHA-256: `a2898f63b04164da203c5e9e2ba5cce4da60210b95dbfa0544e81766b023d2d5`;
+- real Magisk Action exit: `0`;
+- Action preparation: `3040 ms`;
+- standalone browser opened successfully on loopback port `43969`;
+- ready-file PID `22320` matched the spawned server identity;
+- `/api/v1/health`: PASS with `{"ok":true,"service":"root-module-webui"}`;
+- status API: PASS with Polling `5s`, Thermal `Outdoor Extended +3°C`, ZRAM `100%`, Memory Killer `1% active`, reboot required `no`;
+- `real_action_browser_start=pass`;
+- `server_ready_identity=pass`;
+- `health_endpoint=pass`;
+- `thermal_zram_lmkd_status=pass`;
+- `RESULT: PIXEL_WEBUI_OPEN_DONE outcome=success command_exit_code=0 workflow_exit_code=0`;
+- `RESULT: PIXEL_THERMAL_ALPHA4_ACTION_RACE_FIX_POSTBOOT_PASS`;
+- bound cgrun receipt outcome `success`, command exit `0`.
+
+The real user-facing Action → standalone-browser path is therefore accepted on the target device. The startup-race regression is closed technically. Public Alpha4 publication/update-channel promotion is technically ready, but no public release or update-feed mutation is performed by this verification/evidence change.
