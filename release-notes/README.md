@@ -9,7 +9,9 @@ Release notes are repository documentation and are never included in the flashab
 - [2.0.1](2.0.1.md) — stable Dynamic V2 hotfix with August Stable KernelSU full post-reboot proof, August Canary verification, and July Stable Magisk regression coverage.
 
 ## V2 alpha line
-- [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — public device-tested prerelease with Magisk resetprop-first LMKD evidence and lightweight unchanged boots.
+- [2.1.0-alpha.4](2.1.0-alpha.4.md) — public prerelease with standalone browser WebUI, clearer active controls, faster Inventory switching, and Action/installer reliability fixes.
+- [2.1.0-alpha.3](2.1.0-alpha.3.md) — previous public vNext prerelease with reboot-safe ZRAM Action enable/disable and the expanded single-device-family line.
+- [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — historical public device-tested prerelease with Magisk resetprop-first LMKD evidence and lightweight unchanged boots.
 
 - [2.0.0-alpha.3-dev.19](2.0.0-alpha.3-dev.19.md) — unreleased guarded LMKD early-test and V2 cleanup source.
 - [2.0.0-alpha.3-dev.18](2.0.0-alpha.3-dev.18.md) — unreleased EH UX/evidence hardening and controlled `v2` to `main` promotion preparation.
