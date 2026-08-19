@@ -1,0 +1,38 @@
+name: Sync Alpha4 Public Release Notes
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/alpha4-release-notes-sync.yml
+      - release-notes/2.1.0-alpha.4.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout main docs
+        uses: actions/checkout@v4
+
+      - name: Sync and verify Alpha4 release body
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag='v2.1.0-alpha.4'
+          notes='release-notes/2.1.0-alpha.4.md'
+          test -s "$notes"
+          test "$(gh release view "$tag" --json isDraft --jq '.isDraft')" = 'false'
+          test "$(gh release view "$tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
+          gh release edit "$tag" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.4' --notes-file "$notes"
+          body="$(gh release view "$tag" --json body --jq '.body')"
+          printf '%s\n' "$body" | grep -Fq 'WebUI Core `0.6.0`'
+          printf '%s\n' "$body" | grep -Fq 'Coolapk-Code9527 / F2FS-Optimizer'
+          printf '%s\n' "$body" | grep -Fq 'AshBorn / AshReXcue / AshLooper'
+          printf '%s\n' 'RESULT: ALPHA4_PUBLIC_RELEASE_NOTES_SYNC_PASS'
