@@ -88,3 +88,5 @@ jobs:
           git fetch origin --tags
           test "$(git rev-list -n1 "$OLD_TAG")" = "$old_tag_before"
           printf '%s\n' 'RESULT: ALPHA5_POSTPUBLISH_RECONCILE_PASS'
+
+# retrigger-after-manual-alpha5-main-promotion: 2026-08-20
