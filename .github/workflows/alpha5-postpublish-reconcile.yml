@@ -72,7 +72,7 @@ jobs:
             git push origin HEAD:main
           fi
           git fetch origin main
-          test "$(git show origin/main:update-prerelease.json | grep -c '"'"'"version"'"'": "'"'"2.1.0-alpha.5"'"'"')" = 1
+          git show origin/main:update-prerelease.json | grep -Fq '"version": "2.1.0-alpha.5"'
 
       - name: Remove superseded Alpha4 prerelease and preserve tag
         env:
