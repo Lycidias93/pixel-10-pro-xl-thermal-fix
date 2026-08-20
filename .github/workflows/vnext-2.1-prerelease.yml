@@ -1,16 +1,16 @@
-name: Publish vNext 2.1.0-alpha.4 Prerelease
+name: Publish vNext 2.1.0-alpha.5 Prerelease
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - vnext-2.1.0-alpha.4
+      - vnext-2.1.0-alpha.5
     paths:
       - .github/workflows/vnext-2.1-prerelease.yml
       - .github/workflows/vnext-2.1-ci.yml
       - module.prop
       - update-prerelease.json
-      - release-notes/2.1.0-alpha.4.md
+      - release-notes/2.1.0-alpha.5.md
       - action.sh
       - customize.sh
       - post-fs-data.sh
@@ -30,8 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      RELEASE_TAG: 'v2.1.0-alpha.4'
-      RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.4.zip'
+      RELEASE_TAG: 'v2.1.0-alpha.5'
+      RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.5.zip'
     steps:
       - name: Checkout release source
         uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: 7cf49cafb99664dc2772679bf12c4a8e693b46e8
+          ref: 6fbd1b018a45fe5b1bebba7aeb9142423eab47fb
           path: .webui-core
           fetch-depth: 1
 
@@ -58,15 +58,17 @@ jobs:
       - name: Verify public source identity
         run: |
           set -euo pipefail
-          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.4'
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.4'
-          test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016254'
-          grep -Fq '"version": "2.1.0-alpha.4"' update-prerelease.json
-          grep -Fq '"versionCode": 1016254' update-prerelease.json
-          grep -Fq '/v2.1.0-alpha.4/pixel-thermal-memory-control-2.1.0-alpha.4.zip' update-prerelease.json
-          grep -Fq '## What changed since 2.1.0-alpha.3' release-notes/2.1.0-alpha.4.md
-          grep -Fq '## Compatibility and safety' release-notes/2.1.0-alpha.4.md
-          ! grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries' release-notes/2.1.0-alpha.4.md
+          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.5'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.5'
+          test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016255'
+          grep -Fq '"version": "2.1.0-alpha.5"' update-prerelease.json
+          grep -Fq '"versionCode": 1016255' update-prerelease.json
+          grep -Fq '/v2.1.0-alpha.5/pixel-thermal-memory-control-2.1.0-alpha.5.zip' update-prerelease.json
+          grep -Fq '## New in 2.1.0-alpha.5' release-notes/2.1.0-alpha.5.md
+          grep -Fq '## Included from 2.1.0-alpha.4' release-notes/2.1.0-alpha.5.md
+          grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template' release-notes/2.1.0-alpha.5.md
+          grep -Fq '## Compatibility and safety' release-notes/2.1.0-alpha.5.md
+          ! grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries' release-notes/2.1.0-alpha.5.md
 
       - name: Verify pinned WebUI core
         run: |
@@ -74,7 +76,7 @@ jobs:
           test "$(git -C .webui-core rev-parse HEAD)" = "$(sed -n 's/^template_commit=//p' webui.lock)"
           test "$(tr -d '\r\n' < .webui-core/CORE_VERSION)" = "$(sed -n 's/^core_version=//p' webui.lock)"
           (cd .webui-core && ./scripts/verify.sh)
-          node --test .webui-core/scripts/webui-race-regression.test.mjs
+          node --test .webui-core/scripts/webui-race-regression.test.mjs .webui-core/scripts/webui-embedded-host-bootstrap.test.mjs
 
       - name: Release regression gate
         run: |
@@ -122,6 +124,7 @@ jobs:
           grep -Fxq 'bin/webui-server-arm64' dist/package-entries.txt
           grep -Fxq 'bin/module-control' dist/package-entries.txt
           grep -Fxq 'tools/webui/launch.sh' dist/package-entries.txt
+          grep -Fxq 'webroot/embedded-host-bootstrap.js' dist/package-entries.txt
 
       - name: Publish or reconcile GitHub prerelease
         env:
@@ -141,9 +144,9 @@ jobs:
             test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = 'false'
             test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = 'true'
             gh release upload "$RELEASE_TAG" "dist/$RELEASE_ASSET" --clobber
-            gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.4' --notes-file release-notes/2.1.0-alpha.4.md
+            gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.5' --notes-file release-notes/2.1.0-alpha.5.md
           else
-            gh release create "$RELEASE_TAG" "dist/$RELEASE_ASSET" --target "$release_sha" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.4' --notes-file release-notes/2.1.0-alpha.4.md
+            gh release create "$RELEASE_TAG" "dist/$RELEASE_ASSET" --target "$release_sha" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.5' --notes-file release-notes/2.1.0-alpha.5.md
           fi
 
       - name: Verify public prerelease
@@ -159,6 +162,8 @@ jobs:
           release_digest="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .digest")"
           test "$release_digest" = "sha256:$local_sha"
           public_body="$(gh release view "$RELEASE_TAG" --json body --jq '.body')"
-          printf '%s\n' "$public_body" | grep -Fq '## What changed since 2.1.0-alpha.3'
+          printf '%s\n' "$public_body" | grep -Fq '## New in 2.1.0-alpha.5'
+          printf '%s\n' "$public_body" | grep -Fq '## Included from 2.1.0-alpha.4'
+          printf '%s\n' "$public_body" | grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template'
           ! printf '%s\n' "$public_body" | grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries'
-          printf '%s\n' 'RESULT: VNEXT_ALPHA4_PUBLIC_PRERELEASE_VERIFY_PASS'
+          printf '%s\n' 'RESULT: VNEXT_ALPHA5_PUBLIC_PRERELEASE_VERIFY_PASS'
