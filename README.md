@@ -1,25 +1,27 @@
 # Pixel Thermal & Memory Control
 
-**Dynamic V2 root-module tuning for supported Pixel 10 / 10a and Pixel 9 / 9a devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone browser WebUI.**
+**Dynamic V2 root-module tuning for supported Pixel 10 / 10a and Pixel 9 / 9a devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
 
-[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.4) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
+[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
 > [!IMPORTANT]
-> **2.0.4 remains the current stable release. 2.1.0-alpha.4 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha4 is for users who intentionally want the expanded Pixel 9 / 9a / 10a vNext line and the new standalone WebUI.
+> **2.0.4 remains the current stable release. 2.1.0-alpha.5 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha5 is for users who intentionally want the expanded Pixel 9 / 9a / 10a vNext line and the newer WebUI controls.
 
 ## Current public releases
 
 | Channel | Version | Main purpose |
 |---|---|---|
 | Stable | `2.0.4` | Pixel 10-family Dynamic V2 stable line with current Thermal materialization hotfixes |
-| Prerelease | `2.1.0-alpha.4` | Standalone browser WebUI, expanded Pixel 9 / 9a / 10a support line, clearer controls and current Alpha4 reliability fixes |
+| Prerelease | `2.1.0-alpha.5` | Standalone browser + KsuWebUI embedded WebUI, expanded Pixel 9 / 9a / 10a support line, clearer controls and current vNext reliability fixes |
 
 Stable and prerelease update channels are independent. Switching channel changes only the module update metadata path; it does not automatically flash a ZIP.
 
-## Alpha4 highlights
+## Alpha5 highlights
 
-Compared with the previous public `2.1.0-alpha.3` prerelease, Alpha4 adds and improves the parts users interact with directly:
+Alpha5 includes all user-facing Alpha4 changes and adds embedded KsuWebUI support:
 
+- **KsuWebUI can open the module WebUI directly inside its WebView**, without the previous `404 Not Found` / disconnected state.
+- **Magisk Action and KsuWebUI work in parallel.** Magisk Action opens the standalone WebUI in the default browser; KsuWebUI keeps it inside its own WebView. Both use the same guarded localhost API.
 - **Magisk Action opens a standalone browser WebUI** for normal control and status work.
 - **Active settings are shown directly** instead of requiring users to infer state from the old text dashboard.
 - **Polling, Thermal, ZRAM, Emerald Hill, LMKD and ZRAM page-cluster controls** are exposed through typed guarded actions.
@@ -29,7 +31,7 @@ Compared with the previous public `2.1.0-alpha.3` prerelease, Alpha4 adds and im
 - **Thermal numeric validation is locale-stable**, including devices using non-English system locales.
 - **Mobile layout, action cards, tabs and blocked/active states are clearer** on narrow screens.
 
-See [2.1.0-alpha.4 release notes](release-notes/2.1.0-alpha.4.md) for the public changelog.
+See [2.1.0-alpha.5 release notes](release-notes/2.1.0-alpha.5.md) for the cumulative public changelog.
 
 ## Supported devices
 
@@ -44,9 +46,9 @@ Stable currently targets the Android 17 Pixel 10 family:
 | `frankel` | Pixel 10 |
 | `rango` | Pixel 10 Pro Fold |
 
-### Prerelease 2.1.0-alpha.4
+### Prerelease 2.1.0-alpha.5
 
-Alpha4 carries one Android 17 vNext line for:
+Alpha5 carries one Android 17 vNext line for:
 
 | Codename | Device | vNext policy |
 |---|---|---|
@@ -94,11 +96,14 @@ The experimental LMKD option sets `ro.lmk.swap_free_low_percentage=1`, verifies 
 
 ### ZRAM page-cluster
 
-Alpha4 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation.
+Alpha5 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation. If the device stock value is already `0`, leaving the action on Stock avoids taking ownership of an unnecessary runtime write.
 
-## Alpha4 WebUI
+## Alpha5 WebUI
 
-Open the module card in Magisk and tap **Action**. Alpha4 starts a local loopback WebUI and opens it in the browser.
+There are two supported launch paths:
+
+1. **Magisk Action:** open the module card and tap **Action**. The module starts its loopback WebUI and opens the default browser.
+2. **KsuWebUI:** open the module from the KsuWebUI app. Its WebView bootstraps the same authenticated loopback WebUI and stays inside KsuWebUI.
 
 The interface provides:
 
@@ -109,9 +114,9 @@ The interface provides:
 - bounded logs and support information;
 - clear active, blocked and unavailable states.
 
-The WebUI uses a standalone localhost server with a typed allowlisted control surface. It does not expose an unrestricted shell/JavaScript execution bridge.
+Both launch paths converge on the same standalone localhost server and typed allowlisted control surface. KsuWebUI is used only for the bounded bootstrap step; normal WebUI operations do not expose an unrestricted shell/JavaScript command bridge.
 
-If WebUI startup cannot complete safely, the module retains the legacy Action path as a fallback instead of silently bypassing the launcher checks.
+If standalone browser startup cannot complete safely, the module retains the legacy Action path as a fallback instead of silently bypassing launcher checks.
 
 ## Installation and updating
 
@@ -130,13 +135,13 @@ Download the latest stable package from [v2.0.4](https://github.com/Lycidias93/p
 
 ### Prerelease
 
-Download the Alpha4 package from [v2.1.0-alpha.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.4), install it from the module manager, and reboot before judging the new runtime state.
+Download the Alpha5 package from [v2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5), install it from the module manager, and reboot before judging the new runtime state.
 
-Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` now points to Alpha4.
+Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` points to Alpha5.
 
 ## Status and support
 
-After reboot, use the Alpha4 WebUI to check the active feature state. For a support report, create a **Support Snapshot** from the module UI and include the device model, Android/build ID, module version, selected settings and exact reproduction steps.
+After reboot, use the Alpha5 WebUI through either launch path to check the active feature state. For a support report, create a **Support Snapshot** from the module UI and include the device model, Android/build ID, module version, selected settings and exact reproduction steps.
 
 The support snapshot is intended to collect bounded diagnostic evidence. Review any archive before posting it publicly.
 
@@ -148,6 +153,7 @@ The support snapshot is intended to collect bounded diagnostic evidence. Review 
 - ZRAM, LMKD, Emerald Hill max lock and page-cluster experiments remain independently controlled and reversible where the platform permits it.
 - A failed validation or incompatible firmware transition does not justify blindly mounting an old Thermal overlay.
 - The module does not silently disable emergency/shutdown Thermal protection.
+- WebUI network scope remains loopback-only.
 
 ## Recovery
 
@@ -172,7 +178,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Alpha4 consumes the shared **Android Root Module Standalone WebUI Template** maintained by Lycidias93, pinned to WebUI Core `0.6.0` for the released Alpha4 source.
+Alpha5 consumes the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, pinned to WebUI Core `0.6.1`.
 
 That shared core documents clean adaptations or design references from:
 
@@ -181,9 +187,10 @@ That shared core documents clean adaptations or design references from:
 - **barsikus007 / ksu-webui-module-template** — multi-manager packaging/template concepts;
 - **AuroraNasa / AMMF2** — logging/theme/localization/component reference concepts;
 - **Drizzy07x / Drizzy11 / Supercharger Pixel 9 Series** — readiness, duplicate-action and stale-response regression patterns;
-- **AshBorn / AshReXcue / AshLooper** — design reference only for unsaved-change/session diagnostics; no GPL-covered implementation is imported.
+- **AshBorn / AshReXcue / AshLooper** — design reference only for unsaved-change/session diagnostics; no GPL-covered implementation is imported;
+- **Adinata / KsuWebUI** — compatibility/design reference for its embedded WebView host; no GPL-covered KsuWebUI implementation is imported.
 
-The Alpha4 module also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
+The Alpha5 module also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
 
 ## License
 
