@@ -23,6 +23,7 @@ READY_FILE="$RUNTIME_DIR/server.ready.json"
 TOKEN_FILE="$RUNTIME_DIR/bootstrap.token"
 LOG_FILE="$RUNTIME_DIR/server.log"
 SERVER_PID=""
+MODE=${1:-open}
 
 pid_alive() {
   pid=$1
@@ -72,14 +73,20 @@ make_token() {
   return 1
 }
 
+case "$MODE" in
+  open|--verify|--print-url) ;;
+  *) fail invalid_mode ;;
+esac
+
 [ -x "$SERVER" ] || fail server_binary_missing
 [ -x "$CONTROL" ] || fail module_control_missing
 [ -r "$MODDIR/webroot/index.html" ] || fail webroot_missing
 mkdir -p "$STATE_DIR" "$RUNTIME_DIR"
 chmod 0700 "$STATE_DIR" "$RUNTIME_DIR" 2>/dev/null || true
 
-if [ "${1:-}" = "--verify" ]; then
+if [ "$MODE" = "--verify" ]; then
   "$SERVER" -self-test -webroot "$MODDIR/webroot" -control "$CONTROL" -module-dir "$MODDIR" -state-dir "$STATE_DIR" -runtime-dir "$RUNTIME_DIR" -idle-timeout 15m -session-ttl 15m -job-timeout 30m -max-jobs 2 || fail server_self_test_failed
+  echo "embedded_host_bootstrap=available"
   echo "RESULT: PIXEL_WEBUI_VERIFY_DONE outcome=success command_exit_code=0 workflow_exit_code=0"
   exit 0
 fi
@@ -113,9 +120,20 @@ case "$READY_PID" in ""|*[!0-9]*) fail invalid_server_pid ;; esac
 PORT=$(sed -n 's/.*"port":[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$READY_FILE" | head -n 1)
 case "$PORT" in ""|*[!0-9]*) fail invalid_server_port ;; esac
 [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || fail invalid_server_port
+URL="http://127.0.0.1:$PORT/bootstrap?token=$TOKEN"
+
+if [ "$MODE" = "--print-url" ]; then
+  printf 'WEBUI_BOOTSTRAP_URL=%s\n' "$URL"
+  echo "browser_port=$PORT"
+  echo "server_scope=loopback_only"
+  echo "bootstrap_transport=embedded_host_redirect"
+  echo "RESULT: PIXEL_WEBUI_URL_DONE outcome=success command_exit_code=0 workflow_exit_code=0"
+  unset TOKEN URL
+  exit 0
+fi
+
 CURRENT_USER=$(am get-current-user 2>/dev/null | tr -cd '0-9')
 [ -n "$CURRENT_USER" ] || CURRENT_USER=0
-URL="http://127.0.0.1:$PORT/bootstrap?token=$TOKEN"
 am start --user "$CURRENT_USER" -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d "$URL" >/dev/null 2>&1 || fail browser_launch_failed
 unset TOKEN URL
 echo "WebUI opened in the default browser."
