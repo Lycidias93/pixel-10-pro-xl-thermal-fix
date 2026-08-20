@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - .github/workflows/alpha5-postpublish-reconcile.yml
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -24,6 +27,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Verify Alpha5 public prerelease and immutable source
@@ -93,6 +97,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin main --tags
+          git reset --hard origin/main
           alpha5_sha="$(git rev-list -n1 "$NEW_TAG")"
           alpha4_sha="$(git rev-list -n1 "$OLD_TAG")"
           mkdir -p docs/evidence
