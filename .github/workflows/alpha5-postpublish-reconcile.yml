@@ -1,0 +1,90 @@
+name: Alpha5 postpublish reconciliation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/alpha5-postpublish-reconcile.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NEW_TAG: v2.1.0-alpha.5
+      OLD_TAG: v2.1.0-alpha.4
+      NEW_ASSET: pixel-thermal-memory-control-2.1.0-alpha.5.zip
+      VNEXT_BRANCH: vnext-2.1.0-alpha.5
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify Alpha5 public prerelease and immutable source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$VNEXT_BRANCH" --tags
+          test "$(git rev-list -n1 "$NEW_TAG")" = "$(git rev-parse "origin/$VNEXT_BRANCH")"
+          test "$(gh release view "$NEW_TAG" --json isDraft --jq '.isDraft')" = false
+          test "$(gh release view "$NEW_TAG" --json isPrerelease --jq '.isPrerelease')" = true
+          test "$(gh release view "$NEW_TAG" --json assets --jq '.assets[] | select(.name == env.NEW_ASSET) | .name')" = "$NEW_ASSET"
+          body="$(gh release view "$NEW_TAG" --json body --jq '.body')"
+          printf '%s\n' "$body" | grep -Fq '## New in 2.1.0-alpha.5'
+          printf '%s\n' "$body" | grep -Fq '## Included from 2.1.0-alpha.4'
+          printf '%s\n' "$body" | grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template'
+          ! printf '%s\n' "$body" | grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries'
+          rm -rf /tmp/alpha5-release && mkdir -p /tmp/alpha5-release
+          gh release download "$NEW_TAG" --pattern "$NEW_ASSET" --dir /tmp/alpha5-release
+          unzip -p "/tmp/alpha5-release/$NEW_ASSET" module.prop > /tmp/alpha5-module.prop
+          unzip -p "/tmp/alpha5-release/$NEW_ASSET" webui.lock > /tmp/alpha5-webui.lock
+          grep -Fxq 'version=2.1.0-alpha.5' /tmp/alpha5-module.prop
+          grep -Fxq 'versionCode=1016255' /tmp/alpha5-module.prop
+          grep -Fxq 'template_commit=6fbd1b018a45fe5b1bebba7aeb9142423eab47fb' /tmp/alpha5-webui.lock
+          grep -Fxq 'core_version=0.6.1' /tmp/alpha5-webui.lock
+
+      - name: Promote Alpha5 prerelease metadata and public docs to main
+        run: |
+          set -euo pipefail
+          git fetch origin "$VNEXT_BRANCH" main
+          for path in update-prerelease.json README.md CREDITS.md release-notes/README.md release-notes/2.1.0-alpha.5.md; do
+            git checkout "origin/$VNEXT_BRANCH" -- "$path"
+          done
+          grep -Fq '"version": "2.1.0-alpha.5"' update-prerelease.json
+          grep -Fq 'Latest prerelease — 2.1.0-alpha.5' README.md
+          grep -Fq 'WebUI Core `0.6.1`' CREDITS.md
+          grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template' release-notes/2.1.0-alpha.5.md
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if ! git diff --cached --quiet; then
+            git commit -m 'Promote Alpha5 prerelease metadata and docs'
+            git push origin HEAD:main
+          fi
+          git fetch origin main
+          test "$(git show origin/main:update-prerelease.json | grep -c '"'"'"version"'"'": "'"'"2.1.0-alpha.5"'"'"')" = 1
+
+      - name: Remove superseded Alpha4 prerelease and preserve tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          old_tag_before="$(git rev-list -n1 "$OLD_TAG")"
+          test -n "$old_tag_before"
+          if gh release view "$OLD_TAG" >/dev/null 2>&1; then
+            test "$(gh release view "$OLD_TAG" --json isPrerelease --jq '.isPrerelease')" = true
+            gh release delete "$OLD_TAG" --yes
+          fi
+          if gh release view "$OLD_TAG" >/dev/null 2>&1; then
+            printf '%s\n' 'superseded Alpha4 release object still exists' >&2
+            exit 1
+          fi
+          git fetch origin --tags
+          test "$(git rev-list -n1 "$OLD_TAG")" = "$old_tag_before"
+          printf '%s\n' 'RESULT: ALPHA5_POSTPUBLISH_RECONCILE_PASS'
