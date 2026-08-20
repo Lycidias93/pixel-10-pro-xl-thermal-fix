@@ -167,3 +167,20 @@ jobs:
           printf '%s\n' "$public_body" | grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template'
           ! printf '%s\n' "$public_body" | grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries'
           printf '%s\n' 'RESULT: VNEXT_ALPHA5_PUBLIC_PRERELEASE_VERIFY_PASS'
+
+      - name: Remove superseded Alpha4 prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          old_tag='v2.1.0-alpha.4'
+          if gh release view "$old_tag" >/dev/null 2>&1; then
+            test "$(gh release view "$old_tag" --json isPrerelease --jq '.isPrerelease')" = 'true'
+            gh release delete "$old_tag" --yes
+          fi
+          if gh release view "$old_tag" >/dev/null 2>&1; then
+            printf '%s\n' 'Alpha4 release object still exists' >&2
+            exit 1
+          fi
+          test -n "$(git ls-remote --tags origin "refs/tags/$old_tag" | awk '{print $1}')"
+          printf '%s\n' 'RESULT: VNEXT_ALPHA4_PRERELEASE_REMOVED_TAG_PRESERVED'
