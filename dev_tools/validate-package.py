@@ -8,7 +8,7 @@ if not path:
 required = {
     'module.prop','action.sh','service.sh','bin/module-control','bin/webui-server-arm64',
     'tools/webui/launch.sh','tools/control/pixel-control.sh','tools/zram/page-cluster-control.sh',
-    'webroot/index.html','webroot/app.js','webroot/app.css',
+    'webroot/index.html','webroot/embedded-host-bootstrap.js','webroot/app.js','webroot/app.css',
     'webroot/race-guard.js','webroot/race-guard.css','webroot/observability.js','webroot/observability.css',
     'webroot/v03.js','webroot/v04.js',
     'common/repo.json','webui.lock','webui-third-party/Supercharger_Pixel_9_Series.LICENSE',
