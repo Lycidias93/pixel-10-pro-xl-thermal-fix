@@ -3,9 +3,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-grep -Fqx 'core_version=0.6.0' webui.lock
-grep -Fqx 'template_commit=7cf49cafb99664dc2772679bf12c4a8e693b46e8' webui.lock
+grep -Fqx 'core_version=0.6.1' webui.lock
+grep -Fqx 'template_commit=6fbd1b018a45fe5b1bebba7aeb9142423eab47fb' webui.lock
 grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
+grep -Fq 'adivenxnataly/KsuWebUI@20342d280a841f8b317603a7eefb1193a95ab626' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done
 for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do grep -Fq "\"$device\"" supported_versions.json; done
 for label in 'Pixel 10a' 'Pixel 9a' 'Pixel 10 Pro XL' 'Pixel 9 Pro Fold'; do grep -Fq "\"$label\"" common/repo.json; done
@@ -26,6 +27,14 @@ if grep -Fq 'is_our_pid "$SERVER_PID" || break' tools/webui/launch.sh; then
 fi
 grep -Fq 'is_our_pid "$SERVER_PID" || fail server_identity_mismatch' tools/webui/launch.sh
 grep -Fq '[ "$READY_PID" = "$SERVER_PID" ] || fail server_pid_mismatch' tools/webui/launch.sh
+
+# KsuWebUI is a bootstrap transport only. The Pixel launcher returns the same
+# one-time loopback URL without opening another app; all privileged operations
+# still go through the standalone typed HTTP API after the WebView redirects.
+grep -Fq 'open|--verify|--print-url' tools/webui/launch.sh
+grep -Fq 'WEBUI_BOOTSTRAP_URL=' tools/webui/launch.sh
+grep -Fq 'bootstrap_transport=embedded_host_redirect' tools/webui/launch.sh
+grep -Fq 'RESULT: PIXEL_WEBUI_URL_DONE' tools/webui/launch.sh
 
 # Root-module managers may normalize ZIP modes during staging. The consumer
 # must re-assert the executable bits required by the pinned WebUI template.
@@ -65,8 +74,8 @@ if grep -Eq 'ksu\.exec|apatch\.exec|magisk\.exec|webui\.exec|Android\.exec|eval\
   exit 1
 fi
 
-# The package must carry the complete pinned WebUI 0.6 asset surface.
-for asset in observability.js observability.css v04.js; do
+# The package must carry the complete pinned WebUI 0.6.1 asset surface.
+for asset in embedded-host-bootstrap.js observability.js observability.css v04.js; do
   grep -Fq "$asset" dev_tools/build-release-module.sh
   grep -Fq "webroot/$asset" dev_tools/verify-release-module.sh
   grep -Fq "webroot/$asset" dev_tools/validate-package.py

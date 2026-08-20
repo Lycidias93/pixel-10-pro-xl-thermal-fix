@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: 7cf49cafb99664dc2772679bf12c4a8e693b46e8
+          ref: 6fbd1b018a45fe5b1bebba7aeb9142423eab47fb
           path: .webui-core
           fetch-depth: 1
 
@@ -45,7 +45,7 @@ jobs:
           test "$(git -C .webui-core rev-parse HEAD)" = "$(sed -n 's/^template_commit=//p' webui.lock)"
           test "$(tr -d '\r\n' < .webui-core/CORE_VERSION)" = "$(sed -n 's/^core_version=//p' webui.lock)"
           (cd .webui-core && ./scripts/verify.sh)
-          node --test .webui-core/scripts/webui-race-regression.test.mjs
+          node --test .webui-core/scripts/webui-race-regression.test.mjs .webui-core/scripts/webui-embedded-host-bootstrap.test.mjs
 
       - name: Shell syntax
         run: |
@@ -125,6 +125,7 @@ jobs:
           unzip -Z1 "$zip_path" | sort > dist/package-entries.txt
           for asset in \
             bin/webui-server-arm64 \
+            webroot/embedded-host-bootstrap.js \
             webroot/app.js webroot/app.css \
             webroot/race-guard.js webroot/race-guard.css \
             webroot/observability.js webroot/observability.css \
