@@ -2,22 +2,22 @@
 
 Pixel Thermal & Memory Control is maintained by **Lycidias93**, based on earlier work by **marx161**, with substantial testing, implementation feedback and technical input from community contributors.
 
-## Alpha4 / current vNext line
+## Alpha5 / current vNext line
 
-- **Lycidias93** — integration, Dynamic V2 safety model, Mustang device verification, release maintenance, standalone WebUI consumer integration and fail-closed runtime/recovery behavior.
+- **Lycidias93** — integration, Dynamic V2 safety model, Mustang device verification, release maintenance, standalone/embedded WebUI consumer integration and fail-closed runtime/recovery behavior.
 - **Harish / Codecity001** — extensive Pixel 10 Pro / `blazer` testing and logs; Dynamic V2 three-file patch-scope work; ZRAM, LMKD, Action/WebUI UX and installer feedback; PR #70 resetprop-rs / `boot_early` work; profile-layout direction and continued runtime review.
 - **Allen Chang** — Canary/device screenshots, stock Thermal files, installation/failure evidence, profile feedback and runtime verification that helped harden Dynamic V2 admission and Outdoor handling.
 - **JoshuaDoes / pTune** — original Emerald Hill and ZRAM technical concepts later safety-adapted by this module, including devfreq behavior, ZRAM timing and memory-control implementation guidance.
 - **marx161** — original project foundation and earlier module work.
 
-## Shared WebUI foundation used by Alpha4
+## Shared WebUI foundation used by Alpha5
 
-Alpha4 consumes the first-party **Android Root Module Standalone WebUI Template** from `Lycidias93/android-root-module-webui-template`, pinned by the released Alpha4 source to:
+Alpha5 consumes the first-party **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** from `Lycidias93/android-root-module-webui-template`, pinned to:
 
-- template commit `7cf49cafb99664dc2772679bf12c4a8e693b46e8`;
-- WebUI Core `0.6.0`.
+- template commit `6fbd1b018a45fe5b1bebba7aeb9142423eab47fb`;
+- WebUI Core `0.6.1`.
 
-The shared core provides the standalone localhost browser transport, one-time bootstrap/session model, typed allowlisted API, capability-driven UI, bounded jobs/logs/inventory, action-state handling and reusable root-module WebUI primitives.
+The shared core provides the standalone localhost browser transport, one-time bootstrap/session model, typed allowlisted API, capability-driven UI, bounded jobs/logs/inventory, action-state handling and the bounded embedded-host bootstrap used by compatible KsuWebUI hosts.
 
 ### Public upstream projects referenced by the shared WebUI core
 
@@ -68,6 +68,14 @@ The shared core provides the standalone localhost browser transport, one-time bo
 - Role: design-review inspiration for unsaved-change awareness, session activity diagnostics and raw-state inspection.
 - License: GPL-3.0.
 - Integration boundary: **design reference only**. No AshLooper/AshReXcue JavaScript, CSS, shell code, assets or other GPL-covered implementation is copied or imported into the MIT shared WebUI core or this module.
+
+#### Adinata — KsuWebUI
+
+- Source: `adivenxnataly/KsuWebUI`
+- Pinned source: `20342d280a841f8b317603a7eefb1193a95ab626`
+- Role: compatibility/design reference for the embedded root-module WebView host, including the `mui.kernelsu.org` asset origin, KernelSU-compatible JavaScript bridge and loopback-network environment.
+- License: GPL-3.0.
+- Integration boundary: **compatibility/design reference only**. No KsuWebUI Kotlin, Java, XML, JavaScript, assets or other GPL-covered implementation is copied or imported. The shared MIT core independently implements a bounded bootstrap-only handoff to its existing authenticated loopback server.
 
 The shared template retains the relevant provenance and license notices in its `UPSTREAMS.md`, `NOTICE` and `third_party/licenses/` material. Upstream authors do not endorse this project.
 
