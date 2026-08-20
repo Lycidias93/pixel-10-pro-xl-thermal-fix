@@ -89,4 +89,18 @@ jobs:
           test "$(git rev-list -n1 "$OLD_TAG")" = "$old_tag_before"
           printf '%s\n' 'RESULT: ALPHA5_POSTPUBLISH_RECONCILE_PASS'
 
-# retrigger-after-manual-alpha5-main-promotion: 2026-08-20
+      - name: Persist reconciliation evidence
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          alpha5_sha="$(git rev-list -n1 "$NEW_TAG")"
+          alpha4_sha="$(git rev-list -n1 "$OLD_TAG")"
+          mkdir -p docs/evidence
+          printf '%s\n' '# Alpha5 postpublish reconciliation' '' '- Alpha5 prerelease: verified public and non-draft' "- Alpha5 tag: $NEW_TAG @ $alpha5_sha" "- Alpha5 asset: $NEW_ASSET verified" '- Alpha5 public notes: cumulative Alpha4 changes included' '- Shared WebUI template: linked directly in Alpha5 notes' '- WebUI Core: 0.6.1' '- Alpha4 GitHub release object: removed' "- Alpha4 historical tag preserved: $OLD_TAG @ $alpha4_sha" '' 'RESULT: ALPHA5_POSTPUBLISH_RECONCILE_PASS' > docs/evidence/alpha5-postpublish-reconcile-20260820.md
+          git add docs/evidence/alpha5-postpublish-reconcile-20260820.md
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record Alpha5 postpublish reconciliation'
+            git push origin HEAD:main
+          fi
