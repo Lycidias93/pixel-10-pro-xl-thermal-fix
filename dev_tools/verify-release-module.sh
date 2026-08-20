@@ -13,7 +13,7 @@ required=(
   tools/bootguard/compat-check-vnext.sh tools/bootguard/compat-check.sh tools/debug/collect-thermal-online-v5.sh
   tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh
   bin/module-control bin/webui-server-arm64
-  webroot/index.html webroot/app.js webroot/app.css
+  webroot/index.html webroot/embedded-host-bootstrap.js webroot/app.js webroot/app.css
   webroot/race-guard.js webroot/race-guard.css webroot/observability.js webroot/observability.css webroot/v03.js webroot/v04.js
   common/repo.json webui.lock webui-third-party/core-provenance.env webui-third-party/template.LICENSE webui-third-party/template.NOTICE webui-third-party/Supercharger_Pixel_9_Series.LICENSE
 )
