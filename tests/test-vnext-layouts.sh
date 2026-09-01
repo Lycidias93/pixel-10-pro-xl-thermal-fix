@@ -63,7 +63,8 @@ write_fixture() {
 
 run_case() {
   local device="$1" build="$2" third="$3" profile="$4" expected_family="$5" extra_third="${6:-}"
-  local root="$tmp/$device" mod="$root/mod" src="$root/source" data="$root/data"
+  local root="$tmp/$device"
+  local mod="$root/mod" src="$root/source" data="$root/data"
   mkdir -p "$src" "$data"
   make_module "$mod"
   write_fixture "$src/thermal_info_config.json"
@@ -137,7 +138,8 @@ JSON
 }
 
 run_g6_graph_case() {
-  local root="$tmp/grizzly-graph" mod="$root/mod" src="$root/source" data="$root/data"
+  local root="$tmp/grizzly-graph"
+  local mod="$root/mod" src="$root/source" data="$root/data"
   mkdir -p "$data"
   make_module "$mod"
   write_g6_graph_fixture "$src"
@@ -167,7 +169,8 @@ run_g6_graph_case() {
 }
 
 run_g6_graph_negative_cases() {
-  local root="$tmp/g6-negative" src="$root/source"
+  local root="$tmp/g6-negative"
+  local src="$root/source"
   mkdir -p "$src"
   cp "$repo_root/tools/core/thermal-layout.sh" "$root/thermal-layout.sh"
   . "$root/thermal-layout.sh"
@@ -188,7 +191,8 @@ JSON
 }
 
 run_repo_stock_fixture() {
-  local root="$tmp/mustang-repo-stock" mod="$root/mod" data="$root/data"
+  local root="$tmp/mustang-repo-stock"
+  local mod="$root/mod" data="$root/data"
   make_module "$mod"
   mkdir -p "$data"
   THERMAL_DEVICE=mustang THERMAL_ANDROID=17 THERMAL_BUILD_ID=REPO_STOCK_FIXTURE THERMAL_SOURCE_DIR="$repo_root/dev_tools/stock" THERMAL_DATA_ROOT="$data" \
