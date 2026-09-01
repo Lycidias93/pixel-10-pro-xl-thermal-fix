@@ -6,6 +6,8 @@
 
 > [!IMPORTANT]
 > **2.0.4 remains the current stable release. 2.1.0-alpha.5 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha5 is for users who intentionally want the expanded Pixel 9 / 9a / 10a vNext line and the newer WebUI controls.
+>
+> The current vNext development branch additionally carries **experimental Pixel 11-series code**. That work is not part of the already-published Alpha5 ZIP until a later prerelease is explicitly published.
 
 ## Current public releases
 
@@ -46,9 +48,9 @@ Stable currently targets the Android 17 Pixel 10 family:
 | `frankel` | Pixel 10 |
 | `rango` | Pixel 10 Pro Fold |
 
-### Prerelease 2.1.0-alpha.5
+### Public prerelease 2.1.0-alpha.5
 
-Alpha5 carries one Android 17 vNext line for:
+The published Alpha5 package carries one Android 17 vNext line for:
 
 | Codename | Device | vNext policy |
 |---|---|---|
@@ -65,6 +67,23 @@ Alpha5 carries one Android 17 vNext line for:
 
 Pixel 9-series and Pixel 10a targets remain intentionally conservative: local stock-layout validation is mandatory, pTune Thermal coexistence override is blocked on those experimental targets, and their current admitted Outdoor increase is capped at `+1 °C` where applicable.
 
+### vNext development: Pixel 11 series
+
+The current vNext development code admits these Android 17 targets for **experimental device testing**:
+
+| Codename | Device | Initial policy |
+|---|---|---|
+| `cubs` | Pixel 11 | bounded Include-graph validation; Stock polling only; Outdoor Safe `+1 °C` max |
+| `grizzly` | Pixel 11 Pro | bounded Include-graph validation; Stock polling only; Outdoor Safe `+1 °C` max |
+| `kodiak` | Pixel 11 Pro XL | bounded Include-graph validation; Stock polling only; Outdoor Safe `+1 °C` max |
+| `yogi` | Pixel 11 Pro Fold | bounded Include-graph validation; Stock polling only; Outdoor Safe `+1 °C` max |
+
+Pixel 11 no longer uses the legacy fixed `base + charge + throttling` assumption. vNext resolves a bounded Thermal `Include` graph starting at `thermal_info_config.json`, validates every referenced local Thermal file, rejects missing references/cycles, caches the exact stock graph and permits only the declared byte-level transformations.
+
+The initial Tensor G6 safety envelope is intentionally narrow. Module 5-second polling remains blocked until real-device runtime evidence exists. Outdoor Safe may adjust only the exact `VIRTUAL-SKIN` sensor; derivative/model/charging `VIRTUAL-SKIN-*` sensors, `cellular-emergency` and `OVER-35C` sensors are left untouched. pTune Thermal coexistence override remains blocked and firmware transitions require reinstall while the target is experimental.
+
+The available Pixel 11 Pro stock Thermal archive establishes the graph-layout change and confirms that stock still contains 300-second polling values, but it does **not** count as post-boot module verification. See [the vNext device validation matrix](docs/vnext-device-test-matrix.md).
+
 ## What the module changes
 
 The module combines guarded Thermal and memory controls while retaining fail-closed behavior.
@@ -75,9 +94,9 @@ The Dynamic V2 path derives supported overlays from the device's own stock Therm
 
 User-selectable controls include:
 
-- **Polling Mode:** module values or stock values.
+- **Polling Mode:** module values or stock values where the device policy admits both. Pixel 11 development targets currently remain Stock-only.
 - **Thermal Profile:** Stock, Outdoor Safe, Outdoor Plus or Outdoor Extended where the device policy allows it.
-- **Firmware transition handling:** stale overlays are rejected and rematerialized from current stock evidence rather than blindly reused.
+- **Firmware transition handling:** stale overlays are rejected and rematerialized from current stock evidence rather than blindly reused; experimental Pixel 11 targets require reinstall after a transition.
 
 The module does **not** replace the Pixel Thermal HAL, globally disable Android thermal management, or intentionally alter emergency/shutdown protections.
 
@@ -122,7 +141,7 @@ If standalone browser startup cannot complete safely, the module retains the leg
 
 ### Requirements
 
-- supported device for the selected channel;
+- supported device for the selected channel/build;
 - Android 17;
 - Magisk or a compatible root-module manager;
 - at least 15% battery for normal module installation;
@@ -137,19 +156,21 @@ Download the latest stable package from [v2.0.4](https://github.com/Lycidias93/p
 
 Download the Alpha5 package from [v2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5), install it from the module manager, and reboot before judging the new runtime state.
 
-Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` points to Alpha5.
+Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` points to Alpha5. Pixel 11 development support is not delivered by that already-published update metadata until a later prerelease is explicitly published.
 
 ## Status and support
 
-After reboot, use the Alpha5 WebUI through either launch path to check the active feature state. For a support report, create a **Support Snapshot** from the module UI and include the device model, Android/build ID, module version, selected settings and exact reproduction steps.
+After reboot, use the module WebUI through either launch path to check the active feature state. For a support report, create a **Support Snapshot** from the module UI and include the device model, Android/build ID, module version, selected settings and exact reproduction steps.
 
 The support snapshot is intended to collect bounded diagnostic evidence. Review any archive before posting it publicly.
 
 ## Safety boundaries
 
 - Unknown or unsupported platforms fail closed for Thermal changes.
-- Experimental Pixel 9 / 9a / 10a targets use the stricter conservative vNext policy.
-- pTune conflict protection remains authoritative.
+- Experimental Pixel 9 / 9a / 10a / 11 targets use the stricter conservative vNext policy.
+- Pixel 11 development targets keep Stock Thermal polling until runtime evidence explicitly admits a faster polling policy.
+- Pixel 11 Outdoor changes target only exact `VIRTUAL-SKIN`; emergency, derivative/model/charging and `OVER-35C` sensors are not included in the initial Outdoor allowlist.
+- pTune conflict protection remains authoritative; coexistence override is unavailable on experimental targets.
 - ZRAM, LMKD, Emerald Hill max lock and page-cluster experiments remain independently controlled and reversible where the platform permits it.
 - A failed validation or incompatible firmware transition does not justify blindly mounting an old Thermal overlay.
 - The module does not silently disable emergency/shutdown Thermal protection.
