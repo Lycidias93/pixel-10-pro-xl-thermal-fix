@@ -1,6 +1,5 @@
 #!/system/bin/sh
 # Pixel Thermal & Memory Control - pTune guard helper.
-# Extracted from customize.sh for Test22.
 # Sourced by customize.sh and executed at source time.
 
 PTUNE_GUARD_MODE="$(config_get PTUNE_GUARD_MODE)"
@@ -16,7 +15,7 @@ PTUNE_POLICY_DEVICE="${device:-$(getprop ro.product.device 2>/dev/null || true)}
 PTUNE_POLICY_ANDROID="${android:-$(getprop ro.build.version.release 2>/dev/null || true)}"
 PTUNE_EXPERIMENTAL_PLATFORM=0
 case "$PTUNE_POLICY_DEVICE:$PTUNE_POLICY_ANDROID" in
-  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) PTUNE_EXPERIMENTAL_PLATFORM=1 ;;
+  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17|cubs:17|grizzly:17|kodiak:17|yogi:17) PTUNE_EXPERIMENTAL_PLATFORM=1 ;;
 esac
 
 if [ "$PTUNE_EXPERIMENTAL_PLATFORM" = 1 ]; then
@@ -36,6 +35,7 @@ if [ "$PTUNE_GUARD_MODE" = "off" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
   ui_print "! Using strict guard"
   PTUNE_GUARD_MODE="strict"
 fi
+
 ptune_installed_path() {
   for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
     [ -f "$d/module.prop" ] || continue
@@ -46,6 +46,7 @@ ptune_installed_path() {
   done
   return 1
 }
+
 ptune_active_path() {
   for d in /data/adb/modules/ptune /data/adb/modules_update/ptune; do
     [ -f "$d/module.prop" ] || continue
@@ -57,11 +58,13 @@ ptune_active_path() {
   done
   return 1
 }
+
 ptune_known_bad_state() {
   d="$1"
   vc="$(grep -E '^versionCode=' "$d/module.prop" 2>/dev/null | sed 's/^versionCode=//')"
   [ "$vc" = "200" ] && echo "yes_versionCode_200_thermalhal_bootloop_on_mustang_cp1a_260505_005" || echo "no"
 }
+
 PTUNE_INSTALLED_PATH="$(ptune_installed_path 2>/dev/null || true)"
 PTUNE_ACTIVE_PATH="$(ptune_active_path 2>/dev/null || true)"
 PTUNE_KNOWN_BAD="no"
@@ -74,11 +77,12 @@ case "$PTUNE_GUARD_MODE" in
   active_only) PTUNE_CONFLICT_PATH="$PTUNE_ACTIVE_PATH"; PTUNE_CONFLICT_REASON="conflict_ptune_active"; PTUNE_CONFLICT_MODE="active_only_skip_mount" ;;
   off) PTUNE_CONFLICT_PATH=""; PTUNE_CONFLICT_REASON="guard_off"; PTUNE_CONFLICT_MODE="guard_off" ;;
 esac
+
 if [ -n "$PTUNE_CONFLICT_PATH" ] && [ "$PTUNE_OVERRIDE_ALLOWED" != "1" ]; then
   ui_print "! pTune conflict"
   ui_print "! $PTUNE_CONFLICT_PATH"
   if [ "$PTUNE_EXPERIMENTAL_PLATFORM" = 1 ]; then
-    ui_print "! pTune coexistence is blocked on experimental Pixel 9 / Pixel 10a targets"
+    ui_print "! pTune coexistence is blocked on experimental Pixel 9 / Pixel 10a / Pixel 11 targets"
   fi
   ui_print "! pTune guard mode"
   ui_print "! $PTUNE_GUARD_MODE -> $PTUNE_CONFLICT_MODE"
