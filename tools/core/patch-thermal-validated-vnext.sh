@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Independent vNext validator for the experimental base+charge+{lpm|throttling} family.
+# Independent vNext validator for legacy three-file and bounded Include-graph layouts.
 set -eu
 
 POLLING_MODE="${1:-mod}"
@@ -14,7 +14,6 @@ LAYOUT_HELPER="$MODPATH/tools/core/thermal-layout.sh"
 TARGET_DIR="$MODPATH/system/vendor/etc"
 GUARD_DIR="$MODPATH/guard"
 LAYOUT_ENV="$GUARD_DIR/thermal-layout.env"
-
 LEGACY_REPORT_MODULE="$MODPATH/validation_report.json"
 LEGACY_REPORT_DATA="$DATA_ROOT/validation_report.json"
 LEGACY_PATCH_MANIFEST="$GUARD_DIR/patch-manifest.tsv"
@@ -79,7 +78,7 @@ for file in $THERMAL_LAYOUT_FILES; do
   source_file="$CACHE_DIR/$file"; output_file="$TARGET_DIR/$file"
   [ -s "$source_file" ] || { printf '%s\n' "PATCH_THERMAL_DELTA_REASON=source_missing_$file"; exit 60; }
   [ -s "$output_file" ] || { printf '%s\n' "PATCH_THERMAL_DELTA_REASON=output_missing_$file"; exit 61; }
-  if metrics="$(sh "$DELTA_HELPER" "$source_file" "$output_file" "$DELTA")"; then
+  if metrics="$(sh "$DELTA_HELPER" "$source_file" "$output_file" "$DELTA" "$DEVICE")"; then
     set -- $metrics; [ "$#" -eq 3 ] || exit 62; target_zones="$1"; threshold_arrays="$2"; threshold_values="$3"
   else
     printf '%s\n' "PATCH_THERMAL_DELTA_REASON=exact_delta_invalid_${file}_expected_${DELTA}"; exit 63
@@ -87,12 +86,14 @@ for file in $THERMAL_LAYOUT_FILES; do
   validated_files=$((validated_files + 1)); target_zone_total=$((target_zone_total + target_zones)); threshold_array_total=$((threshold_array_total + threshold_arrays)); threshold_value_total=$((threshold_value_total + threshold_values))
 done
 [ "$validated_files" -eq "$THERMAL_LAYOUT_COUNT" ] || exit 64
-[ "$target_zone_total" -gt 0 ] || exit 65
 [ "$threshold_array_total" -eq "$target_zone_total" ] || exit 66
-[ "$threshold_value_total" -gt 0 ] || exit 67
+if [ "$DELTA" -gt 0 ] 2>/dev/null; then
+  [ "$target_zone_total" -gt 0 ] || exit 65
+  [ "$threshold_value_total" -gt 0 ] || exit 67
+fi
 
 {
-  printf '%s\n' 'schema=pixel-thermal-outdoor-delta-validation-v2'
+  printf '%s\n' 'schema=pixel-thermal-outdoor-delta-validation-v3'
   printf '%s\n' "device=$DEVICE"
   printf '%s\n' "build_id=$BUILD_ID"
   printf '%s\n' "layout_family=$THERMAL_LAYOUT_FAMILY"
