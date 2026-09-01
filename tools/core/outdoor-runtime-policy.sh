@@ -1,7 +1,7 @@
 #!/system/bin/sh
 # Runtime admission for non-stock Thermal profiles.
-# Stable Pixel 10 platforms retain the verified +3 C envelope. Experimental
-# Tensor G4 vNext platforms are capped at +1 C until device runtime evidence expands it.
+# Pixel 10 retains the verified +3 C envelope. Experimental Pixel 9/10a and
+# Pixel 11 platforms are capped at +1 C until device runtime evidence expands it.
 
 case "${0##*/}" in
   patch-thermal.sh)
@@ -43,16 +43,20 @@ thermal_outdoor_platform_supported() {
   _device="${1:-unknown}"
   _android="${2:-unknown}"
   case "$_device:$_android" in
-    mustang:17|blazer:17|frankel:17|rango:17|tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) return 0 ;;
+    mustang:17|blazer:17|frankel:17|rango:17|tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17|cubs:17|grizzly:17|kodiak:17|yogi:17) return 0 ;;
     *) return 1 ;;
   esac
 }
 
 thermal_outdoor_experimental_platform() {
   case "${1:-unknown}:${2:-unknown}" in
-    tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) return 0 ;;
+    tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17|cubs:17|grizzly:17|kodiak:17|yogi:17) return 0 ;;
     *) return 1 ;;
   esac
+}
+
+thermal_outdoor_g6_platform() {
+  case "${1:-unknown}:${2:-unknown}" in cubs:17|grizzly:17|kodiak:17|yogi:17) return 0 ;; *) return 1 ;; esac
 }
 
 thermal_outdoor_max_delta() {
@@ -78,7 +82,9 @@ thermal_outdoor_policy_evidence() {
     mustang:17:CP2A.260805.005) printf '%s\n' august_hotfix_aio_and_runtime_regression_pass_2026-08-07 ;;
     blazer:17:CP2A.260705.006) printf '%s\n' harish_fix5_extended_13zones_91values_pass_2026-07-26 ;;
     *)
-      if thermal_outdoor_experimental_platform "$_device" "$_android"; then
+      if thermal_outdoor_g6_platform "$_device" "$_android"; then
+        printf '%s\n' vnext_g6_plus1_exact_virtual_skin_local_graph_validation_required
+      elif thermal_outdoor_experimental_platform "$_device" "$_android"; then
         printf '%s\n' vnext_experimental_plus1_local_stock_validation_required
       elif thermal_outdoor_platform_supported "$_device" "$_android"; then
         printf '%s\n' supported_platform_local_stock_validation_required
