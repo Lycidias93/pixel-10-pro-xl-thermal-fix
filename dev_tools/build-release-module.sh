@@ -68,7 +68,7 @@ command -v go >/dev/null 2>&1 || { printf '%s\n' 'FAIL go_missing_for_webui_serv
 
 mkdir -p "$stage/webroot" "$stage/bin" "$stage/webui-third-party"
 webui_assets=(
-  index.html embedded-host-bootstrap.js app.js app.css
+  index.html embedded-host-bootstrap.js mobile-input-viewport.js app.js app.css
   race-guard.js race-guard.css
   observability.js observability.css
   v03.js v04.js
@@ -96,7 +96,7 @@ required=(
   tools/bootguard/compat-check-vnext.sh tools/bootguard/compat-check.sh tools/debug/collect-thermal-online-v5.sh
   tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh
   bin/module-control bin/webui-server-arm64
-  webroot/index.html webroot/embedded-host-bootstrap.js webroot/app.js webroot/app.css
+  webroot/index.html webroot/embedded-host-bootstrap.js webroot/mobile-input-viewport.js webroot/app.js webroot/app.css
   webroot/race-guard.js webroot/race-guard.css webroot/observability.js webroot/observability.css webroot/v03.js webroot/v04.js
   common/repo.json webui.lock
 )
