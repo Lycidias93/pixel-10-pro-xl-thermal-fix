@@ -97,6 +97,7 @@ jobs:
           bash tests/test-single-install-menu.sh
           bash tests/test-zram-eh-dev12.sh
           bash tests/test-page-cluster-control.sh
+          bash tests/test-feedback-package-contract.sh
           bash tests/test-webui-integration.sh
 
       - name: Verify single vNext device family matrix
