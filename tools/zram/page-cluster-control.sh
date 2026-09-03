@@ -123,7 +123,9 @@ zero_prerequisites() {
 }
 
 apply_zero() {
-  if ! zero_prerequisites; then
+  if zero_prerequisites; then
+    :
+  else
     rc=$?
     case "$rc" in
       2) reason=zram_not_explicitly_enabled ;;
@@ -236,10 +238,11 @@ reconcile() {
   if apply_zero; then
     printf '%s\n' 'RESULT: PAGE_CLUSTER_RECONCILE_PASS desired=zero action=applied'
     return 0
+  else
+    rc=$?
+    printf 'RESULT: PAGE_CLUSTER_RECONCILE_FAIL command_exit_code=%s\n' "$rc"
+    return "$rc"
   fi
-  rc=$?
-  printf 'RESULT: PAGE_CLUSTER_RECONCILE_FAIL command_exit_code=%s\n' "$rc"
-  return "$rc"
 }
 
 case "${1:-status}" in
