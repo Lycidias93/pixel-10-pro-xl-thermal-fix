@@ -8,13 +8,15 @@ CONFIG_FILE="/data/adb/$ID/config.env"
 NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 ZRAM_APPLY="$MODDIR/tools/zram/apply-zram-100p.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
+PAGE_CLUSTER_CONTROL="$MODDIR/tools/zram/page-cluster-control.sh"
 VERIFY_MODE_FILE="$G/verification-mode.env"
 READINESS="$MODDIR/tools/debug/vnext-readiness-summary.sh"
 mkdir -p "$G"
 
 printf 'timestamp_start=%s\n' "$(date +%s 2>/dev/null || echo unknown)" > "$H"
-printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_lmkd_reload_v8' >> "$H"
+printf '%s\n' 'health_log_model=verified_runtime_guard_plus_zram_100p_eh_lmkd_reload_v9' >> "$H"
 printf '%s\n' 'lmk_swap_low_policy=resolved_after_config' >> "$H"
+printf '%s\n' 'page_cluster_persistence=post_bootguard_reapply' >> "$H"
 
 [ -r "$NORMALIZE" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$NORMALIZE" >> "$H" 2>&1 || true
 if [ -f "$CONFIG_FILE" ]; then
@@ -105,6 +107,17 @@ if [ "$bootguard_verified" = 1 ] &&
     printf '%s\n' "SERVICE_ZRAM_POST_BOOT result=zram_properties_reapplied_no_mmd_restart lmk_policy=${LMKD_SWAP_LOW_RELOAD:-0}" >> "$H"
   else
     printf '%s\n' 'SERVICE_ZRAM_POST_BOOT result=reapply_failed_nonfatal' >> "$H"
+  fi
+fi
+
+# page-cluster is not an early-boot dependency. A persisted experimental zero
+# request is reconciled only after Bootguard and the post-boot ZRAM reapply have
+# succeeded. Failure is diagnostic and nonfatal; stock remains the fallback.
+if [ "$bootguard_verified" = 1 ] && [ -r "$PAGE_CLUSTER_CONTROL" ]; then
+  if PAGE_CLUSTER_CALLER=service_post_boot ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$PAGE_CLUSTER_CONTROL" reconcile >> "$H" 2>&1; then
+    printf '%s\n' 'SERVICE_PAGE_CLUSTER result=reconciled_after_verified_boot' >> "$H"
+  else
+    printf '%s\n' 'SERVICE_PAGE_CLUSTER result=reconcile_failed_nonfatal' >> "$H"
   fi
 fi
 

@@ -7,8 +7,8 @@ if not path:
     raise SystemExit('usage: validate-package.py <zip>')
 required = {
     'module.prop','action.sh','service.sh','bin/module-control','bin/webui-server-arm64',
-    'tools/webui/launch.sh','tools/control/pixel-control.sh','tools/zram/page-cluster-control.sh',
-    'webroot/index.html','webroot/embedded-host-bootstrap.js','webroot/app.js','webroot/app.css',
+    'tools/webui/launch.sh','tools/control/pixel-control.sh','tools/zram/page-cluster-control.sh','tools/zram/fstab.zram.100p',
+    'webroot/index.html','webroot/embedded-host-bootstrap.js','webroot/mobile-input-viewport.js','webroot/app.js','webroot/app.css',
     'webroot/race-guard.js','webroot/race-guard.css','webroot/observability.js','webroot/observability.css',
     'webroot/v03.js','webroot/v04.js',
     'common/repo.json','webui.lock','webui-third-party/Supercharger_Pixel_9_Series.LICENSE',
@@ -20,6 +20,8 @@ with zipfile.ZipFile(path) as z:
     infos = z.infolist(); names = {i.filename.rstrip('/') for i in infos}
     missing = sorted(required - names)
     if missing: raise SystemExit('FAIL package_required_missing=' + ','.join(missing))
+    if 'system/vendor/etc/fstab.zram.100p' in names:
+        raise SystemExit('FAIL package_generated_zram_fstab=system/vendor/etc/fstab.zram.100p')
     for info in infos:
         name = info.filename.rstrip('/')
         if not name: continue

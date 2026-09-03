@@ -152,7 +152,7 @@ THERMAL_INSTALL_ENABLED=0
 build_evidence="unsupported_platform"
 vnext_experimental=0
 case "$device:$android" in
-  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) vnext_experimental=1 ;;
+  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17|cubs:17|grizzly:17|kodiak:17|yogi:17) vnext_experimental=1 ;;
 esac
 
 if thermal_supported_platform_check "$SUPPORTED_JSON" "$device" "$android"; then

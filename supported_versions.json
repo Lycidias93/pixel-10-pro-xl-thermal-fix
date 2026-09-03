@@ -9,7 +9,11 @@
     "caiman": "Pixel 9 Pro",
     "komodo": "Pixel 9 Pro XL",
     "comet": "Pixel 9 Pro Fold",
-    "tegu": "Pixel 9a"
+    "tegu": "Pixel 9a",
+    "cubs": "Pixel 11",
+    "grizzly": "Pixel 11 Pro",
+    "kodiak": "Pixel 11 Pro XL",
+    "yogi": "Pixel 11 Pro Fold"
   },
   "supported_android_versions": [
     "17"
@@ -21,9 +25,9 @@
         "CP21.260330.011",
         "CP2A.260605.012",
         "CP2A.260705.006",
-        "CP2A.260805.005",
         "CP31.260522.006",
-        "CP31.260618.005"
+        "CP31.260618.005",
+        "CP2A.260805.005"
       ]
     },
     "blazer": {
@@ -58,30 +62,15 @@
         "CP31.260618.005"
       ]
     },
-    "stallion": {
-      "17": [
-      ]
-    },
-    "tokay": {
-      "17": [
-      ]
-    },
-    "caiman": {
-      "17": [
-      ]
-    },
-    "komodo": {
-      "17": [
-        "CP2A.260805.005"
-      ]
-    },
-    "comet": {
-      "17": [
-      ]
-    },
-    "tegu": {
-      "17": [
-      ]
-    }
+    "stallion": { "17": [] },
+    "tokay": { "17": [] },
+    "caiman": { "17": [] },
+    "komodo": { "17": ["CP2A.260805.005"] },
+    "comet": { "17": [] },
+    "tegu": { "17": [] },
+    "cubs": { "17": [] },
+    "grizzly": { "17": [] },
+    "kodiak": { "17": [] },
+    "yogi": { "17": [] }
   }
 }
