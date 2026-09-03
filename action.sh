@@ -95,7 +95,7 @@ INSTALLED_BUILD="none"
 [ -n "$INSTALLED_BUILD" ] || INSTALLED_BUILD=none
 
 vnext_experimental=0
-case "$CURRENT_DEVICE:$CURRENT_ANDROID" in tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) vnext_experimental=1 ;; esac
+case "$CURRENT_DEVICE:$CURRENT_ANDROID" in tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17|cubs:17|grizzly:17|kodiak:17|yogi:17) vnext_experimental=1 ;; esac
 
 platform_supported=0
 build_evidence=unsupported_platform
@@ -148,12 +148,19 @@ if [ "$platform_supported" -eq 1 ]; then
     if [ -s "$MODDIR/tools/core/patch-thermal-validated.sh" ] && sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR"; then
       MATERIALIZE_FINISHED_MS="$(now_ms)"
       thermal_layout_load_env "$LAYOUT_ENV" || { remove_thermal_overlay; cfg_set THERMAL_DISABLED 1; msg "! Layout state invalid after materialization"; }
-      if [ "${THERMAL_LAYOUT_COUNT:-0}" = 3 ]; then
+      layout_count="${THERMAL_LAYOUT_COUNT:-0}"
+      layout_count_valid=0
+      case "$layout_count" in ''|*[!0-9]*) ;; *) [ "$layout_count" -ge 3 ] 2>/dev/null && layout_count_valid=1 || true ;; esac
+      if [ "$layout_count_valid" = 1 ]; then
         cfg_set THERMAL_DISABLED 0
         rm -f "$MODDIR/skip_mount" "$MODDIR/guard/disabled_reason" 2>/dev/null || true
         update_install_state_build "$build_evidence"
         msg "- Local structure, diff and Outdoor validation passed"
-        msg "- Layout: $THERMAL_LAYOUT_FAMILY"
+        msg "- Layout: $THERMAL_LAYOUT_FAMILY ($layout_count files)"
+      else
+        remove_thermal_overlay
+        cfg_set THERMAL_DISABLED 1
+        msg "! Layout count invalid after materialization"
       fi
     else
       MATERIALIZE_FINISHED_MS="$(now_ms)"
