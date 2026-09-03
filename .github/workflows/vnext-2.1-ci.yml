@@ -73,6 +73,7 @@ jobs:
           sh -n tools/debug/status-lib.sh
           sh -n tools/debug/status-cached-print.sh
           sh -n tools/debug/collect-thermal-online-v5.sh
+          sh -n tools/debug/g6-polling-inventory.sh
           sh -n tools/core/platform-transition.sh
           sh -n tools/zram/materialize-zram-choice.sh
           sh -n tools/zram/config-normalize.sh
@@ -85,6 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-vnext-layouts.sh
+          bash tests/test-g6-polling-inventory.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
           bash tests/test-vnext-ota-transition.sh
           bash tests/test-vnext-alpha3-hardening.sh
