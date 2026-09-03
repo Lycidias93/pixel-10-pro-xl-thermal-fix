@@ -27,7 +27,7 @@ Community tester reports that do not include the required post-boot readiness/ru
 | Pixel 9 Pro Fold | `comet` | 17 | `platform_admitted` | local detection required | Pending | Stock or module 5 s | +1 C | blocked on experimental target | Stock layout + install/reboot evidence |
 | Pixel 9a | `tegu` | 17 | `platform_admitted` | local detection required | Pending | Stock or module 5 s | +1 C | blocked on experimental target | Stock layout + install/reboot evidence |
 | Pixel 11 | `cubs` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
-| Pixel 11 Pro | `grizzly` | 17 | `layout_evidenced`, runtime pending | bounded Include graph from `thermal_info_config.json` | Harish stock Thermal archive: 10 `thermal_info_config*.json` files plus `thermal_powerbudgets.json`; 35/35 `PollingDelay=300000`; no legacy `thermal_info_config_throttling.json`; archive SHA-256 `3445fe4d45c69e5be40ab331bbaf3fd3047a3bab5eff17a1dfda9a7b6690c7ca`. Exact build ID was not present in the archive | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Exact-head install → reboot → Bootguard/readiness → Support Snapshot |
+| Pixel 11 Pro | `grizzly` | 17 | `layout_evidenced`, runtime pending | bounded Include graph from `thermal_info_config.json` | Harish stock Thermal archive: 10 `thermal_info_config*.json` files plus `thermal_powerbudgets.json`; 35/35 `PollingDelay=300000`; no legacy `thermal_info_config_throttling.json`; archive SHA-256 `3445fe4d45c69e5be40ab331bbaf3fd3047a3bab5eff17a1dfda9a7b6690c7ca`. Exact build ID was not present. Tester later confirmed module mounting after correcting the root/kernel mount setup, but also reported an unisolated battery-temperature difference and feedback issues that changed the candidate afterward. | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | New exact-head install → reboot → Bootguard/readiness → matched heat baseline → WebUI/page-cluster checks → Support Snapshot |
 | Pixel 11 Pro XL | `kodiak` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
 | Pixel 11 Pro Fold | `yogi` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
 
@@ -45,6 +45,14 @@ The initial Tensor G6 policy is deliberately narrower than Pixel 9/10:
 6. local graph/materialization validation is not a runtime-verification claim.
 
 The Pixel 11 Pro source archive is sufficient to establish the new graph layout and the continued 300-second stock polling behavior. It is not sufficient to claim that an exact module head has booted safely on hardware.
+
+## 2026-09-03 tester-feedback retest boundary
+
+Harish reported four behavior/UX issues after the first Pixel 11 candidate: `page-cluster=0` did not survive reboot, the WebUI lacked a Silent/Verbose logging control, the Android keyboard could cover the confirmation field, and the ZIP contained a duplicate ZRAM fstab path. He also reported that battery temperature appeared to remain around 36 C longer with the module installed.
+
+The follow-up code changes the page-cluster post-boot path and the pinned WebUI Core, so any runtime acceptance of the earlier PR #192 candidate is invalid for final integration. The duplicate fstab was package hygiene debt but only 74 bytes; measured candidate size remains dominated by the standalone WebUI server rather than duplicate text files.
+
+The temperature observation remains `reported_unisolated`: the earlier candidate preserved Pixel 11 stock Thermal polling, while optional ZRAM, LMKD and verbose debug settings could also be active. Final device testing starts from Polling Stock + Thermal Stock + ZRAM disabled + LMKD Stock + Emerald Hill Adaptive + page-cluster Stock + Logging Silent, then changes one optional feature at a time under comparable conditions.
 
 ## Existing Mustang runtime gate
 
