@@ -1,6 +1,6 @@
 # Pixel Thermal & Memory Control
 
-**Dynamic V2 root-module tuning for supported Pixel 10 / 10a and Pixel 9 / 9a devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
+**Dynamic V2 root-module tuning for supported Pixel 10 / 10a, Pixel 9 / 9a and experimental Pixel 11-series devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
 
 [Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
@@ -80,11 +80,11 @@ The current vNext development code admits these Android 17 targets for **experim
 
 Pixel 11 no longer uses the legacy fixed `base + charge + throttling` assumption. vNext resolves a bounded Thermal `Include` graph starting at `thermal_info_config.json`, validates every referenced local Thermal file, rejects missing references/cycles, caches the exact stock graph and permits only the declared byte-level transformations.
 
-The initial Tensor G6 safety envelope is intentionally narrow. Module 5-second polling remains blocked until real-device runtime evidence exists. Outdoor Safe may adjust only the exact `VIRTUAL-SKIN` sensor; derivative/model/charging `VIRTUAL-SKIN-*` sensors, `cellular-emergency` and `OVER-35C` sensors are left untouched. pTune Thermal coexistence override remains blocked and firmware transitions require reinstall while the target is experimental.
+The initial Tensor G6 safety envelope is intentionally narrow. Module 5-second polling remains blocked until a later reviewed policy change backed by targeted runtime evidence; the current Pixel 11 Pro runtime acceptance does not itself widen polling. Outdoor Safe may adjust only the exact `VIRTUAL-SKIN` sensor; derivative/model/charging `VIRTUAL-SKIN-*` sensors, `cellular-emergency` and `OVER-35C` sensors are left untouched. pTune Thermal coexistence override remains blocked and firmware transitions require reinstall while the target is experimental.
 
-The available Pixel 11 Pro stock Thermal archive establishes the graph-layout change and confirms that stock still contains 300-second polling values, but it does **not** count as post-boot module verification. Tester feedback also confirmed that the module can mount once the root/kernel mount backend is correctly configured. Neither observation replaces exact-candidate runtime acceptance. See [the vNext device validation matrix](docs/vnext-device-test-matrix.md).
+The available Pixel 11 Pro stock Thermal archive established the graph-layout change and confirmed that stock still contains 300-second polling values. Separately, the exact PR #194 candidate (`461b150d6ebfc59dbb905fb0f29070c010a938a4b23dd490210e65a7ef83ff3f`) completed post-reboot runtime acceptance on Pixel 11 Pro / `grizzly`, Android 17 build `CD1A.260714.001.A9`: Bootguard reported `full_pass`, vNext readiness reached `runtime_verified`, the validated 10-file G6 overlay remained active with 35/35 stock `PollingDelay=300000` values and 0 `5000` values, and the final ZRAM + `page-cluster=0` reboot test reconciled the persisted zero state after verified boot. See [the vNext device validation matrix](docs/vnext-device-test-matrix.md).
 
-Current post-Alpha5 feedback work keeps all Pixel 11 polling values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. These changes require a newly built exact-head device retest; an older Pixel 11 candidate cannot satisfy the final gate.
+Current post-Alpha5 vNext state keeps all Pixel 11 polling values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. The exact-head `grizzly` retest passed these feedback gates; faster polling and further Thermal tuning remain separate later-stage work.
 
 ## What the module changes
 
@@ -119,7 +119,7 @@ The experimental LMKD option sets `ro.lmk.swap_free_low_percentage=1`, verifies 
 
 Published Alpha5 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation. If the device stock value is already `0`, leaving the action on Stock avoids taking ownership of an unnecessary runtime write.
 
-Current vNext development additionally persists the explicit zero selection in private module configuration. After a reboot, the module waits for Bootguard verification and active ZRAM before reapplying `0`; choosing Stock clears the persisted zero request and restores the same-boot baseline when the module owns it. The write remains a guarded ZRAM experiment, not an unconditional early-boot sysctl mutation.
+Current vNext development additionally persists the explicit zero selection in private module configuration. After a reboot, the module waits for Bootguard verification and active ZRAM before reapplying `0`; choosing Stock clears the persisted zero request and restores the same-boot baseline when the module owns it. The write remains a guarded ZRAM experiment, not an unconditional early-boot sysctl mutation. This reboot-persistence path passed the final `grizzly` hardware retest after PR #194 candidate installation.
 
 ## Alpha5 / vNext WebUI
 
@@ -137,7 +137,7 @@ The interface provides:
 - bounded logs and support information;
 - clear active, blocked and unavailable states.
 
-Current vNext development also exposes **Logging · Silent** and **Logging · Verbose** as typed actions using the same debug configuration as the installer. Silent suppresses optional verbose diagnostics but does not disable required bounded Bootguard/health/support evidence. The shared WebUI Core pin includes a mobile `visualViewport` guard that keeps the focused confirmation/text control visible when the Android software keyboard reduces the usable viewport.
+Current vNext development also exposes **Logging · Silent** and **Logging · Verbose** as typed actions using the same debug configuration as the installer. Silent suppresses optional verbose diagnostics but does not disable required bounded Bootguard/health/support evidence. The shared WebUI Core pin includes a mobile `visualViewport` guard that keeps the focused confirmation/text control visible when the Android software keyboard reduces the usable viewport. The final Pixel 11 Pro test confirmed the logging selector and mobile-input feedback fix in the exact candidate cycle.
 
 Both launch paths converge on the same standalone localhost server and typed allowlisted control surface. KsuWebUI is used only for the bounded bootstrap step; normal WebUI operations do not expose an unrestricted shell/JavaScript command bridge.
 
@@ -176,7 +176,7 @@ A reported temperature difference with the module enabled is not attributed to T
 
 - Unknown or unsupported platforms fail closed for Thermal changes.
 - Experimental Pixel 9 / 9a / 10a / 11 targets use the stricter conservative vNext policy.
-- Pixel 11 development targets keep Stock Thermal polling until runtime evidence explicitly admits a faster polling policy.
+- Pixel 11 development targets remain on Stock Thermal polling; the current `grizzly` runtime acceptance does not by itself admit 5-second polling.
 - Pixel 11 Outdoor changes target only exact `VIRTUAL-SKIN`; emergency, derivative/model/charging and `OVER-35C` sensors are not included in the initial Outdoor allowlist.
 - pTune conflict protection remains authoritative; coexistence override is unavailable on experimental targets.
 - ZRAM, LMKD, Emerald Hill max lock and page-cluster experiments remain independently controlled and reversible where the platform permits it.
@@ -207,7 +207,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins the post-Alpha5 mobile-input fix at template commit `e7aa23ebb36be9b9075c66693d045a19413af8b1`; this pin change requires a fresh candidate/device WebUI audit before release acceptance.
+Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins the post-Alpha5 mobile-input fix at template commit `e7aa23ebb36be9b9075c66693d045a19413af8b1`; the exact-candidate `grizzly` WebUI audit passed, while any public release/tag/update-channel publication remains a separate explicit release task.
 
 That shared core documents clean adaptations or design references from:
 
