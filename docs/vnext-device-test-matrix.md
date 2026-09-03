@@ -26,10 +26,10 @@ Community tester reports that do not include the required post-boot readiness/ru
 | Pixel 9 Pro XL | `komodo` | 17 | `platform_admitted` | local detection required | `CP2A.260805.005` registered; registration alone is not runtime verification | Stock or module 5 s | +1 C | blocked on experimental target | Stock layout + install/reboot evidence |
 | Pixel 9 Pro Fold | `comet` | 17 | `platform_admitted` | local detection required | Pending | Stock or module 5 s | +1 C | blocked on experimental target | Stock layout + install/reboot evidence |
 | Pixel 9a | `tegu` | 17 | `platform_admitted` | local detection required | Pending | Stock or module 5 s | +1 C | blocked on experimental target | Stock layout + install/reboot evidence |
-| Pixel 11 | `cubs` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
-| Pixel 11 Pro | `grizzly` | 17 | `layout_evidenced`, runtime pending | bounded Include graph from `thermal_info_config.json` | Harish stock Thermal archive: 10 `thermal_info_config*.json` files plus `thermal_powerbudgets.json`; 35/35 `PollingDelay=300000`; no legacy `thermal_info_config_throttling.json`; archive SHA-256 `3445fe4d45c69e5be40ab331bbaf3fd3047a3bab5eff17a1dfda9a7b6690c7ca`. Exact build ID was not present. Tester later confirmed module mounting after correcting the root/kernel mount setup, but also reported an unisolated battery-temperature difference and feedback issues that changed the candidate afterward. | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | New exact-head install → reboot → Bootguard/readiness → matched heat baseline → WebUI/page-cluster checks → Support Snapshot |
-| Pixel 11 Pro XL | `kodiak` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
-| Pixel 11 Pro Fold | `yogi` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** pending runtime evidence | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
+| Pixel 11 | `cubs` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
+| Pixel 11 Pro | `grizzly` | 17 | `runtime_verified` | bounded Include graph from `thermal_info_config.json` | Harish stock archive established the 10-file Thermal graph plus standalone `thermal_powerbudgets.json` and 35/35 stock `PollingDelay=300000` values. Exact PR #194 candidate SHA-256 `461b150d6ebfc59dbb905fb0f29070c010a938a4b23dd490210e65a7ef83ff3f` then passed on `CD1A.260714.001.A9`: module active, no disable/skip_mount/remove flags, Bootguard `full_pass`, readiness `runtime_verified`, active 10-file G6 overlay validated, 35/35 `300000` preserved and 0 `5000`. Final support bundle SHA-256 `8499968ceebfa12915b4ba01574114945484972482297e14e82df42e060e895d` also records ZRAM active and persisted `page-cluster=0` reconciled after verified boot; WebUI Silent/Verbose and mobile-input fixes were tester-confirmed. | **Stock only**; runtime acceptance does not widen polling | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Keep as exact-candidate G6 runtime regression; faster polling/Thermal tuning requires a separate reviewed stage |
+| Pixel 11 Pro XL | `kodiak` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
+| Pixel 11 Pro Fold | `yogi` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
 
 ## Pixel 11 initial safety envelope
 
@@ -37,22 +37,26 @@ Pixel 11 support does not reuse the old three-file assumption. The vNext materia
 
 The initial Tensor G6 policy is deliberately narrower than Pixel 9/10:
 
-1. stock Thermal polling is mandatory; `300000 → 5000` remains blocked until real-device runtime evidence exists;
+1. stock Thermal polling is mandatory; `300000 → 5000` remains blocked. The `grizzly` runtime pass verifies the Stock-only implementation but does not itself admit faster polling;
 2. Outdoor Safe is capped at `+1 C` and may change only the exact `VIRTUAL-SKIN` sensor;
 3. `cellular-emergency`, `VIRTUAL-SKIN-*` derivative/model/charging sensors and `OVER-35C` sensors are not Outdoor targets on Pixel 11;
 4. pTune coexistence override is blocked;
 5. automatic OTA profile switching is disabled and firmware transitions require reinstall while Pixel 11 remains experimental;
 6. local graph/materialization validation is not a runtime-verification claim.
 
-The Pixel 11 Pro source archive is sufficient to establish the new graph layout and the continued 300-second stock polling behavior. It is not sufficient to claim that an exact module head has booted safely on hardware.
+The Pixel 11 Pro source archive established the new graph layout and the continued 300-second stock polling behavior. Runtime acceptance is tracked separately and is now complete for the exact PR #194 candidate on `grizzly` / build `CD1A.260714.001.A9`.
 
-## 2026-09-03 tester-feedback retest boundary
+## 2026-09-03 tester-feedback acceptance
 
 Harish reported four behavior/UX issues after the first Pixel 11 candidate: `page-cluster=0` did not survive reboot, the WebUI lacked a Silent/Verbose logging control, the Android keyboard could cover the confirmation field, and the ZIP contained a duplicate ZRAM fstab path. He also reported that battery temperature appeared to remain around 36 C longer with the module installed.
 
-The follow-up code changes the page-cluster post-boot path and the pinned WebUI Core, so any runtime acceptance of the earlier PR #192 candidate is invalid for final integration. The duplicate fstab was package hygiene debt but only 74 bytes; measured candidate size remains dominated by the standalone WebUI server rather than duplicate text files.
+The follow-up changed the page-cluster post-boot path and the pinned WebUI Core, so runtime acceptance of the earlier PR #192 candidate was invalidated. The clean PR #194 integration was rebuilt from the Alpha5 target, passed exact-head CI run `33711788431`, and produced candidate SHA-256 `461b150d6ebfc59dbb905fb0f29070c010a938a4b23dd490210e65a7ef83ff3f`.
 
-The temperature observation remains `reported_unisolated`: the earlier candidate preserved Pixel 11 stock Thermal polling, while optional ZRAM, LMKD and verbose debug settings could also be active. Final device testing starts from Polling Stock + Thermal Stock + ZRAM disabled + LMKD Stock + Emerald Hill Adaptive + page-cluster Stock + Logging Silent, then changes one optional feature at a time under comparable conditions.
+Fresh Pixel 11 Pro hardware evidence on `grizzly` then closed the runtime gate: the module remained active after reboot with no disable/skip_mount/remove flags, Bootguard reported `full_pass`, readiness reached `runtime_verified`, the 10-file `include_graph_g6` overlay remained validated with Stock polling, and the final ZRAM test recorded `ZRAM_PAGE_CLUSTER_MODE=zero`, `RESULT: PAGE_CLUSTER_ZERO_PASS ... persistence=post_bootguard_reapply`, `RESULT: PAGE_CLUSTER_RECONCILE_PASS desired=zero action=applied`, and `SERVICE_PAGE_CLUSTER result=reconciled_after_verified_boot`. Harish directly confirmed the requested final check set worked and Codecity001 reviewed the integration as ready to proceed. PR #194 was merged into `vnext-2.1.0-alpha.5` as `4bf8d16dcf38f5eb7e87f19a97c1c388d51f34b6`.
+
+The duplicate fstab was package hygiene debt but only 74 bytes; measured candidate size remains dominated by the standalone WebUI server rather than duplicate text files.
+
+The temperature observation remains `reported_unisolated`: the accepted Pixel 11 candidate preserves stock Thermal polling, and the available captures do not provide a matched long-window A/B attribution. Any temperature investigation continues separately from this acceptance, starting with Polling Stock + Thermal Stock + ZRAM disabled + LMKD Stock + Emerald Hill Adaptive + page-cluster Stock + Logging Silent and changing one optional feature at a time under comparable conditions.
 
 ## Existing Mustang runtime gate
 
@@ -60,6 +64,6 @@ The corrected Alpha4 dev.1 runtime package completed the final repository-owned 
 
 ## Promotion rule
 
-Experimental Pixel 9 / Pixel 10a / Pixel 11 targets remain capped at Stock / Outdoor Safe +1 C. Pixel 11 additionally remains Stock-polling-only. A local materialization pass, build-map entry, static stock archive or tester success report alone is not enough to widen those limits. Higher Thermal profiles or Pixel 11 5-second polling require explicit device runtime evidence and a later reviewed policy change.
+Experimental Pixel 9 / Pixel 10a / Pixel 11 targets remain capped at Stock / Outdoor Safe +1 C. Pixel 11 additionally remains Stock-polling-only. A local materialization pass, build-map entry, static stock archive, tester success report, or a single-device Stock-policy runtime pass does not automatically widen those limits. Higher Thermal profiles or Pixel 11 5-second polling require targeted device evidence and a later reviewed policy change.
 
 The module writes `guard/support-readiness.env` at install time and refreshes it after boot. `runtime_verified` is only claimed when the active Dynamic overlay and boot/runtime contract are actually verified.
