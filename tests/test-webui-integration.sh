@@ -4,18 +4,25 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 grep -Fqx 'core_version=0.6.1' webui.lock
-grep -Fqx 'template_commit=6fbd1b018a45fe5b1bebba7aeb9142423eab47fb' webui.lock
+grep -Fqx 'template_commit=e7aa23ebb36be9b9075c66693d045a19413af8b1' webui.lock
 grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
 grep -Fq 'adivenxnataly/KsuWebUI@20342d280a841f8b317603a7eefb1193a95ab626' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done
-for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do grep -Fq "\"$device\"" supported_versions.json; done
+for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu cubs grizzly kodiak yogi; do grep -Fq "\"$device\"" supported_versions.json; done
 for label in 'Pixel 10a' 'Pixel 9a' 'Pixel 10 Pro XL' 'Pixel 9 Pro Fold'; do grep -Fq "\"$label\"" common/repo.json; done
 grep -Fq 'WEBUI_LAUNCHER="$MODDIR/tools/webui/launch.sh"' action.sh
 grep -Fq 'opening legacy Action menu' action.sh
 grep -Fq '"page-cluster-zero"' bin/module-control
 grep -Fq 'confirmation_text":"PAGECLUSTER"' bin/module-control
+grep -Fq '"debug-silent"' bin/module-control
+grep -Fq '"debug-verbose"' bin/module-control
 grep -Fq 'dynamic_stock_thermal_validation' bin/module-control
 grep -Fq 'ZRAM_MATERIALIZE_NOW=0' tools/control/pixel-control.sh
+grep -Fq 'DEBUG_MODE 0' tools/control/pixel-control.sh
+grep -Fq 'DEBUG_MODE 1' tools/control/pixel-control.sh
+grep -Fq 'ZRAM_PAGE_CLUSTER_MODE zero' tools/zram/page-cluster-control.sh
+grep -Fq 'ZRAM_PAGE_CLUSTER_RISK_ACK explicit_user_zero' tools/zram/page-cluster-control.sh
+grep -Fq 'PAGE_CLUSTER_CALLER=service_post_boot' service.sh
 
 # The launcher must tolerate the short fork->exec window before the native
 # server becomes identifiable through /proc/$pid/cmdline. Identity remains a
@@ -51,6 +58,8 @@ printf '%s\n' "$status_body" | grep -Fq 'ensure_status_cache'
 printf '%s\n' "$status_body" | grep -Fq '"action_state":{"active"'
 printf '%s\n' "$status_body" | grep -Fq 'add_active thermal-outdoor-extended'
 printf '%s\n' "$status_body" | grep -Fq 'add_active zram-enable'
+printf '%s\n' "$status_body" | grep -Fq 'add_active debug-silent'
+printf '%s\n' "$status_body" | grep -Fq 'add_active debug-verbose'
 printf '%s\n' "$status_body" | grep -Fq "add_blocked lmkd-1pct 'Enable module ZRAM 100% first.'"
 if printf '%s\n' "$status_body" | grep -Fxq '  refresh_status'; then
   echo 'FAIL: WebUI status GET performs unconditional full refresh' >&2
@@ -74,8 +83,9 @@ if grep -Eq 'ksu\.exec|apatch\.exec|magisk\.exec|webui\.exec|Android\.exec|eval\
   exit 1
 fi
 
-# The package must carry the complete pinned WebUI 0.6.1 asset surface.
-for asset in embedded-host-bootstrap.js observability.js observability.css v04.js; do
+# The package must carry the complete pinned WebUI 0.6.1 asset surface,
+# including the generic Android software-keyboard viewport guard.
+for asset in embedded-host-bootstrap.js mobile-input-viewport.js observability.js observability.css v04.js; do
   grep -Fq "$asset" dev_tools/build-release-module.sh
   grep -Fq "webroot/$asset" dev_tools/verify-release-module.sh
   grep -Fq "webroot/$asset" dev_tools/validate-package.py

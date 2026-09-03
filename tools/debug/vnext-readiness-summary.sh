@@ -16,19 +16,22 @@ BUILD_ID="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
 [ -n "$BUILD_ID" ] || BUILD_ID=unknown
 
 kv() {
-  _key="$1"
-  _file="$2"
+  _key="$1"; _file="$2"
   [ -r "$_file" ] || return 0
   sed -n "s/^${_key}=//p" "$_file" 2>/dev/null | tail -n 1 | tr -d '\r'
 }
 
 experimental=no
+g6_graph=no
 case "$DEVICE:$ANDROID" in
-  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17) experimental=yes ;;
+  tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17|cubs:17|grizzly:17|kodiak:17|yogi:17) experimental=yes ;;
 esac
+case "$DEVICE:$ANDROID" in cubs:17|grizzly:17|kodiak:17|yogi:17) g6_graph=yes ;; esac
 
 ptune_policy=available_guarded
 [ "$experimental" = yes ] && ptune_policy=blocked_experimental_platform
+polling_policy=stock_or_mod
+[ "$g6_graph" = yes ] && polling_policy=stock_only_pending_runtime_evidence
 
 module_version="$(kv version "$M/module.prop")"
 module_version_code="$(kv versionCode "$M/module.prop")"
@@ -39,8 +42,7 @@ TMP="/data/local/tmp/pixel_thermal_readiness.$$"
 rm -f "$TMP" 2>/dev/null || true
 compat_rc=127
 if [ -s "$COMPAT" ]; then
-  MODDIR="$M" THERMAL_ADB_ROOT="$ADB_ROOT" THERMAL_DEVICE="$DEVICE" THERMAL_ANDROID="$ANDROID" THERMAL_BUILD_ID="$BUILD_ID" \
-    sh "$COMPAT" > "$TMP" 2>&1
+  MODDIR="$M" THERMAL_ADB_ROOT="$ADB_ROOT" THERMAL_DEVICE="$DEVICE" THERMAL_ANDROID="$ANDROID" THERMAL_BUILD_ID="$BUILD_ID" sh "$COMPAT" > "$TMP" 2>&1
   compat_rc=$?
 else
   printf '%s\n' 'REASON=compat_helper_missing' > "$TMP"
@@ -94,6 +96,8 @@ printf '%s\n' "build_id=$BUILD_ID"
 printf '%s\n' "module_version=$module_version"
 printf '%s\n' "module_version_code=$module_version_code"
 printf '%s\n' "experimental_platform=$experimental"
+printf '%s\n' "g6_include_graph_platform=$g6_graph"
+printf '%s\n' "polling_policy=$polling_policy"
 printf '%s\n' "ptune_override_policy=$ptune_policy"
 printf '%s\n' "platform_supported=$platform_supported"
 printf '%s\n' "build_evidence=$build_evidence"

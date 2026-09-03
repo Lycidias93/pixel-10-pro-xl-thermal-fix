@@ -162,7 +162,7 @@ zram_disable() {
   cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
   mark_reboot
   refresh_status
-  printf '%s\n' 'RESULT: PIXEL_CONTROL_ZRAM_DISABLE_PASS reboot_required=yes lmkd=stock eh=adaptive'
+  printf '%s\n' 'RESULT: PIXEL_CONTROL_ZRAM_DISABLE_PASS reboot_required=yes lmkd=stock eh=adaptive page_cluster=stock'
 }
 
 eh_adaptive() {
@@ -220,11 +220,29 @@ lmkd_one_percent() {
 page_cluster_zero() {
   [ -s "$PAGE_CLUSTER" ] || return 3
   PAGE_CLUSTER_CALLER=webui ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$PAGE_CLUSTER" apply-zero
+  refresh_status
 }
 
 page_cluster_stock() {
   [ -s "$PAGE_CLUSTER" ] || return 3
   PAGE_CLUSTER_CALLER=webui ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$PAGE_CLUSTER" restore
+  refresh_status
+}
+
+debug_silent() {
+  cfg_set DEBUG_MODE 0
+  cfg_set debug_mode 0
+  cfg_set LAST_DEBUG_MODE silent
+  refresh_status
+  printf '%s\n' 'RESULT: PIXEL_CONTROL_DEBUG_SILENT_PASS logging=silent'
+}
+
+debug_verbose() {
+  cfg_set DEBUG_MODE 1
+  cfg_set debug_mode 1
+  cfg_set LAST_DEBUG_MODE verbose
+  refresh_status
+  printf '%s\n' 'RESULT: PIXEL_CONTROL_DEBUG_VERBOSE_PASS logging=verbose'
 }
 
 command="${1:-}"
@@ -241,7 +259,7 @@ current_thermal_profile() {
 }
 
 case "$command" in
-  polling-mod|polling-stock|thermal-stock|thermal-outdoor-safe|thermal-outdoor-plus|thermal-outdoor-extended|zram-enable|zram-disable|eh-adaptive|eh-max|lmkd-stock|lmkd-1pct|page-cluster-stock|page-cluster-zero) ;;
+  polling-mod|polling-stock|thermal-stock|thermal-outdoor-safe|thermal-outdoor-plus|thermal-outdoor-extended|zram-enable|zram-disable|eh-adaptive|eh-max|lmkd-stock|lmkd-1pct|page-cluster-stock|page-cluster-zero|debug-silent|debug-verbose) ;;
   *) printf '%s\n' 'usage: pixel-control.sh <declared-command>' >&2; exit 64 ;;
 esac
 
@@ -265,5 +283,7 @@ case "$command" in
   lmkd-1pct) lmkd_one_percent ;;
   page-cluster-stock) page_cluster_stock ;;
   page-cluster-zero) page_cluster_zero ;;
+  debug-silent) debug_silent ;;
+  debug-verbose) debug_verbose ;;
 esac
 release_lock
