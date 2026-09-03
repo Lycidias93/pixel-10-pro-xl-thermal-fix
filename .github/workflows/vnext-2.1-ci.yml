@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: 6fbd1b018a45fe5b1bebba7aeb9142423eab47fb
+          ref: e7aa23ebb36be9b9075c66693d045a19413af8b1
           path: .webui-core
           fetch-depth: 1
 
@@ -45,7 +45,7 @@ jobs:
           test "$(git -C .webui-core rev-parse HEAD)" = "$(sed -n 's/^template_commit=//p' webui.lock)"
           test "$(tr -d '\r\n' < .webui-core/CORE_VERSION)" = "$(sed -n 's/^core_version=//p' webui.lock)"
           (cd .webui-core && ./scripts/verify.sh)
-          node --test .webui-core/scripts/webui-race-regression.test.mjs .webui-core/scripts/webui-embedded-host-bootstrap.test.mjs
+          node --test .webui-core/scripts/webui-race-regression.test.mjs .webui-core/scripts/webui-embedded-host-bootstrap.test.mjs .webui-core/scripts/webui-mobile-input-viewport.test.mjs
 
       - name: Shell syntax
         run: |
@@ -102,10 +102,11 @@ jobs:
       - name: Verify single vNext device family matrix
         run: |
           set -euo pipefail
-          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do
+          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu cubs grizzly kodiak yogi; do
             grep -Fq "\"$device\"" supported_versions.json
           done
           grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
+          grep -Fq 'cubs:17|grizzly:17|kodiak:17|yogi:17' action.sh
           test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.5'
           printf '%s\n' 'RESULT: VNEXT_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
 
@@ -126,6 +127,7 @@ jobs:
           for asset in \
             bin/webui-server-arm64 \
             webroot/embedded-host-bootstrap.js \
+            webroot/mobile-input-viewport.js \
             webroot/app.js webroot/app.css \
             webroot/race-guard.js webroot/race-guard.css \
             webroot/observability.js webroot/observability.css \
