@@ -2,25 +2,6 @@ name: Publish vNext 2.1.0-alpha.5 Prerelease
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - vnext-2.1.0-alpha.5
-    paths:
-      - .github/workflows/vnext-2.1-prerelease.yml
-      - .github/workflows/vnext-2.1-ci.yml
-      - module.prop
-      - update-prerelease.json
-      - release-notes/2.1.0-alpha.5.md
-      - action.sh
-      - customize.sh
-      - post-fs-data.sh
-      - service.sh
-      - supported_versions.json
-      - webui.lock
-      - bin/**
-      - tools/**
-      - tests/**
-      - dev_tools/**
 
 permissions:
   contents: write
@@ -42,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: 6fbd1b018a45fe5b1bebba7aeb9142423eab47fb
+          ref: e7aa23ebb36be9b9075c66693d045a19413af8b1
           path: .webui-core
           fetch-depth: 1
 
@@ -58,6 +39,7 @@ jobs:
       - name: Verify public source identity
         run: |
           set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = 'workflow_dispatch'
           test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.5'
           test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.5'
           test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016255'
@@ -76,7 +58,7 @@ jobs:
           test "$(git -C .webui-core rev-parse HEAD)" = "$(sed -n 's/^template_commit=//p' webui.lock)"
           test "$(tr -d '\r\n' < .webui-core/CORE_VERSION)" = "$(sed -n 's/^core_version=//p' webui.lock)"
           (cd .webui-core && ./scripts/verify.sh)
-          node --test .webui-core/scripts/webui-race-regression.test.mjs .webui-core/scripts/webui-embedded-host-bootstrap.test.mjs
+          node --test .webui-core/scripts/webui-race-regression.test.mjs .webui-core/scripts/webui-embedded-host-bootstrap.test.mjs .webui-core/scripts/webui-mobile-input-viewport.test.mjs
 
       - name: Release regression gate
         run: |
@@ -90,7 +72,9 @@ jobs:
           sh -n tools/control/pixel-control.sh
           sh -n tools/zram/page-cluster-control.sh
           sh -n tools/debug/vnext-device-verify.sh
+          sh -n tools/debug/g6-polling-inventory.sh
           bash tests/test-vnext-layouts.sh
+          bash tests/test-g6-polling-inventory.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
           bash tests/test-vnext-ota-transition.sh
           bash tests/test-vnext-alpha3-hardening.sh
@@ -104,7 +88,7 @@ jobs:
           bash tests/test-zram-eh-dev12.sh
           bash tests/test-page-cluster-control.sh
           bash tests/test-webui-integration.sh
-          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu; do
+          for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu cubs grizzly kodiak yogi; do
             grep -Fq "\"$device\"" supported_versions.json
           done
 
