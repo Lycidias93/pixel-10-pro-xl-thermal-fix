@@ -111,9 +111,9 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
     if (name!="") current=name
 
     if (in_hys) {
-      close=index(line,"]")
-      if (close>0) {
-        line=process_hys_text(substr(line,1,close-1),hys_name) substr(line,close)
+      closing=index(line,"]")
+      if (closing>0) {
+        line=process_hys_text(substr(line,1,closing-1),hys_name) substr(line,closing)
         if (hys_idx!=7) bad=1
         in_hys=0
         hys_idx=0
@@ -131,9 +131,9 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
         bad=1
       } else {
         rest=substr(line,open+1)
-        close=index(rest,"]")
-        if (close>0) {
-          line=substr(line,1,open) process_hys_text(substr(rest,1,close-1),current) substr(rest,close)
+        closing=index(rest,"]")
+        if (closing>0) {
+          line=substr(line,1,open) process_hys_text(substr(rest,1,closing-1),current) substr(rest,closing)
           if (hys_idx!=7) bad=1
           hys_idx=0
           hys_name=""
