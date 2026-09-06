@@ -381,11 +381,11 @@ for file in $THERMAL_LAYOUT_FILES; do [ -s "$PATCH_STAGE/$file" ] || fail 48 "re
 
 if [ "$DEVICE_FAMILY" = pixel11 ] && { [ "$PIXEL11_HYSTERESIS_MODE" = mod ] || [ "$PIXEL11_PASSIVE_MODE" = mod ]; }; then
   [ "$pixel11_hys_arrays" = 7 ] || fail 58 "pixel11_hysteresis_inventory_${pixel11_hys_arrays}_expected_7"
-  [ "$pixel11_mrs_targets" = 5 ] || fail 58 "pixel11_mrs_inventory_${pixel11_mrs_targets}_expected_5"
+  [ "$pixel11_mrs_targets" = 32 ] || fail 58 "pixel11_mrs_inventory_${pixel11_mrs_targets}_expected_32"
   [ "$pixel11_passive_targets" = 7 ] || fail 58 "pixel11_passive_inventory_${pixel11_passive_targets}_expected_7"
   if [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
     [ "$pixel11_hys_changes" = 15 ] || fail 58 "pixel11_hysteresis_changes_${pixel11_hys_changes}_expected_15"
-    [ "$pixel11_mrs_changes" = 5 ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_5"
+    [ "$pixel11_mrs_changes" = 32 ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_32"
   else
     [ "$pixel11_hys_changes" = 0 ] || fail 58 pixel11_stock_hysteresis_changed
     [ "$pixel11_mrs_changes" = 0 ] || fail 58 pixel11_stock_mrs_changed
