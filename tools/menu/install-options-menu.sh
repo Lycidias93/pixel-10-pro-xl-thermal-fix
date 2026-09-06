@@ -63,6 +63,13 @@ ptune_present() {
 }
 
 has_remembered() {
+  _saved_family="$(cfg_get LAST_INSTALL_OPTION_FAMILY)"
+  if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_saved_family" != pixel11 ]; then
+    return 1
+  fi
+  if [ -n "$_saved_family" ] && [ "$_saved_family" != "$DEVICE_FAMILY" ]; then
+    return 1
+  fi
   for _key in \
     LAST_THERMAL_OUTDOOR_PROFILE \
     LAST_THERMAL_POLLING_MODE \
@@ -310,7 +317,9 @@ record_ptune_presence() {
 }
 
 mark_single_pass_complete() {
-  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v2
+  cfg_set INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
+  cfg_set LAST_INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
+  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v3_family
   cfg_set INSTALL_MENU_PROCESS_COUNT 1
   cfg_set INSTALL_OPTIONS_CONFIRMED 1
 }
