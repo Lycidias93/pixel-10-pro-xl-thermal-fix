@@ -456,7 +456,7 @@ if [ "$DEVICE_FAMILY" = pixel11 ]; then
   mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "$(profile_policy_label 1 'Outdoor Safe')" 0
   [ "$MC_INDEX" = 1 ] && apply_profile outdoor-safe || apply_profile stock
 
-  zram_index=1
+  zram_index=0
   mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
   if [ "$MC_INDEX" = 0 ]; then
     apply_zram disabled
