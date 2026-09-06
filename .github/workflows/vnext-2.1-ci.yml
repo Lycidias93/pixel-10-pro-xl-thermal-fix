@@ -112,7 +112,7 @@ jobs:
           done
           grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
           grep -Fq 'cubs:17|grizzly:17|kodiak:17|yogi:17' action.sh
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.5'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.5-test.g6-recovery1'
           printf '%s\n' 'RESULT: VNEXT_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
 
       - name: Build prerelease candidate
@@ -139,14 +139,14 @@ jobs:
             webroot/v03.js webroot/v04.js; do
             grep -Fxq "$asset" dist/package-entries.txt
           done
-          printf '%s\n' 'RESULT: VNEXT_ALPHA5_PACKAGE_PASS'
+          printf '%s\n' 'RESULT: VNEXT_PIXEL11_G6_RECOVERY_TEST1_PACKAGE_PASS'
 
       - name: Upload prerelease candidate
         uses: actions/upload-artifact@v4
         with:
-          name: pixel-thermal-vnext-alpha5-${{ github.sha }}
+          name: pixel-thermal-g6-recovery-test1-${{ github.sha }}
           path: |
-            dist/pixel-thermal-memory-control-2.1.0-alpha.5.zip
+            dist/pixel-thermal-memory-control-2.1.0-alpha.5-test.g6-recovery1.zip
             dist/build-metadata.txt
             dist/prerelease.sha256.txt
             dist/package-entries.txt
