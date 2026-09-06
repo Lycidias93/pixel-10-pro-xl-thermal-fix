@@ -19,7 +19,7 @@ for code in cubs grizzly kodiak yogi; do
   grep -Fq "$code:17" "$repo_root/tools/ptune/ptune-guard.sh" || { echo "FAIL ptune_experimental_$code"; exit 3; }
   grep -Fq "$code:17" "$repo_root/tools/debug/vnext-readiness-summary.sh" || { echo "FAIL readiness_experimental_$code"; exit 3; }
 done
-grep -Fq 'stock_only_pending_runtime_evidence' "$repo_root/tools/core/install-thermal-overlay.sh" || { echo 'FAIL g6_stock_polling_policy_missing'; exit 3; }
+grep -Fq 'classic_polling_stock_family_controls' "$repo_root/tools/core/install-thermal-overlay.sh" || { echo 'FAIL g6_family_polling_policy_missing'; exit 3; }
 
 grep -Fqx 'LC_ALL=C' "$repo_root/tools/core/patch-thermal.sh" || { echo 'FAIL thermal_locale_pin_missing'; exit 4; }
 grep -Fqx 'export LC_ALL' "$repo_root/tools/core/patch-thermal.sh" || { echo 'FAIL thermal_locale_export_missing'; exit 4; }
