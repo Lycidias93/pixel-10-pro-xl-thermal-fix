@@ -172,7 +172,7 @@ normalize_allowed() {
 
 patch_one() {
   _src="$1"; _dst="$2"; _file="$3"
-  _base="${_dst}.base.$"
+  _base="${_dst}.base.$$"
   awk -v delta="$DELTA" -v poll_mode="$POLLING_MODE" -v policy="$OUTDOOR_POLICY" '
     function sensor_name(line, name) {
       if (line !~ /"Name"[[:space:]]*:/) return ""
@@ -222,7 +222,7 @@ patch_one() {
 
   if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_file" = thermal_info_config_common.json ] &&
      { [ "$PIXEL11_HYSTERESIS_MODE" = mod ] || [ "$PIXEL11_PASSIVE_MODE" = mod ]; }; then
-    _metrics="$GUARD_DIR/.g6-controls-metrics.$"
+    _metrics="$GUARD_DIR/.g6-controls-metrics.$$"
     rm -f "$_metrics"
     if ! sh "$G6_CONTROLS_HELPER" "$_base" "$_dst" "$PIXEL11_HYSTERESIS_MODE" "$PIXEL11_PASSIVE_MODE" "$_metrics"; then
       rm -f "$_base" "$_metrics"
