@@ -52,7 +52,7 @@ This path is intentionally not the Test-1 default and is not eligible for target
 
 ## Fail-closed validation
 
-The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays, 32 MaxReleaseStep cooling-device/profile bindings distributed across all five target sensors, and seven PassiveDelay targets.
+The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays, 32 MaxReleaseStep cooling-device/profile bindings distributed across all five target sensors, and seven PassiveDelay targets. Multiple `MaxReleaseStep` keys on the same physical JSON line are iterated independently, so validation is bound to the schema objects rather than file pretty-printing.
 
 The vNext byte-diff normalizer admits only the family-local controlled fields in `thermal_info_config_common.json`; classic `PollingDelay` remains stock. The generated validation state records the Pixel 11 recovery/passive modes.
 
