@@ -58,13 +58,14 @@ The vNext byte-diff normalizer admits only the family-local controlled fields in
 
 ## Test build
 
-Module identity for this candidate:
+The module keeps the branch/public package identity at:
 
-- version: `2.1.0-alpha.5-test.g6-recovery1`
-- versionCode: `1016256`
+- version: `2.1.0-alpha.5`
+- versionCode: `1016255`
+- test identity: `module.prop` description plus Actions artifact name `pixel-thermal-g6-recovery-test1-<head-sha>`
 - release/update publication: unchanged; this is an Actions artifact only.
 
-The vNext CI builds a dedicated test artifact after all existing vNext regression gates plus `tests/test-pixel11-family-controls.sh`.
+The vNext CI builds the standard Alpha5-named inner module ZIP inside the distinctly named test-only Actions artifact after all existing vNext regression gates plus `tests/test-pixel11-family-controls.sh`.
 
 ## Hardware acceptance gate
 
