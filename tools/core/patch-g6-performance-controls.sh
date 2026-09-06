@@ -126,7 +126,10 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
       hys_seen++
       hys_name=current
       hys_idx=0
-      open=index(line,"[")
+      field_pos=index(line,"\"HotHysteresis\"")
+      field_tail=substr(line,field_pos)
+      rel_open=index(field_tail,"[")
+      open=rel_open>0 ? field_pos+rel_open-1 : 0
       if (open<1) {
         bad=1
       } else {
