@@ -40,7 +40,7 @@ Target sensors:
 
 HotHysteresis is slot-bound and fail-closed against the stock arrays supplied for G6 testing. The transformation changes exactly 15 admitted numeric slots while leaving EMERG/SHUTDOWN values untouched.
 
-MaxReleaseStep changes exactly five sensors from `1 -> 2`: the four CPU targets plus `VIRTUAL-SKIN-SOC`.
+MaxReleaseStep changes exactly 32 cooling-device and profile bindings from `1 -> 2` across five target sensors: the four CPU targets plus `VIRTUAL-SKIN-SOC`.
 
 `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` do not gain a MaxReleaseStep. `VIRTUAL-SKIN-SOC-EXTREME` remains stock at `1`.
 
@@ -52,7 +52,7 @@ This path is intentionally not the Test-1 default and is not eligible for target
 
 ## Fail-closed validation
 
-The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays, five MaxReleaseStep targets and seven PassiveDelay targets.
+The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays, 32 MaxReleaseStep cooling-device/profile bindings distributed across all five target sensors, and seven PassiveDelay targets.
 
 The vNext byte-diff normalizer admits only the family-local controlled fields in `thermal_info_config_common.json`; classic `PollingDelay` remains stock. The generated validation state records the Pixel 11 recovery/passive modes.
 
@@ -81,4 +81,6 @@ Test 1 selections:
 
 Required evidence before integration or phase 2: exact candidate identity/hash, install + reboot, module/Bootguard/readiness validity, active G6 overlay, classic PollingDelay unchanged, selected recovery fields exact, benchmark/recovery observations and no safety/protection regressions.
 
-The claimed ~2x tier/frequency recovery remains a hypothesis until this device evidence exists.
+Harish's real-stock-schema review corrected the original synthetic fixture: on the accepted G6 layout, MaxReleaseStep is nested under BindedCdevInfo/Profile bindings rather than being one top-level sensor property. The five target sensors contain 32 admitted bindings in total (6/6/9/6/5), while VIRTUAL-SKIN-SOC-EXTREME has five separate bindings that remain stock. The corrected unit fixture mirrors that nesting and the fail-closed inventory now requires all 32 target bindings.
+
+The claimed ~2x tier/frequency recovery remains a hypothesis until exact-head device benchmark evidence exists.
