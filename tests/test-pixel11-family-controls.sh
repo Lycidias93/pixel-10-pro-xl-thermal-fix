@@ -62,12 +62,58 @@ JSON
   "Sensors": [
     {"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.9, 1.9, 1.9, 1.4, 1.9, 1.9], "PassiveDelay": 7000, "PollingDelay": 300000},
     {"Name": "VIRTUAL-SKIN-HINT", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.9, 1.9, 1.9, 1.4, 1.9, 1.9], "PassiveDelay": 7000, "PollingDelay": 300000},
-    {"Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM", "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "MaxReleaseStep": 1, "PassiveDelay": 7000, "PollingDelay": 300000},
-    {"Name": "VIRTUAL-SKIN-CPU-MID", "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "MaxReleaseStep": 1, "PassiveDelay": 7000, "PollingDelay": 300000},
-    {"Name": "VIRTUAL-SKIN-CPU-ODPM", "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "MaxReleaseStep": 1, "PassiveDelay": 7000, "PollingDelay": 300000},
-    {"Name": "VIRTUAL-SKIN-CPU-HIGH", "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "MaxReleaseStep": 1, "PassiveDelay": 7000, "PollingDelay": 300000},
-    {"Name": "VIRTUAL-SKIN-SOC", "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 1.9, 1.9, 1.4, 1.9], "MaxReleaseStep": 1, "PassiveDelay": 7000, "PollingDelay": 300000},
-    {"Name": "VIRTUAL-SKIN-SOC-EXTREME", "HotThreshold": [60], "HotHysteresis": [0, 0, 1.9, 1.9, 1.9, 1.9, 1.9], "MaxReleaseStep": 1, "PassiveDelay": 7000, "PollingDelay": 300000},
+    {
+      "Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM",
+      "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "PassiveDelay": 7000, "PollingDelay": 300000,
+      "BindedCdevInfo": [
+        {"CdevRequest": "cpufreq-cpu0", "MaxReleaseStep": 1},
+        {"CdevRequest": "cpufreq-cpu2", "MaxReleaseStep": 1},
+        {"CdevRequest": "cpufreq-cpu6", "MaxReleaseStep": 1}
+      ],
+      "Profile": [{"Mode": "game", "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}]}]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CPU-MID",
+      "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "PassiveDelay": 7000, "PollingDelay": 300000,
+      "Profile": [
+        {"Mode": "game", "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}]},
+        {"Mode": "camera", "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}]}
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CPU-ODPM",
+      "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "PassiveDelay": 7000, "PollingDelay": 300000,
+      "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}],
+      "Profile": [
+        {"Mode": "game", "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}]},
+        {"Mode": "camera", "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}]}
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-CPU-HIGH",
+      "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 0, 0, 0, 0], "PassiveDelay": 7000, "PollingDelay": 300000,
+      "Profile": [
+        {"Mode": "game", "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}]},
+        {"Mode": "camera", "BindedCdevInfo": [{"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}]}
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SOC",
+      "HotThreshold": [43], "HotHysteresis": [0, 0.0, 1.9, 1.9, 1.9, 1.4, 1.9], "PassiveDelay": 7000, "PollingDelay": 300000,
+      "BindedCdevInfo": [
+        {"CdevRequest": "g3d", "MaxReleaseStep": 1},
+        {"CdevRequest": "tpu", "MaxReleaseStep": 1},
+        {"CdevRequest": "aurora", "MaxReleaseStep": 1},
+        {"CdevRequest": "vpu", "MaxReleaseStep": 1},
+        {"CdevRequest": "disp", "MaxReleaseStep": 1}
+      ]
+    },
+    {
+      "Name": "VIRTUAL-SKIN-SOC-EXTREME", "HotThreshold": [60], "HotHysteresis": [0, 0, 1.9, 1.9, 1.9, 1.9, 1.9], "PassiveDelay": 7000, "PollingDelay": 300000,
+      "BindedCdevInfo": [
+        {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}, {"MaxReleaseStep": 1}
+      ]
+    },
     {"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": [50], "PassiveDelay": 10000, "PollingDelay": 300000}
   ]
 }
@@ -90,13 +136,15 @@ run_phase() {
   grep -Fxq 'PATCH_THERMAL_REPLACEMENTS=0' "$root.log"
   grep -Fxq 'PATCH_THERMAL_OUTPUT_5000=0' "$root.log"
   grep -Fxq 'PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=15' "$root.log"
-  grep -Fxq 'PATCH_THERMAL_PIXEL11_MRS_CHANGES=5' "$root.log"
+  grep -Fxq 'PATCH_THERMAL_PIXEL11_MRS_CHANGES=32' "$root.log"
 
   local common="$mod/system/vendor/etc/thermal_info_config_common.json"
   grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.0, 1.0, 1.0, 1.0, 1.9, 1.9]' "$common"
   grep -Fq '"Name": "VIRTUAL-SKIN-HINT", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.0, 1.0, 1.0, 1.0, 1.9, 1.9]' "$common"
-  [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 5 ]]
-  grep -Fq '"Name": "VIRTUAL-SKIN-SOC-EXTREME", "HotThreshold": [60], "HotHysteresis": [0, 0, 1.9, 1.9, 1.9, 1.9, 1.9], "MaxReleaseStep": 1, "PassiveDelay": 7000' "$common"
+  [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 32 ]]
+  [[ "$(grep -Fo '"MaxReleaseStep": 1' "$common" | wc -l | tr -d ' ')" = 5 ]]
+  grep -Fq '"Name": "VIRTUAL-SKIN-SOC-EXTREME"' "$common"
+  grep -Fq '"HotHysteresis": [0, 0, 1.9, 1.9, 1.9, 1.9, 1.9]' "$common"
   grep -Fq '"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": [50], "PassiveDelay": 10000' "$common"
   grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": [34, 38, 43], "PassiveDelay": 7000' "$mod/system/vendor/etc/thermal_info_config_charge.json"
 
@@ -115,7 +163,7 @@ run_phase test2 mod
 
 bad="$tmp/bad"
 write_graph "$bad"
-sed -i '/VIRTUAL-SKIN-SOC".*"MaxReleaseStep": 1/s/"MaxReleaseStep": 1, //' "$bad/thermal_info_config_common.json"
+sed -i '0,/"MaxReleaseStep": 1/s//"MaxReleaseStep": 3/' "$bad/thermal_info_config_common.json"
 if sh "$repo_root/tools/core/patch-g6-performance-controls.sh"     "$bad/thermal_info_config_common.json" "$tmp/bad.out" mod stock "$tmp/bad.metrics" >/dev/null 2>&1; then
   echo 'FAIL malformed_g6_inventory_admitted'
   exit 30
