@@ -93,6 +93,26 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
     sub(/[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)$/, replacement, token)
     return substr(line,1,RSTART-1) token substr(line,RSTART+RLENGTH)
   }
+  function patch_mrs_line(line, enabled, out, token, val) {
+    out=""
+    while (match(line, /"MaxReleaseStep"[[:space:]]*:[[:space:]]*[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)/)) {
+      token=substr(line,RSTART,RLENGTH)
+      val=token
+      sub(/^.*:[[:space:]]*/,"",val)
+      mrs_per_sensor[current]++
+      mrs_seen++
+      if ((val+0)!=1) {
+        bad=1
+      } else if (enabled) {
+        sub(/[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)$/, 2, token)
+        mrs_changes++
+      }
+      out=out substr(line,1,RSTART-1) token
+      line=substr(line,RSTART+RLENGTH)
+    }
+    return out line
+  }
+
   BEGIN {
     current=""
     in_hys=0
@@ -148,11 +168,7 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
     }
 
     if (is_mrs_target(current) && line ~ /"MaxReleaseStep"[[:space:]]*:/) {
-      mrs_per_sensor[current]++
-      mrs_seen++
-      before=line
-      line=patch_scalar(line,"MaxReleaseStep",1,2,recovery_mode=="mod")
-      if (recovery_mode=="mod" && line!=before) mrs_changes++
+      line=patch_mrs_line(line,recovery_mode=="mod")
     }
 
     if (is_target(current) && line ~ /"PassiveDelay"[[:space:]]*:/) {
