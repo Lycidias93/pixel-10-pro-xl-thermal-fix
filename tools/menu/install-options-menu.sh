@@ -12,7 +12,9 @@ chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
 
 [ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" || exit 0
 POLICY_HELPER="$MODDIR/tools/core/outdoor-runtime-policy.sh"
+LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
 [ -s "$POLICY_HELPER" ] && . "$POLICY_HELPER" || exit 23
+[ -s "$LAYOUT_HELPER" ] && . "$LAYOUT_HELPER" || exit 24
 
 POLICY_DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
 POLICY_ANDROID="${THERMAL_ANDROID:-$(getprop ro.build.version.release 2>/dev/null || true)}"
@@ -26,6 +28,8 @@ POLICY_EXPERIMENTAL=no
 if thermal_outdoor_experimental_platform "$POLICY_DEVICE" "$POLICY_ANDROID"; then
   POLICY_EXPERIMENTAL=yes
 fi
+DEVICE_FAMILY="$(thermal_device_family "$POLICY_DEVICE")"
+case "$DEVICE_FAMILY" in pixel11|pixel10) ;; *) DEVICE_FAMILY=pixel10 ;; esac
 
 cfg_get() {
   _key="$1"
@@ -62,6 +66,10 @@ has_remembered() {
   for _key in \
     LAST_THERMAL_OUTDOOR_PROFILE \
     LAST_THERMAL_POLLING_MODE \
+    LAST_PIXEL11_HYSTERESIS_MODE \
+    LAST_PIXEL11_PASSIVE_MODE \
+    PIXEL11_HYSTERESIS_MODE \
+    PIXEL11_PASSIVE_MODE \
     LAST_PTUNE_OVERRIDE \
     LAST_DEBUG_MODE \
     LAST_ZRAM_100P \
@@ -161,6 +169,26 @@ apply_polling() {
   cfg_set THERMAL_POLLING_MODE "$_polling"
   cfg_set THERMAL_POLLING_EFFECTIVE "$_polling"
   cfg_set LAST_THERMAL_POLLING_MODE "$_polling"
+}
+
+apply_pixel11_hysteresis() {
+  case "$1" in stock) _mode=stock ;; *) _mode=mod ;; esac
+  cfg_set PIXEL11_HYSTERESIS_MODE "$_mode"
+  cfg_set LAST_PIXEL11_HYSTERESIS_MODE "$_mode"
+}
+
+apply_pixel11_passive() {
+  case "$1" in mod) _mode=mod; _delay=5000 ;; *) _mode=stock; _delay=7000 ;; esac
+  cfg_set PIXEL11_PASSIVE_MODE "$_mode"
+  cfg_set PIXEL11_PASSIVE_TARGET_MS "$_delay"
+  cfg_set LAST_PIXEL11_PASSIVE_MODE "$_mode"
+}
+
+pin_pixel11_legacy_controls() {
+  apply_polling stock
+  apply_ptune 0
+  apply_lmkd_reload 0
+  cfg_set THERMAL_POLLING_POLICY stock_classic_polling_disabled_pixel11
 }
 
 apply_ptune() {
@@ -299,17 +327,29 @@ zram_summary_label() {
 print_summary() {
   mc_msg ""
   mc_msg "Install choices"
-  mc_msg "Polling: $(cfg_get THERMAL_POLLING_MODE)"
-  mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
-  mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
-  mc_msg "ZRAM: $(zram_summary_label)"
-  if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ]; then
-    mc_msg "Memory Killer 1%: $(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
+  mc_msg "Family: $DEVICE_FAMILY"
+  if [ "$DEVICE_FAMILY" = pixel11 ]; then
+    mc_msg "Recovery control: $(cfg_get PIXEL11_HYSTERESIS_MODE)"
+    mc_msg "Passive Polling: $(cfg_get PIXEL11_PASSIVE_MODE) ($(cfg_get PIXEL11_PASSIVE_TARGET_MS) ms)"
+    mc_msg "Classic PollingDelay: stock"
+    mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
+    mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
+    mc_msg "ZRAM: $(zram_summary_label)"
+    mc_msg "Memory Killer: stock (Pixel 11 family)"
+    mc_msg "pTune: unavailable (Pixel 11 family)"
   else
-    mc_msg "Memory Killer: unavailable (ZRAM disabled)"
+    mc_msg "Polling: $(cfg_get THERMAL_POLLING_MODE)"
+    mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
+    mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
+    mc_msg "ZRAM: $(zram_summary_label)"
+    if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ]; then
+      mc_msg "Memory Killer 1%: $(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
+    else
+      mc_msg "Memory Killer: unavailable (ZRAM disabled)"
+    fi
+    mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
+    mc_msg "pTune policy: $(cfg_get PTUNE_OVERRIDE_POLICY)"
   fi
-  mc_msg "pTune: $(cfg_get PTUNE_OVERRIDE_MENU)"
-  mc_msg "pTune policy: $(cfg_get PTUNE_OVERRIDE_POLICY)"
   mc_msg "Debug: $(cfg_get LAST_DEBUG_MODE)"
   mc_msg "Support snapshot: $(cfg_get LAST_INSTALL_SUPPORT_SNAPSHOT)"
   mc_msg "Single menu process: yes"
@@ -319,19 +359,33 @@ print_summary() {
 apply_last_settings() {
   cfg_set THERMAL_SETTINGS_MODE last
   cfg_set USE_LAST_FALLBACK none
+  cfg_set INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
   record_ptune_presence
 
   _profile="$(cfg_get LAST_THERMAL_OUTDOOR_PROFILE)"
   [ -n "$_profile" ] || _profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   apply_profile "$_profile"
 
-  _polling="$(cfg_get LAST_THERMAL_POLLING_MODE)"
-  [ -n "$_polling" ] || _polling="$(cfg_get THERMAL_POLLING_MODE)"
-  apply_polling "$_polling"
+  if [ "$DEVICE_FAMILY" = pixel11 ]; then
+    _hys="$(cfg_get LAST_PIXEL11_HYSTERESIS_MODE)"
+    [ -n "$_hys" ] || _hys="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
+    [ -n "$_hys" ] || _hys=mod
+    apply_pixel11_hysteresis "$_hys"
 
-  _ptune="$(cfg_get LAST_PTUNE_OVERRIDE)"
-  [ -n "$_ptune" ] || _ptune="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"
-  apply_ptune "$_ptune"
+    _passive="$(cfg_get LAST_PIXEL11_PASSIVE_MODE)"
+    [ -n "$_passive" ] || _passive="$(cfg_get PIXEL11_PASSIVE_MODE)"
+    [ -n "$_passive" ] || _passive=stock
+    apply_pixel11_passive "$_passive"
+    pin_pixel11_legacy_controls
+  else
+    _polling="$(cfg_get LAST_THERMAL_POLLING_MODE)"
+    [ -n "$_polling" ] || _polling="$(cfg_get THERMAL_POLLING_MODE)"
+    apply_polling "$_polling"
+
+    _ptune="$(cfg_get LAST_PTUNE_OVERRIDE)"
+    [ -n "$_ptune" ] || _ptune="$(cfg_get ALLOW_THERMAL_WITH_PTUNE)"
+    apply_ptune "$_ptune"
+  fi
 
   _debug="$(cfg_get LAST_DEBUG_MODE)"
   [ -n "$_debug" ] || _debug="$(cfg_get DEBUG_MODE)"
@@ -345,7 +399,9 @@ apply_last_settings() {
   [ -n "$_zram" ] || _zram="$(cfg_get ENABLE_ZRAM_100P)"
   apply_zram "$_zram"
 
-  if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ] && [ "$(cfg_get ZRAM_RISK_ACK)" = explicit_user_enable ]; then
+  if [ "$DEVICE_FAMILY" = pixel11 ]; then
+    apply_lmkd_reload 0
+  elif [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ] && [ "$(cfg_get ZRAM_RISK_ACK)" = explicit_user_enable ]; then
     _lmkd="$(cfg_get LAST_LMKD_SWAP_LOW_RELOAD)"
     [ -n "$_lmkd" ] || _lmkd=disabled
     apply_lmkd_reload "$_lmkd"
@@ -376,7 +432,45 @@ if [ "$MC_INDEX" = 0 ]; then
 fi
 
 cfg_set THERMAL_SETTINGS_MODE fresh
+cfg_set INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
 record_ptune_presence
+
+if [ "$DEVICE_FAMILY" = pixel11 ]; then
+  recovery_index=0
+  mc_cycle2 "HotHysteresis & MaxReleaseStep" "Mod (faster recovery)" "Stock values" "$recovery_index"
+  [ "$MC_INDEX" = 1 ] && apply_pixel11_hysteresis stock || apply_pixel11_hysteresis mod
+
+  passive_index=1
+  mc_cycle2 "Passive Polling" "Mod 5s (experimental)" "Stock 7s (test 1 default)" "$passive_index"
+  [ "$MC_INDEX" = 0 ] && apply_pixel11_passive mod || apply_pixel11_passive stock
+
+  mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "$(profile_policy_label 1 'Outdoor Safe')" 0
+  [ "$MC_INDEX" = 1 ] && apply_profile outdoor-safe || apply_profile stock
+
+  zram_index=1
+  mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
+  if [ "$MC_INDEX" = 0 ]; then
+    apply_zram disabled
+  else
+    oc_index=0
+    mc_cycle2 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock (heat/battery)" "$oc_index"
+    [ "$MC_INDEX" = 0 ] && apply_zram enabled_standard || apply_zram enabled_max_lock
+  fi
+
+  pin_pixel11_legacy_controls
+
+  debug_index=1
+  mc_cycle2 "Debug Logging" "Silent" "Verbose" "$debug_index"
+  [ "$MC_INDEX" = 0 ] && apply_debug 0 || apply_debug 1
+
+  snapshot_index=0
+  mc_cycle2 "Support Snapshot (read-only)" "Skip" "Collect after install" "$snapshot_index"
+  [ "$MC_INDEX" = 1 ] && apply_support_snapshot 1 || apply_support_snapshot 0
+
+  mark_single_pass_complete
+  print_summary
+  exit 0
+fi
 
 polling_index=0
 mc_cycle2 "Polling Mode" "Mod values" "Stock values" "$polling_index"
