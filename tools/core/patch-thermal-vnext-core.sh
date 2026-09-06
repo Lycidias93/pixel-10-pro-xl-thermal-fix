@@ -143,7 +143,10 @@ normalize_allowed() {
         if (closing>0) { line=mask_numbers(substr(line,1,closing-1),"__G6_HYS_VALUE__") substr(line,closing); in_g6_hys=0 }
         else line=mask_numbers(line,"__G6_HYS_VALUE__")
       } else if (g6_controls=="yes" && g6_target(current) && line ~ /"HotHysteresis"[[:space:]]*:/) {
-        open=index(line,"[")
+        field_pos=index(line,"\"HotHysteresis\"")
+        field_tail=substr(line,field_pos)
+        rel_open=index(field_tail,"[")
+        open=rel_open>0 ? field_pos+rel_open-1 : 0
         if (open>0) {
           rest=substr(line,open+1); closing=index(rest,"]")
           if (closing>0) line=substr(line,1,open) mask_numbers(substr(rest,1,closing-1),"__G6_HYS_VALUE__") substr(rest,closing)
