@@ -58,6 +58,7 @@ jobs:
           sh -n tools/control/pixel-control.sh
           sh -n tools/zram/page-cluster-control.sh
           sh -n tools/core/thermal-layout.sh
+          sh -n tools/core/patch-g6-performance-controls.sh
           sh -n tools/core/patch-thermal.sh
           sh -n tools/core/patch-thermal-vnext-core.sh
           sh -n tools/core/patch-thermal-validated.sh
@@ -86,6 +87,7 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-vnext-layouts.sh
+          bash tests/test-pixel11-family-controls.sh
           bash tests/test-g6-polling-inventory.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
           bash tests/test-vnext-ota-transition.sh
