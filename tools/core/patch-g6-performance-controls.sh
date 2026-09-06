@@ -65,13 +65,13 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
     if (name=="VIRTUAL-SKIN-SOC") return idx>=3 && idx<=5
     return 0
   }
-  function process_hys_text(text, name, out, tok, exp) {
+  function process_hys_text(text, name, out, tok, expected) {
     out=""
     while (match(text, /[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)/)) {
       tok=substr(text,RSTART,RLENGTH)
       hys_idx++
-      exp=expected_hys(name,hys_idx)
-      if (exp=="__invalid__" || (tok+0)!=(exp+0)) bad=1
+      expected=expected_hys(name,hys_idx)
+      if (expected=="__invalid__" || (tok+0)!=(expected+0)) bad=1
       if (recovery_mode=="mod" && mod_hys(name,hys_idx)) {
         out=out substr(text,1,RSTART-1) "1.0"
         if ((tok+0)!=1.0) hys_changes++
