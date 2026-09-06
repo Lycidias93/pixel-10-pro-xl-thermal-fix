@@ -13,6 +13,8 @@ export LC_ALL
 POLLING_MODE="${1:-mod}"
 OUTDOOR_PROFILE="${2:-stock}"
 MODPATH="${3:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
+PIXEL11_HYSTERESIS_MODE="${4:-stock}"
+PIXEL11_PASSIVE_MODE="${5:-stock}"
 POLICY_HELPER="$MODPATH/tools/core/outdoor-runtime-policy.sh"
 VNEXT_CORE="$MODPATH/tools/core/patch-thermal-vnext-core.sh"
 
@@ -45,6 +47,16 @@ case "$OUTDOOR_PROFILE" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; 
   printf '%s\n' 'PATCH_THERMAL_REASON=invalid_outdoor_profile'
   exit 22
 ;; esac
+case "$PIXEL11_HYSTERESIS_MODE" in stock|mod) ;; *)
+  printf '%s\n' 'PATCH_THERMAL=fail'
+  printf '%s\n' 'PATCH_THERMAL_REASON=invalid_pixel11_hysteresis_mode'
+  exit 22
+;; esac
+case "$PIXEL11_PASSIVE_MODE" in stock|mod) ;; *)
+  printf '%s\n' 'PATCH_THERMAL=fail'
+  printf '%s\n' 'PATCH_THERMAL_REASON=invalid_pixel11_passive_mode'
+  exit 22
+;; esac
 
 if ! thermal_outdoor_profile_admitted "$OUTDOOR_PROFILE" "$DEVICE" "$ANDROID" "$BUILD_ID"; then
   requested_delta="$(thermal_outdoor_profile_delta "$OUTDOOR_PROFILE" 2>/dev/null || printf '%s\n' unknown)"
@@ -58,4 +70,4 @@ if ! thermal_outdoor_profile_admitted "$OUTDOOR_PROFILE" "$DEVICE" "$ANDROID" "$
   exit 23
 fi
 
-exec sh "$VNEXT_CORE" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH"
+exec sh "$VNEXT_CORE" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH" "$PIXEL11_HYSTERESIS_MODE" "$PIXEL11_PASSIVE_MODE"

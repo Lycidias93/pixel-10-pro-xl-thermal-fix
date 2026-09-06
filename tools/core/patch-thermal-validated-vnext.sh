@@ -5,6 +5,8 @@ set -eu
 POLLING_MODE="${1:-mod}"
 OUTDOOR_PROFILE="${2:-stock}"
 MODPATH="${3:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
+PIXEL11_HYSTERESIS_MODE="${4:-stock}"
+PIXEL11_PASSIVE_MODE="${5:-stock}"
 ID="pixel-10-pro-xl-thermal-fix"
 DATA_ROOT="${THERMAL_DATA_ROOT:-/data/adb/$ID}"
 PATCHER="$MODPATH/tools/core/patch-thermal.sh"
@@ -26,6 +28,8 @@ VALIDATED=0
 
 case "$POLLING_MODE" in stock|mod) ;; *) exit 21 ;; esac
 case "$OUTDOOR_PROFILE" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) exit 22 ;; esac
+case "$PIXEL11_HYSTERESIS_MODE" in stock|mod) ;; *) exit 22 ;; esac
+case "$PIXEL11_PASSIVE_MODE" in stock|mod) ;; *) exit 22 ;; esac
 [ -s "$PATCHER" ] || exit 23
 [ -s "$DELTA_HELPER" ] || exit 24
 [ -s "$STATE_HELPER" ] || exit 25
@@ -61,7 +65,7 @@ cleanup() { _rc="$?"; if [ "$_rc" -ne 0 ] && [ "$VALIDATED" -ne 1 ]; then rollba
 trap cleanup EXIT HUP INT TERM
 
 rm -f "$LEGACY_REPORT_MODULE" "$LEGACY_REPORT_DATA" "$LEGACY_PATCH_MANIFEST" "$LEGACY_DELTA_MODULE" "$LEGACY_DELTA_DATA" "$LAYOUT_ENV" 2>/dev/null || true
-if sh "$PATCHER" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH" > "$RUN_LOG" 2>&1; then cat "$RUN_LOG"; else _rc="$?"; cat "$RUN_LOG"; exit "$_rc"; fi
+if sh "$PATCHER" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH" "$PIXEL11_HYSTERESIS_MODE" "$PIXEL11_PASSIVE_MODE" > "$RUN_LOG" 2>&1; then cat "$RUN_LOG"; else _rc="$?"; cat "$RUN_LOG"; exit "$_rc"; fi
 
 thermal_layout_load_env "$LAYOUT_ENV" || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=layout_state_missing_or_invalid; exit 59; }
 DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
@@ -99,6 +103,8 @@ fi
   printf '%s\n' "layout_family=$THERMAL_LAYOUT_FAMILY"
   printf '%s\n' "layout_files=$THERMAL_LAYOUT_FILES_CSV"
   printf '%s\n' "polling_mode=$POLLING_MODE"
+  printf '%s\n' "pixel11_hysteresis_mode=$PIXEL11_HYSTERESIS_MODE"
+  printf '%s\n' "pixel11_passive_mode=$PIXEL11_PASSIVE_MODE"
   printf '%s\n' "outdoor_profile=$OUTDOOR_PROFILE"
   printf '%s\n' "expected_delta=$DELTA"
   printf '%s\n' "validated_files=$validated_files"
@@ -113,11 +119,11 @@ fi
 thermal_validation_publish "$LEGACY_REPORT_MODULE" "$THERMAL_VALIDATION_REPORT" 0644 || exit 70
 thermal_validation_publish "$LEGACY_PATCH_MANIFEST" "$THERMAL_VALIDATION_PATCH_MANIFEST" 0644 || exit 71
 thermal_validation_publish "$DELTA_TMP" "$THERMAL_VALIDATION_DELTA" 0644 || exit 72
-thermal_validation_write_state "$DEVICE" "$BUILD_ID" "$POLLING_MODE" "$OUTDOOR_PROFILE" || exit 73
+thermal_validation_write_state "$DEVICE" "$BUILD_ID" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$PIXEL11_HYSTERESIS_MODE" "$PIXEL11_PASSIVE_MODE" || exit 73
 thermal_validation_refresh_legacy_links "$MODPATH" || exit 74
 VALIDATED=1
 rm -rf "$BACKUP_DIR"
-printf '%s\n' PATCH_THERMAL_DELTA_VALIDATION=pass "PATCH_THERMAL_DELTA_EXPECTED=$DELTA" "PATCH_THERMAL_DELTA_FILES=$validated_files" "PATCH_THERMAL_DELTA_TARGET_ZONES=$target_zone_total" "PATCH_THERMAL_DELTA_THRESHOLD_ARRAYS=$threshold_array_total" "PATCH_THERMAL_DELTA_THRESHOLD_VALUES=$threshold_value_total" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_VALIDATION_DIR=$THERMAL_VALIDATION_DIR" "PATCH_THERMAL_DELTA_REPORT=$THERMAL_VALIDATION_DELTA"
+printf '%s\n' PATCH_THERMAL_DELTA_VALIDATION=pass "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_PIXEL11_PASSIVE_MODE=$PIXEL11_PASSIVE_MODE" "PATCH_THERMAL_DELTA_EXPECTED=$DELTA" "PATCH_THERMAL_DELTA_FILES=$validated_files" "PATCH_THERMAL_DELTA_TARGET_ZONES=$target_zone_total" "PATCH_THERMAL_DELTA_THRESHOLD_ARRAYS=$threshold_array_total" "PATCH_THERMAL_DELTA_THRESHOLD_VALUES=$threshold_value_total" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_VALIDATION_DIR=$THERMAL_VALIDATION_DIR" "PATCH_THERMAL_DELTA_REPORT=$THERMAL_VALIDATION_DELTA"
 trap - EXIT HUP INT TERM
 rm -f "$RUN_LOG" "$DELTA_TMP"
 exit 0

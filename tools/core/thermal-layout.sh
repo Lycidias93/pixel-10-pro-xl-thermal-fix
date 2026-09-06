@@ -30,6 +30,14 @@ thermal_layout_device_family() {
   esac
 }
 
+thermal_device_family() {
+  case "$(thermal_layout_device_family "${1:-unknown}")" in
+    tensor_g6_graph) printf '%s\n' pixel11 ;;
+    pixel10_g5|tensor_g4_vnext) printf '%s\n' pixel10 ;;
+    *) printf '%s\n' unknown ;;
+  esac
+}
+
 thermal_layout_is_g6_device() {
   case "${1:-unknown}" in cubs|grizzly|kodiak|yogi) return 0 ;; *) return 1 ;; esac
 }
