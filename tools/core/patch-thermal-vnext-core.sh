@@ -122,12 +122,16 @@ normalize_allowed() {
       while (match(text, /[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)/)) { out=out substr(text,1,RSTART-1) marker; text=substr(text,RSTART+RLENGTH) }
       return out text
     }
-    function normalize_scalar(line, key, marker, token) {
+    function normalize_scalar(line, key, marker, out, token) {
       scalar_pattern="\"" key "\"[[:space:]]*:[[:space:]]*[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)"
-      if (!match(line,scalar_pattern)) return line
-      token=substr(line,RSTART,RLENGTH)
-      sub(/[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)$/,marker,token)
-      return substr(line,1,RSTART-1) token substr(line,RSTART+RLENGTH)
+      out=""
+      while (match(line,scalar_pattern)) {
+        token=substr(line,RSTART,RLENGTH)
+        sub(/[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)$/,marker,token)
+        out=out substr(line,1,RSTART-1) token
+        line=substr(line,RSTART+RLENGTH)
+      }
+      return out line
     }
     BEGIN { target=0; in_hot=0; current=""; in_g6_hys=0 }
     {
