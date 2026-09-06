@@ -148,7 +148,7 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
     }
 
     if (is_mrs_target(current) && line ~ /"MaxReleaseStep"[[:space:]]*:/) {
-      if (seen_mrs[current]++) bad=1
+      mrs_per_sensor[current]++
       mrs_seen++
       before=line
       line=patch_scalar(line,"MaxReleaseStep",1,2,recovery_mode=="mod")
@@ -167,8 +167,13 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
   }
   END {
     if (in_hys) bad=1
-    if (hys_seen!=7 || mrs_seen!=5 || passive_seen!=7) bad=1
-    if (recovery_mode=="mod" && (hys_changes<1 || mrs_changes!=5)) bad=1
+    if (mrs_per_sensor["VIRTUAL-SKIN-CPU-LIGHT-ODPM"] < 1 || \
+        mrs_per_sensor["VIRTUAL-SKIN-CPU-MID"] < 1 || \
+        mrs_per_sensor["VIRTUAL-SKIN-CPU-ODPM"] < 1 || \
+        mrs_per_sensor["VIRTUAL-SKIN-CPU-HIGH"] < 1 || \
+        mrs_per_sensor["VIRTUAL-SKIN-SOC"] < 1) bad=1
+    if (hys_seen!=7 || mrs_seen!=32 || passive_seen!=7) bad=1
+    if (recovery_mode=="mod" && (hys_changes!=15 || mrs_changes!=32)) bad=1
     if (recovery_mode=="stock" && (hys_changes!=0 || mrs_changes!=0)) bad=1
     if (passive_mode=="mod" && passive_changes!=7) bad=1
     if (passive_mode=="stock" && passive_changes!=0) bad=1
