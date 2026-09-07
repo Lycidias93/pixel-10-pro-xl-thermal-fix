@@ -126,5 +126,8 @@ grep -Fq 'webui-server-arm64' dev_tools/build-release-module.sh
 # Polling/Memory Killer markers with Recovery while retaining Thermal/ZRAM.
 grep -Fq 'desc="description=Recovery $recovery_icon $recovery_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Action: details/support"' tools/debug/status-lib.sh
 grep -Fq 'desc="description=Polling $polling_icon $polling_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Memory Killer $lmk_icon $memory_killer_display | Action: details/support"' tools/debug/status-lib.sh
+grep -Fq "'Recovery '*' | Thermal '*' | ZRAM '*' | Action: details/support'" service.sh
+grep -Fq 'cubs|grizzly|kodiak|yogi) device_family=pixel11' service.sh
+grep -Fq 'write_manager_description "Recovery $r_icon $r_value | Thermal $t_icon $t_value | ZRAM $z_icon $z_value | Action: details/support"' service.sh
 
 printf '%s\n' 'RESULT: PIXEL_WEBUI_INTEGRATION_TEST_PASS'
