@@ -292,6 +292,10 @@ current_recovery() {
 }
 
 current_thermal_profile() {
+  if [ "$device_family" = pixel11 ]; then
+    printf '%s\n' stock
+    return 0
+  fi
   value="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   [ -n "$value" ] || value=stock
   printf '%s\n' "$value"
