@@ -12,16 +12,18 @@ for device in cubs grizzly kodiak yogi; do
   [[ "$(thermal_device_family "$device")" = pixel11 ]] || { echo "FAIL family_$device"; exit 2; }
 done
 . "$repo_root/tools/core/outdoor-runtime-policy.sh"
-[[ "$(thermal_outdoor_max_delta grizzly 17 G6_FAMILY_TEST)" = 0 ]]
-! thermal_outdoor_profile_admitted outdoor-safe grizzly 17 G6_FAMILY_TEST
+[[ "$(thermal_outdoor_max_delta grizzly 17 G6_FAMILY_TEST)" = 1 ]]
+thermal_outdoor_profile_admitted outdoor-safe grizzly 17 G6_FAMILY_TEST
+! thermal_outdoor_profile_admitted outdoor-plus grizzly 17 G6_FAMILY_TEST
 
 menu="$repo_root/tools/menu/install-options-menu.sh"
 grep -Fq 'HotHysteresis & MaxReleaseStep' "$menu"
 grep -Fq 'INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"' "$menu"
 ! grep -Fq 'Passive Polling' "$menu"
-! grep -Fq 'mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock"' "$menu"
+grep -Fq 'mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "Outdoor Safe +1C"' "$menu"
+grep -Fq 'mc_cycle2 "ZRAM page-cluster" "Stock" "EXPERIMENTAL 0 (post-Bootguard)"' "$menu"
 grep -Fq 'cfg_unset PIXEL11_PASSIVE_MODE' "$menu"
-grep -Fq 'single_pass_v4_family' "$menu"
+grep -Fq 'single_pass_v5_family_zram' "$menu"
 grep -Fq 'THERMAL_POLLING_POLICY stock_classic_polling_disabled_pixel11' "$menu"
 grep -Fq 'mc_cycle2 "Polling Mode" "Mod values" "Stock values"' "$menu"
 
@@ -164,6 +166,28 @@ run_phase() {
 
 run_phase recovery_mod mod
 run_phase recovery_stock stock
+
+# Pixel 11 threshold admission is independent from recovery tuning: +1 C is
+# allowed only on the exact master VIRTUAL-SKIN object while classic polling
+# and PassiveDelay remain untouched. The real-layout object placement itself
+# is covered by test-vnext-layouts.sh.
+threshold_root="$tmp/threshold-safe"
+threshold_mod="$threshold_root/mod"
+threshold_src="$threshold_root/source"
+threshold_data="$threshold_root/data"
+make_module "$threshold_mod"
+write_graph "$threshold_src"
+mkdir -p "$threshold_data"
+THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=G6_FAMILY_TEST \
+  THERMAL_SOURCE_DIR="$threshold_src" THERMAL_DATA_ROOT="$threshold_data" \
+  sh "$threshold_mod/tools/core/patch-thermal-validated.sh" stock outdoor-safe "$threshold_mod" mod | tee "$threshold_root.log"
+grep -Fxq 'PATCH_THERMAL=pass' "$threshold_root.log"
+grep -Fxq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$threshold_root.log"
+grep -Fxq 'PATCH_THERMAL_REPLACEMENTS=0' "$threshold_root.log"
+grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [40, 44, 46, 47.5, 53, 66]' "$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
+grep -Fq '"Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM", "HotThreshold": [43]' "$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
+grep -Fq '"Name": "VIRTUAL-SKIN-SOC", "HotThreshold": [43]' "$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
+[[ "$(grep -Rho '"PassiveDelay":[[:space:]]*5000\|"PassiveDelay": 5000' "$threshold_mod/system/vendor/etc" | wc -l | tr -d ' ')" = 0 ]]
 
 bad="$tmp/bad"
 write_graph "$bad"
