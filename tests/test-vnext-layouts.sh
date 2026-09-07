@@ -99,7 +99,7 @@ write_g6_graph_fixture() {
     "thermal_info_config_ambient.json"
   ],
   "Sensors": [
-    {"Name": "VIRTUAL-SKIN", "HotThreshold": ["NaN", 39, 43, 45], "PollingDelay": 300000},
+    {"Name": "VIRTUAL-SKIN-SPEAKER", "HotThreshold": ["NaN", 37], "PollingDelay": 300000},
     {"Name": "cellular-emergency", "HotThreshold": ["NaN", 50, 54], "PollingDelay": 300000},
     {"Name": "VIRTUAL-SKIN-OVER-35C-TRIGGER", "HotThreshold": [35], "PollingDelay": 300000}
   ]
@@ -121,6 +121,10 @@ JSON
     "thermal_info_config_bg_tasks_throttling.json"
   ],
   "Sensors": [
+    {"Name": "VIRTUAL-SKIN", "HotThreshold": ["NaN", 39, 43, 45, 46.5, 52, 65], "PollingDelay": 300000},
+    {"Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM", "HotThreshold": ["NaN", 37, 39, "NaN", "NaN", "NaN", "NaN"], "PollingDelay": 300000},
+    {"Name": "VIRTUAL-SKIN-SOC", "HotThreshold": ["NaN", 37, 39, 41, 45, 46.5, 52], "PollingDelay": 300000},
+    {"Name": "VSYS_WLAN_BT_MMWAVE", "HotThreshold": ["NaN", 42, 48, 54], "PollingDelay": 300000},
     {"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": ["NaN", 43, 45, 46.5], "PollingDelay": 300000}
   ]
 }
@@ -152,12 +156,16 @@ run_g6_graph_case() {
   grep -q '^count=10$' "$mod/guard/thermal-layout.env"
   grep -q '^PATCH_THERMAL_FILES=10$' "$root/run.log"
   grep -q '^PATCH_THERMAL_REPLACEMENTS=0$' "$root/run.log"
-  [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 12 ]]
+  [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 16 ]]
   [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*5000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 0 ]]
 
-  grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": ["NaN", 40, 44, 46]' "$mod/system/vendor/etc/thermal_info_config.json"
+  grep -Fq '"Name": "VIRTUAL-SKIN-SPEAKER", "HotThreshold": ["NaN", 37]' "$mod/system/vendor/etc/thermal_info_config.json"
   grep -Fq '"Name": "cellular-emergency", "HotThreshold": ["NaN", 50, 54]' "$mod/system/vendor/etc/thermal_info_config.json"
   grep -Fq '"Name": "VIRTUAL-SKIN-OVER-35C-TRIGGER", "HotThreshold": [35]' "$mod/system/vendor/etc/thermal_info_config.json"
+  grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": ["NaN", 40, 44, 46, 47.5, 53, 66]' "$mod/system/vendor/etc/thermal_info_config_common.json"
+  grep -Fq '"Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM", "HotThreshold": ["NaN", 37, 39, "NaN", "NaN", "NaN", "NaN"]' "$mod/system/vendor/etc/thermal_info_config_common.json"
+  grep -Fq '"Name": "VIRTUAL-SKIN-SOC", "HotThreshold": ["NaN", 37, 39, 41, 45, 46.5, 52]' "$mod/system/vendor/etc/thermal_info_config_common.json"
+  grep -Fq '"Name": "VSYS_WLAN_BT_MMWAVE", "HotThreshold": ["NaN", 42, 48, 54]' "$mod/system/vendor/etc/thermal_info_config_common.json"
   grep -Fq '"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": ["NaN", 43, 45, 46.5]' "$mod/system/vendor/etc/thermal_info_config_common.json"
   grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": ["NaN", 34, 38, 43]' "$mod/system/vendor/etc/thermal_info_config_charge.json"
 
