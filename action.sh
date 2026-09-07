@@ -142,10 +142,19 @@ if [ "$platform_supported" -eq 1 ]; then
     msg "- Materializing stock-derived Thermal layout"
     polling="$(cfg_get THERMAL_POLLING_MODE)"
     outdoor="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+    recovery="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
     [ -n "$polling" ] || polling=mod
     [ -n "$outdoor" ] || outdoor=stock
+    [ -n "$recovery" ] || recovery=stock
+    device_family="$(thermal_device_family "$CURRENT_DEVICE")"
+    if [ "$device_family" = pixel11 ]; then
+      polling=stock
+      case "$recovery" in stock|mod) ;; *) recovery=stock ;; esac
+    else
+      recovery=stock
+    fi
 
-    if [ -s "$MODDIR/tools/core/patch-thermal-validated.sh" ] && sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR"; then
+    if [ -s "$MODDIR/tools/core/patch-thermal-validated.sh" ] && sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR" "$recovery"; then
       MATERIALIZE_FINISHED_MS="$(now_ms)"
       thermal_layout_load_env "$LAYOUT_ENV" || { remove_thermal_overlay; cfg_set THERMAL_DISABLED 1; msg "! Layout state invalid after materialization"; }
       layout_count="${THERMAL_LAYOUT_COUNT:-0}"
