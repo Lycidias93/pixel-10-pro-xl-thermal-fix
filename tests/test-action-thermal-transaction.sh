@@ -27,10 +27,15 @@ if grep -Fq 'rematerialize_thermal_overlay || true' "$action"; then
   printf '%s\n' 'FAIL action_ignores_materialization_failure'
   exit 1
 fi
-grep -Fq 'if rematerialize_thermal_overlay "$current_polling" "$choice"; then' "$action"
+grep -Fq 'if rematerialize_thermal_overlay "$current_polling" "$choice" "$recovery"; then' "$action"
 grep -Fq 'set_thermal_choice "$choice"' "$action"
 grep -Fq 'Existing settings kept' "$action"
 grep -Fq 'action_validated_transaction_v2' "$action"
+grep -Fq 'DEVICE_FAMILY="$(thermal_device_family "$POLICY_DEVICE")"' "$action"
+grep -Fq 'mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%"' "$action"
+grep -Fq 'current_polling=stock' "$action"
+grep -Fq 'cfg_unset PIXEL11_PASSIVE_MODE' "$action"
+grep -Fq 'sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR" "$recovery"' "$action_root"
 
 grep -Fq 'patch-thermal-validated.sh' "$auto_switch"
 grep -Fq 'patch-thermal-validated.sh' "$ptune_override"
