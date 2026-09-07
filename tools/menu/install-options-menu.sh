@@ -93,7 +93,8 @@ has_remembered() {
     INSTALL_SUPPORT_SNAPSHOT \
     THERMAL_OUTDOOR_PROFILE \
     THERMAL_POLLING_MODE \
-    ENABLE_ZRAM_100P; do
+    ENABLE_ZRAM_100P \
+    ZRAM_PAGE_CLUSTER_MODE; do
     [ -n "$(cfg_get "$_key")" ] && return 0
   done
   return 1
@@ -192,7 +193,6 @@ apply_pixel11_hysteresis() {
 }
 
 pin_pixel11_legacy_controls() {
-  apply_profile stock
   apply_polling stock
   apply_ptune 0
   apply_lmkd_reload 0
@@ -268,6 +268,7 @@ apply_zram() {
       cfg_set LMKD_SWAP_LOW_RELOAD 0
       cfg_set LMKD_SWAP_LOW_RISK_ACK none
       cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
+      apply_page_cluster_choice stock
     ;;
     enabled_max_lock)
       cfg_set ENABLE_ZRAM_100P 1
@@ -284,6 +285,24 @@ apply_zram() {
       cfg_set ZRAM_RISK_ACK explicit_user_enable
       cfg_set ZRAM_EH_RISK_ACK none
       cfg_set LAST_ZRAM_100P enabled_standard
+    ;;
+  esac
+}
+
+apply_page_cluster_choice() {
+  case "$1" in
+    zero)
+      if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ] && [ "$(cfg_get ZRAM_RISK_ACK)" = explicit_user_enable ]; then
+        cfg_set ZRAM_PAGE_CLUSTER_MODE zero
+        cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK explicit_user_zero
+      else
+        cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+        cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
+      fi
+    ;;
+    *)
+      cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+      cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
     ;;
   esac
 }
@@ -323,7 +342,7 @@ record_ptune_presence() {
 mark_single_pass_complete() {
   cfg_set INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
   cfg_set LAST_INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
-  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v4_family
+  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v5_family_zram
   cfg_set INSTALL_MENU_PROCESS_COUNT 1
   cfg_set INSTALL_OPTIONS_CONFIRMED 1
 }
@@ -347,6 +366,16 @@ print_summary() {
     mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
     mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
     mc_msg "ZRAM: $(zram_summary_label)"
+    if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ]; then
+      mc_msg "page-cluster: $(cfg_get ZRAM_PAGE_CLUSTER_MODE)"
+    else
+      mc_msg "page-cluster: stock"
+    fi
+    if [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ]; then
+      mc_msg "page-cluster: $(cfg_get ZRAM_PAGE_CLUSTER_MODE)"
+    else
+      mc_msg "page-cluster: stock"
+    fi
     mc_msg "Memory Killer: stock (Pixel 11 family)"
     mc_msg "pTune: unavailable (Pixel 11 family)"
   else
@@ -407,6 +436,10 @@ apply_last_settings() {
   [ -n "$_zram" ] || _zram="$(cfg_get ENABLE_ZRAM_100P)"
   apply_zram "$_zram"
 
+  _page_cluster="$(cfg_get ZRAM_PAGE_CLUSTER_MODE)"
+  [ -n "$_page_cluster" ] || _page_cluster=stock
+  apply_page_cluster_choice "$_page_cluster"
+
   if [ "$DEVICE_FAMILY" = pixel11 ]; then
     apply_lmkd_reload 0
   elif [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ] && [ "$(cfg_get ZRAM_RISK_ACK)" = explicit_user_enable ]; then
@@ -448,7 +481,9 @@ if [ "$DEVICE_FAMILY" = pixel11 ]; then
   mc_cycle2 "HotHysteresis & MaxReleaseStep" "Mod (faster recovery)" "Stock values" "$recovery_index"
   [ "$MC_INDEX" = 1 ] && apply_pixel11_hysteresis stock || apply_pixel11_hysteresis mod
 
-  apply_profile stock
+  thermal_index=0
+  mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "Outdoor Safe +1C" "$thermal_index"
+  [ "$MC_INDEX" = 1 ] && apply_profile outdoor-safe || apply_profile stock
 
   zram_index=0
   mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
@@ -458,6 +493,11 @@ if [ "$DEVICE_FAMILY" = pixel11 ]; then
     oc_index=0
     mc_cycle2 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock (heat/battery)" "$oc_index"
     [ "$MC_INDEX" = 0 ] && apply_zram enabled_standard || apply_zram enabled_max_lock
+
+    page_cluster_index=0
+    [ "$(cfg_get ZRAM_PAGE_CLUSTER_MODE)" = zero ] && page_cluster_index=1
+    mc_cycle2 "ZRAM page-cluster" "Stock" "EXPERIMENTAL 0 (post-Bootguard)" "$page_cluster_index"
+    [ "$MC_INDEX" = 1 ] && apply_page_cluster_choice zero || apply_page_cluster_choice stock
   fi
 
   pin_pixel11_legacy_controls
@@ -503,6 +543,11 @@ else
   else
     apply_zram enabled_max_lock
   fi
+
+  page_cluster_index=0
+  [ "$(cfg_get ZRAM_PAGE_CLUSTER_MODE)" = zero ] && page_cluster_index=1
+  mc_cycle2 "ZRAM page-cluster" "Stock" "EXPERIMENTAL 0 (post-Bootguard)" "$page_cluster_index"
+  [ "$MC_INDEX" = 1 ] && apply_page_cluster_choice zero || apply_page_cluster_choice stock
 
   lmkd_index=0
   mc_cycle2 "Memory Killer" "Stock" "EXPERIMENTAL 1%" "$lmkd_index"
