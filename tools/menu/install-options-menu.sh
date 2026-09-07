@@ -192,6 +192,7 @@ apply_pixel11_hysteresis() {
 }
 
 pin_pixel11_legacy_controls() {
+  apply_profile stock
   apply_polling stock
   apply_ptune 0
   apply_lmkd_reload 0
@@ -447,8 +448,7 @@ if [ "$DEVICE_FAMILY" = pixel11 ]; then
   mc_cycle2 "HotHysteresis & MaxReleaseStep" "Mod (faster recovery)" "Stock values" "$recovery_index"
   [ "$MC_INDEX" = 1 ] && apply_pixel11_hysteresis stock || apply_pixel11_hysteresis mod
 
-  mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "$(profile_policy_label 1 'Outdoor Safe')" 0
-  [ "$MC_INDEX" = 1 ] && apply_profile outdoor-safe || apply_profile stock
+  apply_profile stock
 
   zram_index=0
   mc_cycle2 "ZRAM 100%" "Disabled" "Enabled" "$zram_index"
