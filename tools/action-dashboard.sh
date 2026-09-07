@@ -62,7 +62,7 @@ cfg_set() {
   v="$2"
   mkdir -p "$CONFIG_DIR" 2>/dev/null || true
   touch "$CONFIG_FILE" 2>/dev/null || true
-  tmp="$CONFIG_FILE.tmp.$"
+  tmp="$CONFIG_FILE.tmp.$$"
   grep -v "^${k}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
   printf '%s=%s\n' "$k" "$v" >> "$tmp"
   mv "$tmp" "$CONFIG_FILE"
@@ -73,7 +73,7 @@ cfg_unset() {
   k="$1"
   mkdir -p "$CONFIG_DIR" 2>/dev/null || true
   touch "$CONFIG_FILE" 2>/dev/null || true
-  tmp="$CONFIG_FILE.tmp.$"
+  tmp="$CONFIG_FILE.tmp.$$"
   grep -v "^${k}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
   mv "$tmp" "$CONFIG_FILE"
   chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
