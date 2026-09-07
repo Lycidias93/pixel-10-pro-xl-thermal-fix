@@ -61,7 +61,7 @@ Therefore the installer, Action dashboard, WebUI capability surface and thermal 
 
 The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays and 32 MaxReleaseStep cooling-device/profile bindings distributed across all five target sensors. Multiple `MaxReleaseStep` keys on the same physical JSON line are iterated independently, so validation is bound to the schema objects rather than file pretty-printing. PassiveDelay is not an admitted transformation.
 
-The vNext byte-diff normalizer admits only the family-local controlled fields in `thermal_info_config_common.json`; classic `PollingDelay` remains stock. The generated validation state records the Pixel 11 recovery/passive modes.
+The vNext byte-diff normalizer admits only the family-local recovery fields in `thermal_info_config_common.json`; classic `PollingDelay` and `PassiveDelay` remain untouched. The generated validation state records the Pixel 11 recovery mode only.
 
 ## Test build
 
