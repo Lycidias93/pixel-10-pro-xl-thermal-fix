@@ -43,10 +43,19 @@ cfg_get() {
 cfg_set() {
   _key="$1"
   _value="$2"
-  _tmp="${CONFIG_FILE}.tmp.$$"
+  _tmp="${CONFIG_FILE}.tmp.$"
   touch "$CONFIG_FILE" 2>/dev/null || true
   grep -v "^${_key}=" "$CONFIG_FILE" 2>/dev/null > "$_tmp" || true
   printf '%s=%s\n' "$_key" "$_value" >> "$_tmp"
+  mv "$_tmp" "$CONFIG_FILE"
+  chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
+}
+
+cfg_unset() {
+  _key="$1"
+  _tmp="${CONFIG_FILE}.tmp.$"
+  touch "$CONFIG_FILE" 2>/dev/null || true
+  grep -v "^${_key}=" "$CONFIG_FILE" 2>/dev/null > "$_tmp" || true
   mv "$_tmp" "$CONFIG_FILE"
   chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
 }
@@ -74,9 +83,7 @@ has_remembered() {
     LAST_THERMAL_OUTDOOR_PROFILE \
     LAST_THERMAL_POLLING_MODE \
     LAST_PIXEL11_HYSTERESIS_MODE \
-    LAST_PIXEL11_PASSIVE_MODE \
     PIXEL11_HYSTERESIS_MODE \
-    PIXEL11_PASSIVE_MODE \
     LAST_PTUNE_OVERRIDE \
     LAST_DEBUG_MODE \
     LAST_ZRAM_100P \
@@ -184,17 +191,13 @@ apply_pixel11_hysteresis() {
   cfg_set LAST_PIXEL11_HYSTERESIS_MODE "$_mode"
 }
 
-apply_pixel11_passive() {
-  case "$1" in mod) _mode=mod; _delay=5000 ;; *) _mode=stock; _delay=7000 ;; esac
-  cfg_set PIXEL11_PASSIVE_MODE "$_mode"
-  cfg_set PIXEL11_PASSIVE_TARGET_MS "$_delay"
-  cfg_set LAST_PIXEL11_PASSIVE_MODE "$_mode"
-}
-
 pin_pixel11_legacy_controls() {
   apply_polling stock
   apply_ptune 0
   apply_lmkd_reload 0
+  cfg_unset PIXEL11_PASSIVE_MODE
+  cfg_unset PIXEL11_PASSIVE_TARGET_MS
+  cfg_unset LAST_PIXEL11_PASSIVE_MODE
   cfg_set THERMAL_POLLING_POLICY stock_classic_polling_disabled_pixel11
 }
 
@@ -319,7 +322,7 @@ record_ptune_presence() {
 mark_single_pass_complete() {
   cfg_set INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
   cfg_set LAST_INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
-  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v3_family
+  cfg_set INSTALL_OPTIONS_MENU_VERSION single_pass_v4_family
   cfg_set INSTALL_MENU_PROCESS_COUNT 1
   cfg_set INSTALL_OPTIONS_CONFIRMED 1
 }
@@ -339,7 +342,6 @@ print_summary() {
   mc_msg "Family: $DEVICE_FAMILY"
   if [ "$DEVICE_FAMILY" = pixel11 ]; then
     mc_msg "Recovery control: $(cfg_get PIXEL11_HYSTERESIS_MODE)"
-    mc_msg "Passive Polling: $(cfg_get PIXEL11_PASSIVE_MODE) ($(cfg_get PIXEL11_PASSIVE_TARGET_MS) ms)"
     mc_msg "Classic PollingDelay: stock"
     mc_msg "Thermal: $(profile_label "$(cfg_get THERMAL_OUTDOOR_PROFILE)")"
     mc_msg "Thermal max delta: $POLICY_MAX_DELTA"
@@ -381,10 +383,6 @@ apply_last_settings() {
     [ -n "$_hys" ] || _hys=mod
     apply_pixel11_hysteresis "$_hys"
 
-    _passive="$(cfg_get LAST_PIXEL11_PASSIVE_MODE)"
-    [ -n "$_passive" ] || _passive="$(cfg_get PIXEL11_PASSIVE_MODE)"
-    [ -n "$_passive" ] || _passive=stock
-    apply_pixel11_passive "$_passive"
     pin_pixel11_legacy_controls
   else
     _polling="$(cfg_get LAST_THERMAL_POLLING_MODE)"
@@ -448,10 +446,6 @@ if [ "$DEVICE_FAMILY" = pixel11 ]; then
   recovery_index=0
   mc_cycle2 "HotHysteresis & MaxReleaseStep" "Mod (faster recovery)" "Stock values" "$recovery_index"
   [ "$MC_INDEX" = 1 ] && apply_pixel11_hysteresis stock || apply_pixel11_hysteresis mod
-
-  passive_index=1
-  mc_cycle2 "Passive Polling" "Mod 5s (experimental)" "Stock 7s (test 1 default)" "$passive_index"
-  [ "$MC_INDEX" = 0 ] && apply_pixel11_passive mod || apply_pixel11_passive stock
 
   mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "$(profile_policy_label 1 'Outdoor Safe')" 0
   [ "$MC_INDEX" = 1 ] && apply_profile outdoor-safe || apply_profile stock
