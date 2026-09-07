@@ -292,12 +292,11 @@ current_recovery() {
 }
 
 current_thermal_profile() {
-  if [ "$device_family" = pixel11 ]; then
-    printf '%s\n' stock
-    return 0
-  fi
   value="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   [ -n "$value" ] || value=stock
+  if [ "$device_family" = pixel11 ]; then
+    case "$value" in stock|outdoor-safe) ;; *) value=stock ;; esac
+  fi
   printf '%s\n' "$value"
 }
 
@@ -336,15 +335,15 @@ case "$command" in
   zram-disable) zram_disable ;;
   eh-adaptive) eh_adaptive ;;
   eh-max) eh_max ;;
-  lmkd-stock|lmkd-1pct|page-cluster-stock|page-cluster-zero)
+  lmkd-stock|lmkd-1pct)
     [ "$device_family" != pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=action_not_in_pixel11_family_surface'; exit 2; }
     case "$command" in
       lmkd-stock) lmkd_stock ;;
       lmkd-1pct) lmkd_one_percent ;;
-      page-cluster-stock) page_cluster_stock ;;
-      page-cluster-zero) page_cluster_zero ;;
     esac
   ;;
+  page-cluster-stock) page_cluster_stock ;;
+  page-cluster-zero) page_cluster_zero ;;
   debug-silent) debug_silent ;;
   debug-verbose) debug_verbose ;;
 esac
