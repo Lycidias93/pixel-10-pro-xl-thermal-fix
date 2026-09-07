@@ -19,6 +19,10 @@ grep -Fq '"debug-verbose"' bin/module-control
 grep -Fq 'dynamic_stock_thermal_validation' bin/module-control
 grep -Fq '"name":"recovery-mod"' bin/module-control
 grep -Fq '"name":"recovery-stock"' bin/module-control
+if sed -n '/^print_capabilities() {/,/^}/p' bin/module-control | grep -Fq 'PassiveDelay'; then
+  echo 'FAIL: Pixel 11 WebUI recovery action still mentions PassiveDelay' >&2
+  exit 1
+fi
 grep -Fq '"device_family":"%s"' bin/module-control
 grep -Fq '"label":"Recovery"' bin/module-control
 grep -Fq 'classic_polling_stock_only_pixel11' tools/control/pixel-control.sh
