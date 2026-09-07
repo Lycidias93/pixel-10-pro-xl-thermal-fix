@@ -43,7 +43,7 @@ cfg_get() {
 cfg_set() {
   _key="$1"
   _value="$2"
-  _tmp="${CONFIG_FILE}.tmp.$"
+  _tmp="${CONFIG_FILE}.tmp.$$"
   touch "$CONFIG_FILE" 2>/dev/null || true
   grep -v "^${_key}=" "$CONFIG_FILE" 2>/dev/null > "$_tmp" || true
   printf '%s=%s\n' "$_key" "$_value" >> "$_tmp"
@@ -53,7 +53,7 @@ cfg_set() {
 
 cfg_unset() {
   _key="$1"
-  _tmp="${CONFIG_FILE}.tmp.$"
+  _tmp="${CONFIG_FILE}.tmp.$$"
   touch "$CONFIG_FILE" 2>/dev/null || true
   grep -v "^${_key}=" "$CONFIG_FILE" 2>/dev/null > "$_tmp" || true
   mv "$_tmp" "$CONFIG_FILE"
