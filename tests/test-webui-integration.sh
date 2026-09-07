@@ -23,11 +23,11 @@ if sed -n '/^print_capabilities() {/,/^}/p' bin/module-control | grep -Fq 'Passi
   echo 'FAIL: Pixel 11 WebUI recovery action still mentions PassiveDelay' >&2
   exit 1
 fi
-grep -Fq '"device_family":"%s"' bin/module-control
+! sed -n '/^print_capabilities() {/,/^}/p' bin/module-control | grep -Fq '"device_family":"%s"'
 grep -Fq '"label":"Recovery"' bin/module-control
 grep -Fq 'classic_polling_stock_only_pixel11' tools/control/pixel-control.sh
 grep -Fq 'action_not_in_pixel11_family_surface' tools/control/pixel-control.sh
-grep -Fq 'mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%"' tools/action-dashboard.sh
+grep -Fq 'ui_menu3 "Pixel 11 Settings" "Recovery Control" "ZRAM 100%" "Back"' tools/action-dashboard.sh
 grep -Fq 'ui_menu3 "Pixel 11 Advanced" "Emerald Hill mode" "Update Channel" "Back"' tools/action-dashboard.sh
 ! grep -Fq 'Passive Polling' tools/menu/install-options-menu.sh
 grep -Fq 'ZRAM_MATERIALIZE_NOW=0' tools/control/pixel-control.sh
