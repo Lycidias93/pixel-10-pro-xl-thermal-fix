@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # Tensor G6 performance-control patcher for thermal_info_config_common.json.
-# Changes only the explicitly admitted Pixel 11 recovery/passive fields.
+# Changes only the explicitly admitted Pixel 11 recovery fields.
 set -eu
 LC_ALL=C
 export LC_ALL
@@ -8,16 +8,14 @@ export LC_ALL
 SOURCE_FILE="${1:-}"
 OUTPUT_FILE="${2:-}"
 RECOVERY_MODE="${3:-stock}"
-PASSIVE_MODE="${4:-stock}"
-METRICS_FILE="${5:-}"
+METRICS_FILE="${4:-}"
 
 [ -s "$SOURCE_FILE" ] || exit 2
 [ -n "$OUTPUT_FILE" ] || exit 3
 [ -n "$METRICS_FILE" ] || exit 4
 case "$RECOVERY_MODE" in stock|mod) ;; *) exit 5 ;; esac
-case "$PASSIVE_MODE" in stock|mod) ;; *) exit 6 ;; esac
 
-awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics="$METRICS_FILE" '
+awk -v recovery_mode="$RECOVERY_MODE" -v metrics="$METRICS_FILE" '
   function sensor_name(line, name) {
     if (!match(line, /"Name"[[:space:]]*:[[:space:]]*"[^"]+"/)) return ""
     name=substr(line,RSTART,RLENGTH)
@@ -82,17 +80,6 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
     }
     return out text
   }
-  function patch_scalar(line, key, expected, replacement, enabled, token, val) {
-    scalar_pattern="\"" key "\"[[:space:]]*:[[:space:]]*[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)"
-    if (!match(line, scalar_pattern)) return line
-    token=substr(line,RSTART,RLENGTH)
-    val=token
-    sub(/^.*:[[:space:]]*/,"",val)
-    if ((val+0)!=(expected+0)) { bad=1; return line }
-    if (!enabled) return line
-    sub(/[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)$/, replacement, token)
-    return substr(line,1,RSTART-1) token substr(line,RSTART+RLENGTH)
-  }
   function patch_mrs_line(line, enabled, out, token, val) {
     out=""
     while (match(line, /"MaxReleaseStep"[[:space:]]*:[[:space:]]*[+-]?([0-9]+([.][0-9]+)?|[.][0-9]+)/)) {
@@ -119,10 +106,8 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
     hys_idx=0
     hys_seen=0
     mrs_seen=0
-    passive_seen=0
     hys_changes=0
     mrs_changes=0
-    passive_changes=0
     bad=0
   }
   {
@@ -171,14 +156,6 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
       line=patch_mrs_line(line,recovery_mode=="mod")
     }
 
-    if (is_target(current) && line ~ /"PassiveDelay"[[:space:]]*:/) {
-      if (seen_passive[current]++) bad=1
-      passive_seen++
-      before=line
-      line=patch_scalar(line,"PassiveDelay",7000,5000,passive_mode=="mod")
-      if (passive_mode=="mod" && line!=before) passive_changes++
-    }
-
     print line
   }
   END {
@@ -188,17 +165,13 @@ awk -v recovery_mode="$RECOVERY_MODE" -v passive_mode="$PASSIVE_MODE" -v metrics
         mrs_per_sensor["VIRTUAL-SKIN-CPU-ODPM"] < 1 || \
         mrs_per_sensor["VIRTUAL-SKIN-CPU-HIGH"] < 1 || \
         mrs_per_sensor["VIRTUAL-SKIN-SOC"] < 1) bad=1
-    if (hys_seen!=7 || mrs_seen!=32 || passive_seen!=7) bad=1
+    if (hys_seen!=7 || mrs_seen!=32) bad=1
     if (recovery_mode=="mod" && (hys_changes!=15 || mrs_changes!=32)) bad=1
     if (recovery_mode=="stock" && (hys_changes!=0 || mrs_changes!=0)) bad=1
-    if (passive_mode=="mod" && passive_changes!=7) bad=1
-    if (passive_mode=="stock" && passive_changes!=0) bad=1
     if (bad) exit 40
     printf "PIXEL11_HYSTERESIS_ARRAYS=%d\n", hys_seen > metrics
     printf "PIXEL11_MRS_TARGETS=%d\n", mrs_seen >> metrics
-    printf "PIXEL11_PASSIVE_TARGETS=%d\n", passive_seen >> metrics
     printf "PIXEL11_HYSTERESIS_CHANGES=%d\n", hys_changes >> metrics
     printf "PIXEL11_MRS_CHANGES=%d\n", mrs_changes >> metrics
-    printf "PIXEL11_PASSIVE_CHANGES=%d\n", passive_changes >> metrics
   }
 ' "$SOURCE_FILE" > "$OUTPUT_FILE"
