@@ -298,8 +298,7 @@ set_pixel11_recovery() {
     1) requested=stock ;;
     *) msg "Back."; return 0 ;;
   esac
-  current_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
-  [ -n "$current_profile" ] || current_profile=stock
+  current_profile=stock
   if rematerialize_thermal_overlay stock "$current_profile" "$requested"; then
     cfg_set PIXEL11_HYSTERESIS_MODE "$requested"
     cfg_set LAST_PIXEL11_HYSTERESIS_MODE "$requested"
@@ -309,6 +308,7 @@ set_pixel11_recovery() {
     cfg_unset PIXEL11_PASSIVE_MODE
     cfg_unset PIXEL11_PASSIVE_TARGET_MS
     cfg_unset LAST_PIXEL11_PASSIVE_MODE
+    set_thermal_choice stock
     cfg_set THERMAL_SETTINGS_MODE action_settings
     msg "- Pixel 11 recovery: $requested"
   fi
@@ -526,9 +526,9 @@ set_zram() {
 settings_loop() {
   while :; do
     if [ "$DEVICE_FAMILY" = pixel11 ]; then
-      mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%" "Back" 0
-      [ "$MC_REASON" = "timeout" ] && return 0
-      case "$MC_INDEX" in 0) set_pixel11_recovery ;; 1) set_thermal ;; 2) set_zram ;; *) msg "Back."; return 0 ;; esac
+      ui_menu3 "Pixel 11 Settings" "Recovery Control" "ZRAM 100%" "Back" 0
+      [ "$UI_REASON" = "timeout" ] && return 0
+      case "$UI_INDEX" in 0) set_pixel11_recovery ;; 1) set_zram ;; *) msg "Back."; return 0 ;; esac
     else
       mc_cycle4 "Settings" "Polling Mode" "Thermal Profile" "ZRAM 100%" "Back" 0
       [ "$MC_REASON" = "timeout" ] && return 0
