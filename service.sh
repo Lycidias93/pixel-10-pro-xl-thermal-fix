@@ -223,7 +223,12 @@ update_manager_badges_fast() {
   else
     l_icon="$white"; l_value=Stock
   fi
-  write_manager_description "Polling $p_icon $p_value | Thermal $t_icon $t_value | ZRAM $z_icon $z_value | Memory Killer $l_icon $l_value | Action: details/support"
+  status_lib="$MODDIR/tools/debug/status-lib.sh"
+  if [ -s "$status_lib" ] && sh "$status_lib" update >> "$H" 2>&1; then
+    :
+  else
+    write_manager_description "Polling $p_icon $p_value | Thermal $t_icon $t_value | ZRAM $z_icon $z_value | Memory Killer $l_icon $l_value | Action: details/support"
+  fi
 }
 
 if [ "$verify_mode" = fast ]; then
