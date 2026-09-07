@@ -11,11 +11,15 @@ trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 for device in cubs grizzly kodiak yogi; do
   [[ "$(thermal_device_family "$device")" = pixel11 ]] || { echo "FAIL family_$device"; exit 2; }
 done
+. "$repo_root/tools/core/outdoor-runtime-policy.sh"
+[[ "$(thermal_outdoor_max_delta grizzly 17 G6_FAMILY_TEST)" = 0 ]]
+! thermal_outdoor_profile_admitted outdoor-safe grizzly 17 G6_FAMILY_TEST
 
 menu="$repo_root/tools/menu/install-options-menu.sh"
 grep -Fq 'HotHysteresis & MaxReleaseStep' "$menu"
 grep -Fq 'INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"' "$menu"
 ! grep -Fq 'Passive Polling' "$menu"
+! grep -Fq 'mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock"' "$menu"
 grep -Fq 'cfg_unset PIXEL11_PASSIVE_MODE' "$menu"
 grep -Fq 'single_pass_v4_family' "$menu"
 grep -Fq 'THERMAL_POLLING_POLICY stock_classic_polling_disabled_pixel11' "$menu"
