@@ -6,7 +6,6 @@ POLLING_MODE="${1:-mod}"
 OUTDOOR_PROFILE="${2:-stock}"
 MODPATH="${3:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
 PIXEL11_HYSTERESIS_MODE="${4:-stock}"
-PIXEL11_PASSIVE_MODE="${5:-stock}"
 ID="pixel-10-pro-xl-thermal-fix"
 DATA_ROOT="${THERMAL_DATA_ROOT:-/data/adb/$ID}"
 TARGET_DIR="$MODPATH/system/vendor/etc"
@@ -25,18 +24,17 @@ LAYOUT_ENV="$GUARD_DIR/thermal-layout.env"
 case "$POLLING_MODE" in stock|mod) ;; *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_polling_mode; exit 21 ;; esac
 case "$OUTDOOR_PROFILE" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_outdoor_profile; exit 22 ;; esac
 case "$PIXEL11_HYSTERESIS_MODE" in stock|mod) ;; *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_pixel11_hysteresis_mode; exit 23 ;; esac
-case "$PIXEL11_PASSIVE_MODE" in stock|mod) ;; *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_pixel11_passive_mode; exit 23 ;; esac
 
 DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
 BUILD_ID="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
 [ -n "$DEVICE" ] || DEVICE=unknown
 [ -n "$BUILD_ID" ] || BUILD_ID=unknown
 DEVICE_FAMILY="$(thermal_device_family "$DEVICE")"
-if [ "$DEVICE_FAMILY" != pixel11 ] && { [ "$PIXEL11_HYSTERESIS_MODE" != stock ] || [ "$PIXEL11_PASSIVE_MODE" != stock ]; }; then
+if [ "$DEVICE_FAMILY" != pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
   printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=pixel11_controls_requested_on_non_pixel11
   exit 23
 fi
-if [ "$DEVICE_FAMILY" = pixel11 ] && { [ "$PIXEL11_HYSTERESIS_MODE" != stock ] || [ "$PIXEL11_PASSIVE_MODE" != stock ]; }; then
+if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
   [ -r "$G6_CONTROLS_HELPER" ] || { printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=g6_controls_helper_missing; exit 23; }
 fi
 thermal_layout_polling_mode_admitted "$DEVICE" "$POLLING_MODE" || {
@@ -87,7 +85,7 @@ normalize_allowed() {
   _src="$1"; _dst="$2"; _file="${3:-unknown}"
   _g6_controls=no
   if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_file" = thermal_info_config_common.json ] &&
-     { [ "$PIXEL11_HYSTERESIS_MODE" = mod ] || [ "$PIXEL11_PASSIVE_MODE" = mod ]; }; then
+     [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
     _g6_controls=yes
   fi
   awk -v policy="$OUTDOOR_POLICY" -v g6_controls="$_g6_controls" '
@@ -158,7 +156,6 @@ normalize_allowed() {
         }
       }
       if (g6_controls=="yes" && g6_mrs_target(current)) line=normalize_scalar(line,"MaxReleaseStep","__G6_MRS_VALUE__")
-      if (g6_controls=="yes" && g6_target(current)) line=normalize_scalar(line,"PassiveDelay","__G6_PASSIVE_VALUE__")
 
       if (in_hot) {
         closing=index(line,"]")
@@ -228,19 +225,17 @@ patch_one() {
   ' "$_src" > "$_base" || return 1
 
   if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_file" = thermal_info_config_common.json ] &&
-     { [ "$PIXEL11_HYSTERESIS_MODE" = mod ] || [ "$PIXEL11_PASSIVE_MODE" = mod ]; }; then
+     [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
     _metrics="$GUARD_DIR/.g6-controls-metrics.$$"
     rm -f "$_metrics"
-    if ! sh "$G6_CONTROLS_HELPER" "$_base" "$_dst" "$PIXEL11_HYSTERESIS_MODE" "$PIXEL11_PASSIVE_MODE" "$_metrics"; then
+    if ! sh "$G6_CONTROLS_HELPER" "$_base" "$_dst" "$PIXEL11_HYSTERESIS_MODE" "$_metrics"; then
       rm -f "$_base" "$_metrics"
       return 1
     fi
     pixel11_hys_arrays="$(sed -n 's/^PIXEL11_HYSTERESIS_ARRAYS=//p' "$_metrics" | tail -n 1)"
     pixel11_mrs_targets="$(sed -n 's/^PIXEL11_MRS_TARGETS=//p' "$_metrics" | tail -n 1)"
-    pixel11_passive_targets="$(sed -n 's/^PIXEL11_PASSIVE_TARGETS=//p' "$_metrics" | tail -n 1)"
     pixel11_hys_changes="$(sed -n 's/^PIXEL11_HYSTERESIS_CHANGES=//p' "$_metrics" | tail -n 1)"
     pixel11_mrs_changes="$(sed -n 's/^PIXEL11_MRS_CHANGES=//p' "$_metrics" | tail -n 1)"
-    pixel11_passive_changes="$(sed -n 's/^PIXEL11_PASSIVE_CHANGES=//p' "$_metrics" | tail -n 1)"
     rm -f "$_base" "$_metrics"
   else
     mv "$_base" "$_dst"
@@ -337,14 +332,13 @@ printf '  "layout_count": %s,\n' "$THERMAL_LAYOUT_COUNT" >> "$REPORT_TMP"
 printf '  "polling_mode": "%s",\n' "$POLLING_MODE" >> "$REPORT_TMP"
 printf '  "polling_policy": "%s",\n' "$(thermal_layout_is_g6_device "$DEVICE" && printf '%s' classic_polling_stock_family_controls || printf '%s' stock_or_mod)" >> "$REPORT_TMP"
 printf '  "pixel11_hysteresis_mode": "%s",\n' "$PIXEL11_HYSTERESIS_MODE" >> "$REPORT_TMP"
-printf '  "pixel11_passive_mode": "%s",\n' "$PIXEL11_PASSIVE_MODE" >> "$REPORT_TMP"
 printf '  "outdoor_policy": "%s",\n' "$OUTDOOR_POLICY" >> "$REPORT_TMP"
 printf '  "outdoor_profile": "%s",\n' "$OUTDOOR_PROFILE" >> "$REPORT_TMP"
 printf '%s\n' '  "files": {' >> "$REPORT_TMP"
 
 _tab="$(printf '\t')"; first_json=1; source_files=0; source_polling_total=0; replacement_total=0; output_300000_total=0; output_5000_total=0
-pixel11_hys_arrays=0; pixel11_mrs_targets=0; pixel11_passive_targets=0
-pixel11_hys_changes=0; pixel11_mrs_changes=0; pixel11_passive_changes=0
+pixel11_hys_arrays=0; pixel11_mrs_targets=0
+pixel11_hys_changes=0; pixel11_mrs_changes=0
 while IFS="$_tab" read -r file source_sha source_bytes source_polling; do
   [ "$file" = file ] && continue
   [ -n "$file" ] || continue
@@ -383,22 +377,11 @@ done < "$MANIFEST"
 [ "$source_files" -eq "$THERMAL_LAYOUT_COUNT" ] 2>/dev/null || fail 48 "output_layout_count_${source_files}_expected_${THERMAL_LAYOUT_COUNT}"
 for file in $THERMAL_LAYOUT_FILES; do [ -s "$PATCH_STAGE/$file" ] || fail 48 "required_output_missing_$file"; done
 
-if [ "$DEVICE_FAMILY" = pixel11 ] && { [ "$PIXEL11_HYSTERESIS_MODE" = mod ] || [ "$PIXEL11_PASSIVE_MODE" = mod ]; }; then
+if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
   [ "$pixel11_hys_arrays" = 7 ] || fail 58 "pixel11_hysteresis_inventory_${pixel11_hys_arrays}_expected_7"
   [ "$pixel11_mrs_targets" = 32 ] || fail 58 "pixel11_mrs_inventory_${pixel11_mrs_targets}_expected_32"
-  [ "$pixel11_passive_targets" = 7 ] || fail 58 "pixel11_passive_inventory_${pixel11_passive_targets}_expected_7"
-  if [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
-    [ "$pixel11_hys_changes" = 15 ] || fail 58 "pixel11_hysteresis_changes_${pixel11_hys_changes}_expected_15"
-    [ "$pixel11_mrs_changes" = 32 ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_32"
-  else
-    [ "$pixel11_hys_changes" = 0 ] || fail 58 pixel11_stock_hysteresis_changed
-    [ "$pixel11_mrs_changes" = 0 ] || fail 58 pixel11_stock_mrs_changed
-  fi
-  if [ "$PIXEL11_PASSIVE_MODE" = mod ]; then
-    [ "$pixel11_passive_changes" = 7 ] || fail 58 "pixel11_passive_changes_${pixel11_passive_changes}_expected_7"
-  else
-    [ "$pixel11_passive_changes" = 0 ] || fail 58 pixel11_stock_passive_changed
-  fi
+  [ "$pixel11_hys_changes" = 15 ] || fail 58 "pixel11_hysteresis_changes_${pixel11_hys_changes}_expected_15"
+  [ "$pixel11_mrs_changes" = 32 ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_32"
 fi
 
 printf '%s\n' '  },' '  "totals": {' >> "$REPORT_TMP"
@@ -427,6 +410,6 @@ mv "$REPORT_TMP" "$REPORT_MODULE"
 cp -fp "$REPORT_MODULE" "$REPORT_DATA"
 thermal_layout_write_env "$LAYOUT_ENV" "$DEVICE" "$BUILD_ID" || fail 57 layout_state_publish_failed
 chmod 0644 "$PATCH_MANIFEST" "$REPORT_MODULE" "$REPORT_DATA" 2>/dev/null || true
-printf '%s\n' PATCH_THERMAL=pass "PATCH_THERMAL_DEVICE=$DEVICE" "PATCH_THERMAL_BUILD_ID=$BUILD_ID" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR" "PATCH_THERMAL_FILES=$source_files" "PATCH_THERMAL_SOURCE_300000=$source_polling_total" "PATCH_THERMAL_REPLACEMENTS=$replacement_total" "PATCH_THERMAL_OUTPUT_5000=$output_5000_total" "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_PIXEL11_PASSIVE_MODE=$PIXEL11_PASSIVE_MODE" "PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=$pixel11_hys_changes" "PATCH_THERMAL_PIXEL11_MRS_CHANGES=$pixel11_mrs_changes" "PATCH_THERMAL_PIXEL11_PASSIVE_CHANGES=$pixel11_passive_changes" "PATCH_THERMAL_MANIFEST=$PATCH_MANIFEST" "PATCH_THERMAL_REPORT=$REPORT_MODULE"
+printf '%s\n' PATCH_THERMAL=pass "PATCH_THERMAL_DEVICE=$DEVICE" "PATCH_THERMAL_BUILD_ID=$BUILD_ID" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR" "PATCH_THERMAL_FILES=$source_files" "PATCH_THERMAL_SOURCE_300000=$source_polling_total" "PATCH_THERMAL_REPLACEMENTS=$replacement_total" "PATCH_THERMAL_OUTPUT_5000=$output_5000_total" "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=$pixel11_hys_changes" "PATCH_THERMAL_PIXEL11_MRS_CHANGES=$pixel11_mrs_changes" "PATCH_THERMAL_MANIFEST=$PATCH_MANIFEST" "PATCH_THERMAL_REPORT=$REPORT_MODULE"
 trap - EXIT HUP INT TERM
 exit 0
