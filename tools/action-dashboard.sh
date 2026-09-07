@@ -5,6 +5,7 @@ CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
+PAGE_CLUSTER="$MODDIR/tools/zram/page-cluster-control.sh"
 EH_EVENT_LOG="$CONFIG_DIR/zram-eh/events.log"
 LMKD_RELOAD_EVIDENCE="$CONFIG_DIR/lmkd-reload.env"
 PTUNE_ROOTS="${PTUNE_MODULE_ROOTS:-/data/adb/modules/ptune /data/adb/modules_update/ptune}"
@@ -298,7 +299,8 @@ set_pixel11_recovery() {
     1) requested=stock ;;
     *) msg "Back."; return 0 ;;
   esac
-  current_profile=stock
+  current_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+  case "$current_profile" in stock|outdoor-safe) ;; *) current_profile=stock ;; esac
   if rematerialize_thermal_overlay stock "$current_profile" "$requested"; then
     cfg_set PIXEL11_HYSTERESIS_MODE "$requested"
     cfg_set LAST_PIXEL11_HYSTERESIS_MODE "$requested"
@@ -308,7 +310,7 @@ set_pixel11_recovery() {
     cfg_unset PIXEL11_PASSIVE_MODE
     cfg_unset PIXEL11_PASSIVE_TARGET_MS
     cfg_unset LAST_PIXEL11_PASSIVE_MODE
-    set_thermal_choice stock
+    set_thermal_choice "$current_profile"
     cfg_set THERMAL_SETTINGS_MODE action_settings
     msg "- Pixel 11 recovery: $requested"
   fi
@@ -339,13 +341,20 @@ set_thermal() {
     return 0
   fi
   cur="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
-  case "$cur" in outdoor-safe) idx=1 ;; outdoor-plus) idx=2 ;; outdoor-extended) idx=3 ;; *) idx=0 ;; esac
-  safe_label="$(policy_label outdoor-safe 'Outdoor Safe')"
-  plus_label="$(policy_label outdoor-plus 'Outdoor Plus')"
-  ext_label="$(policy_label outdoor-extended 'Outdoor Extended')"
-  ui_menu5 "Thermal max+$(policy_max_delta)" "Stock" "$safe_label" "$plus_label" "$ext_label" "Back" "$idx"
-  [ "$UI_REASON" = "timeout" ] && return 0
-  case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; 2) choice=outdoor-plus ;; 3) choice=outdoor-extended ;; *) msg "Back."; return 0 ;; esac
+  if [ "$DEVICE_FAMILY" = pixel11 ]; then
+    case "$cur" in outdoor-safe) idx=1 ;; *) idx=0 ;; esac
+    ui_menu3 "Pixel 11 Thermal max+$(policy_max_delta)" "Stock" "Outdoor Safe +1C" "Back" "$idx"
+    [ "$UI_REASON" = "timeout" ] && return 0
+    case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; *) msg "Back."; return 0 ;; esac
+  else
+    case "$cur" in outdoor-safe) idx=1 ;; outdoor-plus) idx=2 ;; outdoor-extended) idx=3 ;; *) idx=0 ;; esac
+    safe_label="$(policy_label outdoor-safe 'Outdoor Safe')"
+    plus_label="$(policy_label outdoor-plus 'Outdoor Plus')"
+    ext_label="$(policy_label outdoor-extended 'Outdoor Extended')"
+    ui_menu5 "Thermal max+$(policy_max_delta)" "Stock" "$safe_label" "$plus_label" "$ext_label" "Back" "$idx"
+    [ "$UI_REASON" = "timeout" ] && return 0
+    case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; 2) choice=outdoor-plus ;; 3) choice=outdoor-extended ;; *) msg "Back."; return 0 ;; esac
+  fi
   if ! variant_exists dynamic "$choice"; then
     msg "! $choice is not admitted on $POLICY_BUILD"
     sleep 2
@@ -431,6 +440,38 @@ set_emerald_hill() {
   msg "Back to Advanced."
 }
 
+configure_page_cluster() {
+  cur_pc="$(cfg_get ZRAM_PAGE_CLUSTER_MODE)"
+  case "$cur_pc" in zero) pc_idx=1 ;; *) pc_idx=0 ;; esac
+  ui_menu3 "ZRAM page-cluster" "Stock" "EXPERIMENTAL 0 (post-Bootguard)" "Back" "$pc_idx"
+  [ "$UI_REASON" = "timeout" ] && return 0
+  case "$UI_INDEX" in
+    0)
+      if [ -s "$PAGE_CLUSTER" ]; then
+        ZRAM_CONFIG_FILE="$CONFIG_FILE" PAGE_CLUSTER_CALLER=action_menu sh "$PAGE_CLUSTER" restore >/dev/null 2>&1 || {
+          cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+          cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
+        }
+      else
+        cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+        cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
+      fi
+      msg "- page-cluster: stock"
+    ;;
+    1)
+      cfg_set ZRAM_PAGE_CLUSTER_MODE zero
+      cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK explicit_user_zero
+      if [ -s "$PAGE_CLUSTER" ]; then
+        ZRAM_CONFIG_FILE="$CONFIG_FILE" PAGE_CLUSTER_CALLER=action_menu sh "$PAGE_CLUSTER" reconcile >/dev/null 2>&1 || true
+      fi
+      msg "- page-cluster: EXPERIMENTAL 0 persisted"
+      msg "- Runtime apply remains post-Bootguard"
+    ;;
+    *) msg "Back."; return 0 ;;
+  esac
+  printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+}
+
 set_zram() {
   cur_z="$(cfg_get ENABLE_ZRAM_100P)"
   case "$cur_z" in 1) idx=0 ;; *) idx=1 ;; esac
@@ -479,6 +520,7 @@ set_zram() {
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_enable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
       fi
+      configure_page_cluster
       if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
         msg "- Applying runtime properties"
         if ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1; then
@@ -503,6 +545,12 @@ set_zram() {
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_disable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
       fi
+      if [ -s "$PAGE_CLUSTER" ]; then
+        ZRAM_CONFIG_FILE="$CONFIG_FILE" PAGE_CLUSTER_CALLER=action_zram_disable sh "$PAGE_CLUSTER" restore >/dev/null 2>&1 || true
+      else
+        cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+        cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
+      fi
       cfg_set ENABLE_ZRAM_100P 0
       cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_RESTART_MMD 0
@@ -526,9 +574,14 @@ set_zram() {
 settings_loop() {
   while :; do
     if [ "$DEVICE_FAMILY" = pixel11 ]; then
-      ui_menu3 "Pixel 11 Settings" "Recovery Control" "ZRAM 100%" "Back" 0
-      [ "$UI_REASON" = "timeout" ] && return 0
-      case "$UI_INDEX" in 0) set_pixel11_recovery ;; 1) set_zram ;; *) msg "Back."; return 0 ;; esac
+      mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%" "Back" 0
+      [ "$MC_REASON" = "timeout" ] && return 0
+      case "$MC_INDEX" in
+        0) set_pixel11_recovery ;;
+        1) set_thermal ;;
+        2) set_zram ;;
+        *) msg "Back."; return 0 ;;
+      esac
     else
       mc_cycle4 "Settings" "Polling Mode" "Thermal Profile" "ZRAM 100%" "Back" 0
       [ "$MC_REASON" = "timeout" ] && return 0
