@@ -176,6 +176,7 @@ update_manager_badges_full() {
   sh "$status_lib" update >> "$H" 2>&1 || true
   desc="$(sed -n 's/^description=//p' "$MODDIR/module.prop" 2>/dev/null | tail -n 1)"
   case "$desc" in
+    'Recovery '*' | Thermal '*' | ZRAM '*' | Action: details/support') write_manager_description "$desc" ;;
     'Polling '*' | Thermal '*' | ZRAM '*' | Memory Killer '*) write_manager_description "$desc" ;;
     *) return 1 ;;
   esac
@@ -183,8 +184,15 @@ update_manager_badges_full() {
 
 update_manager_badges_fast() {
   green='🟢'; yellow='🟡'; red='🔴'; white='⚪'
+  device_family="$(cfg_fast INSTALL_OPTION_FAMILY)"
+  case "$device_family" in
+    pixel11|pixel10) ;;
+    *) case "$(getprop ro.product.device 2>/dev/null || true)" in cubs|grizzly|kodiak|yogi) device_family=pixel11 ;; *) device_family=pixel10 ;; esac ;;
+  esac
   polling="$(cfg_fast THERMAL_POLLING_MODE)"; [ -n "$polling" ] || polling=mod
   profile="$(cfg_fast THERMAL_OUTDOOR_PROFILE)"; [ -n "$profile" ] || profile=stock
+  recovery="$(cfg_fast PIXEL11_HYSTERESIS_MODE)"
+  case "$recovery" in mod) r_icon="$green"; r_value=Mod ;; *) r_icon="$white"; r_value=Stock ;; esac
   thermal_disabled="$(cfg_fast THERMAL_DISABLED)"; [ -n "$thermal_disabled" ] || thermal_disabled=0
   if [ "$thermal_disabled" = 1 ]; then
     p_icon="$red"; p_value=Disabled; t_icon="$red"; t_value=Disabled
@@ -226,6 +234,8 @@ update_manager_badges_fast() {
   status_lib="$MODDIR/tools/debug/status-lib.sh"
   if [ -s "$status_lib" ] && sh "$status_lib" update >> "$H" 2>&1; then
     :
+  elif [ "$device_family" = pixel11 ]; then
+    write_manager_description "Recovery $r_icon $r_value | Thermal $t_icon $t_value | ZRAM $z_icon $z_value | Action: details/support"
   else
     write_manager_description "Polling $p_icon $p_value | Thermal $t_icon $t_value | ZRAM $z_icon $z_value | Memory Killer $l_icon $l_value | Action: details/support"
   fi
