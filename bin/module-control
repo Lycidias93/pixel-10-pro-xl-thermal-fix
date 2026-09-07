@@ -10,6 +10,7 @@ CONFIG_DIR="/data/adb/$ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 RUNTIME_DIR="${WEBUI_RUNTIME_DIR:-/data/local/tmp/${ID}-webui}"
 STATUS_LIB="$MODDIR/tools/debug/status-lib.sh"
+LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
 STATUS_ENV="$MODDIR/guard/manager-status.env"
 CONTROL="$MODDIR/tools/control/pixel-control.sh"
 PAGE_CLUSTER="$MODDIR/tools/zram/page-cluster-control.sh"
@@ -18,6 +19,16 @@ COLLECTOR="$MODDIR/tools/bootguard/collect-debug.sh"
 module_value() { sed -n "s/^$1=//p" "$PROP" 2>/dev/null | head -n 1; }
 MODULE_NAME="$(module_value name)"
 MODULE_VERSION="$(module_value version)"
+
+resolved_family() {
+  _device="${1:-$(getprop ro.product.device 2>/dev/null || true)}"
+  if [ -r "$LAYOUT_HELPER" ]; then
+    . "$LAYOUT_HELPER"
+    _family="$(thermal_device_family "$_device" 2>/dev/null || true)"
+    case "$_family" in pixel11|pixel10) printf '%s\n' "$_family"; return 0 ;; esac
+  fi
+  case "$_device" in cubs|grizzly|kodiak|yogi) printf '%s\n' pixel11 ;; *) printf '%s\n' pixel10 ;; esac
+}
 
 json_escape() {
   printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g'
@@ -57,9 +68,14 @@ json_string() {
 }
 
 print_capabilities() {
-  cat <<EOF_CAP
-{"schema":"root-module-webui.capabilities.v1","module":{"id":"$ID","name":"$(json_escape "$MODULE_NAME")","version":"$(json_escape "$MODULE_VERSION")"},"features":{"config":false,"logs":true,"actions":true,"jobs":true,"inventory":true},"config_fields":[],"actions":[{"name":"polling-mod","label":"Polling · Module values","description":"Materialize the current validated Thermal profile with admitted 5s PollingDelay changes.","risk":"caution","supports_dry_run":true},{"name":"polling-stock","label":"Polling · Stock values","description":"Rematerialize the current Thermal profile while preserving stock polling values.","risk":"safe","supports_dry_run":true},{"name":"thermal-stock","label":"Thermal · Stock","description":"Return admitted Outdoor thresholds to stock while keeping the selected polling mode.","risk":"safe","supports_dry_run":true},{"name":"thermal-outdoor-safe","label":"Thermal · Outdoor Safe +1°C","description":"Validated +1°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-plus","label":"Thermal · Outdoor Plus +2°C","description":"Validated +2°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-extended","label":"Thermal · Outdoor Extended +3°C","description":"Maximum admitted Outdoor target delta; device/build policy may block it.","risk":"caution","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill and stock Memory Killer; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Memory Killer/Emerald Hill/page-cluster experiments.","risk":"caution","supports_dry_run":true},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"lmkd-stock","label":"Memory Killer · Stock","description":"Disable the experimental 1% LMKD swap-free threshold and attempt runtime restore.","risk":"safe","supports_dry_run":true},{"name":"lmkd-1pct","label":"Memory Killer · EXPERIMENTAL 1%","description":"Requires module ZRAM 100%; applies the guarded LMKD reload path.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"LMKD"},{"name":"page-cluster-stock","label":"ZRAM page-cluster · Stock","description":"Restore the current-boot baseline when owned and persist Stock for future boots.","risk":"safe","supports_dry_run":true},{"name":"page-cluster-zero","label":"ZRAM page-cluster · EXPERIMENTAL 0","description":"Persist guarded page-cluster 0 and reapply it only after verified boot with active module ZRAM.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"PAGECLUSTER"},{"name":"debug-silent","label":"Logging · Silent","description":"Disable verbose module diagnostics while keeping required bounded health/support evidence.","risk":"safe","supports_dry_run":true},{"name":"debug-verbose","label":"Logging · Verbose","description":"Enable verbose module diagnostics for active development and troubleshooting.","risk":"caution","supports_dry_run":true}],"jobs":[{"name":"support-snapshot","label":"Create Support Snapshot","description":"Run the existing bounded support collector and report the generated archive path.","risk":"safe"}],"inventories":[{"name":"device-matrix","label":"Supported Pixel family","description":"Single Pixel 9/9a/10/10a/11 vNext device matrix."},{"name":"validation","label":"Latest verified validation evidence","description":"Latest verified stock-source, overlay and runtime status; WebUI view switching never reruns the expensive validator."}]}
-EOF_CAP
+  family="$(resolved_family)"
+  if [ "$family" = pixel11 ]; then
+    actions='[{"name":"recovery-mod","label":"Recovery · Mod","description":"Apply the admitted Pixel 11 HotHysteresis + MaxReleaseStep recovery tuning while keeping classic PollingDelay and PassiveDelay stock.","risk":"caution","supports_dry_run":true},{"name":"recovery-stock","label":"Recovery · Stock","description":"Restore stock HotHysteresis and MaxReleaseStep behavior on Pixel 11.","risk":"safe","supports_dry_run":true},{"name":"thermal-stock","label":"Thermal · Stock","description":"Use stock VIRTUAL-SKIN thresholds while preserving the selected recovery mode.","risk":"safe","supports_dry_run":true},{"name":"thermal-outdoor-safe","label":"Thermal · Outdoor Safe +1°C","description":"Validated +1°C exact VIRTUAL-SKIN threshold delta on admitted Pixel 11 builds.","risk":"caution","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Emerald Hill tuning.","risk":"caution","supports_dry_run":true},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"debug-silent","label":"Logging · Silent","description":"Disable verbose module diagnostics while keeping required bounded health/support evidence.","risk":"safe","supports_dry_run":true},{"name":"debug-verbose","label":"Logging · Verbose","description":"Enable verbose module diagnostics for active development and troubleshooting.","risk":"caution","supports_dry_run":true}]'
+  else
+    actions='[{"name":"polling-mod","label":"Polling · Module values","description":"Materialize the current validated Thermal profile with admitted 5s PollingDelay changes.","risk":"caution","supports_dry_run":true},{"name":"polling-stock","label":"Polling · Stock values","description":"Rematerialize the current Thermal profile while preserving stock polling values.","risk":"safe","supports_dry_run":true},{"name":"thermal-stock","label":"Thermal · Stock","description":"Return admitted Outdoor thresholds to stock while keeping the selected polling mode.","risk":"safe","supports_dry_run":true},{"name":"thermal-outdoor-safe","label":"Thermal · Outdoor Safe +1°C","description":"Validated +1°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-plus","label":"Thermal · Outdoor Plus +2°C","description":"Validated +2°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-extended","label":"Thermal · Outdoor Extended +3°C","description":"Maximum admitted Outdoor target delta; device/build policy may block it.","risk":"caution","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill and stock Memory Killer; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Memory Killer/Emerald Hill/page-cluster experiments.","risk":"caution","supports_dry_run":true},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"lmkd-stock","label":"Memory Killer · Stock","description":"Disable the experimental 1% LMKD swap-free threshold and attempt runtime restore.","risk":"safe","supports_dry_run":true},{"name":"lmkd-1pct","label":"Memory Killer · EXPERIMENTAL 1%","description":"Requires module ZRAM 100%; applies the guarded LMKD reload path.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"LMKD"},{"name":"page-cluster-stock","label":"ZRAM page-cluster · Stock","description":"Restore the current-boot baseline when owned and persist Stock for future boots.","risk":"safe","supports_dry_run":true},{"name":"page-cluster-zero","label":"ZRAM page-cluster · EXPERIMENTAL 0","description":"Persist guarded page-cluster 0 and reapply it only after verified boot with active module ZRAM.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"PAGECLUSTER"},{"name":"debug-silent","label":"Logging · Silent","description":"Disable verbose module diagnostics while keeping required bounded health/support evidence.","risk":"safe","supports_dry_run":true},{"name":"debug-verbose","label":"Logging · Verbose","description":"Enable verbose module diagnostics for active development and troubleshooting.","risk":"caution","supports_dry_run":true}]'
+  fi
+  printf '{"schema":"root-module-webui.capabilities.v1","module":{"id":"%s","name":"%s","version":"%s"},"features":{"config":false,"logs":true,"actions":true,"jobs":true,"inventory":true},"config_fields":[],"device_family":"%s","actions":%s,"jobs":[{"name":"support-snapshot","label":"Create Support Snapshot","description":"Run the existing bounded support collector and report the generated archive path.","risk":"safe"}],"inventories":[{"name":"device-matrix","label":"Supported Pixel family","description":"Pixel family-specific vNext device matrix."},{"name":"validation","label":"Latest verified validation evidence","description":"Latest verified stock-source, overlay and runtime status; WebUI view switching never reruns the expensive validator."}]}\n' \
+    "$ID" "$(json_escape "$MODULE_NAME")" "$(json_escape "$MODULE_VERSION")" "$family" "$actions"
 }
 
 print_status() {
@@ -78,6 +94,9 @@ print_status() {
   reboot_safe="$(env_value SAFE_TO_REBOOT "$STATUS_ENV")"
   build_evidence="$(env_value BUILD_EVIDENCE "$STATUS_ENV")"
   polling_mode="$(env_value THERMAL_POLLING_MODE "$CONFIG_FILE")"; [ -n "$polling_mode" ] || polling_mode=mod
+  family="$(resolved_family "$device")"
+  recovery_mode="$(env_value PIXEL11_HYSTERESIS_MODE "$CONFIG_FILE")"; case "$recovery_mode" in mod) recovery_display=Mod ;; *) recovery_mode=stock; recovery_display=Stock ;; esac
+  if [ "$family" = pixel11 ]; then polling_mode=stock; polling=Stock; fi
   thermal_profile="$(env_value THERMAL_OUTDOOR_PROFILE "$CONFIG_FILE")"; [ -n "$thermal_profile" ] || thermal_profile=stock
   thermal_disabled="$(env_value THERMAL_DISABLED "$CONFIG_FILE")"; [ -n "$thermal_disabled" ] || thermal_disabled=0
   zram_enabled="$(env_value ENABLE_ZRAM_100P "$CONFIG_FILE")"; [ -n "$zram_enabled" ] || zram_enabled=0
@@ -110,20 +129,29 @@ print_status() {
     blocked_json="$blocked_json\"$(json_escape "$1")\":\"$(json_escape "$2")\""
   }
 
-  case "$polling_mode" in stock) add_active polling-stock ;; *) add_active polling-mod ;; esac
-  if [ "$thermal_disabled" = 1 ]; then
-    for action_name in thermal-stock thermal-outdoor-safe thermal-outdoor-plus thermal-outdoor-extended; do
-      add_blocked "$action_name" 'Thermal controls are disabled by the current validation/policy state.'
-    done
+  if [ "$family" = pixel11 ]; then
+    case "$recovery_mode" in mod) add_active recovery-mod ;; *) add_active recovery-stock ;; esac
+    if [ "$thermal_disabled" = 1 ]; then
+      add_blocked thermal-stock 'Thermal controls are disabled by the current validation/policy state.'
+      add_blocked thermal-outdoor-safe 'Thermal controls are disabled by the current validation/policy state.'
+    else
+      case "$thermal_profile" in outdoor-safe) add_active thermal-outdoor-safe ;; *) add_active thermal-stock ;; esac
+    fi
   else
-    case "$thermal_profile" in
-      outdoor-safe) add_active thermal-outdoor-safe ;;
-      outdoor-plus) add_active thermal-outdoor-plus ;;
-      outdoor-extended) add_active thermal-outdoor-extended ;;
-      *) add_active thermal-stock ;;
-    esac
+    case "$polling_mode" in stock) add_active polling-stock ;; *) add_active polling-mod ;; esac
+    if [ "$thermal_disabled" = 1 ]; then
+      for action_name in thermal-stock thermal-outdoor-safe thermal-outdoor-plus thermal-outdoor-extended; do
+        add_blocked "$action_name" 'Thermal controls are disabled by the current validation/policy state.'
+      done
+    else
+      case "$thermal_profile" in
+        outdoor-safe) add_active thermal-outdoor-safe ;;
+        outdoor-plus) add_active thermal-outdoor-plus ;;
+        outdoor-extended) add_active thermal-outdoor-extended ;;
+        *) add_active thermal-stock ;;
+      esac
+    fi
   fi
-
   if [ "$zram_enabled" = 1 ]; then
     add_active zram-enable
     if [ "$eh_max" = 1 ]; then add_active eh-max; else add_active eh-adaptive; fi
@@ -132,29 +160,37 @@ print_status() {
     add_blocked eh-adaptive 'Enable module ZRAM 100% first.'
     add_blocked eh-max 'Enable module ZRAM 100% first.'
   fi
-  if [ "$lmkd_enabled" = 1 ]; then add_active lmkd-1pct; else add_active lmkd-stock; fi
-  if [ "$zram_enabled" != 1 ] || [ "$zram_ack" != explicit_user_enable ]; then
-    add_blocked lmkd-1pct 'Enable module ZRAM 100% first.'
-    add_blocked page-cluster-zero 'Enable module ZRAM 100% first.'
-  elif [ "$page_zram_swap" != yes ]; then
-    add_blocked page-cluster-zero 'An active module ZRAM swap device is required.'
+  if [ "$family" != pixel11 ]; then
+    if [ "$lmkd_enabled" = 1 ]; then add_active lmkd-1pct; else add_active lmkd-stock; fi
+    if [ "$zram_enabled" != 1 ] || [ "$zram_ack" != explicit_user_enable ]; then
+      add_blocked lmkd-1pct 'Enable module ZRAM 100% first.'
+      add_blocked page-cluster-zero 'Enable module ZRAM 100% first.'
+    elif [ "$page_zram_swap" != yes ]; then
+      add_blocked page-cluster-zero 'An active module ZRAM swap device is required.'
+    fi
+    if [ "$page_desired" = zero ]; then add_active page-cluster-zero; else add_active page-cluster-stock; fi
   fi
-  if [ "$page_desired" = zero ]; then add_active page-cluster-zero; else add_active page-cluster-stock; fi
   if [ "$debug_mode" = 1 ]; then add_active debug-verbose; else add_active debug-silent; fi
 
   printf '{"ok":true,"module":{"id":"%s","name":"%s","version":"%s"},' "$ID" "$(json_escape "$MODULE_NAME")" "$(json_escape "$MODULE_VERSION")"
   printf '"summary":['
   printf '{"label":"Device","value":"%s (%s)","level":"good"},' "$(json_escape "${model:-unknown}")" "$(json_escape "${device:-unknown}")"
-  printf '{"label":"Polling","value":"%s","level":"good"},' "$(json_escape "${polling:-unknown}")"
-  printf '{"label":"Thermal","value":"%s","level":"good"},' "$(json_escape "${thermal:-unknown}")"
-  printf '{"label":"ZRAM","value":"%s","level":"good"},' "$(json_escape "${zram:-unknown}")"
-  printf '{"label":"Memory Killer","value":"%s","level":"muted"},' "$(json_escape "${lmkd:-unknown}")"
+  if [ "$family" = pixel11 ]; then
+    printf '{"label":"Recovery","value":"%s","level":"%s"},' "$recovery_display" "$([ "$recovery_mode" = mod ] && printf caution || printf muted)"
+    printf '{"label":"Thermal","value":"%s","level":"good"},' "$(json_escape "${thermal:-unknown}")"
+    printf '{"label":"ZRAM","value":"%s","level":"good"},' "$(json_escape "${zram:-unknown}")"
+  else
+    printf '{"label":"Polling","value":"%s","level":"good"},' "$(json_escape "${polling:-unknown}")"
+    printf '{"label":"Thermal","value":"%s","level":"good"},' "$(json_escape "${thermal:-unknown}")"
+    printf '{"label":"ZRAM","value":"%s","level":"good"},' "$(json_escape "${zram:-unknown}")"
+    printf '{"label":"Memory Killer","value":"%s","level":"muted"},' "$(json_escape "${lmkd:-unknown}")"
+  fi
   printf '{"label":"Logging","value":"%s","level":"%s"},' "$debug_display" "$([ "$debug_mode" = 1 ] && printf caution || printf muted)"
   printf '{"label":"Reboot required","value":"%s","level":"%s"}' "$reboot_required" "$([ "$reboot_required" = yes ] && printf caution || printf good)"
   printf '],'
   printf '"action_state":{"active":[%s],"blocked":{%s}},' "$active_json" "$blocked_json"
-  printf '"runtime":{"device":"%s","model":"%s","android":"%s","build_id":"%s","build_evidence":"%s","source_state":"%s","materialization_valid":"%s","active_vendor_match":"%s","safe_to_reboot":"%s","page_cluster_current":"%s","page_cluster_desired":"%s","page_cluster_effective":"%s","page_cluster_owned":"%s","debug_mode":"%s"},' \
-    "$(json_escape "$device")" "$(json_escape "$model")" "$(json_escape "$android")" "$(json_escape "$build")" "$(json_escape "$build_evidence")" "$(json_escape "$source_state")" "$(json_escape "$materialized")" "$(json_escape "$vendor_match")" "$(json_escape "$reboot_safe")" "$(json_escape "$page_current")" "$(json_escape "$page_desired")" "$(json_escape "$page_effective")" "$(json_escape "$page_owned")" "$debug_mode"
+  printf '"runtime":{"device":"%s","model":"%s","device_family":"%s","android":"%s","build_id":"%s","build_evidence":"%s","source_state":"%s","materialization_valid":"%s","active_vendor_match":"%s","safe_to_reboot":"%s","page_cluster_current":"%s","page_cluster_desired":"%s","page_cluster_effective":"%s","page_cluster_owned":"%s","debug_mode":"%s"},' \
+    "$(json_escape "$device")" "$(json_escape "$model")" "$(json_escape "$family")" "$(json_escape "$android")" "$(json_escape "$build")" "$(json_escape "$build_evidence")" "$(json_escape "$source_state")" "$(json_escape "$materialized")" "$(json_escape "$vendor_match")" "$(json_escape "$reboot_safe")" "$(json_escape "$page_current")" "$(json_escape "$page_desired")" "$(json_escape "$page_effective")" "$(json_escape "$page_owned")" "$debug_mode"
   printf '"safety":{"loopback_only":true,"arbitrary_shell_blocked":true,"typed_actions_only":true,"dynamic_stock_thermal_validation":true,"zram_config_first":true,"lmkd_requires_zram":true,"page_cluster_persisted_post_guard":true,"boot_dependency_absent":true}}\n'
 }
 
@@ -176,7 +212,7 @@ run_action_file() {
   confirmation="$(json_string confirmation "$file")"
   [ -z "$expected" ] || [ "$confirmation" = "$expected" ] || return 2
   case "$name" in
-    polling-mod|polling-stock|thermal-stock|thermal-outdoor-safe|thermal-outdoor-plus|thermal-outdoor-extended|zram-enable|zram-disable|eh-adaptive|eh-max|lmkd-stock|lmkd-1pct|page-cluster-stock|page-cluster-zero|debug-silent|debug-verbose) ;;
+    recovery-mod|recovery-stock|polling-mod|polling-stock|thermal-stock|thermal-outdoor-safe|thermal-outdoor-plus|thermal-outdoor-extended|zram-enable|zram-disable|eh-adaptive|eh-max|lmkd-stock|lmkd-1pct|page-cluster-stock|page-cluster-zero|debug-silent|debug-verbose) ;;
     *) return 2 ;;
   esac
   if [ "$dry_run" = true ]; then
