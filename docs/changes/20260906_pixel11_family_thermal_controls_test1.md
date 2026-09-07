@@ -16,11 +16,10 @@ This prevents Pixel 11-specific Thermal schema changes from widening or destabil
 ## Pixel 11 option set
 
 - HotHysteresis & MaxReleaseStep: `mod|stock`; Test-1 default `mod`.
-- Passive Polling: `mod|stock`; Test-1 default `stock` (`PassiveDelay=7000`).
 - Thermal Profile: Stock / Outdoor Safe only under the existing +1 C runtime cap; Test-1 default Stock.
 - ZRAM 100% + Emerald Hill modes remain available; Test-1 default disabled to isolate Thermal recovery.
 - Debug Logging and Support Snapshot remain available.
-- Classic `PollingDelay 300000 -> 5000`, LMKD 1% and pTune override are excluded/pinned safe on Pixel 11.
+- Classic `PollingDelay 300000 -> 5000`, PassiveDelay tuning, LMKD 1% and pTune override are excluded/pinned safe on Pixel 11.
 
 Remembered settings are family-local so Pixel 10 choices do not silently become Pixel 11 choices.
 
@@ -44,15 +43,23 @@ MaxReleaseStep changes exactly 32 cooling-device and profile bindings from `1 ->
 
 `VIRTUAL-SKIN` and `VIRTUAL-SKIN-HINT` do not gain a MaxReleaseStep. `VIRTUAL-SKIN-SOC-EXTREME` remains stock at `1`.
 
-## Phase-2 PassiveDelay path
+## PassiveDelay decision
 
-The same family patcher contains a separate, independently selectable `PassiveDelay 7000 -> 5000` mode for the same seven target sensors. It changes exactly seven values and leaves modem/RF, shutdown, cellular-emergency, charging and `VIRTUAL-SKIN-SOC-EXTREME` stock.
+The Pixel 11 PassiveDelay experiment is removed. Harish's real-device test found that reducing `PassiveDelay 7000 -> 5000` could severely throttle the prime core and cut single-core performance by roughly 50%. With the recovery changes retained and PassiveDelay left at stock, he reported about 2.3k single-core / 7k multi-core in Geekbench 7.
 
-This path is intentionally not the Test-1 default and is not eligible for target-branch integration until Test-1 recovery evidence is reviewed.
+The uploaded install/support evidence for the problematic run confirms the module had actually materialized recovery `mod` plus `PassiveDelay=5000`: 15 HotHysteresis changes, 32 MaxReleaseStep changes and 7 PassiveDelay changes, while classic PollingDelay stayed 35/35 at 300000 and 0 at 5000. Bootguard and readiness still passed, so the performance regression is not treated as an installation-validation failure.
+
+Evidence supplied 2026-09-06:
+- KernelSU install log: SHA-256 `9817c1f4f1803f89fe14020f6f21afdb8b05a0a3a8f53942eaa3deb2d01cceea`, 8634 bytes.
+- Packaged debug archive: SHA-256 `3f9efe4c5b07c0f7f83c60c3ee7b396fcd773bcbe7de8c77ce3eb19077b0fcbe`, 362026 bytes.
+- Device/build: Pixel 11 Pro / `grizzly`, Android 17 `CD1A.260714.001.A9`.
+- Runtime evidence: Bootguard `full_pass`, readiness `runtime_verified`, active vendor match yes, disable/skip_mount/remove flags absent.
+
+Therefore the installer, Action dashboard, WebUI capability surface and thermal patch API no longer expose or apply a Pixel 11 PassiveDelay mode. Existing stale PassiveDelay config keys are removed during the new Pixel 11 selection/control flow.
 
 ## Fail-closed validation
 
-The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays, 32 MaxReleaseStep cooling-device/profile bindings distributed across all five target sensors, and seven PassiveDelay targets. Multiple `MaxReleaseStep` keys on the same physical JSON line are iterated independently, so validation is bound to the schema objects rather than file pretty-printing.
+The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays and 32 MaxReleaseStep cooling-device/profile bindings distributed across all five target sensors. Multiple `MaxReleaseStep` keys on the same physical JSON line are iterated independently, so validation is bound to the schema objects rather than file pretty-printing. PassiveDelay is not an admitted transformation.
 
 The vNext byte-diff normalizer admits only the family-local controlled fields in `thermal_info_config_common.json`; classic `PollingDelay` remains stock. The generated validation state records the Pixel 11 recovery/passive modes.
 
@@ -74,12 +81,12 @@ Harish / Codecity001 should test the exact Actions artifact on the accepted Pixe
 Test 1 selections:
 
 - HotHysteresis & MaxReleaseStep: Mod
-- Passive Polling: Stock 7s
 - Thermal Profile: Stock
 - ZRAM: Disabled
 - classic PollingDelay: pinned Stock
+- PassiveDelay: pinned Stock / no control
 
-Required evidence before integration or phase 2: exact candidate identity/hash, install + reboot, module/Bootguard/readiness validity, active G6 overlay, classic PollingDelay unchanged, selected recovery fields exact, benchmark/recovery observations and no safety/protection regressions.
+Required evidence before integration: exact candidate identity/hash, install + reboot, module/Bootguard/readiness validity, active G6 overlay, classic PollingDelay and PassiveDelay unchanged, selected recovery fields exact, family-specific Action/WebUI surfaces verified, benchmark/recovery observations and no safety/protection regressions.
 
 Harish's real-stock-schema review corrected the original synthetic fixture: on the accepted G6 layout, MaxReleaseStep is nested under BindedCdevInfo/Profile bindings rather than being one top-level sensor property. The five target sensors contain 32 admitted bindings in total (6/6/9/6/5), while VIRTUAL-SKIN-SOC-EXTREME has five separate bindings that remain stock. The corrected unit fixture mirrors that nesting and the fail-closed inventory now requires all 32 target bindings.
 
