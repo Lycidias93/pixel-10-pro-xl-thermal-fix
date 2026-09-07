@@ -70,7 +70,7 @@ json_string() {
 print_capabilities() {
   family="$(resolved_family)"
   if [ "$family" = pixel11 ]; then
-    actions='[{"name":"recovery-mod","label":"Recovery · Mod","description":"Apply the admitted Pixel 11 HotHysteresis + MaxReleaseStep recovery tuning while polling and Thermal thresholds remain stock.","risk":"caution","supports_dry_run":true},{"name":"recovery-stock","label":"Recovery · Stock","description":"Restore stock HotHysteresis and MaxReleaseStep behavior on Pixel 11.","risk":"safe","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Emerald Hill tuning.","risk":"caution","supports_dry_run":true},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"debug-silent","label":"Logging · Silent","description":"Disable verbose module diagnostics while keeping required bounded health/support evidence.","risk":"safe","supports_dry_run":true},{"name":"debug-verbose","label":"Logging · Verbose","description":"Enable verbose module diagnostics for active development and troubleshooting.","risk":"caution","supports_dry_run":true}]'
+    actions='[{"name":"recovery-mod","label":"Recovery · Mod","description":"Apply the admitted Pixel 11 HotHysteresis + MaxReleaseStep recovery tuning while classic PollingDelay stays stock.","risk":"caution","supports_dry_run":true},{"name":"recovery-stock","label":"Recovery · Stock","description":"Restore stock HotHysteresis and MaxReleaseStep behavior on Pixel 11.","risk":"safe","supports_dry_run":true},{"name":"thermal-stock","label":"Thermal · Stock","description":"Keep Pixel 11 master VIRTUAL-SKIN HotThreshold values stock.","risk":"safe","supports_dry_run":true},{"name":"thermal-outdoor-safe","label":"Thermal · Outdoor Safe +1°C","description":"Apply +1°C only to the exact Pixel 11 VIRTUAL-SKIN HotThreshold array; CPU/SOC derivatives, WLAN/BT, modem, charge and protection sensors stay stock.","risk":"caution","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Emerald Hill/page-cluster tuning.","risk":"caution","supports_dry_run":true},{"name":"page-cluster-stock","label":"ZRAM page-cluster · Stock","description":"Persist Stock page-cluster and restore the owned current-boot baseline when available.","risk":"safe","supports_dry_run":true},{"name":"page-cluster-zero","label":"ZRAM page-cluster · EXPERIMENTAL 0","description":"Persist guarded page-cluster 0; runtime application remains post-Bootguard and requires active module ZRAM.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"PAGECLUSTER"},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"debug-silent","label":"Logging · Silent","description":"Disable verbose module diagnostics while keeping required bounded health/support evidence.","risk":"safe","supports_dry_run":true},{"name":"debug-verbose","label":"Logging · Verbose","description":"Enable verbose module diagnostics for active development and troubleshooting.","risk":"caution","supports_dry_run":true}]'
   else
     actions='[{"name":"polling-mod","label":"Polling · Module values","description":"Materialize the current validated Thermal profile with admitted 5s PollingDelay changes.","risk":"caution","supports_dry_run":true},{"name":"polling-stock","label":"Polling · Stock values","description":"Rematerialize the current Thermal profile while preserving stock polling values.","risk":"safe","supports_dry_run":true},{"name":"thermal-stock","label":"Thermal · Stock","description":"Return admitted Outdoor thresholds to stock while keeping the selected polling mode.","risk":"safe","supports_dry_run":true},{"name":"thermal-outdoor-safe","label":"Thermal · Outdoor Safe +1°C","description":"Validated +1°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-plus","label":"Thermal · Outdoor Plus +2°C","description":"Validated +2°C Outdoor target delta where admitted for this device/build.","risk":"caution","supports_dry_run":true},{"name":"thermal-outdoor-extended","label":"Thermal · Outdoor Extended +3°C","description":"Maximum admitted Outdoor target delta; device/build policy may block it.","risk":"caution","supports_dry_run":true},{"name":"zram-enable","label":"ZRAM · Enable 100%","description":"Store ZRAM 100p with adaptive Emerald Hill and stock Memory Killer; reboot guarantees layout.","risk":"caution","supports_dry_run":true},{"name":"zram-disable","label":"ZRAM · Disable module layout","description":"Disable module ZRAM modification and dependent Memory Killer/Emerald Hill/page-cluster experiments.","risk":"caution","supports_dry_run":true},{"name":"eh-adaptive","label":"Emerald Hill · Adaptive","description":"Restore the captured adaptive minimum-frequency baseline.","risk":"safe","supports_dry_run":true},{"name":"eh-max","label":"Emerald Hill · EXPERIMENTAL max lock","description":"Lock the validated Emerald Hill minimum to the kernel-exposed maximum OPP.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"MAX"},{"name":"lmkd-stock","label":"Memory Killer · Stock","description":"Disable the experimental 1% LMKD swap-free threshold and attempt runtime restore.","risk":"safe","supports_dry_run":true},{"name":"lmkd-1pct","label":"Memory Killer · EXPERIMENTAL 1%","description":"Requires module ZRAM 100%; applies the guarded LMKD reload path.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"LMKD"},{"name":"page-cluster-stock","label":"ZRAM page-cluster · Stock","description":"Restore the current-boot baseline when owned and persist Stock for future boots.","risk":"safe","supports_dry_run":true},{"name":"page-cluster-zero","label":"ZRAM page-cluster · EXPERIMENTAL 0","description":"Persist guarded page-cluster 0 and reapply it only after verified boot with active module ZRAM.","risk":"danger","supports_dry_run":true,"requires_confirmation":true,"confirmation_text":"PAGECLUSTER"},{"name":"debug-silent","label":"Logging · Silent","description":"Disable verbose module diagnostics while keeping required bounded health/support evidence.","risk":"safe","supports_dry_run":true},{"name":"debug-verbose","label":"Logging · Verbose","description":"Enable verbose module diagnostics for active development and troubleshooting.","risk":"caution","supports_dry_run":true}]'
   fi
@@ -133,17 +133,21 @@ print_status() {
     case "$recovery_mode" in mod) add_active recovery-mod ;; *) add_active recovery-stock ;; esac
   else
     case "$polling_mode" in stock) add_active polling-stock ;; *) add_active polling-mod ;; esac
-    if [ "$thermal_disabled" = 1 ]; then
-      for action_name in thermal-stock thermal-outdoor-safe thermal-outdoor-plus thermal-outdoor-extended; do
-        add_blocked "$action_name" 'Thermal controls are disabled by the current validation/policy state.'
-      done
-    else
-      case "$thermal_profile" in
-        outdoor-safe) add_active thermal-outdoor-safe ;;
-        outdoor-plus) add_active thermal-outdoor-plus ;;
-        outdoor-extended) add_active thermal-outdoor-extended ;;
-        *) add_active thermal-stock ;;
-      esac
+  fi
+  if [ "$thermal_disabled" = 1 ]; then
+    for action_name in thermal-stock thermal-outdoor-safe thermal-outdoor-plus thermal-outdoor-extended; do
+      add_blocked "$action_name" 'Thermal controls are disabled by the current validation/policy state.'
+    done
+  else
+    case "$thermal_profile" in
+      outdoor-safe) add_active thermal-outdoor-safe ;;
+      outdoor-plus) add_active thermal-outdoor-plus ;;
+      outdoor-extended) add_active thermal-outdoor-extended ;;
+      *) add_active thermal-stock ;;
+    esac
+    if [ "$family" = pixel11 ]; then
+      add_blocked thermal-outdoor-plus 'Pixel 11 family is capped at Outdoor Safe +1°C.'
+      add_blocked thermal-outdoor-extended 'Pixel 11 family is capped at Outdoor Safe +1°C.'
     fi
   fi
   if [ "$zram_enabled" = 1 ]; then
@@ -158,12 +162,14 @@ print_status() {
     if [ "$lmkd_enabled" = 1 ]; then add_active lmkd-1pct; else add_active lmkd-stock; fi
     if [ "$zram_enabled" != 1 ] || [ "$zram_ack" != explicit_user_enable ]; then
       add_blocked lmkd-1pct 'Enable module ZRAM 100% first.'
-      add_blocked page-cluster-zero 'Enable module ZRAM 100% first.'
-    elif [ "$page_zram_swap" != yes ]; then
-      add_blocked page-cluster-zero 'An active module ZRAM swap device is required.'
     fi
-    if [ "$page_desired" = zero ]; then add_active page-cluster-zero; else add_active page-cluster-stock; fi
   fi
+  if [ "$zram_enabled" != 1 ] || [ "$zram_ack" != explicit_user_enable ]; then
+    add_blocked page-cluster-zero 'Enable module ZRAM 100% first.'
+  elif [ "$page_zram_swap" != yes ]; then
+    add_blocked page-cluster-zero 'An active module ZRAM swap device is required.'
+  fi
+  if [ "$page_desired" = zero ]; then add_active page-cluster-zero; else add_active page-cluster-stock; fi
   if [ "$debug_mode" = 1 ]; then add_active debug-verbose; else add_active debug-silent; fi
 
   printf '{"ok":true,"module":{"id":"%s","name":"%s","version":"%s"},' "$ID" "$(json_escape "$MODULE_NAME")" "$(json_escape "$MODULE_VERSION")"
