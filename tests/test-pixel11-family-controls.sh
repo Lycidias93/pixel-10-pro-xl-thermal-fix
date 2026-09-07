@@ -184,10 +184,24 @@ THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=G6_FAMILY_TEST \
 grep -Fxq 'PATCH_THERMAL=pass' "$threshold_root.log"
 grep -Fxq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$threshold_root.log"
 grep -Fxq 'PATCH_THERMAL_REPLACEMENTS=0' "$threshold_root.log"
-grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [40, 44, 46, 47.5, 53, 66]' "$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
-grep -Fq '"Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM", "HotThreshold": [43]' "$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
-grep -Fq '"Name": "VIRTUAL-SKIN-SOC", "HotThreshold": [43]' "$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
-[[ "$(grep -Rho '"PassiveDelay":[[:space:]]*5000\|"PassiveDelay": 5000' "$threshold_mod/system/vendor/etc" | wc -l | tr -d ' ')" = 0 ]]
+threshold_common="$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
+grep -Eq '"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN".*"HotThreshold"[[:space:]]*:[[:space:]]*\[[[:space:]]*40,[[:space:]]*44,[[:space:]]*46,[[:space:]]*47\.5,[[:space:]]*53,[[:space:]]*66[[:space:]]*\]' "$threshold_common" || {
+  echo 'FAIL pixel11_threshold_virtual_skin_plus1'
+  grep -F '"Name": "VIRTUAL-SKIN"' "$threshold_common" || true
+  exit 31
+}
+grep -Eq '"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-CPU-LIGHT-ODPM".*"HotThreshold"[[:space:]]*:[[:space:]]*\[[[:space:]]*43[[:space:]]*\]' "$threshold_common" || {
+  echo 'FAIL pixel11_threshold_cpu_light_changed'
+  exit 32
+}
+grep -Eq '"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-SOC".*"HotThreshold"[[:space:]]*:[[:space:]]*\[[[:space:]]*43[[:space:]]*\]' "$threshold_common" || {
+  echo 'FAIL pixel11_threshold_soc_changed'
+  exit 33
+}
+if grep -R -Eq '"PassiveDelay"[[:space:]]*:[[:space:]]*5000' "$threshold_mod/system/vendor/etc"; then
+  echo 'FAIL pixel11_threshold_materialized_passive_5000'
+  exit 34
+fi
 
 bad="$tmp/bad"
 write_graph "$bad"
