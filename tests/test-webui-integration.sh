@@ -17,6 +17,15 @@ grep -Fq 'confirmation_text":"PAGECLUSTER"' bin/module-control
 grep -Fq '"debug-silent"' bin/module-control
 grep -Fq '"debug-verbose"' bin/module-control
 grep -Fq 'dynamic_stock_thermal_validation' bin/module-control
+grep -Fq '"name":"recovery-mod"' bin/module-control
+grep -Fq '"name":"recovery-stock"' bin/module-control
+grep -Fq '"device_family":"%s"' bin/module-control
+grep -Fq '"label":"Recovery"' bin/module-control
+grep -Fq 'classic_polling_stock_only_pixel11' tools/control/pixel-control.sh
+grep -Fq 'action_not_in_pixel11_family_surface' tools/control/pixel-control.sh
+grep -Fq 'mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%"' tools/action-dashboard.sh
+grep -Fq 'ui_menu3 "Pixel 11 Advanced" "Emerald Hill mode" "Update Channel" "Back"' tools/action-dashboard.sh
+! grep -Fq 'Passive Polling' tools/menu/install-options-menu.sh
 grep -Fq 'ZRAM_MATERIALIZE_NOW=0' tools/control/pixel-control.sh
 grep -Fq 'DEBUG_MODE 0' tools/control/pixel-control.sh
 grep -Fq 'DEBUG_MODE 1' tools/control/pixel-control.sh
@@ -57,6 +66,8 @@ status_body="$(sed -n '/^print_status() {/,/^}/p' bin/module-control)"
 printf '%s\n' "$status_body" | grep -Fq 'ensure_status_cache'
 printf '%s\n' "$status_body" | grep -Fq '"action_state":{"active"'
 printf '%s\n' "$status_body" | grep -Fq 'add_active thermal-outdoor-extended'
+printf '%s\n' "$status_body" | grep -Fq 'add_active recovery-mod'
+printf '%s\n' "$status_body" | grep -Fq 'if [ "$family" != pixel11 ]'
 printf '%s\n' "$status_body" | grep -Fq 'add_active zram-enable'
 printf '%s\n' "$status_body" | grep -Fq 'add_active debug-silent'
 printf '%s\n' "$status_body" | grep -Fq 'add_active debug-verbose'
