@@ -14,9 +14,10 @@ done
 
 menu="$repo_root/tools/menu/install-options-menu.sh"
 grep -Fq 'HotHysteresis & MaxReleaseStep' "$menu"
-grep -Fq 'Passive Polling' "$menu"
-grep -Fq 'Stock 7s (test 1 default)' "$menu"
 grep -Fq 'INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"' "$menu"
+! grep -Fq 'Passive Polling' "$menu"
+grep -Fq 'cfg_unset PIXEL11_PASSIVE_MODE' "$menu"
+grep -Fq 'single_pass_v4_family' "$menu"
 grep -Fq 'THERMAL_POLLING_POLICY stock_classic_polling_disabled_pixel11' "$menu"
 grep -Fq 'mc_cycle2 "Polling Mode" "Mod values" "Stock values"' "$menu"
 
@@ -121,7 +122,7 @@ JSON
 }
 
 run_phase() {
-  local phase="$1" passive="$2"
+  local phase="$1" recovery="$2"
   local root="$tmp/$phase" mod="$tmp/$phase/mod" src="$tmp/$phase/source" data="$tmp/$phase/data"
   make_module "$mod"
   write_graph "$src"
@@ -129,42 +130,41 @@ run_phase() {
 
   THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=G6_FAMILY_TEST \
     THERMAL_SOURCE_DIR="$src" THERMAL_DATA_ROOT="$data" \
-    sh "$mod/tools/core/patch-thermal-validated.sh" stock stock "$mod" mod "$passive" | tee "$root.log"
+    sh "$mod/tools/core/patch-thermal-validated.sh" stock stock "$mod" "$recovery" | tee "$root.log"
 
   grep -Fxq 'PATCH_THERMAL=pass' "$root.log"
   grep -Fxq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$root.log"
   grep -Fxq 'PATCH_THERMAL_REPLACEMENTS=0' "$root.log"
   grep -Fxq 'PATCH_THERMAL_OUTPUT_5000=0' "$root.log"
-  grep -Fxq 'PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=15' "$root.log"
-  grep -Fxq 'PATCH_THERMAL_PIXEL11_MRS_CHANGES=32' "$root.log"
+  ! grep -Fq 'PIXEL11_PASSIVE' "$root.log"
 
   local common="$mod/system/vendor/etc/thermal_info_config_common.json"
-  grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.0, 1.0, 1.0, 1.0, 1.9, 1.9]' "$common"
-  grep -Fq '"Name": "VIRTUAL-SKIN-HINT", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.0, 1.0, 1.0, 1.0, 1.9, 1.9]' "$common"
-  [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 32 ]]
-  [[ "$(grep -Fo '"MaxReleaseStep": 1' "$common" | wc -l | tr -d ' ')" = 5 ]]
+  [[ "$(grep -Fo '"PassiveDelay": 5000' "$common" | wc -l | tr -d ' ')" = 0 ]]
+  [[ "$(grep -Fo '"PassiveDelay": 7000' "$common" | wc -l | tr -d ' ')" = 8 ]]
   grep -Fq '"Name": "VIRTUAL-SKIN-SOC-EXTREME"' "$common"
-  grep -Fq '"HotHysteresis": [0, 0, 1.9, 1.9, 1.9, 1.9, 1.9]' "$common"
   grep -Fq '"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": [50], "PassiveDelay": 10000' "$common"
   grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": [34, 38, 43], "PassiveDelay": 7000' "$mod/system/vendor/etc/thermal_info_config_charge.json"
 
-  if [[ "$passive" = stock ]]; then
-    grep -Fxq 'PATCH_THERMAL_PIXEL11_PASSIVE_CHANGES=0' "$root.log"
-    [[ "$(grep -Fo '"PassiveDelay": 7000' "$common" | wc -l | tr -d ' ')" = 8 ]]
+  if [[ "$recovery" = mod ]]; then
+    grep -Fxq 'PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=15' "$root.log"
+    grep -Fxq 'PATCH_THERMAL_PIXEL11_MRS_CHANGES=32' "$root.log"
+    [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 32 ]]
+    [[ "$(grep -Fo '"MaxReleaseStep": 1' "$common" | wc -l | tr -d ' ')" = 5 ]]
+    grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.0, 1.0, 1.0, 1.0, 1.9, 1.9]' "$common"
   else
-    grep -Fxq 'PATCH_THERMAL_PIXEL11_PASSIVE_CHANGES=7' "$root.log"
-    [[ "$(grep -Fo '"PassiveDelay": 5000' "$common" | wc -l | tr -d ' ')" = 7 ]]
-    [[ "$(grep -Fo '"PassiveDelay": 7000' "$common" | wc -l | tr -d ' ')" = 1 ]]
+    [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 0 ]]
+    [[ "$(grep -Fo '"MaxReleaseStep": 1' "$common" | wc -l | tr -d ' ')" = 37 ]]
+    grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.9, 1.9, 1.9, 1.4, 1.9, 1.9]' "$common"
   fi
 }
 
-run_phase test1 stock
-run_phase test2 mod
+run_phase recovery_mod mod
+run_phase recovery_stock stock
 
 bad="$tmp/bad"
 write_graph "$bad"
 sed -i '0,/"MaxReleaseStep": 1/s//"MaxReleaseStep": 3/' "$bad/thermal_info_config_common.json"
-if sh "$repo_root/tools/core/patch-g6-performance-controls.sh"     "$bad/thermal_info_config_common.json" "$tmp/bad.out" mod stock "$tmp/bad.metrics" >/dev/null 2>&1; then
+if sh "$repo_root/tools/core/patch-g6-performance-controls.sh"     "$bad/thermal_info_config_common.json" "$tmp/bad.out" mod "$tmp/bad.metrics" >/dev/null 2>&1; then
   echo 'FAIL malformed_g6_inventory_admitted'
   exit 30
 fi
