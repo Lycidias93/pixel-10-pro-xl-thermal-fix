@@ -185,16 +185,39 @@ grep -Fxq 'PATCH_THERMAL=pass' "$threshold_root.log"
 grep -Fxq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$threshold_root.log"
 grep -Fxq 'PATCH_THERMAL_REPLACEMENTS=0' "$threshold_root.log"
 threshold_common="$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
+sensor_threshold_matches() {
+  local file="$1" sensor="$2" expected="$3"
+  awk -v target="$sensor" -v expected="$expected" '
+    function sensor_name(line, name) {
+      if (!match(line, /"Name"[[:space:]]*:[[:space:]]*"[^"]+"/)) return ""
+      name=substr(line,RSTART,RLENGTH)
+      sub(/^.*:[[:space:]]*"/,"",name)
+      sub(/"$/,"",name)
+      return name
+    }
+    {
+      name=sensor_name($0)
+      if (name!="") current=name
+      if (current==target && $0 ~ /"HotThreshold"[[:space:]]*:/) {
+        line=$0
+        gsub(/[[:space:]]/,"",line)
+        needle="\"HotThreshold\":[" expected "]"
+        if (index(line,needle)) found=1
+      }
+    }
+    END { exit found ? 0 : 1 }
+  ' "$file"
+}
 grep -Eq '"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN".*"HotThreshold"[[:space:]]*:[[:space:]]*\[[[:space:]]*40,[[:space:]]*44,[[:space:]]*46,[[:space:]]*47\.5,[[:space:]]*53,[[:space:]]*66[[:space:]]*\]' "$threshold_common" || {
   echo 'FAIL pixel11_threshold_virtual_skin_plus1'
   grep -F '"Name": "VIRTUAL-SKIN"' "$threshold_common" || true
   exit 31
 }
-grep -Eq '"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-CPU-LIGHT-ODPM".*"HotThreshold"[[:space:]]*:[[:space:]]*\[[[:space:]]*43[[:space:]]*\]' "$threshold_common" || {
+sensor_threshold_matches "$threshold_common" VIRTUAL-SKIN-CPU-LIGHT-ODPM 43 || {
   echo 'FAIL pixel11_threshold_cpu_light_changed'
   exit 32
 }
-grep -Eq '"Name"[[:space:]]*:[[:space:]]*"VIRTUAL-SKIN-SOC".*"HotThreshold"[[:space:]]*:[[:space:]]*\[[[:space:]]*43[[:space:]]*\]' "$threshold_common" || {
+sensor_threshold_matches "$threshold_common" VIRTUAL-SKIN-SOC 43 || {
   echo 'FAIL pixel11_threshold_soc_changed'
   exit 33
 }
