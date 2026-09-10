@@ -8,6 +8,7 @@ CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
 CONFIG_FILE="${PIXEL_CONFIG_FILE:-$CONFIG_DIR/config.env}"
 LOCKDIR="${PIXEL_CONTROL_LOCKDIR:-$CONFIG_DIR/webui-control.lock}"
 POLICY_HELPER="$MODDIR/tools/core/outdoor-runtime-policy.sh"
+LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
 THERMAL_MATERIALIZER="$MODDIR/tools/core/patch-thermal-validated.sh"
 ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 ZRAM_APPLY="$MODDIR/tools/zram/apply-zram-100p.sh"
@@ -16,6 +17,7 @@ PAGE_CLUSTER="$MODDIR/tools/zram/page-cluster-control.sh"
 STATUS_LIB="$MODDIR/tools/debug/status-lib.sh"
 
 [ -r "$POLICY_HELPER" ] && . "$POLICY_HELPER"
+[ -r "$LAYOUT_HELPER" ] && . "$LAYOUT_HELPER" || true
 
 cfg_get() {
   [ -r "$CONFIG_FILE" ] || return 0
@@ -31,6 +33,16 @@ cfg_set() {
   printf '%s=%s\n' "$key" "$value" >> "$tmp"
   chmod 0600 "$tmp" 2>/dev/null || true
   mv "$tmp" "$CONFIG_FILE"
+}
+
+cfg_unset() {
+  key="$1"
+  mkdir -p "$CONFIG_DIR" 2>/dev/null || true
+  touch "$CONFIG_FILE" 2>/dev/null || true
+  tmp="$CONFIG_FILE.tmp.$$"
+  grep -v "^${key}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
+  mv "$tmp" "$CONFIG_FILE"
+  chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
 }
 
 acquire_lock() {
@@ -63,6 +75,11 @@ refresh_status() {
 device="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
 android="${THERMAL_ANDROID:-$(getprop ro.build.version.release 2>/dev/null || true)}"
 build_id="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
+device_family=pixel10
+if command -v thermal_device_family >/dev/null 2>&1; then
+  device_family="$(thermal_device_family "$device")"
+  case "$device_family" in pixel11|pixel10) ;; *) device_family=pixel10 ;; esac
+fi
 [ -n "$device" ] || device=unknown
 [ -n "$android" ] || android=unknown
 [ -n "$build_id" ] || build_id=unknown
@@ -83,9 +100,11 @@ profile_admitted() {
 }
 
 apply_thermal() {
-  polling="$1"; profile="$2"
+  polling="$1"; profile="$2"; recovery="${3:-stock}"
   case "$polling" in mod|stock) ;; *) return 64 ;; esac
   case "$profile" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) return 64 ;; esac
+  case "$recovery" in stock|mod) ;; *) return 64 ;; esac
+  if [ "$device_family" = pixel11 ]; then polling=stock; else recovery=stock; fi
   profile_admitted "$profile" || {
     printf 'RESULT: PIXEL_CONTROL_BLOCKED reason=thermal_profile_not_admitted profile=%s build=%s\n' "$profile" "$build_id"
     return 2
@@ -94,7 +113,7 @@ apply_thermal() {
     printf '%s\n' 'RESULT: PIXEL_CONTROL_FAIL reason=thermal_materializer_missing'
     return 3
   }
-  if ! MODDIR="$MODDIR" sh "$THERMAL_MATERIALIZER" "$polling" "$profile" "$MODDIR"; then
+  if ! MODDIR="$MODDIR" sh "$THERMAL_MATERIALIZER" "$polling" "$profile" "$MODDIR" "$recovery"; then
     printf '%s\n' 'RESULT: PIXEL_CONTROL_FAIL reason=thermal_validation_failed'
     return 4
   fi
@@ -102,6 +121,13 @@ apply_thermal() {
   cfg_set THERMAL_POLLING_EFFECTIVE "$polling"
   cfg_set LAST_THERMAL_POLLING_MODE "$polling"
   cfg_set THERMAL_SETTINGS_MODE webui_settings
+  if [ "$device_family" = pixel11 ]; then
+    cfg_set PIXEL11_HYSTERESIS_MODE "$recovery"
+    cfg_set LAST_PIXEL11_HYSTERESIS_MODE "$recovery"
+    cfg_unset PIXEL11_PASSIVE_MODE
+    cfg_unset PIXEL11_PASSIVE_TARGET_MS
+    cfg_unset LAST_PIXEL11_PASSIVE_MODE
+  fi
   case "$profile" in
     outdoor-safe) ack=explicit_user_enable; target=outdoor_safe ;;
     outdoor-plus) ack=explicit_user_enable; target=outdoor_plus ;;
@@ -120,7 +146,7 @@ apply_thermal() {
   printf '%s\n' dynamic > "$MODDIR/guard/selected_profile" 2>/dev/null || true
   mark_reboot
   refresh_status
-  printf 'RESULT: PIXEL_CONTROL_THERMAL_PASS polling=%s profile=%s reboot_required=yes\n' "$polling" "$profile"
+  printf 'RESULT: PIXEL_CONTROL_THERMAL_PASS family=%s polling=%s recovery=%s profile=%s reboot_required=yes\n' "$device_family" "$polling" "$recovery" "$profile"
 }
 
 zram_enable() {
@@ -247,19 +273,35 @@ debug_verbose() {
 
 command="${1:-}"
 current_polling() {
+  if [ "$device_family" = pixel11 ]; then
+    printf '%s\n' stock
+    return 0
+  fi
   value="$(cfg_get THERMAL_POLLING_MODE)"
   [ -n "$value" ] || value=mod
   printf '%s\n' "$value"
 }
 
+current_recovery() {
+  if [ "$device_family" != pixel11 ]; then
+    printf '%s\n' stock
+    return 0
+  fi
+  value="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
+  case "$value" in stock|mod) printf '%s\n' "$value" ;; *) printf '%s\n' stock ;; esac
+}
+
 current_thermal_profile() {
   value="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   [ -n "$value" ] || value=stock
+  if [ "$device_family" = pixel11 ]; then
+    case "$value" in stock|outdoor-safe) ;; *) value=stock ;; esac
+  fi
   printf '%s\n' "$value"
 }
 
 case "$command" in
-  polling-mod|polling-stock|thermal-stock|thermal-outdoor-safe|thermal-outdoor-plus|thermal-outdoor-extended|zram-enable|zram-disable|eh-adaptive|eh-max|lmkd-stock|lmkd-1pct|page-cluster-stock|page-cluster-zero|debug-silent|debug-verbose) ;;
+  recovery-mod|recovery-stock|polling-mod|polling-stock|thermal-stock|thermal-outdoor-safe|thermal-outdoor-plus|thermal-outdoor-extended|zram-enable|zram-disable|eh-adaptive|eh-max|lmkd-stock|lmkd-1pct|page-cluster-stock|page-cluster-zero|debug-silent|debug-verbose) ;;
   *) printf '%s\n' 'usage: pixel-control.sh <declared-command>' >&2; exit 64 ;;
 esac
 
@@ -269,18 +311,37 @@ acquire_lock || {
 }
 
 case "$command" in
-  polling-mod) apply_thermal mod "$(current_thermal_profile)" ;;
-  polling-stock) apply_thermal stock "$(current_thermal_profile)" ;;
-  thermal-stock) apply_thermal "$(current_polling)" stock ;;
-  thermal-outdoor-safe) apply_thermal "$(current_polling)" outdoor-safe ;;
-  thermal-outdoor-plus) apply_thermal "$(current_polling)" outdoor-plus ;;
-  thermal-outdoor-extended) apply_thermal "$(current_polling)" outdoor-extended ;;
+  recovery-mod)
+    [ "$device_family" = pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=recovery_pixel11_only'; exit 2; }
+    apply_thermal stock "$(current_thermal_profile)" mod
+  ;;
+  recovery-stock)
+    [ "$device_family" = pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=recovery_pixel11_only'; exit 2; }
+    apply_thermal stock "$(current_thermal_profile)" stock
+  ;;
+  polling-mod|polling-stock)
+    [ "$device_family" != pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=classic_polling_stock_only_pixel11'; exit 2; }
+    if [ "$command" = polling-mod ]; then
+      apply_thermal mod "$(current_thermal_profile)" stock
+    else
+      apply_thermal stock "$(current_thermal_profile)" stock
+    fi
+  ;;
+  thermal-stock) apply_thermal "$(current_polling)" stock "$(current_recovery)" ;;
+  thermal-outdoor-safe) apply_thermal "$(current_polling)" outdoor-safe "$(current_recovery)" ;;
+  thermal-outdoor-plus) apply_thermal "$(current_polling)" outdoor-plus "$(current_recovery)" ;;
+  thermal-outdoor-extended) apply_thermal "$(current_polling)" outdoor-extended "$(current_recovery)" ;;
   zram-enable) zram_enable ;;
   zram-disable) zram_disable ;;
   eh-adaptive) eh_adaptive ;;
   eh-max) eh_max ;;
-  lmkd-stock) lmkd_stock ;;
-  lmkd-1pct) lmkd_one_percent ;;
+  lmkd-stock|lmkd-1pct)
+    [ "$device_family" != pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=action_not_in_pixel11_family_surface'; exit 2; }
+    case "$command" in
+      lmkd-stock) lmkd_stock ;;
+      lmkd-1pct) lmkd_one_percent ;;
+    esac
+  ;;
   page-cluster-stock) page_cluster_stock ;;
   page-cluster-zero) page_cluster_zero ;;
   debug-silent) debug_silent ;;

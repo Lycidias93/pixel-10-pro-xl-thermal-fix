@@ -66,6 +66,7 @@ thermal_validation_write_state() {
   _build_id="$2"
   _polling="$3"
   _outdoor="$4"
+  _pixel11_hysteresis="${5:-stock}"
   thermal_validation_init || return 1
 
   _tmp="$THERMAL_VALIDATION_DIR/.state.env.$$"
@@ -74,6 +75,7 @@ thermal_validation_write_state() {
     printf '%s\n' "device=$_device"
     printf '%s\n' "build_id=$_build_id"
     printf '%s\n' "polling_mode=$_polling"
+    printf '%s\n' "pixel11_hysteresis_mode=$_pixel11_hysteresis"
     printf '%s\n' "outdoor_profile=$_outdoor"
     printf '%s\n' "validation_report=$THERMAL_VALIDATION_REPORT"
     printf '%s\n' "validation_report_sha256=$(thermal_validation_sha "$THERMAL_VALIDATION_REPORT")"
