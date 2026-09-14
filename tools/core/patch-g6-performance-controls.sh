@@ -13,7 +13,11 @@ METRICS_FILE="${4:-}"
 [ -s "$SOURCE_FILE" ] || exit 2
 [ -n "$OUTPUT_FILE" ] || exit 3
 [ -n "$METRICS_FILE" ] || exit 4
-case "$RECOVERY_MODE" in stock|mod) ;; *) exit 5 ;; esac
+case "$RECOVERY_MODE" in
+  stock|hysteresis|max-release-step|combined) ;;
+  mod) RECOVERY_MODE=combined ;;
+  *) exit 5 ;;
+esac
 
 awk -v recovery_mode="$RECOVERY_MODE" -v metrics="$METRICS_FILE" '
   function sensor_name(line, name) {
@@ -38,6 +42,8 @@ awk -v recovery_mode="$RECOVERY_MODE" -v metrics="$METRICS_FILE" '
       name=="VIRTUAL-SKIN-CPU-HIGH"
   }
   function is_mrs_target(name) { return is_cpu_target(name) || name=="VIRTUAL-SKIN-SOC" }
+  function hys_enabled() { return recovery_mode=="hysteresis" || recovery_mode=="combined" }
+  function mrs_enabled() { return recovery_mode=="max-release-step" || recovery_mode=="combined" }
   function expected_hys(name, idx) {
     if (name=="VIRTUAL-SKIN" || name=="VIRTUAL-SKIN-HINT") {
       if (idx==1) return "0"
@@ -70,7 +76,7 @@ awk -v recovery_mode="$RECOVERY_MODE" -v metrics="$METRICS_FILE" '
       hys_idx++
       expected=expected_hys(name,hys_idx)
       if (expected=="__invalid__" || (tok+0)!=(expected+0)) bad=1
-      if (recovery_mode=="mod" && mod_hys(name,hys_idx)) {
+      if (hys_enabled() && mod_hys(name,hys_idx)) {
         out=out substr(text,1,RSTART-1) "1.0"
         if ((tok+0)!=1.0) hys_changes++
       } else {
@@ -153,7 +159,7 @@ awk -v recovery_mode="$RECOVERY_MODE" -v metrics="$METRICS_FILE" '
     }
 
     if (is_mrs_target(current) && line ~ /"MaxReleaseStep"[[:space:]]*:/) {
-      line=patch_mrs_line(line,recovery_mode=="mod")
+      line=patch_mrs_line(line,mrs_enabled())
     }
 
     print line
@@ -166,10 +172,13 @@ awk -v recovery_mode="$RECOVERY_MODE" -v metrics="$METRICS_FILE" '
         mrs_per_sensor["VIRTUAL-SKIN-CPU-HIGH"] < 1 || \
         mrs_per_sensor["VIRTUAL-SKIN-SOC"] < 1) bad=1
     if (hys_seen!=7 || mrs_seen!=32) bad=1
-    if (recovery_mode=="mod" && (hys_changes!=15 || mrs_changes!=32)) bad=1
-    if (recovery_mode=="stock" && (hys_changes!=0 || mrs_changes!=0)) bad=1
+    if (hys_enabled() && hys_changes!=15) bad=1
+    if (!hys_enabled() && hys_changes!=0) bad=1
+    if (mrs_enabled() && mrs_changes!=32) bad=1
+    if (!mrs_enabled() && mrs_changes!=0) bad=1
     if (bad) exit 40
-    printf "PIXEL11_HYSTERESIS_ARRAYS=%d\n", hys_seen > metrics
+    printf "PIXEL11_RECOVERY_MODE=%s\n", recovery_mode > metrics
+    printf "PIXEL11_HYSTERESIS_ARRAYS=%d\n", hys_seen >> metrics
     printf "PIXEL11_MRS_TARGETS=%d\n", mrs_seen >> metrics
     printf "PIXEL11_HYSTERESIS_CHANGES=%d\n", hys_changes >> metrics
     printf "PIXEL11_MRS_CHANGES=%d\n", mrs_changes >> metrics
