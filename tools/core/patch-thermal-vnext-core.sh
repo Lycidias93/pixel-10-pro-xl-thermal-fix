@@ -249,6 +249,10 @@ patch_one() {
 
 DELTA=0
 case "$OUTDOOR_PROFILE" in outdoor-safe) DELTA=1 ;; outdoor-plus) DELTA=2 ;; outdoor-extended) DELTA=3 ;; esac
+MATERIALIZATION=overlay
+if [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then
+  MATERIALIZATION=stock-no-overlay
+fi
 mkdir -p "$DATA_ROOT" "$CACHE_PARENT" "$TARGET_PARENT" "$GUARD_DIR"
 
 cache_valid=1
@@ -339,61 +343,74 @@ printf '  "polling_policy": "%s",\n' "$(thermal_layout_is_g6_device "$DEVICE" &&
 printf '  "pixel11_hysteresis_mode": "%s",\n' "$PIXEL11_HYSTERESIS_MODE" >> "$REPORT_TMP"
 printf '  "outdoor_policy": "%s",\n' "$OUTDOOR_POLICY" >> "$REPORT_TMP"
 printf '  "outdoor_profile": "%s",\n' "$OUTDOOR_PROFILE" >> "$REPORT_TMP"
+printf '  "materialization": "%s",\n' "$MATERIALIZATION" >> "$REPORT_TMP"
 printf '%s\n' '  "files": {' >> "$REPORT_TMP"
 
 _tab="$(printf '\t')"; first_json=1; source_files=0; source_polling_total=0; replacement_total=0; output_300000_total=0; output_5000_total=0
 pixel11_hys_arrays=0; pixel11_mrs_targets=0
 pixel11_hys_changes=0; pixel11_mrs_changes=0
-while IFS="$_tab" read -r file source_sha source_bytes source_polling; do
-  [ "$file" = file ] && continue
-  [ -n "$file" ] || continue
-  sf="$CACHE_DIR/$file"; of="$PATCH_STAGE/$file"
-  patch_one "$sf" "$of" "$file" || fail 40 "pixel11_control_patch_invalid_$file"
-  thermal_json_tolerant_validate "$of" || fail 40 "output_structure_invalid_$file"
-  osh="$(sha_file "$of")"; o300="$(count_polling_value "$of" 300000)"; o5="$(count_polling_value "$of" 5000)"; o30="$(count_polling_value "$of" 30000)"; olow="$(count_lowercase_polling "$of")"
-  [ "$o30" = 0 ] || fail 41 "output_30000_rejected_$file"
-  [ "$olow" = 0 ] || fail 42 "output_lowercase_polling_rejected_$file"
-  if [ "$POLLING_MODE" = mod ]; then
-    [ "$o300" = 0 ] || fail 43 "remaining_300000_$file"
-    [ "$o5" = "$source_polling" ] || fail 44 "replacement_count_${file}_${o5}_expected_${source_polling}"
-    replacements="$source_polling"
-  else
-    [ "$o300" = "$source_polling" ] || fail 45 "stock_300000_changed_$file"
-    [ "$o5" = 0 ] || fail 46 "stock_contains_5000_$file"
-    replacements=0
+if [ "$MATERIALIZATION" = stock-no-overlay ]; then
+  while IFS="$_tab" read -r file source_sha source_bytes source_polling; do
+    [ "$file" = file ] && continue
+    [ -n "$file" ] || continue
+    sf="$CACHE_DIR/$file"
+    [ -s "$sf" ] || fail 48 "required_stock_cache_missing_$file"
+    source_files=$((source_files + 1))
+    source_polling_total=$((source_polling_total + source_polling))
+  done < "$MANIFEST"
+  [ "$source_files" -eq "$THERMAL_LAYOUT_COUNT" ] 2>/dev/null || fail 48 "stock_no_overlay_source_count_${source_files}_expected_${THERMAL_LAYOUT_COUNT}"
+else
+  while IFS="$_tab" read -r file source_sha source_bytes source_polling; do
+    [ "$file" = file ] && continue
+    [ -n "$file" ] || continue
+    sf="$CACHE_DIR/$file"; of="$PATCH_STAGE/$file"
+    patch_one "$sf" "$of" "$file" || fail 40 "pixel11_control_patch_invalid_$file"
+    thermal_json_tolerant_validate "$of" || fail 40 "output_structure_invalid_$file"
+    osh="$(sha_file "$of")"; o300="$(count_polling_value "$of" 300000)"; o5="$(count_polling_value "$of" 5000)"; o30="$(count_polling_value "$of" 30000)"; olow="$(count_lowercase_polling "$of")"
+    [ "$o30" = 0 ] || fail 41 "output_30000_rejected_$file"
+    [ "$olow" = 0 ] || fail 42 "output_lowercase_polling_rejected_$file"
+    if [ "$POLLING_MODE" = mod ]; then
+      [ "$o300" = 0 ] || fail 43 "remaining_300000_$file"
+      [ "$o5" = "$source_polling" ] || fail 44 "replacement_count_${file}_${o5}_expected_${source_polling}"
+      replacements="$source_polling"
+    else
+      [ "$o300" = "$source_polling" ] || fail 45 "stock_300000_changed_$file"
+      [ "$o5" = 0 ] || fail 46 "stock_contains_5000_$file"
+      replacements=0
+    fi
+    ns="$GUARD_DIR/.norm-source.$$"; no="$GUARD_DIR/.norm-output.$$"
+    normalize_allowed "$sf" "$ns" "$file"; normalize_allowed "$of" "$no" "$file"
+    cmp -s "$ns" "$no" || fail 47 "unallowed_byte_change_$file"
+    rm -f "$ns" "$no"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$file" "$source_sha" "$osh" "$source_polling" "$replacements" "$o300" "$o5" yes >> "$PATCH_MANIFEST_TMP"
+    [ "$first_json" -eq 1 ] || printf '%s\n' '    ,' >> "$REPORT_TMP"; first_json=0
+    printf '    "%s": {\n' "$file" >> "$REPORT_TMP"
+    printf '      "source_sha256": "%s",\n' "$source_sha" >> "$REPORT_TMP"
+    printf '      "output_sha256": "%s",\n' "$osh" >> "$REPORT_TMP"
+    printf '      "source_polling_300000": %s,\n' "$source_polling" >> "$REPORT_TMP"
+    printf '      "replacements": %s,\n' "$replacements" >> "$REPORT_TMP"
+    printf '      "output_polling_300000": %s,\n' "$o300" >> "$REPORT_TMP"
+    printf '      "output_polling_5000": %s,\n' "$o5" >> "$REPORT_TMP"
+    printf '%s\n' '      "validation": "passed"' '    }' >> "$REPORT_TMP"
+    source_files=$((source_files + 1)); source_polling_total=$((source_polling_total + source_polling)); replacement_total=$((replacement_total + replacements)); output_300000_total=$((output_300000_total + o300)); output_5000_total=$((output_5000_total + o5))
+  done < "$MANIFEST"
+
+  [ "$source_files" -eq "$THERMAL_LAYOUT_COUNT" ] 2>/dev/null || fail 48 "output_layout_count_${source_files}_expected_${THERMAL_LAYOUT_COUNT}"
+  for file in $THERMAL_LAYOUT_FILES; do [ -s "$PATCH_STAGE/$file" ] || fail 48 "required_output_missing_$file"; done
+
+  if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
+    [ "$pixel11_hys_arrays" = 7 ] || fail 58 "pixel11_hysteresis_inventory_${pixel11_hys_arrays}_expected_7"
+    [ "$pixel11_mrs_targets" = 32 ] || fail 58 "pixel11_mrs_inventory_${pixel11_mrs_targets}_expected_32"
+    pixel11_expected_hys_changes=0
+    pixel11_expected_mrs_changes=0
+    case "$PIXEL11_HYSTERESIS_MODE" in
+      hysteresis) pixel11_expected_hys_changes=15 ;;
+      max-release-step) pixel11_expected_mrs_changes=32 ;;
+      combined) pixel11_expected_hys_changes=15; pixel11_expected_mrs_changes=32 ;;
+    esac
+    [ "$pixel11_hys_changes" = "$pixel11_expected_hys_changes" ] || fail 58 "pixel11_hysteresis_changes_${pixel11_hys_changes}_expected_${pixel11_expected_hys_changes}"
+    [ "$pixel11_mrs_changes" = "$pixel11_expected_mrs_changes" ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_${pixel11_expected_mrs_changes}"
   fi
-  ns="$GUARD_DIR/.norm-source.$$"; no="$GUARD_DIR/.norm-output.$$"
-  normalize_allowed "$sf" "$ns" "$file"; normalize_allowed "$of" "$no" "$file"
-  cmp -s "$ns" "$no" || fail 47 "unallowed_byte_change_$file"
-  rm -f "$ns" "$no"
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$file" "$source_sha" "$osh" "$source_polling" "$replacements" "$o300" "$o5" yes >> "$PATCH_MANIFEST_TMP"
-  [ "$first_json" -eq 1 ] || printf '%s\n' '    ,' >> "$REPORT_TMP"; first_json=0
-  printf '    "%s": {\n' "$file" >> "$REPORT_TMP"
-  printf '      "source_sha256": "%s",\n' "$source_sha" >> "$REPORT_TMP"
-  printf '      "output_sha256": "%s",\n' "$osh" >> "$REPORT_TMP"
-  printf '      "source_polling_300000": %s,\n' "$source_polling" >> "$REPORT_TMP"
-  printf '      "replacements": %s,\n' "$replacements" >> "$REPORT_TMP"
-  printf '      "output_polling_300000": %s,\n' "$o300" >> "$REPORT_TMP"
-  printf '      "output_polling_5000": %s,\n' "$o5" >> "$REPORT_TMP"
-  printf '%s\n' '      "validation": "passed"' '    }' >> "$REPORT_TMP"
-  source_files=$((source_files + 1)); source_polling_total=$((source_polling_total + source_polling)); replacement_total=$((replacement_total + replacements)); output_300000_total=$((output_300000_total + o300)); output_5000_total=$((output_5000_total + o5))
-done < "$MANIFEST"
-
-[ "$source_files" -eq "$THERMAL_LAYOUT_COUNT" ] 2>/dev/null || fail 48 "output_layout_count_${source_files}_expected_${THERMAL_LAYOUT_COUNT}"
-for file in $THERMAL_LAYOUT_FILES; do [ -s "$PATCH_STAGE/$file" ] || fail 48 "required_output_missing_$file"; done
-
-if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
-  [ "$pixel11_hys_arrays" = 7 ] || fail 58 "pixel11_hysteresis_inventory_${pixel11_hys_arrays}_expected_7"
-  [ "$pixel11_mrs_targets" = 32 ] || fail 58 "pixel11_mrs_inventory_${pixel11_mrs_targets}_expected_32"
-  pixel11_expected_hys_changes=0
-  pixel11_expected_mrs_changes=0
-  case "$PIXEL11_HYSTERESIS_MODE" in
-    hysteresis) pixel11_expected_hys_changes=15 ;;
-    max-release-step) pixel11_expected_mrs_changes=32 ;;
-    combined) pixel11_expected_hys_changes=15; pixel11_expected_mrs_changes=32 ;;
-  esac
-  [ "$pixel11_hys_changes" = "$pixel11_expected_hys_changes" ] || fail 58 "pixel11_hysteresis_changes_${pixel11_hys_changes}_expected_${pixel11_expected_hys_changes}"
-  [ "$pixel11_mrs_changes" = "$pixel11_expected_mrs_changes" ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_${pixel11_expected_mrs_changes}"
 fi
 
 printf '%s\n' '  },' '  "totals": {' >> "$REPORT_TMP"
@@ -404,7 +421,11 @@ printf '    "output_polling_300000": %s,\n' "$output_300000_total" >> "$REPORT_T
 printf '    "output_polling_5000": %s\n' "$output_5000_total" >> "$REPORT_TMP"
 printf '%s\n' '  },' '  "validation": "passed"' '}' >> "$REPORT_TMP"
 thermal_json_tolerant_validate "$REPORT_TMP" || fail 49 validation_report_invalid
-if [ "$POLLING_MODE" = mod ]; then
+if [ "$MATERIALIZATION" = stock-no-overlay ]; then
+  [ "$replacement_total" = 0 ] || fail 53 stock_no_overlay_replacements_nonzero
+  [ "$output_300000_total" = 0 ] || fail 54 stock_no_overlay_output_300000_nonzero
+  [ "$output_5000_total" = 0 ] || fail 55 stock_no_overlay_output_5000_nonzero
+elif [ "$POLLING_MODE" = mod ]; then
   [ "$replacement_total" = "$source_polling_total" ] || fail 50 total_replacement_mismatch
   [ "$output_300000_total" = 0 ] || fail 51 total_remaining_300000
   [ "$output_5000_total" = "$source_polling_total" ] || fail 52 total_5000_mismatch
@@ -422,6 +443,6 @@ mv "$REPORT_TMP" "$REPORT_MODULE"
 cp -fp "$REPORT_MODULE" "$REPORT_DATA"
 thermal_layout_write_env "$LAYOUT_ENV" "$DEVICE" "$BUILD_ID" || fail 57 layout_state_publish_failed
 chmod 0644 "$PATCH_MANIFEST" "$REPORT_MODULE" "$REPORT_DATA" 2>/dev/null || true
-printf '%s\n' PATCH_THERMAL=pass "PATCH_THERMAL_DEVICE=$DEVICE" "PATCH_THERMAL_BUILD_ID=$BUILD_ID" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR" "PATCH_THERMAL_FILES=$source_files" "PATCH_THERMAL_SOURCE_300000=$source_polling_total" "PATCH_THERMAL_REPLACEMENTS=$replacement_total" "PATCH_THERMAL_OUTPUT_5000=$output_5000_total" "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=$pixel11_hys_changes" "PATCH_THERMAL_PIXEL11_MRS_CHANGES=$pixel11_mrs_changes" "PATCH_THERMAL_MANIFEST=$PATCH_MANIFEST" "PATCH_THERMAL_REPORT=$REPORT_MODULE"
+printf '%s\n' PATCH_THERMAL=pass "PATCH_THERMAL_DEVICE=$DEVICE" "PATCH_THERMAL_BUILD_ID=$BUILD_ID" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR" "PATCH_THERMAL_FILES=$source_files" "PATCH_THERMAL_SOURCE_300000=$source_polling_total" "PATCH_THERMAL_REPLACEMENTS=$replacement_total" "PATCH_THERMAL_OUTPUT_5000=$output_5000_total" "PATCH_THERMAL_MATERIALIZATION=$MATERIALIZATION" "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=$pixel11_hys_changes" "PATCH_THERMAL_PIXEL11_MRS_CHANGES=$pixel11_mrs_changes" "PATCH_THERMAL_MANIFEST=$PATCH_MANIFEST" "PATCH_THERMAL_REPORT=$REPORT_MODULE"
 trap - EXIT HUP INT TERM
 exit 0
