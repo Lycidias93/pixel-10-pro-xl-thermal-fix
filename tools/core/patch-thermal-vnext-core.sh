@@ -23,7 +23,11 @@ LAYOUT_ENV="$GUARD_DIR/thermal-layout.env"
 
 case "$POLLING_MODE" in stock|mod) ;; *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_polling_mode; exit 21 ;; esac
 case "$OUTDOOR_PROFILE" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_outdoor_profile; exit 22 ;; esac
-case "$PIXEL11_HYSTERESIS_MODE" in stock|mod) ;; *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_pixel11_hysteresis_mode; exit 23 ;; esac
+case "$PIXEL11_HYSTERESIS_MODE" in
+  stock|hysteresis|max-release-step|combined) ;;
+  mod) PIXEL11_HYSTERESIS_MODE=combined ;;
+  *) printf '%s\n' PATCH_THERMAL=fail PATCH_THERMAL_REASON=invalid_pixel11_hysteresis_mode; exit 23 ;;
+esac
 
 DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
 BUILD_ID="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
@@ -83,12 +87,13 @@ count_lowercase_polling() { grep -o '"pollingDelay"[[:space:]]*:' "$1" 2>/dev/nu
 
 normalize_allowed() {
   _src="$1"; _dst="$2"; _file="${3:-unknown}"
-  _g6_controls=no
-  if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_file" = thermal_info_config_common.json ] &&
-     [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
-    _g6_controls=yes
+  _g6_hys=no
+  _g6_mrs=no
+  if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_file" = thermal_info_config_common.json ]; then
+    case "$PIXEL11_HYSTERESIS_MODE" in hysteresis|combined) _g6_hys=yes ;; esac
+    case "$PIXEL11_HYSTERESIS_MODE" in max-release-step|combined) _g6_mrs=yes ;; esac
   fi
-  awk -v policy="$OUTDOOR_POLICY" -v g6_controls="$_g6_controls" '
+  awk -v policy="$OUTDOOR_POLICY" -v g6_hys="$_g6_hys" -v g6_mrs="$_g6_mrs" '
     function sensor_name(line, name) {
       if (line !~ /"Name"[[:space:]]*:/) return ""
       if (!match(line, /"Name"[[:space:]]*:[[:space:]]*"[^"]+"/)) return ""
@@ -140,11 +145,11 @@ normalize_allowed() {
       }
       line=normalize_poll(line)
 
-      if (g6_controls=="yes" && in_g6_hys) {
+      if (g6_hys=="yes" && in_g6_hys) {
         closing=index(line,"]")
         if (closing>0) { line=mask_numbers(substr(line,1,closing-1),"__G6_HYS_VALUE__") substr(line,closing); in_g6_hys=0 }
         else line=mask_numbers(line,"__G6_HYS_VALUE__")
-      } else if (g6_controls=="yes" && g6_target(current) && line ~ /"HotHysteresis"[[:space:]]*:/) {
+      } else if (g6_hys=="yes" && g6_target(current) && line ~ /"HotHysteresis"[[:space:]]*:/) {
         field_pos=index(line,"\"HotHysteresis\"")
         field_tail=substr(line,field_pos)
         rel_open=index(field_tail,"[")
@@ -155,7 +160,7 @@ normalize_allowed() {
           else { line=substr(line,1,open) mask_numbers(rest,"__G6_HYS_VALUE__"); in_g6_hys=1 }
         }
       }
-      if (g6_controls=="yes" && g6_mrs_target(current)) line=normalize_scalar(line,"MaxReleaseStep","__G6_MRS_VALUE__")
+      if (g6_mrs=="yes" && g6_mrs_target(current)) line=normalize_scalar(line,"MaxReleaseStep","__G6_MRS_VALUE__")
 
       if (in_hot) {
         closing=index(line,"]")
@@ -225,7 +230,7 @@ patch_one() {
   ' "$_src" > "$_base" || return 1
 
   if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_file" = thermal_info_config_common.json ] &&
-     [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
+     [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
     _metrics="$GUARD_DIR/.g6-controls-metrics.$$"
     rm -f "$_metrics"
     if ! sh "$G6_CONTROLS_HELPER" "$_base" "$_dst" "$PIXEL11_HYSTERESIS_MODE" "$_metrics"; then
@@ -377,11 +382,18 @@ done < "$MANIFEST"
 [ "$source_files" -eq "$THERMAL_LAYOUT_COUNT" ] 2>/dev/null || fail 48 "output_layout_count_${source_files}_expected_${THERMAL_LAYOUT_COUNT}"
 for file in $THERMAL_LAYOUT_FILES; do [ -s "$PATCH_STAGE/$file" ] || fail 48 "required_output_missing_$file"; done
 
-if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" = mod ]; then
+if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
   [ "$pixel11_hys_arrays" = 7 ] || fail 58 "pixel11_hysteresis_inventory_${pixel11_hys_arrays}_expected_7"
   [ "$pixel11_mrs_targets" = 32 ] || fail 58 "pixel11_mrs_inventory_${pixel11_mrs_targets}_expected_32"
-  [ "$pixel11_hys_changes" = 15 ] || fail 58 "pixel11_hysteresis_changes_${pixel11_hys_changes}_expected_15"
-  [ "$pixel11_mrs_changes" = 32 ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_32"
+  pixel11_expected_hys_changes=0
+  pixel11_expected_mrs_changes=0
+  case "$PIXEL11_HYSTERESIS_MODE" in
+    hysteresis) pixel11_expected_hys_changes=15 ;;
+    max-release-step) pixel11_expected_mrs_changes=32 ;;
+    combined) pixel11_expected_hys_changes=15; pixel11_expected_mrs_changes=32 ;;
+  esac
+  [ "$pixel11_hys_changes" = "$pixel11_expected_hys_changes" ] || fail 58 "pixel11_hysteresis_changes_${pixel11_hys_changes}_expected_${pixel11_expected_hys_changes}"
+  [ "$pixel11_mrs_changes" = "$pixel11_expected_mrs_changes" ] || fail 58 "pixel11_mrs_changes_${pixel11_mrs_changes}_expected_${pixel11_expected_mrs_changes}"
 fi
 
 printf '%s\n' '  },' '  "totals": {' >> "$REPORT_TMP"
