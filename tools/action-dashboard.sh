@@ -5,6 +5,7 @@ CONFIG_DIR="${THERMAL_CONFIG_DIR:-/data/adb/$ID}"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
+PAGE_CLUSTER="$MODDIR/tools/zram/page-cluster-control.sh"
 EH_EVENT_LOG="$CONFIG_DIR/zram-eh/events.log"
 LMKD_RELOAD_EVIDENCE="$CONFIG_DIR/lmkd-reload.env"
 PTUNE_ROOTS="${PTUNE_MODULE_ROOTS:-/data/adb/modules/ptune /data/adb/modules_update/ptune}"
@@ -18,8 +19,11 @@ ACTION_MENU_RENDER_COUNT=0
 MENU_CYCLE_AVAILABLE=0
 [ -s "$MODDIR/tools/menu/menu-cycle.sh" ] && . "$MODDIR/tools/menu/menu-cycle.sh" && MENU_CYCLE_AVAILABLE=1
 POLICY_HELPER="$MODDIR/tools/core/outdoor-runtime-policy.sh"
+LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
 POLICY_AVAILABLE=0
+LAYOUT_AVAILABLE=0
 [ -s "$POLICY_HELPER" ] && . "$POLICY_HELPER" && POLICY_AVAILABLE=1
+[ -s "$LAYOUT_HELPER" ] && . "$LAYOUT_HELPER" && LAYOUT_AVAILABLE=1
 
 POLICY_DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
 POLICY_ANDROID="${THERMAL_ANDROID:-$(getprop ro.build.version.release 2>/dev/null || true)}"
@@ -27,12 +31,17 @@ POLICY_BUILD="${THERMAL_BUILD_ID:-$(getprop ro.build.id 2>/dev/null || true)}"
 [ -n "$POLICY_DEVICE" ] || POLICY_DEVICE=unknown
 [ -n "$POLICY_ANDROID" ] || POLICY_ANDROID=unknown
 [ -n "$POLICY_BUILD" ] || POLICY_BUILD=unknown
+DEVICE_FAMILY=pixel10
+if [ "$LAYOUT_AVAILABLE" = 1 ]; then
+  DEVICE_FAMILY="$(thermal_device_family "$POLICY_DEVICE")"
+  case "$DEVICE_FAMILY" in pixel11|pixel10) ;; *) DEVICE_FAMILY=pixel10 ;; esac
+fi
 
 msg() {
   if command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi
 }
 
-if [ "$MENU_CYCLE_AVAILABLE" != "1" ] || [ "$POLICY_AVAILABLE" != "1" ]; then
+if [ "$MENU_CYCLE_AVAILABLE" != "1" ] || [ "$POLICY_AVAILABLE" != "1" ] || [ "$LAYOUT_AVAILABLE" != "1" ]; then
   msg "! Action menu unavailable"
   if [ -s "$MODDIR/tools/debug/status-cached-print.sh" ]; then
     MODDIR="$MODDIR" sh "$MODDIR/tools/debug/status-cached-print.sh" || true
@@ -56,6 +65,16 @@ cfg_set() {
   tmp="$CONFIG_FILE.tmp.$$"
   grep -v "^${k}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
   printf '%s=%s\n' "$k" "$v" >> "$tmp"
+  mv "$tmp" "$CONFIG_FILE"
+  chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
+}
+
+cfg_unset() {
+  k="$1"
+  mkdir -p "$CONFIG_DIR" 2>/dev/null || true
+  touch "$CONFIG_FILE" 2>/dev/null || true
+  tmp="$CONFIG_FILE.tmp.$$"
+  grep -v "^${k}=" "$CONFIG_FILE" 2>/dev/null > "$tmp" || true
   mv "$tmp" "$CONFIG_FILE"
   chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
 }
@@ -119,7 +138,7 @@ ensure_status() {
 show_status() {
   msg ""
   msg "----------------------------------------"
-  msg "Pixel 10 Thermal & Memory Control"
+  msg "Pixel Thermal & Memory Control"
   msg "----------------------------------------"
   if [ -s "$MODDIR/tools/debug/status-cached-print.sh" ]; then
     MODDIR="$MODDIR" sh "$MODDIR/tools/debug/status-cached-print.sh"
@@ -207,6 +226,13 @@ ui_menu6() {
 rematerialize_thermal_overlay() {
   _polling="$1"
   _profile="$2"
+  _recovery="${3:-stock}"
+  if [ "$DEVICE_FAMILY" = pixel11 ]; then
+    _polling=stock
+    case "$_recovery" in stock|mod) ;; *) _recovery=stock ;; esac
+  else
+    _recovery=stock
+  fi
 
   if ! variant_exists dynamic "$_profile"; then
     msg "! Thermal $_profile blocked on $POLICY_BUILD"
@@ -220,7 +246,7 @@ rematerialize_thermal_overlay() {
     return 1
   fi
   chmod 0755 "$_validator" 2>/dev/null || true
-  if ! sh "$_validator" "$_polling" "$_profile" "$MODDIR"; then
+  if ! sh "$_validator" "$_polling" "$_profile" "$MODDIR" "$_recovery"; then
     msg "! Thermal validation failed"
     msg "! Existing settings kept"
     return 1
@@ -258,6 +284,39 @@ set_polling() {
   refresh_status; show_status; msg "Back to Settings."
 }
 
+set_pixel11_recovery() {
+  if [ "$(cfg_get THERMAL_DISABLED)" = "1" ]; then
+    msg "! Thermal features are disabled."
+    sleep 2
+    return 0
+  fi
+  cur="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
+  case "$cur" in mod) idx=0 ;; *) idx=1 ;; esac
+  ui_menu3 "Recovery Control" "HotHysteresis + MaxReleaseStep · Mod" "Stock values" "Back" "$idx"
+  [ "$UI_REASON" = "timeout" ] && return 0
+  case "$UI_INDEX" in
+    0) requested=mod ;;
+    1) requested=stock ;;
+    *) msg "Back."; return 0 ;;
+  esac
+  current_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+  case "$current_profile" in stock|outdoor-safe) ;; *) current_profile=stock ;; esac
+  if rematerialize_thermal_overlay stock "$current_profile" "$requested"; then
+    cfg_set PIXEL11_HYSTERESIS_MODE "$requested"
+    cfg_set LAST_PIXEL11_HYSTERESIS_MODE "$requested"
+    cfg_set THERMAL_POLLING_MODE stock
+    cfg_set THERMAL_POLLING_EFFECTIVE stock
+    cfg_set LAST_THERMAL_POLLING_MODE stock
+    cfg_unset PIXEL11_PASSIVE_MODE
+    cfg_unset PIXEL11_PASSIVE_TARGET_MS
+    cfg_unset LAST_PIXEL11_PASSIVE_MODE
+    set_thermal_choice "$current_profile"
+    cfg_set THERMAL_SETTINGS_MODE action_settings
+    msg "- Pixel 11 recovery: $requested"
+  fi
+  refresh_status; show_status; msg "Back to Settings."
+}
+
 set_thermal_choice() {
   choice="$1"
   case "$choice" in
@@ -282,13 +341,20 @@ set_thermal() {
     return 0
   fi
   cur="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
-  case "$cur" in outdoor-safe) idx=1 ;; outdoor-plus) idx=2 ;; outdoor-extended) idx=3 ;; *) idx=0 ;; esac
-  safe_label="$(policy_label outdoor-safe 'Outdoor Safe')"
-  plus_label="$(policy_label outdoor-plus 'Outdoor Plus')"
-  ext_label="$(policy_label outdoor-extended 'Outdoor Extended')"
-  ui_menu5 "Thermal max+$(policy_max_delta)" "Stock" "$safe_label" "$plus_label" "$ext_label" "Back" "$idx"
-  [ "$UI_REASON" = "timeout" ] && return 0
-  case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; 2) choice=outdoor-plus ;; 3) choice=outdoor-extended ;; *) msg "Back."; return 0 ;; esac
+  if [ "$DEVICE_FAMILY" = pixel11 ]; then
+    case "$cur" in outdoor-safe) idx=1 ;; *) idx=0 ;; esac
+    ui_menu3 "Pixel 11 Thermal max+$(policy_max_delta)" "Stock" "Outdoor Safe +1C" "Back" "$idx"
+    [ "$UI_REASON" = "timeout" ] && return 0
+    case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; *) msg "Back."; return 0 ;; esac
+  else
+    case "$cur" in outdoor-safe) idx=1 ;; outdoor-plus) idx=2 ;; outdoor-extended) idx=3 ;; *) idx=0 ;; esac
+    safe_label="$(policy_label outdoor-safe 'Outdoor Safe')"
+    plus_label="$(policy_label outdoor-plus 'Outdoor Plus')"
+    ext_label="$(policy_label outdoor-extended 'Outdoor Extended')"
+    ui_menu5 "Thermal max+$(policy_max_delta)" "Stock" "$safe_label" "$plus_label" "$ext_label" "Back" "$idx"
+    [ "$UI_REASON" = "timeout" ] && return 0
+    case "$UI_INDEX" in 0) choice=stock ;; 1) choice=outdoor-safe ;; 2) choice=outdoor-plus ;; 3) choice=outdoor-extended ;; *) msg "Back."; return 0 ;; esac
+  fi
   if ! variant_exists dynamic "$choice"; then
     msg "! $choice is not admitted on $POLICY_BUILD"
     sleep 2
@@ -296,7 +362,13 @@ set_thermal() {
   fi
   current_polling="$(cfg_get THERMAL_POLLING_MODE)"
   [ -n "$current_polling" ] || current_polling=mod
-  if rematerialize_thermal_overlay "$current_polling" "$choice"; then
+  recovery=stock
+  if [ "$DEVICE_FAMILY" = pixel11 ]; then
+    current_polling=stock
+    recovery="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
+    case "$recovery" in stock|mod) ;; *) recovery=stock ;; esac
+  fi
+  if rematerialize_thermal_overlay "$current_polling" "$choice" "$recovery"; then
     cfg_set THERMAL_SETTINGS_MODE action_settings
     set_thermal_choice "$choice"
     msg "- Thermal: $choice"
@@ -368,6 +440,38 @@ set_emerald_hill() {
   msg "Back to Advanced."
 }
 
+configure_page_cluster() {
+  cur_pc="$(cfg_get ZRAM_PAGE_CLUSTER_MODE)"
+  case "$cur_pc" in zero) pc_idx=1 ;; *) pc_idx=0 ;; esac
+  ui_menu3 "ZRAM page-cluster" "Stock" "EXPERIMENTAL 0 (post-Bootguard)" "Back" "$pc_idx"
+  [ "$UI_REASON" = "timeout" ] && return 0
+  case "$UI_INDEX" in
+    0)
+      if [ -s "$PAGE_CLUSTER" ]; then
+        ZRAM_CONFIG_FILE="$CONFIG_FILE" PAGE_CLUSTER_CALLER=action_menu sh "$PAGE_CLUSTER" restore >/dev/null 2>&1 || {
+          cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+          cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
+        }
+      else
+        cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+        cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
+      fi
+      msg "- page-cluster: stock"
+    ;;
+    1)
+      cfg_set ZRAM_PAGE_CLUSTER_MODE zero
+      cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK explicit_user_zero
+      if [ -s "$PAGE_CLUSTER" ]; then
+        ZRAM_CONFIG_FILE="$CONFIG_FILE" PAGE_CLUSTER_CALLER=action_menu sh "$PAGE_CLUSTER" reconcile >/dev/null 2>&1 || true
+      fi
+      msg "- page-cluster: EXPERIMENTAL 0 persisted"
+      msg "- Runtime apply remains post-Bootguard"
+    ;;
+    *) msg "Back."; return 0 ;;
+  esac
+  printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
+}
+
 set_zram() {
   cur_z="$(cfg_get ENABLE_ZRAM_100P)"
   case "$cur_z" in 1) idx=0 ;; *) idx=1 ;; esac
@@ -376,23 +480,29 @@ set_zram() {
 
   case "$UI_INDEX" in
     0)
-      cur_l="$(cfg_get LMKD_SWAP_LOW_RELOAD)"
-      case "$cur_l" in 1) l_idx=1 ;; *) l_idx=0 ;; esac
-      ui_menu3 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "Back" "$l_idx"
-      [ "$UI_REASON" = "timeout" ] && return 0
-      case "$UI_INDEX" in
-        0)
-          lmkd_reload=0
-          lmkd_ack=none
-          last_lmkd=disabled
-        ;;
-        1)
-          lmkd_reload=1
-          lmkd_ack=explicit_user_reload
-          last_lmkd=enabled
-        ;;
-        *) msg "Back."; return 0 ;;
-      esac
+      if [ "$DEVICE_FAMILY" = pixel11 ]; then
+        lmkd_reload=0
+        lmkd_ack=none
+        last_lmkd=disabled
+      else
+        cur_l="$(cfg_get LMKD_SWAP_LOW_RELOAD)"
+        case "$cur_l" in 1) l_idx=1 ;; *) l_idx=0 ;; esac
+        ui_menu3 "LMKD 1% reload" "Disabled (stock)" "EXPERIMENTAL 1%" "Back" "$l_idx"
+        [ "$UI_REASON" = "timeout" ] && return 0
+        case "$UI_INDEX" in
+          0)
+            lmkd_reload=0
+            lmkd_ack=none
+            last_lmkd=disabled
+          ;;
+          1)
+            lmkd_reload=1
+            lmkd_ack=explicit_user_reload
+            last_lmkd=enabled
+          ;;
+          *) msg "Back."; return 0 ;;
+        esac
+      fi
 
       if [ -s "$ZRAM_LAYOUT" ]; then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" enable >/dev/null 2>&1 || true
@@ -410,6 +520,7 @@ set_zram() {
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_enable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
       fi
+      configure_page_cluster
       if [ -s "$MODDIR/tools/zram/apply-zram-100p.sh" ]; then
         msg "- Applying runtime properties"
         if ! MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/zram/apply-zram-100p.sh" manual >/dev/null 2>&1; then
@@ -434,6 +545,12 @@ set_zram() {
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_disable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
       fi
+      if [ -s "$PAGE_CLUSTER" ]; then
+        ZRAM_CONFIG_FILE="$CONFIG_FILE" PAGE_CLUSTER_CALLER=action_zram_disable sh "$PAGE_CLUSTER" restore >/dev/null 2>&1 || true
+      else
+        cfg_set ZRAM_PAGE_CLUSTER_MODE stock
+        cfg_set ZRAM_PAGE_CLUSTER_RISK_ACK none
+      fi
       cfg_set ENABLE_ZRAM_100P 0
       cfg_set ZRAM_EMERALD_OC 0
       cfg_set ZRAM_RESTART_MMD 0
@@ -456,9 +573,20 @@ set_zram() {
 
 settings_loop() {
   while :; do
-    mc_cycle4 "Settings" "Polling Mode" "Thermal Profile" "ZRAM 100%" "Back" 0
-    [ "$MC_REASON" = "timeout" ] && return 0
-    case "$MC_INDEX" in 0) set_polling ;; 1) set_thermal ;; 2) set_zram ;; *) msg "Back."; return 0 ;; esac
+    if [ "$DEVICE_FAMILY" = pixel11 ]; then
+      mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%" "Back" 0
+      [ "$MC_REASON" = "timeout" ] && return 0
+      case "$MC_INDEX" in
+        0) set_pixel11_recovery ;;
+        1) set_thermal ;;
+        2) set_zram ;;
+        *) msg "Back."; return 0 ;;
+      esac
+    else
+      mc_cycle4 "Settings" "Polling Mode" "Thermal Profile" "ZRAM 100%" "Back" 0
+      [ "$MC_REASON" = "timeout" ] && return 0
+      case "$MC_INDEX" in 0) set_polling ;; 1) set_thermal ;; 2) set_zram ;; *) msg "Back."; return 0 ;; esac
+    fi
   done
 }
 
@@ -602,19 +730,29 @@ set_lmkd_reload() {
 
 advanced_loop() {
   while :; do
-    ui_menu6 "Advanced" "Emerald Hill mode" "LMKD 1% reload" "pTune Status" "pTune Override" "Update Channel" "Back" 0
-    [ "$UI_REASON" = "timeout" ] && return 0
-    case "$UI_INDEX" in
-      0) set_emerald_hill ;;
-      1) set_lmkd_reload ;;
-      2) ptune_status; sleep 2 ;;
-      3)
-        if [ "$(cfg_get ALLOW_THERMAL_WITH_PTUNE)" = 1 ]; then ptune_override_off; else ptune_override_on; fi
-        sleep 2
-      ;;
-      4) update_channel_loop ;;
-      *) msg "Back."; return 0 ;;
-    esac
+    if [ "$DEVICE_FAMILY" = pixel11 ]; then
+      ui_menu3 "Pixel 11 Advanced" "Emerald Hill mode" "Update Channel" "Back" 0
+      [ "$UI_REASON" = "timeout" ] && return 0
+      case "$UI_INDEX" in
+        0) set_emerald_hill ;;
+        1) update_channel_loop ;;
+        *) msg "Back."; return 0 ;;
+      esac
+    else
+      ui_menu6 "Advanced" "Emerald Hill mode" "LMKD 1% reload" "pTune Status" "pTune Override" "Update Channel" "Back" 0
+      [ "$UI_REASON" = "timeout" ] && return 0
+      case "$UI_INDEX" in
+        0) set_emerald_hill ;;
+        1) set_lmkd_reload ;;
+        2) ptune_status; sleep 2 ;;
+        3)
+          if [ "$(cfg_get ALLOW_THERMAL_WITH_PTUNE)" = 1 ]; then ptune_override_off; else ptune_override_on; fi
+          sleep 2
+        ;;
+        4) update_channel_loop ;;
+        *) msg "Back."; return 0 ;;
+      esac
+    fi
   done
 }
 

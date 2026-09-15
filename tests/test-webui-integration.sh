@@ -17,12 +17,36 @@ grep -Fq 'confirmation_text":"PAGECLUSTER"' bin/module-control
 grep -Fq '"debug-silent"' bin/module-control
 grep -Fq '"debug-verbose"' bin/module-control
 grep -Fq 'dynamic_stock_thermal_validation' bin/module-control
+grep -Fq '"name":"recovery-mod"' bin/module-control
+grep -Fq '"name":"recovery-stock"' bin/module-control
+grep -Fq '"name":"thermal-stock"' bin/module-control
+grep -Fq '"name":"thermal-outdoor-safe"' bin/module-control
+grep -Fq '"name":"page-cluster-stock"' bin/module-control
+grep -Fq '"name":"page-cluster-zero"' bin/module-control
+if sed -n '/^print_capabilities() {/,/^}/p' bin/module-control | grep -Fq 'PassiveDelay'; then
+  echo 'FAIL: Pixel 11 WebUI recovery action still mentions PassiveDelay' >&2
+  exit 1
+fi
+! sed -n '/^print_capabilities() {/,/^}/p' bin/module-control | grep -Fq '"device_family":"%s"'
+grep -Fq '"label":"Recovery"' bin/module-control
+grep -Fq 'classic_polling_stock_only_pixel11' tools/control/pixel-control.sh
+grep -Fq 'action_not_in_pixel11_family_surface' tools/control/pixel-control.sh
+grep -Fq 'mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%" "Back"' tools/action-dashboard.sh
+grep -Fq 'ui_menu3 "Pixel 11 Thermal max+$(policy_max_delta)" "Stock" "Outdoor Safe +1C" "Back"' tools/action-dashboard.sh
+grep -Fq 'configure_page_cluster() {' tools/action-dashboard.sh
+grep -Fq 'ui_menu3 "Pixel 11 Advanced" "Emerald Hill mode" "Update Channel" "Back"' tools/action-dashboard.sh
+! grep -Fq 'Passive Polling' tools/menu/install-options-menu.sh
+grep -Fq 'mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "Outdoor Safe +1C"' tools/menu/install-options-menu.sh
+grep -Fq 'mc_cycle2 "ZRAM page-cluster" "Stock" "EXPERIMENTAL 0 (post-Bootguard)"' tools/menu/install-options-menu.sh
 grep -Fq 'ZRAM_MATERIALIZE_NOW=0' tools/control/pixel-control.sh
 grep -Fq 'DEBUG_MODE 0' tools/control/pixel-control.sh
 grep -Fq 'DEBUG_MODE 1' tools/control/pixel-control.sh
 grep -Fq 'ZRAM_PAGE_CLUSTER_MODE zero' tools/zram/page-cluster-control.sh
 grep -Fq 'ZRAM_PAGE_CLUSTER_RISK_ACK explicit_user_zero' tools/zram/page-cluster-control.sh
 grep -Fq 'PAGE_CLUSTER_CALLER=service_post_boot' service.sh
+grep -Fq 'case "$value" in stock|outdoor-safe)' tools/control/pixel-control.sh
+grep -Fq 'page-cluster-stock) page_cluster_stock ;;' tools/control/pixel-control.sh
+grep -Fq 'page-cluster-zero) page_cluster_zero ;;' tools/control/pixel-control.sh
 
 # The launcher must tolerate the short fork->exec window before the native
 # server becomes identifiable through /proc/$pid/cmdline. Identity remains a
@@ -57,6 +81,11 @@ status_body="$(sed -n '/^print_status() {/,/^}/p' bin/module-control)"
 printf '%s\n' "$status_body" | grep -Fq 'ensure_status_cache'
 printf '%s\n' "$status_body" | grep -Fq '"action_state":{"active"'
 printf '%s\n' "$status_body" | grep -Fq 'add_active thermal-outdoor-extended'
+printf '%s\n' "$status_body" | grep -Fq 'add_active recovery-mod'
+printf '%s\n' "$status_body" | grep -Fq 'add_active thermal-outdoor-safe'
+printf '%s\n' "$status_body" | grep -Fq "add_blocked thermal-outdoor-plus 'Pixel 11 family is capped at Outdoor Safe +1°C.'"
+printf '%s\n' "$status_body" | grep -Fq 'add_active page-cluster-zero'
+printf '%s\n' "$status_body" | grep -Fq 'if [ "$family" != pixel11 ]'
 printf '%s\n' "$status_body" | grep -Fq 'add_active zram-enable'
 printf '%s\n' "$status_body" | grep -Fq 'add_active debug-silent'
 printf '%s\n' "$status_body" | grep -Fq 'add_active debug-verbose'
@@ -92,4 +121,13 @@ for asset in embedded-host-bootstrap.js mobile-input-viewport.js observability.j
 done
 grep -Fq 'WEBUI_CORE_DIR' dev_tools/build-release-module.sh
 grep -Fq 'webui-server-arm64' dev_tools/build-release-module.sh
+
+# Manager-card markers must be device-family aware. Pixel 11 replaces legacy
+# Polling/Memory Killer markers with Recovery while retaining Thermal/ZRAM.
+grep -Fq 'desc="description=Recovery $recovery_icon $recovery_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Action: details/support"' tools/debug/status-lib.sh
+grep -Fq 'desc="description=Polling $polling_icon $polling_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Memory Killer $lmk_icon $memory_killer_display | Action: details/support"' tools/debug/status-lib.sh
+grep -Fq "'Recovery '*' | Thermal '*' | ZRAM '*' | Action: details/support'" service.sh
+grep -Fq 'cubs|grizzly|kodiak|yogi) device_family=pixel11' service.sh
+grep -Fq 'write_manager_description "Recovery $r_icon $r_value | Thermal $t_icon $t_value | ZRAM $z_icon $z_value | Action: details/support"' service.sh
+
 printf '%s\n' 'RESULT: PIXEL_WEBUI_INTEGRATION_TEST_PASS'

@@ -27,10 +27,18 @@ if grep -Fq 'rematerialize_thermal_overlay || true' "$action"; then
   printf '%s\n' 'FAIL action_ignores_materialization_failure'
   exit 1
 fi
-grep -Fq 'if rematerialize_thermal_overlay "$current_polling" "$choice"; then' "$action"
+grep -Fq 'if rematerialize_thermal_overlay "$current_polling" "$choice" "$recovery"; then' "$action"
 grep -Fq 'set_thermal_choice "$choice"' "$action"
 grep -Fq 'Existing settings kept' "$action"
 grep -Fq 'action_validated_transaction_v2' "$action"
+grep -Fq 'DEVICE_FAMILY="$(thermal_device_family "$POLICY_DEVICE")"' "$action"
+grep -Fq 'mc_cycle4 "Pixel 11 Settings" "Recovery Control" "Thermal Profile" "ZRAM 100%"' "$action"
+grep -Fq 'ui_menu3 "Pixel 11 Thermal max+$(policy_max_delta)" "Stock" "Outdoor Safe +1C" "Back"' "$action"
+grep -Fq 'configure_page_cluster() {' "$action"
+grep -Fq 'current_polling=stock' "$action"
+grep -Fq 'case "$current_profile" in stock|outdoor-safe)' "$action"
+grep -Fq 'cfg_unset PIXEL11_PASSIVE_MODE' "$action"
+grep -Fq 'sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR" "$recovery"' "$action_root"
 
 grep -Fq 'patch-thermal-validated.sh' "$auto_switch"
 grep -Fq 'patch-thermal-validated.sh' "$ptune_override"
@@ -106,6 +114,13 @@ fi
 [[ "$(thermal_outdoor_max_delta mustang 17 CP2A.260705.006)" = 3 ]]
 [[ "$(thermal_outdoor_max_delta mustang 17 ZP11.260618.005)" = 3 ]]
 thermal_outdoor_profile_admitted outdoor-extended mustang 17 ZP11.260618.005
+[[ "$(thermal_outdoor_max_delta cubs 17 TEST)" = 1 ]]
+[[ "$(thermal_outdoor_max_delta grizzly 17 CD1A.260714.001.A9)" = 1 ]]
+thermal_outdoor_profile_admitted outdoor-safe grizzly 17 CD1A.260714.001.A9
+if thermal_outdoor_profile_admitted outdoor-plus grizzly 17 CD1A.260714.001.A9; then
+  printf '%s\n' 'FAIL pixel11_outdoor_plus_admitted'
+  exit 1
+fi
 
 printf '%s\n' 'PASS action_uses_validated_transaction'
 printf '%s\n' 'PASS action_failure_does_not_commit_requested_profile'
@@ -119,5 +134,8 @@ printf '%s\n' 'PASS compat_backend_probe_is_shallow'
 printf '%s\n' 'PASS supported_manifest_validation_is_cached'
 printf '%s\n' 'PASS obsolete_action_toggle_collector_call_absent'
 printf '%s\n' 'PASS duplicate_update_channel_status_call_absent'
+printf '%s\n' 'PASS pixel11_outdoor_safe_plus1_only'
+printf '%s\n' 'PASS pixel11_recovery_preserves_thermal_profile'
+printf '%s\n' 'PASS zram_page_cluster_is_install_action_family_option'
 bash "$repo_root/tests/test-ota-transition-bootguard.sh"
 printf '%s\n' 'RESULT: PIXEL_THERMAL_ACTION_TRANSACTION_TEST_PASS'
