@@ -92,7 +92,13 @@ status_collect() {
     case "$(prop_get ro.product.device)" in cubs|grizzly|kodiak|yogi) device_family=pixel11 ;; *) device_family=pixel10 ;; esac
   ;; esac
   recovery_mode="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
-  case "$recovery_mode" in mod) recovery_icon="$OK"; recovery_display=Mod ;; *) recovery_mode=stock; recovery_icon="$OFF"; recovery_display=Stock ;; esac
+  case "$recovery_mode" in
+    mod|combined) recovery_mode=combined; recovery_icon="$OK"; recovery_display=Combined ;;
+    hysteresis) recovery_icon="$OK"; recovery_display=HotHysteresis ;;
+    max-release-step) recovery_icon="$OK"; recovery_display=MaxReleaseStep ;;
+    stock|"") recovery_mode=stock; recovery_icon="$OFF"; recovery_display=Stock ;;
+    *) recovery_icon="$WARN"; recovery_display="Unknown ($recovery_mode)" ;;
+  esac
 
   source_icon="$BAD"
   source_state=invalid
