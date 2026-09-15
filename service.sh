@@ -192,7 +192,13 @@ update_manager_badges_fast() {
   polling="$(cfg_fast THERMAL_POLLING_MODE)"; [ -n "$polling" ] || polling=mod
   profile="$(cfg_fast THERMAL_OUTDOOR_PROFILE)"; [ -n "$profile" ] || profile=stock
   recovery="$(cfg_fast PIXEL11_HYSTERESIS_MODE)"
-  case "$recovery" in mod) r_icon="$green"; r_value=Mod ;; *) r_icon="$white"; r_value=Stock ;; esac
+  case "$recovery" in
+    mod|combined) recovery=combined; r_icon="$green"; r_value=Combined ;;
+    hysteresis) r_icon="$green"; r_value=HotHysteresis ;;
+    max-release-step) r_icon="$green"; r_value=MaxReleaseStep ;;
+    stock|'') recovery=stock; r_icon="$white"; r_value=Stock ;;
+    *) r_icon="$yellow"; r_value="$recovery" ;;
+  esac
   thermal_disabled="$(cfg_fast THERMAL_DISABLED)"; [ -n "$thermal_disabled" ] || thermal_disabled=0
   if [ "$thermal_disabled" = 1 ]; then
     p_icon="$red"; p_value=Disabled; t_icon="$red"; t_value=Disabled
