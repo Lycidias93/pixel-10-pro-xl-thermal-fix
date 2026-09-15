@@ -187,7 +187,11 @@ apply_polling() {
 }
 
 apply_pixel11_hysteresis() {
-  case "$1" in stock) _mode=stock ;; *) _mode=mod ;; esac
+  case "$1" in
+    mod|combined) _mode=combined ;;
+    hysteresis|max-release-step|stock) _mode="$1" ;;
+    *) _mode=stock ;;
+  esac
   cfg_set PIXEL11_HYSTERESIS_MODE "$_mode"
   cfg_set LAST_PIXEL11_HYSTERESIS_MODE "$_mode"
 }
@@ -410,7 +414,7 @@ apply_last_settings() {
   if [ "$DEVICE_FAMILY" = pixel11 ]; then
     _hys="$(cfg_get LAST_PIXEL11_HYSTERESIS_MODE)"
     [ -n "$_hys" ] || _hys="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
-    [ -n "$_hys" ] || _hys=mod
+    [ -n "$_hys" ] || _hys=combined
     apply_pixel11_hysteresis "$_hys"
 
     pin_pixel11_legacy_controls
@@ -477,9 +481,14 @@ cfg_set INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
 record_ptune_presence
 
 if [ "$DEVICE_FAMILY" = pixel11 ]; then
-  recovery_index=0
-  mc_cycle2 "HotHysteresis & MaxReleaseStep" "Mod (faster recovery)" "Stock values" "$recovery_index"
-  [ "$MC_INDEX" = 1 ] && apply_pixel11_hysteresis stock || apply_pixel11_hysteresis mod
+  recovery_index=3
+  mc_cycle4 "Recovery Control" "Stock" "HotHysteresis" "MaxReleaseStep" "Combined" "$recovery_index"
+  case "$MC_INDEX" in
+    0) apply_pixel11_hysteresis stock ;;
+    1) apply_pixel11_hysteresis hysteresis ;;
+    2) apply_pixel11_hysteresis max-release-step ;;
+    *) apply_pixel11_hysteresis combined ;;
+  esac
 
   thermal_index=0
   mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "Outdoor Safe +1C" "$thermal_index"

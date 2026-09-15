@@ -229,7 +229,11 @@ rematerialize_thermal_overlay() {
   _recovery="${3:-stock}"
   if [ "$DEVICE_FAMILY" = pixel11 ]; then
     _polling=stock
-    case "$_recovery" in stock|mod) ;; *) _recovery=stock ;; esac
+    case "$_recovery" in
+      mod) _recovery=combined ;;
+      stock|hysteresis|max-release-step|combined) ;;
+      *) _recovery=stock ;;
+    esac
   else
     _recovery=stock
   fi
@@ -291,12 +295,14 @@ set_pixel11_recovery() {
     return 0
   fi
   cur="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
-  case "$cur" in mod) idx=0 ;; *) idx=1 ;; esac
-  ui_menu3 "Recovery Control" "HotHysteresis + MaxReleaseStep · Mod" "Stock values" "Back" "$idx"
+  case "$cur" in mod|combined) idx=3 ;; hysteresis) idx=1 ;; max-release-step) idx=2 ;; *) idx=0 ;; esac
+  ui_menu5 "Recovery Control" "Stock" "HotHysteresis" "MaxReleaseStep" "Combined" "Back" "$idx"
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in
-    0) requested=mod ;;
-    1) requested=stock ;;
+    0) requested=stock ;;
+    1) requested=hysteresis ;;
+    2) requested=max-release-step ;;
+    3) requested=combined ;;
     *) msg "Back."; return 0 ;;
   esac
   current_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
@@ -366,7 +372,11 @@ set_thermal() {
   if [ "$DEVICE_FAMILY" = pixel11 ]; then
     current_polling=stock
     recovery="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
-    case "$recovery" in stock|mod) ;; *) recovery=stock ;; esac
+    case "$recovery" in
+      mod) recovery=combined ;;
+      stock|hysteresis|max-release-step|combined) ;;
+      *) recovery=stock ;;
+    esac
   fi
   if rematerialize_thermal_overlay "$current_polling" "$choice" "$recovery"; then
     cfg_set THERMAL_SETTINGS_MODE action_settings
