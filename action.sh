@@ -39,6 +39,14 @@ cfg_set() {
   chmod 0600 "$CONFIG_FILE" 2>/dev/null || true
 }
 
+normalize_recovery() {
+  case "${1:-stock}" in
+    mod) printf '%s\n' combined ;;
+    stock|hysteresis|max-release-step|combined) printf '%s\n' "${1:-stock}" ;;
+    *) printf '%s\n' stock ;;
+  esac
+}
+
 msg() { if command -v ui_print >/dev/null 2>&1; then ui_print "$*"; else echo "$*"; fi; }
 remove_thermal_overlay() { rm -f "$MODDIR/system/vendor/etc"/thermal_info_config*.json 2>/dev/null || true; }
 
@@ -117,11 +125,27 @@ else
   cfg_set VNEXT_EXPERIMENTAL_PLATFORM 0
 fi
 
+current_polling="$(cfg_get THERMAL_POLLING_MODE)"
+current_outdoor="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
+current_recovery="$(normalize_recovery "$(cfg_get PIXEL11_HYSTERESIS_MODE)")"
+[ -n "$current_polling" ] || current_polling=mod
+[ -n "$current_outdoor" ] || current_outdoor=stock
+device_family="$(thermal_device_family "$CURRENT_DEVICE")"
+if [ "$device_family" = pixel11 ]; then
+  current_polling=stock
+else
+  current_recovery=stock
+fi
+
 needs_materialize=0
 [ "$CURRENT_BUILD" = "$INSTALLED_BUILD" ] || needs_materialize=1
 [ "$(cfg_get THERMAL_DISABLED)" = 1 ] && needs_materialize=1
 if ! thermal_layout_load_env "$LAYOUT_ENV" 2>/dev/null; then
   needs_materialize=1
+elif [ "$current_polling" = stock ] && [ "$current_outdoor" = stock ] && [ "$current_recovery" = stock ]; then
+  for required in $THERMAL_LAYOUT_FILES; do
+    if [ -e "$MODDIR/system/vendor/etc/$required" ] || [ -L "$MODDIR/system/vendor/etc/$required" ]; then needs_materialize=1; fi
+  done
 else
   for required in $THERMAL_LAYOUT_FILES; do [ -s "$MODDIR/system/vendor/etc/$required" ] || needs_materialize=1; done
 fi
@@ -139,20 +163,10 @@ if [ "$platform_supported" -eq 1 ]; then
     msg "! Reinstall this prerelease before re-enabling Thermal"
   elif [ "$needs_materialize" -eq 1 ]; then
     MATERIALIZE_STARTED_MS="$(now_ms)"
-    msg "- Materializing stock-derived Thermal layout"
-    polling="$(cfg_get THERMAL_POLLING_MODE)"
-    outdoor="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
-    recovery="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
-    [ -n "$polling" ] || polling=mod
-    [ -n "$outdoor" ] || outdoor=stock
-    [ -n "$recovery" ] || recovery=stock
-    device_family="$(thermal_device_family "$CURRENT_DEVICE")"
-    if [ "$device_family" = pixel11 ]; then
-      polling=stock
-      case "$recovery" in stock|mod) ;; *) recovery=stock ;; esac
-    else
-      recovery=stock
-    fi
+    msg "- Materializing validated Thermal state"
+    polling="$current_polling"
+    outdoor="$current_outdoor"
+    recovery="$current_recovery"
 
     if [ -s "$MODDIR/tools/core/patch-thermal-validated.sh" ] && sh "$MODDIR/tools/core/patch-thermal-validated.sh" "$polling" "$outdoor" "$MODDIR" "$recovery"; then
       MATERIALIZE_FINISHED_MS="$(now_ms)"
