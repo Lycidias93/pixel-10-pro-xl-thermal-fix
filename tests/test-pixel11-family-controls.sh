@@ -133,6 +133,10 @@ run_phase() {
   make_module "$mod"
   write_graph "$src"
   mkdir -p "$data"
+  if [[ "$recovery" = stock ]]; then
+    cp "$src/thermal_info_config_common.json" "$mod/system/vendor/etc/thermal_info_config_common.json"
+    cp "$src/thermal_info_config_charge.json" "$mod/system/vendor/etc/thermal_info_config_charge.json"
+  fi
 
   THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=G6_FAMILY_TEST \
     THERMAL_SOURCE_DIR="$src" THERMAL_DATA_ROOT="$data" \
@@ -164,6 +168,7 @@ run_phase() {
     grep -Fxq 'PATCH_THERMAL_PIXEL11_MRS_CHANGES=0' "$root.log"
     [[ ! -e "$common" ]]
     [[ ! -e "$mod/system/vendor/etc/thermal_info_config_charge.json" ]]
+    [[ ! -e "$mod/system/vendor/etc" ]]
   fi
 }
 

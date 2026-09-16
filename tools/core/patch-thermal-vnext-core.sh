@@ -436,7 +436,11 @@ else
 fi
 
 if [ -d "$TARGET_DIR" ]; then mv "$TARGET_DIR" "$TARGET_OLD"; fi
-mv "$PATCH_STAGE" "$TARGET_DIR" || fail 56 target_atomic_promotion_failed
+if [ "$MATERIALIZATION" = stock-no-overlay ] && ! find "$PATCH_STAGE" -mindepth 1 -maxdepth 1 -print -quit | grep -q .; then
+  rm -rf "$PATCH_STAGE"
+else
+  mv "$PATCH_STAGE" "$TARGET_DIR" || fail 56 target_atomic_promotion_failed
+fi
 PROMOTED=1; rm -rf "$TARGET_OLD"
 mv "$PATCH_MANIFEST_TMP" "$PATCH_MANIFEST"
 mv "$REPORT_TMP" "$REPORT_MODULE"

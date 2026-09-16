@@ -82,7 +82,7 @@ The manager-card description is already generated dynamically by `tools/debug/st
 
 The G6 helper rejects the patch if the target inventory or stock values do not match the expected seven hysteresis arrays and 32 MaxReleaseStep cooling-device/profile bindings distributed across all five target sensors. Multiple `MaxReleaseStep` keys on the same physical JSON line are iterated independently, so validation is bound to the schema objects rather than file pretty-printing. PassiveDelay is not an admitted transformation.
 
-The vNext byte-diff normalizer admits only the family-local recovery fields in `thermal_info_config_common.json`; classic `PollingDelay` and `PassiveDelay` remain untouched. The generated validation state records the Pixel 11 recovery mode only.
+The vNext byte-diff normalizer admits only the family-local recovery fields in `thermal_info_config_common.json`; classic `PollingDelay` and `PassiveDelay` remain untouched. The generated validation state records the Pixel 11 recovery mode only. When Polling, Thermal profile and Recovery are all Stock, `stock-no-overlay` now removes stale generated thermal JSONs and does not promote an empty `system/vendor/etc` overlay directory; unrelated pre-existing non-thermal entries, if any, remain preserved.
 
 ## Test build
 
@@ -101,7 +101,7 @@ Harish / Codecity001 should test the exact Actions artifact on the accepted Pixe
 
 Four-mode acceptance sequence:
 
-1. **Stock** — Thermal Stock, ZRAM disabled/page-cluster Stock; capture the baseline install/reboot, Bootguard/readiness, active overlay and benchmark.
+1. **Stock** — Thermal Stock, ZRAM disabled/page-cluster Stock; capture the baseline install/reboot and benchmark, and verify no generated `system/vendor/etc` thermal overlay path remains.
 2. **HotHysteresis** — only HotHysteresis recovery active; verify exactly 15 admitted hysteresis slots change and all 32 MaxReleaseStep bindings remain `1`; capture benchmark/recovery observations.
 3. **MaxReleaseStep** — only MaxReleaseStep recovery active; verify all seven hysteresis arrays remain stock and exactly 32 admitted bindings change `1 -> 2`; capture benchmark/recovery observations.
 4. **Combined** — both recovery changes active; verify exactly 15 + 32 admitted changes and compare against Stock plus both isolated modes.
