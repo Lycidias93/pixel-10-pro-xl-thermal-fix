@@ -46,7 +46,7 @@ case "$OUTDOOR_PROFILE" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; 
   printf '%s\n' 'PATCH_THERMAL_REASON=invalid_outdoor_profile'
   exit 22
 ;; esac
-case "$PIXEL11_HYSTERESIS_MODE" in stock|mod) ;; *)
+case "$PIXEL11_HYSTERESIS_MODE" in stock|mod|hysteresis|max-release-step|combined) ;; *)
   printf '%s\n' 'PATCH_THERMAL=fail'
   printf '%s\n' 'PATCH_THERMAL_REASON=invalid_pixel11_hysteresis_mode'
   exit 22

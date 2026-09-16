@@ -17,7 +17,7 @@ thermal_outdoor_profile_admitted outdoor-safe grizzly 17 G6_FAMILY_TEST
 ! thermal_outdoor_profile_admitted outdoor-plus grizzly 17 G6_FAMILY_TEST
 
 menu="$repo_root/tools/menu/install-options-menu.sh"
-grep -Fq 'HotHysteresis & MaxReleaseStep' "$menu"
+grep -Fq 'mc_cycle4 "Recovery Control" "Stock" "HotHysteresis" "MaxReleaseStep" "Combined"' "$menu"
 grep -Fq 'INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"' "$menu"
 ! grep -Fq 'Passive Polling' "$menu"
 grep -Fq 'mc_cycle2 "Thermal Profile max+$POLICY_MAX_DELTA" "Stock" "Outdoor Safe +1C"' "$menu"
@@ -145,22 +145,25 @@ run_phase() {
   ! grep -Fq 'PIXEL11_PASSIVE' "$root.log"
 
   local common="$mod/system/vendor/etc/thermal_info_config_common.json"
-  [[ "$(grep -Fo '"PassiveDelay": 5000' "$common" | wc -l | tr -d ' ')" = 0 ]]
-  [[ "$(grep -Fo '"PassiveDelay": 7000' "$common" | wc -l | tr -d ' ')" = 8 ]]
-  grep -Fq '"Name": "VIRTUAL-SKIN-SOC-EXTREME"' "$common"
-  grep -Fq '"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": [50], "PassiveDelay": 10000' "$common"
-  grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": [34, 38, 43], "PassiveDelay": 7000' "$mod/system/vendor/etc/thermal_info_config_charge.json"
-
   if [[ "$recovery" = mod ]]; then
+    grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=overlay' "$root.log"
+    [[ -f "$common" ]]
+    [[ "$(grep -Fo '"PassiveDelay": 5000' "$common" | wc -l | tr -d ' ')" = 0 ]]
+    [[ "$(grep -Fo '"PassiveDelay": 7000' "$common" | wc -l | tr -d ' ')" = 8 ]]
+    grep -Fq '"Name": "VIRTUAL-SKIN-SOC-EXTREME"' "$common"
+    grep -Fq '"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": [50], "PassiveDelay": 10000' "$common"
+    grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": [34, 38, 43], "PassiveDelay": 7000' "$mod/system/vendor/etc/thermal_info_config_charge.json"
     grep -Fxq 'PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=15' "$root.log"
     grep -Fxq 'PATCH_THERMAL_PIXEL11_MRS_CHANGES=32' "$root.log"
     [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 32 ]]
     [[ "$(grep -Fo '"MaxReleaseStep": 1' "$common" | wc -l | tr -d ' ')" = 5 ]]
     grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.0, 1.0, 1.0, 1.0, 1.9, 1.9]' "$common"
   else
-    [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 0 ]]
-    [[ "$(grep -Fo '"MaxReleaseStep": 1' "$common" | wc -l | tr -d ' ')" = 37 ]]
-    grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.9, 1.9, 1.9, 1.4, 1.9, 1.9]' "$common"
+    grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=stock-no-overlay' "$root.log"
+    grep -Fxq 'PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=0' "$root.log"
+    grep -Fxq 'PATCH_THERMAL_PIXEL11_MRS_CHANGES=0' "$root.log"
+    [[ ! -e "$common" ]]
+    [[ ! -e "$mod/system/vendor/etc/thermal_info_config_charge.json" ]]
   fi
 }
 
