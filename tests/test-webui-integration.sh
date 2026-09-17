@@ -3,8 +3,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-grep -Fqx 'core_version=0.6.5' webui.lock
-grep -Fqx 'template_commit=056e91977dbd6f163a00720e975805a2edc5ab44' webui.lock
+grep -Fqx 'core_version=0.6.6' webui.lock
+grep -Fqx 'template_commit=0d5c724711733b6f794790ef96d718e96c64c258' webui.lock
 grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
 grep -Fq 'adivenxnataly/KsuWebUI@20342d280a841f8b317603a7eefb1193a95ab626' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done

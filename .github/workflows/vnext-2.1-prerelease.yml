@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: 056e91977dbd6f163a00720e975805a2edc5ab44
+          ref: 0d5c724711733b6f794790ef96d718e96c64c258
           path: .webui-core
           fetch-depth: 1
 
@@ -88,6 +88,7 @@ jobs:
           bash tests/test-zram-eh-dev12.sh
           bash tests/test-page-cluster-control.sh
           bash tests/test-webui-integration.sh
+          bash tests/test-webui-android-json-bool.sh
           bash tests/test-feedback-package-contract.sh
           for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu cubs grizzly kodiak yogi; do
             grep -Fq "\"$device\"" supported_versions.json

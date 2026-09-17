@@ -48,7 +48,10 @@ request_file_allowed() {
 
 json_bool() {
   key="$1"; file="$2"
-  sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*\(true\|false\).*/\1/p' "$file" | head -n 1
+  value="$(sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*\([^,}[:space:]][^,}[:space:]]*\).*/\1/p' "$file" | head -n 1)"
+  case "$value" in
+    true|false) printf '%s\n' "$value" ;;
+  esac
 }
 
 json_string() {
