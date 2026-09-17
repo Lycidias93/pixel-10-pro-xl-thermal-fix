@@ -118,6 +118,7 @@ else
 fi
 
 needs_materialize=0
+[ -e "$MODDIR/skip_mount" ] && needs_materialize=1
 [ "$CURRENT_BUILD" = "$INSTALLED_BUILD" ] || needs_materialize=1
 [ "$(cfg_get THERMAL_DISABLED)" = 1 ] && needs_materialize=1
 if ! thermal_layout_load_env "$LAYOUT_ENV" 2>/dev/null; then

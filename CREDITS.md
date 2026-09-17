@@ -17,6 +17,8 @@ Alpha5 consumes the first-party **[Android Root Module Standalone WebUI Template
 - template commit `6fbd1b018a45fe5b1bebba7aeb9142423eab47fb`;
 - WebUI Core `0.6.1`.
 
+The current post-Alpha5 vNext development line advances only its build input to template commit `619efa89588cc76d081aefb8669aa8c17b1b5ed9`, WebUI Core `0.6.2`, for the shared HUP-safe standalone Action server lifetime fix. The published Alpha5 provenance above remains unchanged.
+
 The shared core provides the standalone localhost browser transport, one-time bootstrap/session model, typed allowlisted API, capability-driven UI, bounded jobs/logs/inventory, action-state handling and the bounded embedded-host bootstrap used by compatible KsuWebUI hosts.
 
 ### Public upstream projects referenced by the shared WebUI core

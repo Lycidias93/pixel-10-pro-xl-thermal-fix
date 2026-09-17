@@ -3,8 +3,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-grep -Fqx 'core_version=0.6.1' webui.lock
-grep -Fqx 'template_commit=e7aa23ebb36be9b9075c66693d045a19413af8b1' webui.lock
+grep -Fqx 'core_version=0.6.2' webui.lock
+grep -Fqx 'template_commit=619efa89588cc76d081aefb8669aa8c17b1b5ed9' webui.lock
 grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
 grep -Fq 'adivenxnataly/KsuWebUI@20342d280a841f8b317603a7eefb1193a95ab626' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done
@@ -42,6 +42,10 @@ grep -Fq 'open|--verify|--print-url' tools/webui/launch.sh
 grep -Fq 'WEBUI_BOOTSTRAP_URL=' tools/webui/launch.sh
 grep -Fq 'bootstrap_transport=embedded_host_redirect' tools/webui/launch.sh
 grep -Fq 'RESULT: PIXEL_WEBUI_URL_DONE' tools/webui/launch.sh
+grep -Fq 'command -v nohup' tools/webui/launch.sh
+grep -Fq "trap '' HUP" tools/webui/launch.sh
+grep -Fq 'server_detach=hup_safe' tools/webui/launch.sh
+grep -Fq '[ -e "$MODDIR/skip_mount" ] && needs_materialize=1' action.sh
 
 # Root-module managers may normalize ZIP modes during staging. The consumer
 # must re-assert the executable bits required by the pinned WebUI template.
