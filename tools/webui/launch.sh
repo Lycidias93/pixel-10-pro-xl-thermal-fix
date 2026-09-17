@@ -87,6 +87,7 @@ chmod 0700 "$STATE_DIR" "$RUNTIME_DIR" 2>/dev/null || true
 if [ "$MODE" = "--verify" ]; then
   "$SERVER" -self-test -webroot "$MODDIR/webroot" -control "$CONTROL" -module-dir "$MODDIR" -state-dir "$STATE_DIR" -runtime-dir "$RUNTIME_DIR" -idle-timeout 15m -session-ttl 15m -job-timeout 30m -max-jobs 2 || fail server_self_test_failed
   echo "embedded_host_bootstrap=available"
+  echo "server_detach=hup_safe"
   echo "RESULT: PIXEL_WEBUI_VERIFY_DONE outcome=success command_exit_code=0 workflow_exit_code=0"
   exit 0
 fi
@@ -99,7 +100,33 @@ case "$TOKEN" in *[!0-9a-f]*|"") fail secure_token_generation_failed ;; esac
 printf '%s\n' "$TOKEN" > "$TOKEN_FILE"
 chmod 0600 "$TOKEN_FILE"
 
-"$SERVER" -listen 127.0.0.1:0 -webroot "$MODDIR/webroot" -control "$CONTROL" -module-dir "$MODDIR" -state-dir "$STATE_DIR" -runtime-dir "$RUNTIME_DIR" -token-file "$TOKEN_FILE" -state-file "$READY_FILE" -pid-file "$PID_FILE" -idle-timeout "${WEBUI_IDLE_TIMEOUT:-15m}" -session-ttl "${WEBUI_SESSION_TTL:-15m}" -job-timeout "${WEBUI_JOB_TIMEOUT:-30m}" -max-jobs "${WEBUI_MAX_JOBS:-2}" >> "$LOG_FILE" 2>&1 &
+set -- "$SERVER" \
+  -listen 127.0.0.1:0 \
+  -webroot "$MODDIR/webroot" \
+  -control "$CONTROL" \
+  -module-dir "$MODDIR" \
+  -state-dir "$STATE_DIR" \
+  -runtime-dir "$RUNTIME_DIR" \
+  -token-file "$TOKEN_FILE" \
+  -state-file "$READY_FILE" \
+  -pid-file "$PID_FILE" \
+  -idle-timeout "${WEBUI_IDLE_TIMEOUT:-15m}" \
+  -session-ttl "${WEBUI_SESSION_TTL:-15m}" \
+  -job-timeout "${WEBUI_JOB_TIMEOUT:-30m}" \
+  -max-jobs "${WEBUI_MAX_JOBS:-2}"
+
+# The root-manager Action shell may disappear immediately after Android accepts
+# the browser intent. Detach the loopback server from that shell's stdio/HUP
+# lifetime so Chrome can finish the one-time bootstrap after this script exits.
+# This mirrors shared WebUI Core 0.6.2 exactly at the lifecycle boundary.
+if command -v nohup >/dev/null 2>&1; then
+  nohup "$@" </dev/null >> "$LOG_FILE" 2>&1 &
+else
+  (
+    trap '' HUP
+    exec "$@" </dev/null >> "$LOG_FILE" 2>&1
+  ) &
+fi
 SERVER_PID=$!
 printf '%s\n' "$SERVER_PID" > "$PID_FILE"
 chmod 0600 "$PID_FILE"
@@ -127,6 +154,7 @@ if [ "$MODE" = "--print-url" ]; then
   echo "browser_port=$PORT"
   echo "server_scope=loopback_only"
   echo "bootstrap_transport=embedded_host_redirect"
+  echo "server_detach=hup_safe"
   echo "RESULT: PIXEL_WEBUI_URL_DONE outcome=success command_exit_code=0 workflow_exit_code=0"
   unset TOKEN URL
   exit 0
@@ -139,4 +167,5 @@ unset TOKEN URL
 echo "WebUI opened in the default browser."
 echo "browser_port=$PORT"
 echo "server_scope=loopback_only"
+echo "server_detach=hup_safe"
 echo "RESULT: PIXEL_WEBUI_OPEN_DONE outcome=success command_exit_code=0 workflow_exit_code=0"

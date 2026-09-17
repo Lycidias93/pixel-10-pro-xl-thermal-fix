@@ -207,7 +207,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins the post-Alpha5 mobile-input fix at template commit `e7aa23ebb36be9b9075c66693d045a19413af8b1`; the exact-candidate `grizzly` WebUI audit passed, while any public release/tag/update-channel publication remains a separate explicit release task.
+Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins WebUI Core `0.6.5` at template commit `056e91977dbd6f163a00720e975805a2edc5ab44`, adding the corrected HUP-safe standalone Action server lifetime contract while retaining the post-Alpha5 mobile-input fix; the exact-candidate `grizzly` WebUI audit passed, while any public release/tag/update-channel publication remains a separate explicit release task.
 
 That shared core documents clean adaptations or design references from:
 
