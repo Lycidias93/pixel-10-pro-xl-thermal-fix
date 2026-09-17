@@ -210,7 +210,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins WebUI Core `0.6.5` at template commit `056e91977dbd6f163a00720e975805a2edc5ab44`, adding the corrected HUP-safe standalone Action server lifetime contract while retaining the post-Alpha5 mobile-input fix; the exact-candidate `grizzly` WebUI audit passed, while any public release/tag/update-channel publication remains a separate explicit release task.
+Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins WebUI Core `0.6.6` at template commit `0d5c724711733b6f794790ef96d718e96c64c258`, adding the corrected HUP-safe standalone Action server lifetime contract plus Android/Toybox-safe WebUI dry-run boolean parsing while retaining the post-Alpha5 mobile-input fix; Alpha6 publication now requires a fresh exact-candidate device WebUI release audit after the Core 0.6.6 rebuild; PR #199 Pixel 11 recovery work remains separately hardware-gated.
 
 That shared core documents clean adaptations or design references from:
 
