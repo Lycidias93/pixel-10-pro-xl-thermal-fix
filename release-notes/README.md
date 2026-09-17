@@ -6,8 +6,7 @@ Release notes are repository documentation and are never included in the flashab
 - [2.0.1](2.0.1.md) — stable Dynamic V2 hotfix with August Stable KernelSU full post-reboot proof, August Canary verification, and July Stable Magisk regression coverage.
 
 ## V2 alpha line
-- [2.1.0-alpha.6](2.1.0-alpha.6.md) — current public prerelease with experimental Pixel 11 support, HUP-safe standalone WebUI and current vNext reliability fixes.
-- [2.1.0-alpha.5](2.1.0-alpha.5.md) — previous public prerelease with KsuWebUI embedded launch plus the complete user-facing Alpha4 WebUI and reliability changes.
+- [2.1.0-alpha.5](2.1.0-alpha.5.md) — current public prerelease with KsuWebUI embedded launch plus the complete user-facing Alpha4 WebUI and reliability changes.
 - [2.1.0-alpha.4](2.1.0-alpha.4.md) — superseded Alpha4 notes retained for history; its user-facing changes are included cumulatively in Alpha5.
 - [2.1.0-alpha.3](2.1.0-alpha.3.md) — previous public vNext prerelease with reboot-safe ZRAM Action enable/disable and the expanded single-device-family line.
 - [2.0.0-alpha.3-dev.21](2.0.0-alpha.3-dev.21.md) — historical public device-tested prerelease with Magisk resetprop-first LMKD behavior.
