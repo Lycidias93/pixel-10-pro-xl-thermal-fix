@@ -1,37 +1,33 @@
 # Pixel Thermal & Memory Control
 
-**Dynamic V2 root-module tuning for supported Pixel 10 / 10a and Pixel 9 / 9a devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
+**Dynamic V2 root-module tuning for supported Pixel 10 / 10a, Pixel 9 / 9a and experimental Pixel 11-series devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
 
-[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
+[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.6](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.6) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
 > [!IMPORTANT]
-> **2.0.4 remains the current stable release. 2.1.0-alpha.5 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha5 is for users who intentionally want the expanded Pixel 9 / 9a / 10a vNext line and the newer WebUI controls.
+> **2.0.4 remains the current stable release. 2.1.0-alpha.6 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha6 adds the experimental Pixel 11 line plus the latest WebUI and vNext reliability fixes.
 
 ## Current public releases
 
 | Channel | Version | Main purpose |
 |---|---|---|
 | Stable | `2.0.4` | Pixel 10-family Dynamic V2 stable line with current Thermal materialization hotfixes |
-| Prerelease | `2.1.0-alpha.5` | Standalone browser + KsuWebUI embedded WebUI, expanded Pixel 9 / 9a / 10a support line, clearer controls and current vNext reliability fixes |
+| Prerelease | `2.1.0-alpha.6` | Experimental Pixel 11 support, HUP-safe standalone browser WebUI, embedded KsuWebUI, expanded Pixel 9 / 9a / 10a support and current vNext reliability fixes |
 
 Stable and prerelease update channels are independent. Switching channel changes only the module update metadata path; it does not automatically flash a ZIP.
 
-## Alpha5 highlights
+## Alpha6 highlights
 
-Alpha5 includes all user-facing Alpha4 changes and adds embedded KsuWebUI support:
+Alpha6 includes the Alpha5 WebUI/device line and adds Pixel 11 support plus the latest runtime fixes:
 
-- **KsuWebUI can open the module WebUI directly inside its WebView**, without the previous `404 Not Found` / disconnected state.
-- **Magisk Action and KsuWebUI work in parallel.** Magisk Action opens the standalone WebUI in the default browser; KsuWebUI keeps it inside its own WebView. Both use the same guarded localhost API.
-- **Magisk Action opens a standalone browser WebUI** for normal control and status work.
-- **Active settings are shown directly** instead of requiring users to infer state from the old text dashboard.
-- **Polling, Thermal, ZRAM, Emerald Hill, LMKD and ZRAM page-cluster controls** are exposed through typed guarded actions.
-- **Inventory switching is fast and cache-first**, avoiding repeated deep validation just to change views.
-- **The intermittent `server_not_ready` Action startup failure is fixed.**
-- **The installer volume-key timeout hang is fixed.**
-- **Thermal numeric validation is locale-stable**, including devices using non-English system locales.
-- **Mobile layout, action cards, tabs and blocked/active states are clearer** on narrow screens.
+- **Experimental Pixel 11 / 11 Pro / 11 Pro XL / 11 Pro Fold support is included** with Stock-only polling and conservative Outdoor Safe policy.
+- **Magisk Action keeps the standalone browser WebUI alive after the Action shell exits**, fixing immediate `ERR_CONNECTION_REFUSED` failures.
+- **Stale `skip_mount` state is recovered safely** by guarded rematerialization and validation.
+- **Pixel 11 page-cluster `0` selections persist for guarded post-boot reapplication.**
+- **WebUI usability improves** with Silent/Verbose logging controls and mobile input handling that keeps confirmation fields visible above the Android keyboard.
+- Existing Pixel 10 / 10a and Pixel 9 / 9a vNext controls remain available.
 
-See [2.1.0-alpha.5 release notes](release-notes/2.1.0-alpha.5.md) for the cumulative public changelog.
+See [2.1.0-alpha.6 release notes](release-notes/2.1.0-alpha.6.md) for the current public prerelease changelog.
 
 ## Supported devices
 
@@ -46,9 +42,9 @@ Stable currently targets the Android 17 Pixel 10 family:
 | `frankel` | Pixel 10 |
 | `rango` | Pixel 10 Pro Fold |
 
-### Prerelease 2.1.0-alpha.5
+### Prerelease 2.1.0-alpha.6
 
-Alpha5 carries one Android 17 vNext line for:
+Alpha6 carries one Android 17 vNext line for:
 
 | Codename | Device | vNext policy |
 |---|---|---|
@@ -62,8 +58,14 @@ Alpha5 carries one Android 17 vNext line for:
 | `komodo` | Pixel 9 Pro XL | experimental, conservative Thermal policy |
 | `comet` | Pixel 9 Pro Fold | experimental, conservative Thermal policy |
 | `tegu` | Pixel 9a | experimental, conservative Thermal policy |
+| `cubs` | Pixel 11 | experimental, Stock polling only, Outdoor Safe up to +1 °C |
+| `grizzly` | Pixel 11 Pro | experimental, Stock polling only, Outdoor Safe up to +1 °C |
+| `kodiak` | Pixel 11 Pro XL | experimental, Stock polling only, Outdoor Safe up to +1 °C |
+| `yogi` | Pixel 11 Pro Fold | experimental, Stock polling only, Outdoor Safe up to +1 °C |
 
 Pixel 9-series and Pixel 10a targets remain intentionally conservative: local stock-layout validation is mandatory, pTune Thermal coexistence override is blocked on those experimental targets, and their current admitted Outdoor increase is capped at `+1 °C` where applicable.
+
+Pixel 11 targets are also experimental: Thermal polling remains Stock-only, Outdoor Safe is capped at `+1 °C`, pTune Thermal coexistence override stays blocked, and firmware transitions require reinstall while support remains experimental.
 
 ## What the module changes
 
@@ -96,9 +98,9 @@ The experimental LMKD option sets `ro.lmk.swap_free_low_percentage=1`, verifies 
 
 ### ZRAM page-cluster
 
-Alpha5 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation. If the device stock value is already `0`, leaving the action on Stock avoids taking ownership of an unnecessary runtime write.
+Alpha6 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation. If the device stock value is already `0`, leaving the action on Stock avoids taking ownership of an unnecessary runtime write.
 
-## Alpha5 WebUI
+## Alpha6 / vNext WebUI
 
 There are two supported launch paths:
 
@@ -135,13 +137,13 @@ Download the latest stable package from [v2.0.4](https://github.com/Lycidias93/p
 
 ### Prerelease
 
-Download the Alpha5 package from [v2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5), install it from the module manager, and reboot before judging the new runtime state.
+Download the Alpha6 package from [v2.1.0-alpha.6](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.6), install it from the module manager, and reboot before judging the new runtime state.
 
-Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` points to Alpha5.
+Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` points to Alpha6.
 
 ## Status and support
 
-After reboot, use the Alpha5 WebUI through either launch path to check the active feature state. For a support report, create a **Support Snapshot** from the module UI and include the device model, Android/build ID, module version, selected settings and exact reproduction steps.
+After reboot, use the Alpha6 WebUI through either launch path to check the active feature state. For a support report, create a **Support Snapshot** from the module UI and include the device model, Android/build ID, module version, selected settings and exact reproduction steps.
 
 The support snapshot is intended to collect bounded diagnostic evidence. Review any archive before posting it publicly.
 
@@ -149,6 +151,7 @@ The support snapshot is intended to collect bounded diagnostic evidence. Review 
 
 - Unknown or unsupported platforms fail closed for Thermal changes.
 - Experimental Pixel 9 / 9a / 10a targets use the stricter conservative vNext policy.
+- Experimental Pixel 11 targets remain on Stock Thermal polling with the conservative +1 °C Outdoor Safe envelope.
 - pTune conflict protection remains authoritative.
 - ZRAM, LMKD, Emerald Hill max lock and page-cluster experiments remain independently controlled and reversible where the platform permits it.
 - A failed validation or incompatible firmware transition does not justify blindly mounting an old Thermal overlay.
@@ -178,7 +181,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Alpha5 consumes the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, pinned to WebUI Core `0.6.1`.
+Alpha6 consumes the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, pinned to WebUI Core `0.6.5`.
 
 That shared core documents clean adaptations or design references from:
 
@@ -190,7 +193,7 @@ That shared core documents clean adaptations or design references from:
 - **AshBorn / AshReXcue / AshLooper** — design reference only for unsaved-change/session diagnostics; no GPL-covered implementation is imported;
 - **Adinata / KsuWebUI** — compatibility/design reference for its embedded WebView host; no GPL-covered KsuWebUI implementation is imported.
 
-The Alpha5 module also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
+The Alpha6 module also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
 
 ## License
 
