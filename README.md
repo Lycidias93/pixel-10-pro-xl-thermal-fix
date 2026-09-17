@@ -2,26 +2,29 @@
 
 **Dynamic V2 root-module tuning for supported Pixel 10 / 10a, Pixel 9 / 9a and experimental Pixel 11-series devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
 
-[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
+[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.6](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.6) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
 > [!IMPORTANT]
-> **2.0.4 remains the current stable release. 2.1.0-alpha.5 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha5 is for users who intentionally want the expanded Pixel 9 / 9a / 10a vNext line and the newer WebUI controls.
+> **2.0.4 remains the current stable release. 2.1.0-alpha.6 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha6 adds the experimental Pixel 11 line plus the latest WebUI and vNext reliability fixes.
 >
-> The current vNext development branch additionally carries **experimental Pixel 11-series code** and post-Alpha5 tester-feedback fixes. That work is not part of the already-published Alpha5 ZIP until a later prerelease is explicitly published.
+> Alpha6 now includes the previously development-only **experimental Pixel 11-series support** and the post-Alpha5 tester-feedback fixes.
 
 ## Current public releases
 
 | Channel | Version | Main purpose |
 |---|---|---|
 | Stable | `2.0.4` | Pixel 10-family Dynamic V2 stable line with current Thermal materialization hotfixes |
-| Prerelease | `2.1.0-alpha.5` | Standalone browser + KsuWebUI embedded WebUI, expanded Pixel 9 / 9a / 10a support line, clearer controls and current vNext reliability fixes |
+| Prerelease | `2.1.0-alpha.6` | Experimental Pixel 11 support, HUP-safe standalone browser WebUI, embedded KsuWebUI, expanded Pixel 9 / 9a / 10a support and current vNext reliability fixes |
 
 Stable and prerelease update channels are independent. Switching channel changes only the module update metadata path; it does not automatically flash a ZIP.
 
-## Alpha5 highlights
+## Alpha6 highlights
 
-Alpha5 includes all user-facing Alpha4 changes and adds embedded KsuWebUI support:
+Alpha6 includes the Alpha5 WebUI/device line and adds Pixel 11 support plus the latest runtime fixes:
 
+- **Experimental Pixel 11 / 11 Pro / 11 Pro XL / 11 Pro Fold support is included** with Stock-only polling and conservative Outdoor Safe policy.
+- **Magisk Action browser launch is HUP-safe.** The standalone loopback server remains alive after the Action shell exits, fixing immediate `ERR_CONNECTION_REFUSED`.
+- **Stale `skip_mount` recovery rematerializes validated Thermal/Polling state** instead of leaving intended changes pending behind an old marker.
 - **KsuWebUI can open the module WebUI directly inside its WebView**, without the previous `404 Not Found` / disconnected state.
 - **Magisk Action and KsuWebUI work in parallel.** Magisk Action opens the standalone WebUI in the default browser; KsuWebUI keeps it inside its own WebView. Both use the same guarded localhost API.
 - **Magisk Action opens a standalone browser WebUI** for normal control and status work.
@@ -33,7 +36,7 @@ Alpha5 includes all user-facing Alpha4 changes and adds embedded KsuWebUI suppor
 - **Thermal numeric validation is locale-stable**, including devices using non-English system locales.
 - **Mobile layout, action cards, tabs and blocked/active states are clearer** on narrow screens.
 
-See [2.1.0-alpha.5 release notes](release-notes/2.1.0-alpha.5.md) for the cumulative public changelog.
+See [2.1.0-alpha.6 release notes](release-notes/2.1.0-alpha.6.md) for the current public prerelease changelog.
 
 ## Supported devices
 
@@ -50,7 +53,7 @@ Stable currently targets the Android 17 Pixel 10 family:
 
 ### Public prerelease 2.1.0-alpha.5
 
-The published Alpha5 package carries one Android 17 vNext line for:
+The published Alpha6 package carries one Android 17 vNext line for:
 
 | Codename | Device | vNext policy |
 |---|---|---|
@@ -67,7 +70,7 @@ The published Alpha5 package carries one Android 17 vNext line for:
 
 Pixel 9-series and Pixel 10a targets remain intentionally conservative: local stock-layout validation is mandatory, pTune Thermal coexistence override is blocked on those experimental targets, and their current admitted Outdoor increase is capped at `+1 °C` where applicable.
 
-### vNext development: Pixel 11 series
+### Alpha6: Pixel 11 series
 
 The current vNext development code admits these Android 17 targets for **experimental device testing**:
 
@@ -84,7 +87,7 @@ The initial Tensor G6 safety envelope is intentionally narrow. Module 5-second p
 
 The available Pixel 11 Pro stock Thermal archive established the graph-layout change and confirmed that stock still contains 300-second polling values. Separately, the exact PR #194 candidate (`461b150d6ebfc59dbb905fb0f29070c010a938a4b23dd490210e65a7ef83ff3f`) completed post-reboot runtime acceptance on Pixel 11 Pro / `grizzly`, Android 17 build `CD1A.260714.001.A9`: Bootguard reported `full_pass`, vNext readiness reached `runtime_verified`, the validated 10-file G6 overlay remained active with 35/35 stock `PollingDelay=300000` values and 0 `5000` values, and the final ZRAM + `page-cluster=0` reboot test reconciled the persisted zero state after verified boot. See [the vNext device validation matrix](docs/vnext-device-test-matrix.md).
 
-Current post-Alpha5 vNext state keeps all Pixel 11 polling values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. The exact-head `grizzly` retest passed these feedback gates; faster polling and further Thermal tuning remain separate later-stage work.
+Alpha6 keeps all Pixel 11 polling values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. The exact-head `grizzly` retest passed these feedback gates; faster polling and further Thermal tuning remain separate later-stage work.
 
 ## What the module changes
 
@@ -121,7 +124,7 @@ Published Alpha5 exposes the guarded experimental `page-cluster 0` action throug
 
 Current vNext development additionally persists the explicit zero selection in private module configuration. After a reboot, the module waits for Bootguard verification and active ZRAM before reapplying `0`; choosing Stock clears the persisted zero request and restores the same-boot baseline when the module owns it. The write remains a guarded ZRAM experiment, not an unconditional early-boot sysctl mutation. This reboot-persistence path passed the final `grizzly` hardware retest after PR #194 candidate installation.
 
-## Alpha5 / vNext WebUI
+## Alpha6 / vNext WebUI
 
 There are two supported launch paths:
 
@@ -160,9 +163,9 @@ Download the latest stable package from [v2.0.4](https://github.com/Lycidias93/p
 
 ### Prerelease
 
-Download the Alpha5 package from [v2.1.0-alpha.5](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.5), install it from the module manager, and reboot before judging the new runtime state.
+Download the Alpha6 package from [v2.1.0-alpha.6](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.6), install it from the module manager, and reboot before judging the new runtime state.
 
-Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` points to Alpha5. Pixel 11 development support and the post-Alpha5 tester-feedback fixes are not delivered by that already-published update metadata until a later prerelease is explicitly published.
+Users already on the prerelease channel can use the normal module update flow after `update-prerelease.json` is promoted to Alpha6. Pixel 11 support and the post-Alpha5 reliability fixes are included in this prerelease.
 
 ## Status and support
 
