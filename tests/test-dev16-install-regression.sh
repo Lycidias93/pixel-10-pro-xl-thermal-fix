@@ -4,6 +4,8 @@ set -euo pipefail
 root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
 layout="$root/tools/zram/materialize-zram-choice.sh"
 install_zram="$root/tools/zram/install-zram.sh"
+thermal_install_overlay="$root/tools/core/install-thermal-overlay.sh"
+customize="$root/customize.sh"
 collector="$root/tools/bootguard/collect-debug-v3.sh"
 menu_cycle="$root/tools/menu/menu-cycle.sh"
 module_prop="$root/module.prop"
@@ -11,7 +13,7 @@ module_prop="$root/module.prop"
 fail() { printf 'FAIL %s\n' "$*"; exit 1; }
 pass() { printf 'PASS %s\n' "$*"; }
 
-for file in "$layout" "$install_zram" "$collector" "$menu_cycle"; do
+for file in "$layout" "$install_zram" "$thermal_install_overlay" "$customize" "$collector" "$menu_cycle"; do
   bash -n "$file" || fail "syntax file=$file"
 done
 pass dev16_shell_syntax
@@ -26,6 +28,16 @@ fi
 grep -Fq 'if ! command -v timeout >/dev/null 2>&1; then echo timeout; return 0; fi' "$menu_cycle" || fail menu_timeout_unavailable_fail_safe_missing
 pass installer_volume_key_timeout_is_bounded
 
+# Production regression from Harish / grizzly: stock-no-overlay is valid even
+# when ZRAM 100% keeps only fstab.zram.100p in system/vendor/etc.
+grep -Fq 'stock|hysteresis|max-release-step|combined' "$thermal_install_overlay" || fail pixel11_split_recovery_install_modes_missing
+grep -Fq 'THERMAL_MATERIALIZATION_MODE="$patch_materialization"' "$thermal_install_overlay" || fail installer_materialization_mode_not_propagated
+grep -Fq 'thermal_verify_materialized_layout || thermal_abort' "$customize" || fail customize_materialization_mode_verifier_missing
+if grep -Fq 'for f in $THERMAL_LAYOUT_FILES' "$customize"; then
+  fail customize_still_requires_thermal_files_unconditionally
+fi
+pass installer_stock_no_overlay_contract_bound
+
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 id="pixel-10-pro-xl-thermal-fix"
@@ -34,6 +46,29 @@ stage="$adb_root/modules_update/$id"
 config="$tmp/config/config.env"
 mkdir -p "$stage/tools/zram" "$stage/system/vendor/etc" "$tmp/config" "$tmp/bin"
 cp "$layout" "$stage/tools/zram/materialize-zram-choice.sh"
+
+verify_mod="$tmp/verify-mod"
+mkdir -p "$verify_mod/system/vendor/etc"
+printf '%s\n' zram-only > "$verify_mod/system/vendor/etc/fstab.zram.100p"
+thermal_abort() { printf 'fixture_abort %s\n' "$*" >&2; return 1; }
+. "$thermal_install_overlay"
+MODPATH="$verify_mod"
+THERMAL_LAYOUT_FILES='thermal_info_config.json thermal_info_config_common.json'
+THERMAL_MATERIALIZATION_MODE=stock-no-overlay
+thermal_verify_materialized_layout || fail stock_no_overlay_rejected_zram_only_directory
+grep -Fxq zram-only "$verify_mod/system/vendor/etc/fstab.zram.100p" || fail stock_no_overlay_removed_zram_fstab
+printf '%s\n' stale-thermal > "$verify_mod/system/vendor/etc/thermal_info_config.json"
+if thermal_verify_materialized_layout >/dev/null 2>&1; then
+  fail stock_no_overlay_accepted_generated_thermal_file
+fi
+rm -f "$verify_mod/system/vendor/etc/thermal_info_config.json"
+THERMAL_MATERIALIZATION_MODE=overlay
+printf '%s\n' active > "$verify_mod/system/vendor/etc/thermal_info_config.json"
+printf '%s\n' active > "$verify_mod/system/vendor/etc/thermal_info_config_common.json"
+thermal_verify_materialized_layout || fail overlay_mode_rejected_complete_thermal_layout
+grep -Fxq zram-only "$verify_mod/system/vendor/etc/fstab.zram.100p" || fail overlay_verifier_mutated_zram_fstab
+pass installer_materialization_verifier_preserves_zram_only_stock_overlay
+
 printf '%s\n' template > "$stage/tools/zram/fstab.zram.100p"
 printf '%s\n' template > "$stage/system/vendor/etc/fstab.zram.100p"
 

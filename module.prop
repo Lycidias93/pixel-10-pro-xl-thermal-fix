@@ -3,5 +3,5 @@ name=Pixel Thermal & Memory Control
 version=2.1.0-alpha.6
 versionCode=1016256
 author=Lycidias93, marx161, Codecity001
-description=vNext alpha.6 prerelease: experimental Pixel 11-series support, HUP-safe standalone WebUI, guarded G6 stock polling, persistent memory controls, stock-derived Thermal profiles, and ZRAM 100%.
+description=vNext alpha.6 integration: experimental Pixel 11-series support with independent HotHysteresis and MaxReleaseStep recovery toggles, HUP-safe standalone WebUI, stock-only G6 polling/timing, stock-no-overlay handling, persistent memory controls, stock-derived Thermal profiles, and ZRAM 100%.
 updateJson=https://raw.githubusercontent.com/Lycidias93/pixel-10-pro-xl-thermal-fix/main/update-prerelease.json

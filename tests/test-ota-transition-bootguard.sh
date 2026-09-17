@@ -106,8 +106,10 @@ fi
 
 grep -Fq 'state_set build_guard_mode dynamic_local_validation' "$auto_switch"
 grep -Fq 'unsupported_platform' "$auto_switch"
-grep -Fq 'PLATFORM_SUPPORTED=' "$compat"
-grep -Fq 'BUILD_EVIDENCE=' "$compat"
+grep -Fq 'compat-check-vnext.sh' "$compat"
+grep -Fq 'exec sh "$VNEXT" "$@"' "$compat"
+grep -Fq 'PLATFORM_SUPPORTED=' "$repo_root/tools/bootguard/compat-check-vnext.sh"
+grep -Fq 'BUILD_EVIDENCE=' "$repo_root/tools/bootguard/compat-check-vnext.sh"
 grep -Fq 'PLATFORM_SUPPORTED=' "$status_lib"
 if grep -R -nE 'unsupported_exact_build|exact_device_android_build|EXACT_BUILD_SUPPORTED=' \
   "$auto_switch" "$compat" "$status_lib" "$post_fs"; then
