@@ -481,13 +481,24 @@ cfg_set INSTALL_OPTION_FAMILY "$DEVICE_FAMILY"
 record_ptune_presence
 
 if [ "$DEVICE_FAMILY" = pixel11 ]; then
-  recovery_index=3
-  mc_cycle4 "Recovery Control" "Stock" "HotHysteresis" "MaxReleaseStep" "Combined" "$recovery_index"
-  case "$MC_INDEX" in
-    0) apply_pixel11_hysteresis stock ;;
-    1) apply_pixel11_hysteresis hysteresis ;;
-    2) apply_pixel11_hysteresis max-release-step ;;
-    *) apply_pixel11_hysteresis combined ;;
+  recovery_hys_index=1
+  recovery_mrs_index=1
+  case "$(cfg_get LAST_PIXEL11_HYSTERESIS_MODE)" in
+    stock) recovery_hys_index=0; recovery_mrs_index=0 ;;
+    hysteresis) recovery_hys_index=1; recovery_mrs_index=0 ;;
+    max-release-step) recovery_hys_index=0; recovery_mrs_index=1 ;;
+    mod|combined|"") recovery_hys_index=1; recovery_mrs_index=1 ;;
+    *) recovery_hys_index=0; recovery_mrs_index=0 ;;
+  esac
+  mc_cycle2 "Recovery · HotHysteresis" "Disabled" "Enabled" "$recovery_hys_index"
+  [ "$MC_INDEX" = 1 ] && recovery_hys=1 || recovery_hys=0
+  mc_cycle2 "Recovery · MaxReleaseStep" "Disabled" "Enabled" "$recovery_mrs_index"
+  [ "$MC_INDEX" = 1 ] && recovery_mrs=1 || recovery_mrs=0
+  case "$recovery_hys:$recovery_mrs" in
+    0:0) apply_pixel11_hysteresis stock ;;
+    1:0) apply_pixel11_hysteresis hysteresis ;;
+    0:1) apply_pixel11_hysteresis max-release-step ;;
+    1:1) apply_pixel11_hysteresis combined ;;
   esac
 
   thermal_index=0

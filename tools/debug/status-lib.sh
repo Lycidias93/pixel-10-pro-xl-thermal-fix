@@ -93,7 +93,7 @@ status_collect() {
   ;; esac
   recovery_mode="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
   case "$recovery_mode" in
-    mod|combined) recovery_mode=combined; recovery_icon="$OK"; recovery_display=Combined ;;
+    mod|combined) recovery_mode=combined; recovery_icon="$OK"; recovery_display="HotHysteresis + MaxReleaseStep" ;;
     hysteresis) recovery_icon="$OK"; recovery_display=HotHysteresis ;;
     max-release-step) recovery_icon="$OK"; recovery_display=MaxReleaseStep ;;
     stock|"") recovery_mode=stock; recovery_icon="$OFF"; recovery_display=Stock ;;

@@ -295,15 +295,27 @@ set_pixel11_recovery() {
     return 0
   fi
   cur="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
-  case "$cur" in mod|combined) idx=3 ;; hysteresis) idx=1 ;; max-release-step) idx=2 ;; *) idx=0 ;; esac
-  ui_menu5 "Recovery Control" "Stock" "HotHysteresis" "MaxReleaseStep" "Combined" "Back" "$idx"
+  hys=0; mrs=0
+  case "$cur" in
+    hysteresis) hys=1 ;;
+    max-release-step) mrs=1 ;;
+    mod|combined) hys=1; mrs=1 ;;
+  esac
+  [ "$hys" = 1 ] && hys_label="HotHysteresis · Enabled" || hys_label="HotHysteresis · Disabled"
+  [ "$mrs" = 1 ] && mrs_label="MaxReleaseStep · Enabled" || mrs_label="MaxReleaseStep · Disabled"
+  ui_menu4 "Recovery Control" "$hys_label" "$mrs_label" "Reset both to Stock" "Back" 0
   [ "$UI_REASON" = "timeout" ] && return 0
   case "$UI_INDEX" in
-    0) requested=stock ;;
-    1) requested=hysteresis ;;
-    2) requested=max-release-step ;;
-    3) requested=combined ;;
+    0) [ "$hys" = 1 ] && hys=0 || hys=1 ;;
+    1) [ "$mrs" = 1 ] && mrs=0 || mrs=1 ;;
+    2) hys=0; mrs=0 ;;
     *) msg "Back."; return 0 ;;
+  esac
+  case "$hys:$mrs" in
+    0:0) requested=stock ;;
+    1:0) requested=hysteresis ;;
+    0:1) requested=max-release-step ;;
+    1:1) requested=combined ;;
   esac
   current_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   case "$current_profile" in stock|outdoor-safe) ;; *) current_profile=stock ;; esac
@@ -318,7 +330,7 @@ set_pixel11_recovery() {
     cfg_unset LAST_PIXEL11_PASSIVE_MODE
     set_thermal_choice "$current_profile"
     cfg_set THERMAL_SETTINGS_MODE action_settings
-    msg "- Pixel 11 recovery: $requested"
+    msg "- Pixel 11 recovery: HotHysteresis=$hys MaxReleaseStep=$mrs"
   fi
   refresh_status; show_status; msg "Back to Settings."
 }

@@ -15,7 +15,7 @@ This prevents Pixel 11-specific Thermal schema changes from widening or destabil
 
 ## Pixel 11 option set
 
-- Recovery Mode: Stock / HotHysteresis / MaxReleaseStep / Combined. Legacy `mod` normalizes to `combined`; hardware acceptance must test the two recovery components separately before Combined.
+- Recovery controls are two independent toggles: HotHysteresis and MaxReleaseStep. The internal effective states remain `stock|hysteresis|max-release-step|combined` for patching and legacy compatibility, but `Combined` is no longer a separate user-facing option; legacy `mod` still normalizes to the derived `combined` state.
 - Thermal Profile: Stock / Outdoor Safe only under the existing +1 C runtime cap; Test-1 default Stock.
 - ZRAM 100% + Emerald Hill modes remain available; Test-1 default disabled to isolate Thermal recovery.
 - ZRAM page-cluster is a separate persisted ZRAM sub-choice: Stock or guarded EXPERIMENTAL 0. Install-time selection records desired state only; runtime 0 remains post-Bootguard/reconcile gated.
@@ -104,12 +104,12 @@ Four-mode acceptance sequence:
 1. **Stock** — Thermal Stock, ZRAM disabled/page-cluster Stock; capture the baseline install/reboot and benchmark, and verify no generated `system/vendor/etc` thermal overlay path remains.
 2. **HotHysteresis** — only HotHysteresis recovery active; verify exactly 15 admitted hysteresis slots change and all 32 MaxReleaseStep bindings remain `1`; capture benchmark/recovery observations.
 3. **MaxReleaseStep** — only MaxReleaseStep recovery active; verify all seven hysteresis arrays remain stock and exactly 32 admitted bindings change `1 -> 2`; capture benchmark/recovery observations.
-4. **Combined** — both recovery changes active; verify exactly 15 + 32 admitted changes and compare against Stock plus both isolated modes.
+4. **Both toggles enabled** — derived internal `combined` state; verify exactly 15 + 32 admitted changes and compare against Stock plus both isolated states.
 5. **Thermal threshold round-trip** — from the accepted recovery mode, switch Stock -> Outdoor Safe +1 C -> Stock through Action/WebUI and prove only exact master `VIRTUAL-SKIN` changes.
 
 For all four recovery modes, classic PollingDelay and PassiveDelay must remain Stock. Keep ZRAM disabled for the recovery benchmarks, so page-cluster remains Stock. The standalone WebUI must launch without capability-schema failure, and Action/WebUI/manager surfaces must report the same canonical Recovery mode.
 
-Required evidence before integration: exact candidate identity/hash; exact-head `grizzly` install + reboot; module/Bootguard/readiness validity; active G6 overlay; exact per-mode recovery-field inventory; classic PollingDelay and PassiveDelay unchanged; benchmark/recovery observations for Stock, HotHysteresis, MaxReleaseStep and Combined; standalone WebUI plus family-specific Action/WebUI/manager surfaces verified; Pixel 11 Stock/+1 threshold round-trip proven on exact `VIRTUAL-SKIN`; and no safety/protection regressions.
+Required evidence before integration: exact candidate identity/hash; exact-head `grizzly` install + reboot; module/Bootguard/readiness validity; active G6 overlay; exact per-mode recovery-field inventory; classic PollingDelay and PassiveDelay unchanged; benchmark/recovery observations for Stock, HotHysteresis-only, MaxReleaseStep-only and both toggles enabled; standalone WebUI plus family-specific Action/WebUI/manager surfaces verified; Pixel 11 Stock/+1 threshold round-trip proven on exact `VIRTUAL-SKIN`; and no safety/protection regressions.
 
 Harish's real-stock-schema review corrected the original synthetic fixture: on the accepted G6 layout, MaxReleaseStep is nested under BindedCdevInfo/Profile bindings rather than being one top-level sensor property. The five target sensors contain 32 admitted bindings in total (6/6/9/6/5), while VIRTUAL-SKIN-SOC-EXTREME has five separate bindings that remain stock. The corrected unit fixture mirrors that nesting and the fail-closed inventory now requires all 32 target bindings.
 

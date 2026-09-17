@@ -20,7 +20,7 @@ grep -Fq 'dynamic_stock_thermal_validation' bin/module-control
 grep -Fq '"name":"recovery-stock"' bin/module-control
 grep -Fq '"name":"recovery-hysteresis"' bin/module-control
 grep -Fq '"name":"recovery-max-release-step"' bin/module-control
-grep -Fq '"name":"recovery-combined"' bin/module-control
+! sed -n '/^print_capabilities() {/,/^}/p' bin/module-control | grep -Fq '"name":"recovery-combined"'
 grep -Fq '"name":"thermal-stock"' bin/module-control
 grep -Fq '"name":"thermal-outdoor-safe"' bin/module-control
 grep -Fq '"name":"page-cluster-stock"' bin/module-control
@@ -87,7 +87,7 @@ status_body="$(sed -n '/^print_status() {/,/^}/p' bin/module-control)"
 printf '%s\n' "$status_body" | grep -Fq 'ensure_status_cache'
 printf '%s\n' "$status_body" | grep -Fq '"action_state":{"active"'
 printf '%s\n' "$status_body" | grep -Fq 'add_active thermal-outdoor-extended'
-printf '%s\n' "$status_body" | grep -Fq 'add_active recovery-combined'
+printf '%s\n' "$status_body" | grep -Fq 'combined) add_active recovery-hysteresis; add_active recovery-max-release-step'
 printf '%s\n' "$status_body" | grep -Fq 'add_active thermal-outdoor-safe'
 printf '%s\n' "$status_body" | grep -Fq "add_blocked thermal-outdoor-plus 'Pixel 11 family is capped at Outdoor Safe +1°C.'"
 printf '%s\n' "$status_body" | grep -Fq 'add_active page-cluster-zero'

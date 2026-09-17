@@ -299,6 +299,26 @@ current_recovery() {
   esac
 }
 
+toggle_recovery_component() {
+  mode="$1"; component="$2"; hys=0; mrs=0
+  case "$mode" in
+    hysteresis) hys=1 ;;
+    max-release-step) mrs=1 ;;
+    combined|mod) hys=1; mrs=1 ;;
+  esac
+  case "$component" in
+    hysteresis) [ "$hys" = 1 ] && hys=0 || hys=1 ;;
+    max-release-step) [ "$mrs" = 1 ] && mrs=0 || mrs=1 ;;
+    *) return 64 ;;
+  esac
+  case "$hys:$mrs" in
+    0:0) printf '%s\n' stock ;;
+    1:0) printf '%s\n' hysteresis ;;
+    0:1) printf '%s\n' max-release-step ;;
+    1:1) printf '%s\n' combined ;;
+  esac
+}
+
 current_thermal_profile() {
   value="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
   [ -n "$value" ] || value=stock
@@ -325,11 +345,11 @@ case "$command" in
   ;;
   recovery-hysteresis)
     [ "$device_family" = pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=recovery_pixel11_only'; exit 2; }
-    apply_thermal stock "$(current_thermal_profile)" hysteresis
+    apply_thermal stock "$(current_thermal_profile)" "$(toggle_recovery_component "$(current_recovery)" hysteresis)"
   ;;
   recovery-max-release-step)
     [ "$device_family" = pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=recovery_pixel11_only'; exit 2; }
-    apply_thermal stock "$(current_thermal_profile)" max-release-step
+    apply_thermal stock "$(current_thermal_profile)" "$(toggle_recovery_component "$(current_recovery)" max-release-step)"
   ;;
   recovery-combined|recovery-mod)
     [ "$device_family" = pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=recovery_pixel11_only'; exit 2; }
