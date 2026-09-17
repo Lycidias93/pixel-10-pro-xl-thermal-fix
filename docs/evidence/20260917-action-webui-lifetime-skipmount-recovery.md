@@ -10,7 +10,7 @@ A second independent Alpha5 issue was verified before that reboot: stale `skip_m
 
 ## Root cause and shared-core classification
 
-The browser lifetime defect is generic WebUI lifecycle behavior. Initial staging against shared Core `0.6.2` exposed a second defect in the generic contract: the launcher correctly inherited `SIGHUP=ignore`, but the Go server subscribed to `SIGHUP` with `signal.Notify`, re-enabling delivery and shutting down on HUP. Shared template Core `0.6.5`, commit `dc95d5821fdea323efaf8c4ddc459a0644f8e66d`, removes SIGHUP from the server shutdown subscription and adds runtime HUP-survival verification. This consumer therefore advances its exact pin from Core `0.6.1` to `0.6.5` and mirrors the detached launcher lifecycle boundary in `tools/webui/launch.sh`.
+The browser lifetime defect is generic WebUI lifecycle behavior. Initial staging against shared Core `0.6.2` exposed a second defect in the generic contract: the launcher correctly inherited `SIGHUP=ignore`, but the Go server subscribed to `SIGHUP` with `signal.Notify`, re-enabling delivery and shutting down on HUP. Shared template Core `0.6.5`, commit `056e91977dbd6f163a00720e975805a2edc5ab44`, removes SIGHUP from the server shutdown subscription and adds runtime HUP-survival verification. This consumer therefore advances its exact pin from Core `0.6.1` to `0.6.5` and mirrors the detached launcher lifecycle boundary in `tools/webui/launch.sh`.
 
 The stale `skip_mount` recovery is module-specific and is fixed in `action.sh` by making an existing module `skip_mount` marker force guarded rematerialization.
 
@@ -29,7 +29,7 @@ A non-installed local test candidate was built successfully:
 - bytes: `2985299`
 - entries: `84`
 - SHA-256: `79fabd76408562ed492801f3c80e8201f420f0191e8363e3e43cf20692161e3a`
-- WebUI pin: `dc95d5821fdea323efaf8c4ddc459a0644f8e66d`, Core `0.6.5`
+- WebUI pin: `056e91977dbd6f163a00720e975805a2edc5ab44`, Core `0.6.5`
 
 ## Installation boundary
 
