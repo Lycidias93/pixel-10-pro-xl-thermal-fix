@@ -2,6 +2,8 @@
 
 **Dynamic V2 root-module tuning for supported Pixel 10 / 10a, Pixel 9 / 9a and experimental Pixel 11-series devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
 
+Dynamic V2 is the active source architecture for the current module line.
+
 [Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.6](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.6) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
 > [!IMPORTANT]
