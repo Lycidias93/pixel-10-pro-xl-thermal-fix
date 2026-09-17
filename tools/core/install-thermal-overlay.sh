@@ -1,5 +1,26 @@
 #!/system/bin/sh
 
+thermal_verify_materialized_layout() {
+  _thermal_mode="${THERMAL_MATERIALIZATION_MODE:-overlay}"
+  case "$_thermal_mode" in
+    overlay)
+      for _thermal_file in $THERMAL_LAYOUT_FILES; do
+        [ -s "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Failed to materialize active file: $_thermal_file"; return 1; }
+      done
+    ;;
+    stock-no-overlay)
+      for _thermal_file in $THERMAL_LAYOUT_FILES; do
+        [ ! -e "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Unexpected thermal overlay file in stock-no-overlay mode: $_thermal_file"; return 1; }
+      done
+    ;;
+    *)
+      thermal_abort "! Invalid thermal materialization mode: $_thermal_mode"
+      return 1
+    ;;
+  esac
+  return 0
+}
+
 thermal_install_overlay() {
   [ -n "${MODPATH:-}" ] || thermal_abort "! MODPATH missing for overlay install"
   [ -n "${device:-}" ] || thermal_abort "! device missing for overlay install"
@@ -72,19 +93,27 @@ thermal_install_overlay() {
   PIXEL11_HYSTERESIS_MODE=stock
   if thermal_layout_is_g6_device "$device"; then
     PIXEL11_HYSTERESIS_MODE="$(config_get PIXEL11_HYSTERESIS_MODE)"
-    case "$PIXEL11_HYSTERESIS_MODE" in stock|mod) ;; *)
-      PIXEL11_HYSTERESIS_MODE=mod
-      config_set PIXEL11_HYSTERESIS_MODE mod
-      config_set LAST_PIXEL11_HYSTERESIS_MODE mod
-      ui_print "! Invalid Pixel 11 recovery selection; fallback: mod"
-    ;; esac
+    case "$PIXEL11_HYSTERESIS_MODE" in
+      stock|hysteresis|max-release-step|combined) ;;
+      mod)
+        PIXEL11_HYSTERESIS_MODE=combined
+        config_set PIXEL11_HYSTERESIS_MODE combined
+        config_set LAST_PIXEL11_HYSTERESIS_MODE combined
+      ;;
+      *)
+        PIXEL11_HYSTERESIS_MODE=combined
+        config_set PIXEL11_HYSTERESIS_MODE combined
+        config_set LAST_PIXEL11_HYSTERESIS_MODE combined
+        ui_print "! Invalid Pixel 11 recovery selection; fallback: combined"
+      ;;
+    esac
 
   fi
 
   ui_print "- Install selections already confirmed"
   ui_print "- Polling mode: $THERMAL_POLLING_MODE"
   if thermal_layout_is_g6_device "$device"; then
-    ui_print "- HotHysteresis + MaxReleaseStep: $PIXEL11_HYSTERESIS_MODE"
+    ui_print "- Recovery control: $PIXEL11_HYSTERESIS_MODE"
   fi
   ui_print "- Thermal profile: $THERMAL_OUTDOOR_PROFILE"
   ui_print "- Materializing and validating thermal overlay..."
@@ -103,6 +132,7 @@ thermal_install_overlay() {
     patch_values="$(sed -n 's/^PATCH_THERMAL_DELTA_THRESHOLD_VALUES=//p' "$patch_output" | tail -n 1)"
     patch_hys="$(sed -n 's/^PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=//p' "$patch_output" | tail -n 1)"
     patch_mrs="$(sed -n 's/^PATCH_THERMAL_PIXEL11_MRS_CHANGES=//p' "$patch_output" | tail -n 1)"
+    patch_materialization="$(sed -n 's/^PATCH_THERMAL_MATERIALIZATION=//p' "$patch_output" | tail -n 1)"
     [ -n "$patch_source" ] || patch_source=unknown
     [ -n "$patch_replacements" ] || patch_replacements=unknown
     [ -n "$patch_delta" ] || patch_delta=unknown
@@ -111,6 +141,8 @@ thermal_install_overlay() {
     [ -n "$patch_values" ] || patch_values=unknown
     [ -n "$patch_hys" ] || patch_hys=0
     [ -n "$patch_mrs" ] || patch_mrs=0
+    case "$patch_materialization" in overlay|stock-no-overlay) ;; *) thermal_abort "! Invalid Thermal materialization result: ${patch_materialization:-missing}"; return 1 ;; esac
+    THERMAL_MATERIALIZATION_MODE="$patch_materialization"
     ui_print "- Thermal validation: PASS"
     ui_print "- Polling changes: $patch_replacements/$patch_source"
     if thermal_layout_is_g6_device "$device"; then
@@ -118,6 +150,7 @@ thermal_install_overlay() {
     fi
     ui_print "- Outdoor delta: +${patch_delta} C"
     ui_print "- Scope: $patch_files files, $patch_zones zones, $patch_values values"
+    ui_print "- Materialization: $THERMAL_MATERIALIZATION_MODE"
     ui_print "- Validation state: canonical"
     rm -f "$patch_output" 2>/dev/null || true
   else
