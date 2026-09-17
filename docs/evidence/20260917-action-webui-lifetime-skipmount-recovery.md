@@ -10,13 +10,13 @@ A second independent Alpha5 issue was verified before that reboot: stale `skip_m
 
 ## Root cause and shared-core classification
 
-The browser lifetime defect is generic WebUI lifecycle behavior. Shared template WebUI Core `0.6.2`, commit `619efa89588cc76d081aefb8669aa8c17b1b5ed9`, already contains the canonical HUP-safe Action-server detach contract. This consumer therefore advances its exact pin from Core `0.6.1` to `0.6.2` and mirrors that lifecycle boundary in `tools/webui/launch.sh`.
+The browser lifetime defect is generic WebUI lifecycle behavior. Initial staging against shared Core `0.6.2` exposed a second defect in the generic contract: the launcher correctly inherited `SIGHUP=ignore`, but the Go server subscribed to `SIGHUP` with `signal.Notify`, re-enabling delivery and shutting down on HUP. Shared template Core `0.6.5`, commit `dc95d5821fdea323efaf8c4ddc459a0644f8e66d`, removes SIGHUP from the server shutdown subscription and adds runtime HUP-survival verification. This consumer therefore advances its exact pin from Core `0.6.1` to `0.6.5` and mirrors the detached launcher lifecycle boundary in `tools/webui/launch.sh`.
 
 The stale `skip_mount` recovery is module-specific and is fixed in `action.sh` by making an existing module `skip_mount` marker force guarded rematerialization.
 
 ## Repository verification
 
-- Shared Core `0.6.2` `scripts/verify.sh`: PASS, including `WEBUI_CORE_V062_ACTION_BROWSER_LIFETIME_CONTRACT_PASS`.
+- Shared Core `0.6.5` `scripts/verify.sh`: PASS, including `WEBUI_SERVER_HUP_SURVIVAL_PASS` and the existing Action-browser lifetime contract.
 - Consumer shell syntax: PASS.
 - `tests/test-webui-integration.sh`: PASS.
 - `tests/test-feedback-package-contract.sh`: PASS.
@@ -25,11 +25,11 @@ The stale `skip_mount` recovery is module-specific and is fixed in `action.sh` b
 
 A non-installed local test candidate was built successfully:
 
-- file: `pixel-thermal-memory-control-2.1.0-alpha.5-webui-detach-test1.zip`
-- bytes: `2984426`
+- file: `pixel-thermal-memory-control-2.1.0-alpha.5-webui-detach-core065-test1.zip`
+- bytes: `2985299`
 - entries: `84`
-- SHA-256: `f4d92ce9c944ad7cb4c42a5be18366766425b90568d800f04b80a590d7f05c36`
-- WebUI pin: `619efa89588cc76d081aefb8669aa8c17b1b5ed9`, Core `0.6.2`
+- SHA-256: `79fabd76408562ed492801f3c80e8201f420f0191e8363e3e43cf20692161e3a`
+- WebUI pin: `dc95d5821fdea323efaf8c4ddc459a0644f8e66d`, Core `0.6.5`
 
 ## Installation boundary
 
