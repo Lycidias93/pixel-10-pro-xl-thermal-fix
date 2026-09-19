@@ -2,20 +2,20 @@
 
 Pixel Thermal & Memory Control is maintained by **Lycidias93**, based on earlier work by **marx161**, with substantial testing, implementation feedback and technical input from community contributors.
 
-## Alpha5 / current vNext line
+## Alpha7 / current vNext line
 
 - **Lycidias93** — integration, Dynamic V2 safety model, Mustang device verification, release maintenance, standalone/embedded WebUI consumer integration and fail-closed runtime/recovery behavior.
-- **Harish / Codecity001** — extensive Pixel 10 Pro / `blazer` testing and logs; Dynamic V2 three-file patch-scope work; ZRAM, LMKD, Action/WebUI UX and installer feedback; PR #70 resetprop-rs / `boot_early` work; profile-layout direction and continued runtime review.
+- **Harish / Codecity001** — extensive Pixel 10 Pro / `blazer` and Pixel 11 Pro / `grizzly` hardware testing and logs; Tensor G6 recovery validation; stock-no-overlay and module-manager update feedback; Dynamic V2 three-file patch-scope work; ZRAM, LMKD, Action/WebUI UX and installer feedback; PR #70 resetprop-rs / `boot_early` work; profile-layout direction and continued runtime review.
 - **Allen Chang** — Canary/device screenshots, stock Thermal files, installation/failure evidence, profile feedback and runtime verification that helped harden Dynamic V2 admission and Outdoor handling.
 - **JoshuaDoes / pTune** — original Emerald Hill and ZRAM technical concepts later safety-adapted by this module, including devfreq behavior, ZRAM timing and memory-control implementation guidance.
 - **marx161** — original project foundation and earlier module work.
 
-## Shared WebUI foundation used by Alpha5
+## Shared WebUI foundation used by Alpha7
 
-Alpha5 consumes the first-party **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** from `Lycidias93/android-root-module-webui-template`, pinned to:
+Alpha7 consumes the first-party **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** from `Lycidias93/android-root-module-webui-template`, pinned to:
 
-- template commit `6fbd1b018a45fe5b1bebba7aeb9142423eab47fb`;
-- WebUI Core `0.6.1`.
+- template commit `0d5c724711733b6f794790ef96d718e96c64c258`;
+- WebUI Core `0.6.6`.
 
 The shared core provides the standalone localhost browser transport, one-time bootstrap/session model, typed allowlisted API, capability-driven UI, bounded jobs/logs/inventory, action-state handling and the bounded embedded-host bootstrap used by compatible KsuWebUI hosts.
 
