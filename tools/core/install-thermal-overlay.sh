@@ -1,5 +1,26 @@
 #!/system/bin/sh
 
+thermal_verify_materialized_layout() {
+  _thermal_mode="${THERMAL_MATERIALIZATION_MODE:-overlay}"
+  case "$_thermal_mode" in
+    overlay)
+      for _thermal_file in $THERMAL_LAYOUT_FILES; do
+        [ -s "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Failed to materialize active file: $_thermal_file"; return 1; }
+      done
+    ;;
+    stock-no-overlay)
+      for _thermal_file in $THERMAL_LAYOUT_FILES; do
+        [ ! -e "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Unexpected thermal overlay file in stock-no-overlay mode: $_thermal_file"; return 1; }
+      done
+    ;;
+    *)
+      thermal_abort "! Invalid thermal materialization mode: $_thermal_mode"
+      return 1
+    ;;
+  esac
+  return 0
+}
+
 thermal_install_overlay() {
   [ -n "${MODPATH:-}" ] || thermal_abort "! MODPATH missing for overlay install"
   [ -n "${device:-}" ] || thermal_abort "! device missing for overlay install"
@@ -18,8 +39,7 @@ thermal_install_overlay() {
 
   if thermal_layout_is_g6_device "$device"; then
     # Pixel 11 is intentionally admitted as an experimental vNext platform.
-    # Keep the same fail-closed policies as Pixel 9/10a and additionally pin
-    # Thermal polling to stock until real-device runtime evidence exists.
+    # Classic 300 s PollingDelay remains stock. Family-local recovery controls
     vnext_experimental=1
     config_set CANARY_DIAGNOSTIC_MODE 1
     config_set AUTO_PROFILE_SWITCH 0
@@ -29,10 +49,10 @@ thermal_install_overlay() {
     config_set ALLOW_THERMAL_WITH_PTUNE 0
     config_set RISK_ACK_PTUNE_THERMAL_COLLISION none
     config_set VNEXT_G6_GRAPH_PLATFORM 1
-    config_set THERMAL_POLLING_POLICY stock_only_pending_runtime_evidence
+    config_set THERMAL_POLLING_POLICY classic_polling_stock_family_controls
     ui_print "! Pixel 11 vNext experimental platform"
     ui_print "- Include-graph Thermal validation is required"
-    ui_print "- Polling remains stock pending runtime evidence"
+    ui_print "- Classic 300 s PollingDelay remains stock"
     ui_print "- Outdoor Safe is limited to the exact VIRTUAL-SKIN sensor"
     ui_print "- pTune coexistence override is blocked"
     ui_print "- Firmware transitions require reinstall"
@@ -70,8 +90,31 @@ thermal_install_overlay() {
     ui_print "! Pixel 11 polling override deferred; using stock"
   fi
 
+  PIXEL11_HYSTERESIS_MODE=stock
+  if thermal_layout_is_g6_device "$device"; then
+    PIXEL11_HYSTERESIS_MODE="$(config_get PIXEL11_HYSTERESIS_MODE)"
+    case "$PIXEL11_HYSTERESIS_MODE" in
+      stock|hysteresis|max-release-step|combined) ;;
+      mod)
+        PIXEL11_HYSTERESIS_MODE=combined
+        config_set PIXEL11_HYSTERESIS_MODE combined
+        config_set LAST_PIXEL11_HYSTERESIS_MODE combined
+      ;;
+      *)
+        PIXEL11_HYSTERESIS_MODE=combined
+        config_set PIXEL11_HYSTERESIS_MODE combined
+        config_set LAST_PIXEL11_HYSTERESIS_MODE combined
+        ui_print "! Invalid Pixel 11 recovery selection; fallback: combined"
+      ;;
+    esac
+
+  fi
+
   ui_print "- Install selections already confirmed"
   ui_print "- Polling mode: $THERMAL_POLLING_MODE"
+  if thermal_layout_is_g6_device "$device"; then
+    ui_print "- Recovery control: $PIXEL11_HYSTERESIS_MODE"
+  fi
   ui_print "- Thermal profile: $THERMAL_OUTDOOR_PROFILE"
   ui_print "- Materializing and validating thermal overlay..."
 
@@ -80,23 +123,34 @@ thermal_install_overlay() {
 
   patch_output="$MODPATH/guard/install-patch-output.$$"
   mkdir -p "$MODPATH/guard" 2>/dev/null || true
-  if sh "$MODPATH/tools/core/patch-thermal-validated.sh" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$MODPATH" > "$patch_output" 2>&1; then
+  if sh "$MODPATH/tools/core/patch-thermal-validated.sh" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$MODPATH" "$PIXEL11_HYSTERESIS_MODE" > "$patch_output" 2>&1; then
     patch_source="$(sed -n 's/^PATCH_THERMAL_SOURCE_300000=//p' "$patch_output" | tail -n 1)"
     patch_replacements="$(sed -n 's/^PATCH_THERMAL_REPLACEMENTS=//p' "$patch_output" | tail -n 1)"
     patch_delta="$(sed -n 's/^PATCH_THERMAL_DELTA_EXPECTED=//p' "$patch_output" | tail -n 1)"
     patch_files="$(sed -n 's/^PATCH_THERMAL_DELTA_FILES=//p' "$patch_output" | tail -n 1)"
     patch_zones="$(sed -n 's/^PATCH_THERMAL_DELTA_TARGET_ZONES=//p' "$patch_output" | tail -n 1)"
     patch_values="$(sed -n 's/^PATCH_THERMAL_DELTA_THRESHOLD_VALUES=//p' "$patch_output" | tail -n 1)"
+    patch_hys="$(sed -n 's/^PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=//p' "$patch_output" | tail -n 1)"
+    patch_mrs="$(sed -n 's/^PATCH_THERMAL_PIXEL11_MRS_CHANGES=//p' "$patch_output" | tail -n 1)"
+    patch_materialization="$(sed -n 's/^PATCH_THERMAL_MATERIALIZATION=//p' "$patch_output" | tail -n 1)"
     [ -n "$patch_source" ] || patch_source=unknown
     [ -n "$patch_replacements" ] || patch_replacements=unknown
     [ -n "$patch_delta" ] || patch_delta=unknown
     [ -n "$patch_files" ] || patch_files=unknown
     [ -n "$patch_zones" ] || patch_zones=unknown
     [ -n "$patch_values" ] || patch_values=unknown
+    [ -n "$patch_hys" ] || patch_hys=0
+    [ -n "$patch_mrs" ] || patch_mrs=0
+    case "$patch_materialization" in overlay|stock-no-overlay) ;; *) thermal_abort "! Invalid Thermal materialization result: ${patch_materialization:-missing}"; return 1 ;; esac
+    THERMAL_MATERIALIZATION_MODE="$patch_materialization"
     ui_print "- Thermal validation: PASS"
     ui_print "- Polling changes: $patch_replacements/$patch_source"
+    if thermal_layout_is_g6_device "$device"; then
+      ui_print "- Pixel 11 recovery changes: hysteresis=$patch_hys mrs=$patch_mrs"
+    fi
     ui_print "- Outdoor delta: +${patch_delta} C"
     ui_print "- Scope: $patch_files files, $patch_zones zones, $patch_values values"
+    ui_print "- Materialization: $THERMAL_MATERIALIZATION_MODE"
     ui_print "- Validation state: canonical"
     rm -f "$patch_output" 2>/dev/null || true
   else

@@ -65,6 +65,8 @@ thermal_outdoor_max_delta() {
   _build="${3:-unknown}"
   if ! thermal_outdoor_platform_supported "$_device" "$_android"; then
     printf '%s\n' 0
+  elif thermal_outdoor_g6_platform "$_device" "$_android"; then
+    printf '%s\n' 1
   elif thermal_outdoor_experimental_platform "$_device" "$_android"; then
     printf '%s\n' 1
   else
@@ -83,7 +85,7 @@ thermal_outdoor_policy_evidence() {
     blazer:17:CP2A.260705.006) printf '%s\n' harish_fix5_extended_13zones_91values_pass_2026-07-26 ;;
     *)
       if thermal_outdoor_g6_platform "$_device" "$_android"; then
-        printf '%s\n' vnext_g6_plus1_exact_virtual_skin_local_graph_validation_required
+        printf '%s\n' vnext_g6_plus1_exact_virtual_skin_real_layout_regression
       elif thermal_outdoor_experimental_platform "$_device" "$_android"; then
         printf '%s\n' vnext_experimental_plus1_local_stock_validation_required
       elif thermal_outdoor_platform_supported "$_device" "$_android"; then

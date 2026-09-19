@@ -247,9 +247,10 @@ if [ "$THERMAL_INSTALL_ENABLED" = 1 ]; then
     thermal_abort "! Failed to load validated Thermal layout"
   fi
   ui_print "- Thermal layout: $THERMAL_LAYOUT_FAMILY"
-  for f in $THERMAL_LAYOUT_FILES; do
-    [ -s "$MODPATH/system/vendor/etc/$f" ] || thermal_abort "! Failed to materialize active file: $f"
-  done
+  thermal_verify_materialized_layout || thermal_abort "! Thermal materialization state verification failed"
+  if [ "${THERMAL_MATERIALIZATION_MODE:-overlay}" = stock-no-overlay ]; then
+    ui_print "- Thermal overlay: stock-no-overlay; device stock Thermal files remain active"
+  fi
 fi
 
 if [ -s "$MODPATH/tools/install-finalize.sh" ]; then

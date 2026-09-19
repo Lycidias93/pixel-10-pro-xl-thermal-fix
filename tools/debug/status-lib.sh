@@ -87,6 +87,18 @@ status_collect() {
   [ -n "$thermal_profile" ] || thermal_profile=stock
   thermal_disabled="$(cfg_get THERMAL_DISABLED)"
   [ -n "$thermal_disabled" ] || thermal_disabled=0
+  device_family="$(cfg_get INSTALL_OPTION_FAMILY)"
+  case "$device_family" in pixel11|pixel10) ;; *)
+    case "$(prop_get ro.product.device)" in cubs|grizzly|kodiak|yogi) device_family=pixel11 ;; *) device_family=pixel10 ;; esac
+  ;; esac
+  recovery_mode="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
+  case "$recovery_mode" in
+    mod|combined) recovery_mode=combined; recovery_icon="$OK"; recovery_display="HotHysteresis + MaxReleaseStep" ;;
+    hysteresis) recovery_icon="$OK"; recovery_display=HotHysteresis ;;
+    max-release-step) recovery_icon="$OK"; recovery_display=MaxReleaseStep ;;
+    stock|"") recovery_mode=stock; recovery_icon="$OFF"; recovery_display=Stock ;;
+    *) recovery_icon="$WARN"; recovery_display="Unknown ($recovery_mode)" ;;
+  esac
 
   source_icon="$BAD"
   source_state=invalid
@@ -314,7 +326,11 @@ status_collect() {
     reload-failed) memory_killer_display="Failed" ;;
   esac
 
-  desc="description=Polling $polling_icon $polling_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Memory Killer $lmk_icon $memory_killer_display | Action: details/support"
+  if [ "$device_family" = pixel11 ]; then
+    desc="description=Recovery $recovery_icon $recovery_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Action: details/support"
+  else
+    desc="description=Polling $polling_icon $polling_display | Thermal $thermal_icon $thermal_display | ZRAM $zram_icon $zram_display | Memory Killer $lmk_icon $memory_killer_display | Action: details/support"
+  fi
 
   {
     printf '%s\n' "SOURCE_ICON=$source_icon"
@@ -365,6 +381,10 @@ status_collect() {
     printf '%s\n' "VENDOR_OVERLAY_BACKEND_WARN=$vendor_warn"
     printf '%s\n' "POLLING_VALUE=$polling_value"
     printf '%s\n' "THERMAL_VALUE=$thermal_value"
+    printf '%s\n' "DEVICE_FAMILY=$device_family"
+    printf '%s\n' "RECOVERY_ICON=$recovery_icon"
+    printf '%s\n' "RECOVERY_MODE=$recovery_mode"
+    printf '%s\n' "RECOVERY_DISPLAY=$recovery_display"
     printf '%s\n' "ZRAM_VALUE=$zram_value"
     printf '%s\n' "MEMORY_KILLER_ICON=$lmk_icon"
     printf '%s\n' "MEMORY_KILLER_STATE=$lmk_state"
@@ -426,10 +446,16 @@ status_print() {
     grep -E "^$1=" "$STATUS_FILE" 2>/dev/null | tail -n 1 | sed "s/^$1=//"
   }
   printf '%s\n' "Feature Status"
-  printf '%s\n' "Polling:       $(get_status_kv POLLING_ICON) $(get_status_kv POLLING_DISPLAY)"
-  printf '%s\n' "Thermal:       $(get_status_kv THERMAL_ICON) $(get_status_kv THERMAL_DISPLAY)"
-  printf '%s\n' "ZRAM:          $(get_status_kv ZRAM_ICON) $(get_status_kv ZRAM_DISPLAY)"
-  printf '%s\n' "Memory Killer: $(get_status_kv MEMORY_KILLER_ICON) $(get_status_kv MEMORY_KILLER_DISPLAY)"
+  if [ "$(get_status_kv DEVICE_FAMILY)" = pixel11 ]; then
+    printf '%s\n' "Recovery:      $(get_status_kv RECOVERY_ICON) $(get_status_kv RECOVERY_DISPLAY)"
+    printf '%s\n' "Thermal:       $(get_status_kv THERMAL_ICON) $(get_status_kv THERMAL_DISPLAY)"
+    printf '%s\n' "ZRAM:          $(get_status_kv ZRAM_ICON) $(get_status_kv ZRAM_DISPLAY)"
+  else
+    printf '%s\n' "Polling:       $(get_status_kv POLLING_ICON) $(get_status_kv POLLING_DISPLAY)"
+    printf '%s\n' "Thermal:       $(get_status_kv THERMAL_ICON) $(get_status_kv THERMAL_DISPLAY)"
+    printf '%s\n' "ZRAM:          $(get_status_kv ZRAM_ICON) $(get_status_kv ZRAM_DISPLAY)"
+    printf '%s\n' "Memory Killer: $(get_status_kv MEMORY_KILLER_ICON) $(get_status_kv MEMORY_KILLER_DISPLAY)"
+  fi
   printf '%s\n' ""
   printf '%s\n' "Validation details"
   printf '%s\n' "Source:         $(get_status_kv SOURCE_ICON) $(get_status_kv SOURCE_STATE)"
