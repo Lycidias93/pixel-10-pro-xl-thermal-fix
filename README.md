@@ -2,28 +2,35 @@
 
 **Dynamic V2 root-module tuning for supported Pixel 10 / 10a, Pixel 9 / 9a and experimental Pixel 11-series devices on Android 17, with guarded stock-derived Thermal profiles, optional ZRAM and memory controls, Bootguard recovery, and a standalone/embedded WebUI.**
 
-[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.6](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.6) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
+Dynamic V2 is the active source architecture for the current module line.
+
+[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.7](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.7) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
 > [!IMPORTANT]
-> **2.0.4 remains the current stable release. 2.1.0-alpha.6 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha6 adds the experimental Pixel 11 line plus the latest WebUI and vNext reliability fixes.
+> **2.0.4 remains the current stable release. 2.1.0-alpha.7 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha7 completes the Pixel 11 recovery integration, stock-no-overlay Thermal behavior and corrected prerelease update path while retaining the Alpha6 WebUI and vNext reliability fixes.
 >
-> Alpha6 now includes the previously development-only **experimental Pixel 11-series support** and the post-Alpha5 tester-feedback fixes.
+> Alpha7 is the current public Pixel 11 integration with independent HotHysteresis and MaxReleaseStep controls and the accepted stock-only polling/timing policy.
 
 ## Current public releases
 
 | Channel | Version | Main purpose |
 |---|---|---|
 | Stable | `2.0.4` | Pixel 10-family Dynamic V2 stable line with current Thermal materialization hotfixes |
-| Prerelease | `2.1.0-alpha.6` | Experimental Pixel 11 support, HUP-safe standalone browser WebUI, embedded KsuWebUI, expanded Pixel 9 / 9a / 10a support and current vNext reliability fixes |
+| Prerelease | `2.1.0-alpha.7` | Pixel 11 recovery integration, stock-no-overlay Thermal mode, corrected prerelease updates, HUP-safe WebUI and the existing Pixel 9 / 9a / 10a vNext support |
 
 Stable and prerelease update channels are independent. Switching channel changes only the module update metadata path; it does not automatically flash a ZIP.
 
-## Alpha6 highlights
+## Alpha7 highlights
 
-Alpha6 includes the Alpha5 WebUI/device line and adds Pixel 11 support plus the latest runtime fixes:
+Alpha7 carries forward the Alpha6 WebUI/device line and completes the Pixel 11 recovery/update integration:
+
+- **HotHysteresis and MaxReleaseStep are independent Pixel 11 recovery controls.** Enabling both derives the internal combined state without a redundant third user option.
+- **Stock Pixel 11 Thermal mode no longer mounts generated Thermal JSON overlays.** ZRAM-only installs can keep the ZRAM fstab override while stock Thermal files remain active.
+- **Prerelease updates now advance to Alpha7** instead of resolving an integrated Pixel 11 install back to the older Alpha6 package.
 
 - **Experimental Pixel 11 / 11 Pro / 11 Pro XL / 11 Pro Fold support is included** with Stock-only polling and conservative Outdoor Safe policy.
 - **Magisk Action browser launch is HUP-safe.** The standalone loopback server remains alive after the Action shell exits, fixing immediate `ERR_CONNECTION_REFUSED`.
+- **WebUI previews/dry-runs stay non-mutating on Android.** Android/Toybox-safe boolean parsing prevents `dry_run=true` from falling through to the productive action path.
 - **Stale `skip_mount` recovery rematerializes validated Thermal/Polling state** instead of leaving intended changes pending behind an old marker.
 - **KsuWebUI can open the module WebUI directly inside its WebView**, without the previous `404 Not Found` / disconnected state.
 - **Magisk Action and KsuWebUI work in parallel.** Magisk Action opens the standalone WebUI in the default browser; KsuWebUI keeps it inside its own WebView. Both use the same guarded localhost API.
@@ -36,7 +43,13 @@ Alpha6 includes the Alpha5 WebUI/device line and adds Pixel 11 support plus the 
 - **Thermal numeric validation is locale-stable**, including devices using non-English system locales.
 - **Mobile layout, action cards, tabs and blocked/active states are clearer** on narrow screens.
 
-See [2.1.0-alpha.6 release notes](release-notes/2.1.0-alpha.6.md) for the current public prerelease changelog.
+See [2.1.0-alpha.7 release notes](release-notes/2.1.0-alpha.7.md) for the current public prerelease changelog.
+
+## Alpha8 hardware-test candidate
+
+Alpha8 keeps the Alpha7 policy but makes Tensor G6 / Pixel 11 Thermal materialization sparse: only validated Thermal JSON files whose generated bytes differ from cached stock are placed in the module overlay. Untouched Pixel 11 include-graph files stay on the stock vendor path, and full Stock still creates no Thermal JSON overlay. Pixel 9/10-family targets keep their existing full three-file overlay contract.
+
+Alpha8 is not promoted publicly until the exact candidate passes the Pixel 11 Pro install, reboot, Bootguard/readiness, recovery-state, Outdoor Safe to Stock, WebUI/Action, and quick performance regression gate. See [Alpha8 candidate notes](release-notes/2.1.0-alpha.8.md) and [the vNext device validation matrix](docs/vnext-device-test-matrix.md).
 
 ## Supported devices
 
@@ -51,9 +64,9 @@ Stable currently targets the Android 17 Pixel 10 family:
 | `frankel` | Pixel 10 |
 | `rango` | Pixel 10 Pro Fold |
 
-### Public prerelease 2.1.0-alpha.6
+### Public prerelease 2.1.0-alpha.7
 
-The published Alpha6 package carries one Android 17 vNext line for:
+The published Alpha7 package carries one Android 17 vNext line for:
 
 | Codename | Device | vNext policy |
 |---|---|---|
@@ -70,9 +83,9 @@ The published Alpha6 package carries one Android 17 vNext line for:
 
 Pixel 9-series and Pixel 10a targets remain intentionally conservative: local stock-layout validation is mandatory, pTune Thermal coexistence override is blocked on those experimental targets, and their current admitted Outdoor increase is capped at `+1 °C` where applicable.
 
-### Alpha7 candidate: Pixel 11 series
+### Alpha7: Pixel 11 series
 
-The current vNext development code admits these Android 17 targets for **experimental device testing**:
+Alpha7 admits these Android 17 targets for **experimental device support**:
 
 | Codename | Device | Initial policy |
 |---|---|---|
@@ -87,9 +100,7 @@ The initial Tensor G6 safety envelope is intentionally narrow. Module 5-second p
 
 The available Pixel 11 Pro stock Thermal archive established the graph-layout change and confirmed that stock still contains 300-second polling values. Separately, the exact PR #194 candidate (`461b150d6ebfc59dbb905fb0f29070c010a938a4b23dd490210e65a7ef83ff3f`) completed post-reboot runtime acceptance on Pixel 11 Pro / `grizzly`, Android 17 build `CD1A.260714.001.A9`: Bootguard reported `full_pass`, vNext readiness reached `runtime_verified`, the validated 10-file G6 overlay remained active with 35/35 stock `PollingDelay=300000` values and 0 `5000` values, and the final ZRAM + `page-cluster=0` reboot test reconciled the persisted zero state after verified boot. See [the vNext device validation matrix](docs/vnext-device-test-matrix.md).
 
-The Alpha7 candidate keeps all Pixel 11 classic `PollingDelay` values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. The exact-head `grizzly` retest passed these feedback gates.
-
-The integrated **G6 recovery path** branches the installer, Action dashboard, WebUI capability/action surface and Thermal materializer by device family. Pixel 9/10-family behavior remains on the established option/patch path. Pixel 11-family installs and runtime controls expose **Recovery (HotHysteresis + MaxReleaseStep)**, Thermal Profile (Stock or Outdoor Safe `+1 C` only), ZRAM/Emerald Hill, guarded ZRAM page-cluster, logging and support snapshots; legacy Pixel 10 classic polling, LMKD and pTune controls are not shown for Pixel 11. Classic `PollingDelay` and `PassiveDelay` are both pinned to stock on Pixel 11 and have no user control. Harish's real `grizzly` test rejected `PassiveDelay 7000 -> 5000`: the 5-second variant severely throttled the prime core and cut single-core performance by roughly 50%, while the recovery changes with PassiveDelay left stock produced about 2.3k single-core / 7k multi-core in Geekbench 7. The recovery patch remains restricted to `thermal_info_config_common.json`: seven named VIRTUAL-SKIN performance sensors, 15 admitted hysteresis-slot changes and 32 admitted `MaxReleaseStep 1 -> 2` cooling-device/profile binding changes across five target sensors. A real-G6-layout threshold regression separately proves Outdoor Safe changes only exact master `VIRTUAL-SKIN`; CPU/SOC derivatives, WLAN/BT/MMW, modem, charge and protection objects remain stock.
+Alpha7 keeps all Pixel 11 polling/timing values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. The exact-head `grizzly` retest passed these feedback gates; faster polling and further Thermal tuning remain separate later-stage work.
 
 ## What the module changes
 
@@ -102,7 +113,7 @@ The Dynamic V2 path derives supported overlays from the device's own stock Therm
 User-selectable controls include:
 
 - **Polling Mode:** module values or stock values where the device policy admits both. Pixel 11 development targets currently remain Stock-only.
-- **Thermal Profile:** Stock, Outdoor Safe, Outdoor Plus or Outdoor Extended where the device policy allows it. Pixel 11 exposes only Stock / Outdoor Safe +1 °C and binds the delta to exact master `VIRTUAL-SKIN`.
+- **Thermal Profile:** Stock, Outdoor Safe, Outdoor Plus or Outdoor Extended where the device policy allows it.
 - **Firmware transition handling:** stale overlays are rejected and rematerialized from current stock evidence rather than blindly reused; experimental Pixel 11 targets require reinstall after a transition.
 
 The module does **not** replace the Pixel Thermal HAL, globally disable Android thermal management, or intentionally alter emergency/shutdown protections.
@@ -122,9 +133,9 @@ The experimental LMKD option sets `ro.lmk.swap_free_low_percentage=1`, verifies 
 
 ### ZRAM page-cluster
 
-Published Alpha5 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation. If the device stock value is already `0`, leaving the action on Stock avoids taking ownership of an unnecessary runtime write.
+Alpha7 exposes the guarded experimental `page-cluster 0` action through the WebUI. It is opt-in and requires explicit confirmation. If the device stock value is already `0`, leaving the action on Stock avoids taking ownership of an unnecessary runtime write.
 
-Current vNext development additionally makes page-cluster a separate ZRAM sub-choice during installation and on the family-aware Action/WebUI surfaces. Installation records only the desired Stock/0 state; it does not write the live sysctl. After reboot, the module waits for Bootguard verification and active ZRAM before applying persisted `0`; choosing Stock clears the persisted zero request and restores the same-boot baseline when the module owns it. The write remains a guarded ZRAM experiment, not an unconditional early-boot sysctl mutation. This reboot-persistence path passed the final `grizzly` hardware retest after PR #194 candidate installation.
+Alpha7 persists the explicit zero selection in private module configuration. After a reboot, the module waits for Bootguard verification and active ZRAM before reapplying `0`; choosing Stock clears the persisted zero request and restores the same-boot baseline when the module owns it. The write remains a guarded ZRAM experiment, not an unconditional early-boot sysctl mutation. This reboot-persistence path passed the final `grizzly` hardware retest after PR #194 candidate installation.
 
 ## Alpha7 / vNext WebUI
 
@@ -142,9 +153,7 @@ The interface provides:
 - bounded logs and support information;
 - clear active, blocked and unavailable states.
 
-Current vNext development also exposes **Logging · Silent** and **Logging · Verbose** as typed actions using the same debug configuration as the installer. Silent suppresses optional verbose diagnostics but does not disable required bounded Bootguard/health/support evidence. The shared WebUI Core pin includes a mobile `visualViewport` guard that keeps the focused confirmation/text control visible when the Android software keyboard reduces the usable viewport. The final Pixel 11 Pro test confirmed the logging selector and mobile-input feedback fix in the exact candidate cycle.
-
-For the current Pixel 11 family candidate, WebUI actions mirror the installer and Action dashboard: Recovery, Thermal Stock/+1, ZRAM/page-cluster, Emerald Hill and logging. Family detection remains module-adapter state rather than a new generic capabilities field. This is intentional: the pinned WebUI Core `0.6.1` capabilities schema rejects unknown top-level fields, so the earlier embedded-host failure caused by `device_family` in capabilities is fixed by keeping the generic schema unchanged while reporting family context through runtime/status data. No shared-template API extension is required for this module-specific dispatch.
+Alpha7 also exposes **Logging · Silent** and **Logging · Verbose** as typed actions using the same debug configuration as the installer. Silent suppresses optional verbose diagnostics but does not disable required bounded Bootguard/health/support evidence. The shared WebUI Core pin includes a mobile `visualViewport` guard that keeps the focused confirmation/text control visible when the Android software keyboard reduces the usable viewport. The final Pixel 11 Pro test confirmed the logging selector and mobile-input feedback fix in the exact candidate cycle.
 
 Both launch paths converge on the same standalone localhost server and typed allowlisted control surface. KsuWebUI is used only for the bounded bootstrap step; normal WebUI operations do not expose an unrestricted shell/JavaScript command bridge.
 
@@ -167,9 +176,9 @@ Download the latest stable package from [v2.0.4](https://github.com/Lycidias93/p
 
 ### Prerelease
 
-Download the Alpha6 package from [v2.1.0-alpha.6](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.6), install it from the module manager, and reboot before judging the new runtime state.
+Download the Alpha7 package from [v2.1.0-alpha.7](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.7), install it from the module manager, and reboot before judging the new runtime state.
 
-Users already on the prerelease channel can use the normal module update flow after `update-prerelease.json` is promoted to Alpha6. Pixel 11 support and the post-Alpha5 reliability fixes are included in this prerelease.
+Users already on the prerelease channel can use the normal module update flow because `update-prerelease.json` points to Alpha7. This advances Alpha6 prerelease installs to the integrated Alpha7 package.
 
 ## Status and support
 
@@ -214,7 +223,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins WebUI Core `0.6.6` at template commit `0d5c724711733b6f794790ef96d718e96c64c258`, adding the corrected HUP-safe standalone Action server lifetime contract plus Android/Toybox-safe WebUI dry-run boolean parsing while retaining the post-Alpha5 mobile-input fix; Alpha7 publication remains blocked until the integrated exact-head candidate passes the fresh `grizzly` hardware and WebUI acceptance gate; the public prerelease channel stays on Alpha6 until that acceptance is complete.
+Alpha7 consumes the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.6` pinned at template commit `0d5c724711733b6f794790ef96d718e96c64c258`, including HUP-safe standalone Action lifetime, Android/Toybox-safe WebUI dry-run parsing and the mobile-input viewport fix. The integrated Pixel 11 recovery path completed its exact-device acceptance before Alpha7 publication.
 
 That shared core documents clean adaptations or design references from:
 
@@ -226,7 +235,7 @@ That shared core documents clean adaptations or design references from:
 - **AshBorn / AshReXcue / AshLooper** — design reference only for unsaved-change/session diagnostics; no GPL-covered implementation is imported;
 - **Adinata / KsuWebUI** — compatibility/design reference for its embedded WebView host; no GPL-covered KsuWebUI implementation is imported.
 
-The Alpha5 module also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
+Alpha7 also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
 
 ## License
 

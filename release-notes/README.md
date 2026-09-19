@@ -3,10 +3,15 @@
 Release notes are repository documentation and are never included in the flashable Magisk ZIP.
 
 ## Stable
-- [2.0.1](2.0.1.md) — stable Dynamic V2 hotfix with August Stable KernelSU full post-reboot proof, August Canary verification, and July Stable Magisk regression coverage.
+- [2.0.4](2.0.4.md) — current stable release.
+- [2.0.3](2.0.3.md) — previous stable release.
+- [2.0.2](2.0.2.md) — previous stable release.
+- [2.0.1](2.0.1.md) — historical stable release.
 
 ## V2 alpha line
-- [2.1.0-alpha.6](2.1.0-alpha.6.md) — current public prerelease with experimental Pixel 11 support, HUP-safe standalone WebUI launch and post-Alpha5 reliability fixes.
+- [2.1.0-alpha.8](2.1.0-alpha.8.md) — hardware-test candidate adding sparse Thermal overlay materialization; not yet the public prerelease.
+- [2.1.0-alpha.7](2.1.0-alpha.7.md) — current public prerelease with integrated Pixel 11 recovery controls, stock-no-overlay behavior and corrected prerelease updates.
+- [2.1.0-alpha.6](2.1.0-alpha.6.md) — previous public prerelease with experimental Pixel 11 support, HUP-safe standalone WebUI launch and post-Alpha5 reliability fixes.
 - [2.1.0-alpha.5](2.1.0-alpha.5.md) — previous public prerelease with KsuWebUI embedded launch plus the complete user-facing Alpha4 WebUI and reliability changes.
 - [2.1.0-alpha.4](2.1.0-alpha.4.md) — superseded Alpha4 notes retained for history; its user-facing changes are included cumulatively in Alpha5.
 - [2.1.0-alpha.3](2.1.0-alpha.3.md) — previous public vNext prerelease with reboot-safe ZRAM Action enable/disable and the expanded single-device-family line.

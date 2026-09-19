@@ -76,6 +76,8 @@ run_case() {
     sh "$mod/tools/core/patch-thermal-validated.sh" mod "$profile" "$mod" | tee "$root/run.log"
 
   grep -q '^PATCH_THERMAL_DELTA_VALIDATION=pass$' "$root/run.log" || { echo "FAIL delta_validation_$device"; exit 10; }
+  grep -q '^PATCH_THERMAL_MATERIALIZATION=overlay$' "$root/run.log" || { echo "FAIL full_overlay_materialization_$device"; exit 10; }
+  grep -q '^PATCH_THERMAL_OVERLAY_COUNT=3$' "$root/run.log" || { echo "FAIL full_overlay_count_$device"; exit 10; }
   grep -q "^family=$expected_family$" "$mod/guard/thermal-layout.env" || { echo "FAIL layout_family_$device"; exit 11; }
   grep -q "^third=$third$" "$mod/guard/thermal-layout.env" || { echo "FAIL layout_third_$device"; exit 12; }
   [[ -s "$mod/system/vendor/etc/thermal_info_config.json" ]]
@@ -156,18 +158,24 @@ run_g6_graph_case() {
   grep -q '^count=10$' "$mod/guard/thermal-layout.env"
   grep -q '^PATCH_THERMAL_FILES=10$' "$root/run.log"
   grep -q '^PATCH_THERMAL_REPLACEMENTS=0$' "$root/run.log"
-  [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 16 ]]
+  grep -q '^PATCH_THERMAL_MATERIALIZATION=sparse-overlay$' "$root/run.log"
+  grep -q '^PATCH_THERMAL_OVERLAY_COUNT=1$' "$root/run.log"
+  grep -q '^PATCH_THERMAL_OVERLAY_FILES=thermal_info_config_common.json$' "$root/run.log"
+  grep -q '^PATCH_THERMAL_DELTA_FILES=1$' "$root/run.log"
+  [[ -s "$mod/system/vendor/etc/thermal_info_config_common.json" ]]
+  for unchanged in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_stats.json thermal_info_config_forecast.json thermal_info_config_earlywarnings.json thermal_info_config_ambient.json thermal_info_config_vt.json thermal_info_config_aa_throttling.json thermal_info_config_bg_tasks_throttling.json; do
+    [[ ! -e "$mod/system/vendor/etc/$unchanged" ]] || { echo "FAIL unchanged_overlay_present_$unchanged"; exit 20; }
+  done
+  [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*300000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 5 ]]
   [[ "$(grep -Rho '"PollingDelay"[[:space:]]*:[[:space:]]*5000' "$mod/system/vendor/etc" | wc -l | tr -d ' ')" = 0 ]]
 
-  grep -Fq '"Name": "VIRTUAL-SKIN-SPEAKER", "HotThreshold": ["NaN", 37]' "$mod/system/vendor/etc/thermal_info_config.json"
-  grep -Fq '"Name": "cellular-emergency", "HotThreshold": ["NaN", 50, 54]' "$mod/system/vendor/etc/thermal_info_config.json"
-  grep -Fq '"Name": "VIRTUAL-SKIN-OVER-35C-TRIGGER", "HotThreshold": [35]' "$mod/system/vendor/etc/thermal_info_config.json"
+  grep -Fq '"Name": "VIRTUAL-SKIN-OVER-35C-TRIGGER", "HotThreshold": [35]' "$src/thermal_info_config.json"
   grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": ["NaN", 40, 44, 46, 47.5, 53, 66]' "$mod/system/vendor/etc/thermal_info_config_common.json"
   grep -Fq '"Name": "VIRTUAL-SKIN-CPU-LIGHT-ODPM", "HotThreshold": ["NaN", 37, 39, "NaN", "NaN", "NaN", "NaN"]' "$mod/system/vendor/etc/thermal_info_config_common.json"
   grep -Fq '"Name": "VIRTUAL-SKIN-SOC", "HotThreshold": ["NaN", 37, 39, 41, 45, 46.5, 52]' "$mod/system/vendor/etc/thermal_info_config_common.json"
   grep -Fq '"Name": "VSYS_WLAN_BT_MMWAVE", "HotThreshold": ["NaN", 42, 48, 54]' "$mod/system/vendor/etc/thermal_info_config_common.json"
   grep -Fq '"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": ["NaN", 43, 45, 46.5]' "$mod/system/vendor/etc/thermal_info_config_common.json"
-  grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": ["NaN", 34, 38, 43]' "$mod/system/vendor/etc/thermal_info_config_charge.json"
+  grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": ["NaN", 34, 38, 43]' "$src/thermal_info_config_charge.json"
 
   if THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=HARISH_STATIC_LAYOUT THERMAL_SOURCE_DIR="$src" THERMAL_DATA_ROOT="$data-mod" \
       sh "$mod/tools/core/patch-thermal-validated.sh" mod stock "$mod" > "$root/mod-block.log" 2>&1; then
