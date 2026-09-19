@@ -160,8 +160,11 @@ run_phase() {
     [[ ! -e "$mod/system/vendor/etc" ]]
     return 0
   fi
-  grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=overlay' "$root.log"
+  grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=sparse-overlay' "$root.log"
+  grep -Fxq 'PATCH_THERMAL_OVERLAY_COUNT=1' "$root.log"
+  grep -Fxq 'PATCH_THERMAL_OVERLAY_FILES=thermal_info_config_common.json' "$root.log"
   [[ -f "$common" ]]
+  [[ ! -e "$mod/system/vendor/etc/thermal_info_config_charge.json" ]]
   [[ "$(grep -Fo '"PassiveDelay": 5000' "$common" | wc -l | tr -d ' ')" = 0 ]]
   [[ "$(grep -Fo '"PassiveDelay": 7000' "$common" | wc -l | tr -d ' ')" = 8 ]]
   case "$recovery" in
@@ -175,7 +178,7 @@ run_phase() {
   if [[ "$recovery" = mod || "$recovery" = combined ]]; then
     grep -Fq '"Name": "VIRTUAL-SKIN-SOC-EXTREME"' "$common"
     grep -Fq '"Name": "VIRTUAL-SKIN-MODEM", "HotThreshold": [50], "PassiveDelay": 10000' "$common"
-    grep -Fq '"Name": "VIRTUAL-SKIN-CHARGE-WIRED", "HotThreshold": [34, 38, 43], "PassiveDelay": 7000' "$mod/system/vendor/etc/thermal_info_config_charge.json"
+    [[ ! -e "$mod/system/vendor/etc/thermal_info_config_charge.json" ]]
     [[ "$(grep -Fo '"MaxReleaseStep": 2' "$common" | wc -l | tr -d ' ')" = 32 ]]
     [[ "$(grep -Fo '"MaxReleaseStep": 1' "$common" | wc -l | tr -d ' ')" = 5 ]]
     grep -Fq '"Name": "VIRTUAL-SKIN", "HotThreshold": [39, 43, 45, 46.5, 52, 65], "HotHysteresis": [0, 1.0, 1.0, 1.0, 1.0, 1.9, 1.9]' "$common"
@@ -204,6 +207,10 @@ THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=G6_FAMILY_TEST \
 grep -Fxq 'PATCH_THERMAL=pass' "$threshold_root.log"
 grep -Fxq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$threshold_root.log"
 grep -Fxq 'PATCH_THERMAL_REPLACEMENTS=0' "$threshold_root.log"
+grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=sparse-overlay' "$threshold_root.log"
+grep -Fxq 'PATCH_THERMAL_OVERLAY_COUNT=1' "$threshold_root.log"
+grep -Fxq 'PATCH_THERMAL_OVERLAY_FILES=thermal_info_config_common.json' "$threshold_root.log"
+[[ ! -e "$threshold_mod/system/vendor/etc/thermal_info_config_charge.json" ]]
 threshold_common="$threshold_mod/system/vendor/etc/thermal_info_config_common.json"
 sensor_threshold_matches() {
   local file="$1" sensor="$2" expected="$3"

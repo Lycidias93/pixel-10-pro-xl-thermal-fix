@@ -62,12 +62,26 @@ if thermal_verify_materialized_layout >/dev/null 2>&1; then
   fail stock_no_overlay_accepted_generated_thermal_file
 fi
 rm -f "$verify_mod/system/vendor/etc/thermal_info_config.json"
+THERMAL_MATERIALIZATION_MODE=sparse-overlay
+THERMAL_MATERIALIZED_FILES='thermal_info_config.json'
+printf '%s\n' active > "$verify_mod/system/vendor/etc/thermal_info_config.json"
+rm -f "$verify_mod/system/vendor/etc/thermal_info_config_common.json"
+thermal_verify_materialized_layout || fail sparse_overlay_mode_rejected_expected_thermal_file
+printf '%s\n' stale-unchanged > "$verify_mod/system/vendor/etc/thermal_info_config_common.json"
+if thermal_verify_materialized_layout >/dev/null 2>&1; then
+  fail sparse_overlay_accepted_unchanged_thermal_file
+fi
+rm -f "$verify_mod/system/vendor/etc/thermal_info_config_common.json"
+grep -Fxq zram-only "$verify_mod/system/vendor/etc/fstab.zram.100p" || fail sparse_overlay_verifier_mutated_zram_fstab
+pass installer_materialization_verifier_preserves_zram_and_sparse_overlay
+
 THERMAL_MATERIALIZATION_MODE=overlay
+THERMAL_MATERIALIZED_FILES='thermal_info_config.json thermal_info_config_common.json'
 printf '%s\n' active > "$verify_mod/system/vendor/etc/thermal_info_config.json"
 printf '%s\n' active > "$verify_mod/system/vendor/etc/thermal_info_config_common.json"
-thermal_verify_materialized_layout || fail overlay_mode_rejected_complete_thermal_layout
-grep -Fxq zram-only "$verify_mod/system/vendor/etc/fstab.zram.100p" || fail overlay_verifier_mutated_zram_fstab
-pass installer_materialization_verifier_preserves_zram_only_stock_overlay
+thermal_verify_materialized_layout || fail full_overlay_mode_rejected_complete_thermal_layout
+grep -Fxq zram-only "$verify_mod/system/vendor/etc/fstab.zram.100p" || fail full_overlay_verifier_mutated_zram_fstab
+pass installer_full_overlay_contract_preserved
 
 printf '%s\n' template > "$stage/tools/zram/fstab.zram.100p"
 printf '%s\n' template > "$stage/system/vendor/etc/fstab.zram.100p"

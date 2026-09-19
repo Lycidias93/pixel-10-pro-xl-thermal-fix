@@ -69,15 +69,22 @@ trap cleanup EXIT HUP INT TERM
 rm -f "$LEGACY_REPORT_MODULE" "$LEGACY_REPORT_DATA" "$LEGACY_PATCH_MANIFEST" "$LEGACY_DELTA_MODULE" "$LEGACY_DELTA_DATA" "$LAYOUT_ENV" 2>/dev/null || true
 if sh "$PATCHER" "$POLLING_MODE" "$OUTDOOR_PROFILE" "$MODPATH" "$PIXEL11_HYSTERESIS_MODE" > "$RUN_LOG" 2>&1; then cat "$RUN_LOG"; else _rc="$?"; cat "$RUN_LOG"; exit "$_rc"; fi
 
-MATERIALIZATION_MODE=overlay
+MATERIALIZATION_MODE="$(sed -n 's/^PATCH_THERMAL_MATERIALIZATION=//p' "$RUN_LOG" | tail -n 1)"
+OVERLAY_FILES_CSV="$(sed -n 's/^PATCH_THERMAL_OVERLAY_FILES=//p' "$RUN_LOG" | tail -n 1)"
+OVERLAY_COUNT="$(sed -n 's/^PATCH_THERMAL_OVERLAY_COUNT=//p' "$RUN_LOG" | tail -n 1)"
+PATCH_DEVICE="$(sed -n 's/^PATCH_THERMAL_DEVICE=//p' "$RUN_LOG" | tail -n 1)"
+PATCH_DEVICE_FAMILY="$(thermal_device_family "$PATCH_DEVICE")"
+[ -n "$OVERLAY_FILES_CSV" ] || OVERLAY_FILES_CSV=none
+case "$OVERLAY_COUNT" in ''|*[!0-9]*) printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_overlay_count; exit 58 ;; esac
 STOCK_NO_OVERLAY_EXPECTED=0
-if [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then
-  STOCK_NO_OVERLAY_EXPECTED=1
-fi
-if grep -qx 'PATCH_THERMAL_MATERIALIZATION=stock-no-overlay' "$RUN_LOG"; then
-  [ "$STOCK_NO_OVERLAY_EXPECTED" -eq 1 ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=stock_no_overlay_marker_on_nonstock_request; exit 58; }
-  MATERIALIZATION_MODE=stock-no-overlay
-fi
+if [ "$PATCH_DEVICE_FAMILY" = pixel11 ] && [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then STOCK_NO_OVERLAY_EXPECTED=1; fi
+case "$MATERIALIZATION_MODE" in
+  stock-no-overlay) [ "$STOCK_NO_OVERLAY_EXPECTED" -eq 1 ] && [ "$OVERLAY_COUNT" -eq 0 ] && [ "$OVERLAY_FILES_CSV" = none ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_stock_no_overlay_contract; exit 58; } ;;
+  sparse-overlay) [ "$PATCH_DEVICE_FAMILY" = pixel11 ] && [ "$STOCK_NO_OVERLAY_EXPECTED" -eq 0 ] && [ "$OVERLAY_COUNT" -gt 0 ] && [ "$OVERLAY_FILES_CSV" != none ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_sparse_overlay_contract; exit 58; } ;;
+  overlay) [ "$PATCH_DEVICE_FAMILY" != pixel11 ] && [ "$OVERLAY_COUNT" -gt 0 ] && [ "$OVERLAY_FILES_CSV" != none ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_full_overlay_contract; exit 58; } ;;
+  *) printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_materialization_mode; exit 58 ;;
+esac
+overlay_file_selected() { case ",$OVERLAY_FILES_CSV," in *",$1,"*) return 0 ;; *) return 1 ;; esac; }
 
 thermal_layout_load_env "$LAYOUT_ENV" || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=layout_state_missing_or_invalid; exit 59; }
 DEVICE="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
@@ -89,37 +96,46 @@ CACHE_DIR="$DATA_ROOT/originals/$DEVICE/$BUILD_SLUG/vendor/etc"
 DELTA=0
 case "$OUTDOOR_PROFILE" in outdoor-safe) DELTA=1 ;; outdoor-plus) DELTA=2 ;; outdoor-extended) DELTA=3 ;; esac
 
-validated_files=0; target_zone_total=0; threshold_array_total=0; threshold_value_total=0
+validated_files=0; target_zone_total=0; threshold_array_total=0; threshold_value_total=0; layout_checked_files=0
 if [ "$MATERIALIZATION_MODE" = stock-no-overlay ]; then
   for output_file in "$TARGET_DIR"/thermal_info_config*.json; do
     if [ -e "$output_file" ] || [ -L "$output_file" ]; then
-      printf '%s\n' "PATCH_THERMAL_DELTA_REASON=stock_overlay_present_${output_file##*/}"
-      exit 61
+      printf '%s\n' "PATCH_THERMAL_DELTA_REASON=stock_overlay_present_${output_file##*/}"; exit 61
     fi
   done
   for file in $THERMAL_LAYOUT_FILES; do
     source_file="$CACHE_DIR/$file"
     [ -s "$source_file" ] || { printf '%s\n' "PATCH_THERMAL_DELTA_REASON=source_missing_$file"; exit 60; }
+    layout_checked_files=$((layout_checked_files + 1))
   done
 else
+  overlay_seen=0
   for file in $THERMAL_LAYOUT_FILES; do
     source_file="$CACHE_DIR/$file"; output_file="$TARGET_DIR/$file"
     [ -s "$source_file" ] || { printf '%s\n' "PATCH_THERMAL_DELTA_REASON=source_missing_$file"; exit 60; }
-    [ -s "$output_file" ] || { printf '%s\n' "PATCH_THERMAL_DELTA_REASON=output_missing_$file"; exit 61; }
-    if metrics="$(sh "$DELTA_HELPER" "$source_file" "$output_file" "$DELTA" "$DEVICE")"; then
-      set -- $metrics; [ "$#" -eq 3 ] || exit 62; target_zones="$1"; threshold_arrays="$2"; threshold_values="$3"
+    layout_checked_files=$((layout_checked_files + 1))
+    if overlay_file_selected "$file"; then
+      overlay_seen=$((overlay_seen + 1))
+      [ -s "$output_file" ] || { printf '%s\n' "PATCH_THERMAL_DELTA_REASON=output_missing_$file"; exit 61; }
+      if metrics="$(sh "$DELTA_HELPER" "$source_file" "$output_file" "$DELTA" "$DEVICE")"; then
+        set -- $metrics; [ "$#" -eq 3 ] || exit 62; target_zones="$1"; threshold_arrays="$2"; threshold_values="$3"
+      else
+        printf '%s\n' "PATCH_THERMAL_DELTA_REASON=exact_delta_invalid_${file}_expected_${DELTA}"; exit 63
+      fi
+      validated_files=$((validated_files + 1)); target_zone_total=$((target_zone_total + target_zones)); threshold_array_total=$((threshold_array_total + threshold_arrays)); threshold_value_total=$((threshold_value_total + threshold_values))
     else
-      printf '%s\n' "PATCH_THERMAL_DELTA_REASON=exact_delta_invalid_${file}_expected_${DELTA}"; exit 63
+      [ ! -e "$output_file" ] || { printf '%s\n' "PATCH_THERMAL_DELTA_REASON=unchanged_overlay_present_$file"; exit 61; }
     fi
-    validated_files=$((validated_files + 1)); target_zone_total=$((target_zone_total + target_zones)); threshold_array_total=$((threshold_array_total + threshold_arrays)); threshold_value_total=$((threshold_value_total + threshold_values))
   done
-  [ "$validated_files" -eq "$THERMAL_LAYOUT_COUNT" ] || exit 64
+  [ "$overlay_seen" -eq "$OVERLAY_COUNT" ] 2>/dev/null || exit 64
+  [ "$validated_files" -eq "$OVERLAY_COUNT" ] 2>/dev/null || exit 64
   [ "$threshold_array_total" -eq "$target_zone_total" ] || exit 66
   if [ "$DELTA" -gt 0 ] 2>/dev/null; then
     [ "$target_zone_total" -gt 0 ] || exit 65
     [ "$threshold_value_total" -gt 0 ] || exit 67
   fi
 fi
+[ "$layout_checked_files" -eq "$THERMAL_LAYOUT_COUNT" ] 2>/dev/null || exit 64
 
 {
   printf '%s\n' 'schema=pixel-thermal-outdoor-delta-validation-v3'
@@ -131,6 +147,8 @@ fi
   printf '%s\n' "pixel11_hysteresis_mode=$PIXEL11_HYSTERESIS_MODE"
   printf '%s\n' "outdoor_profile=$OUTDOOR_PROFILE"
   printf '%s\n' "materialization_mode=$MATERIALIZATION_MODE"
+  printf '%s\n' "overlay_files=$OVERLAY_FILES_CSV"
+  printf '%s\n' "overlay_file_count=$OVERLAY_COUNT"
   printf '%s\n' "expected_delta=$DELTA"
   printf '%s\n' "validated_files=$validated_files"
   printf '%s\n' "target_zone_count=$target_zone_total"
@@ -148,7 +166,7 @@ thermal_validation_write_state "$DEVICE" "$BUILD_ID" "$POLLING_MODE" "$OUTDOOR_P
 thermal_validation_refresh_legacy_links "$MODPATH" || exit 74
 VALIDATED=1
 rm -rf "$BACKUP_DIR"
-printf '%s\n' PATCH_THERMAL_DELTA_VALIDATION=pass "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_MATERIALIZATION=$MATERIALIZATION_MODE" "PATCH_THERMAL_DELTA_EXPECTED=$DELTA" "PATCH_THERMAL_DELTA_FILES=$validated_files" "PATCH_THERMAL_DELTA_TARGET_ZONES=$target_zone_total" "PATCH_THERMAL_DELTA_THRESHOLD_ARRAYS=$threshold_array_total" "PATCH_THERMAL_DELTA_THRESHOLD_VALUES=$threshold_value_total" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_VALIDATION_DIR=$THERMAL_VALIDATION_DIR" "PATCH_THERMAL_DELTA_REPORT=$THERMAL_VALIDATION_DELTA"
+printf '%s\n' PATCH_THERMAL_DELTA_VALIDATION=pass "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_MATERIALIZATION=$MATERIALIZATION_MODE" "PATCH_THERMAL_OVERLAY_FILES=$OVERLAY_FILES_CSV" "PATCH_THERMAL_OVERLAY_COUNT=$OVERLAY_COUNT" "PATCH_THERMAL_DELTA_EXPECTED=$DELTA" "PATCH_THERMAL_DELTA_FILES=$validated_files" "PATCH_THERMAL_DELTA_TARGET_ZONES=$target_zone_total" "PATCH_THERMAL_DELTA_THRESHOLD_ARRAYS=$threshold_array_total" "PATCH_THERMAL_DELTA_THRESHOLD_VALUES=$threshold_value_total" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_VALIDATION_DIR=$THERMAL_VALIDATION_DIR" "PATCH_THERMAL_DELTA_REPORT=$THERMAL_VALIDATION_DELTA"
 trap - EXIT HUP INT TERM
 rm -f "$RUN_LOG" "$DELTA_TMP"
 exit 0

@@ -1,4 +1,4 @@
-name: Publish vNext 2.1.0-alpha.7 Prerelease
+name: Publish vNext 2.1.0-alpha.8 Prerelease
 
 on:
   workflow_dispatch:
@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      RELEASE_TAG: 'v2.1.0-alpha.7'
-      RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.7.zip'
+      RELEASE_TAG: 'v2.1.0-alpha.8'
+      RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.8.zip'
     steps:
       - name: Checkout release source
         uses: actions/checkout@v4
@@ -40,17 +40,17 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_EVENT_NAME" = 'workflow_dispatch'
-          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.7'
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.7'
-          test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016257'
-          grep -Fq '"version": "2.1.0-alpha.7"' update-prerelease.json
-          grep -Fq '"versionCode": 1016257' update-prerelease.json
-          grep -Fq '/v2.1.0-alpha.7/pixel-thermal-memory-control-2.1.0-alpha.7.zip' update-prerelease.json
-          grep -Fq '## New in 2.1.0-alpha.7' release-notes/2.1.0-alpha.7.md
-          grep -Fq '## Pixel 11 support' release-notes/2.1.0-alpha.7.md
-          grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template' release-notes/2.1.0-alpha.7.md
-          grep -Fq '## Compatibility and safety' release-notes/2.1.0-alpha.7.md
-          ! grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries' release-notes/2.1.0-alpha.7.md
+          test "$GITHUB_REF_NAME" = 'vnext-2.1.0-alpha.8'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.8'
+          test "$(sed -n 's/^versionCode=//p' module.prop | head -n1)" = '1016258'
+          grep -Fq '"version": "2.1.0-alpha.8"' update-prerelease.json
+          grep -Fq '"versionCode": 1016258' update-prerelease.json
+          grep -Fq '/v2.1.0-alpha.8/pixel-thermal-memory-control-2.1.0-alpha.8.zip' update-prerelease.json
+          grep -Fq '## New in 2.1.0-alpha.8' release-notes/2.1.0-alpha.8.md
+          grep -Fq '## Pixel 11 support' release-notes/2.1.0-alpha.8.md
+          grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template' release-notes/2.1.0-alpha.8.md
+          grep -Fq '## Compatibility and safety' release-notes/2.1.0-alpha.8.md
+          ! grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries' release-notes/2.1.0-alpha.8.md
 
       - name: Verify pinned WebUI core
         run: |
@@ -130,9 +130,9 @@ jobs:
             test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = 'false'
             test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = 'true'
             gh release upload "$RELEASE_TAG" "dist/$RELEASE_ASSET" --clobber
-            gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.7' --notes-file release-notes/2.1.0-alpha.7.md
+            gh release edit "$RELEASE_TAG" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.8' --notes-file release-notes/2.1.0-alpha.8.md
           else
-            gh release create "$RELEASE_TAG" "dist/$RELEASE_ASSET" --target "$release_sha" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.7' --notes-file release-notes/2.1.0-alpha.7.md
+            gh release create "$RELEASE_TAG" "dist/$RELEASE_ASSET" --target "$release_sha" --prerelease --title 'Pixel Thermal & Memory Control 2.1.0-alpha.8' --notes-file release-notes/2.1.0-alpha.8.md
           fi
 
       - name: Verify public prerelease
@@ -148,8 +148,8 @@ jobs:
           release_digest="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .digest")"
           test "$release_digest" = "sha256:$local_sha"
           public_body="$(gh release view "$RELEASE_TAG" --json body --jq '.body')"
-          printf '%s\n' "$public_body" | grep -Fq '## New in 2.1.0-alpha.7'
+          printf '%s\n' "$public_body" | grep -Fq '## New in 2.1.0-alpha.8'
           printf '%s\n' "$public_body" | grep -Fq '## Pixel 11 support'
           printf '%s\n' "$public_body" | grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template'
           ! printf '%s\n' "$public_body" | grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries'
-          printf '%s\n' 'RESULT: VNEXT_ALPHA7_PUBLIC_PRERELEASE_VERIFY_PASS'
+          printf '%s\n' 'RESULT: VNEXT_ALPHA8_PUBLIC_PRERELEASE_VERIFY_PASS'

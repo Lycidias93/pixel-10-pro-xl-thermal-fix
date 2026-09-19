@@ -31,6 +31,12 @@ Community tester reports that do not include the required post-boot readiness/ru
 | Pixel 11 Pro XL | `kodiak` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
 | Pixel 11 Pro Fold | `yogi` | 17 | `platform_admitted` | bounded Include graph from `thermal_info_config.json` | No device-specific stock export/runtime package yet | **Stock only** | +1 C, exact `VIRTUAL-SKIN` only | blocked on experimental target | Stock graph + install/reboot + runtime package |
 
+## Alpha8 sparse-overlay acceptance gate
+
+Alpha8 narrows Tensor G6 module materialization without widening the Thermal policy: only Pixel 11 Thermal JSON files whose validated candidate bytes differ from the cached stock source are placed under the module overlay. Untouched members of the resolved G6 Include graph remain on stock vendor files. Full Stock continues to use `stock-no-overlay`. Pixel 9/10-family targets remain on the established full three-file `overlay` contract.
+
+The exact Alpha8 head must repeat the `grizzly` hardware gate before merge: Stock baseline, HotHysteresis-only, MaxReleaseStep-only, both recovery toggles, Outdoor Safe +1 C -> Stock, Bootguard/readiness/active-file verification, WebUI/Action parity and a quick performance regression check. Static CI proves sparse selection and unchanged-file absence; it does not replace same-head device evidence.
+
 ## Pixel 11 initial safety envelope
 
 Pixel 11 support does not reuse the old three-file assumption. The vNext materializer resolves a bounded Include closure rooted at `thermal_info_config.json`, accepts only known Thermal-config basenames under the local vendor Thermal directory, rejects missing includes and cycles, hashes/caches every controlled source file, and validates that only admitted bytes changed.

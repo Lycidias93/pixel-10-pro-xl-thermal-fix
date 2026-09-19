@@ -25,6 +25,7 @@ BUILD_SLUG="$(printf '%s' "$BUILD_ID" | tr -c 'A-Za-z0-9._-' '_')"
 CACHE_DIR="$DATA_ROOT/originals/$DEVICE/$BUILD_SLUG/vendor/etc"
 SOURCE_MANIFEST="$CACHE_DIR/source-manifest.tsv"
 PATCH_MANIFEST="$GUARD_DIR/patch-manifest.tsv"
+DELTA_REPORT="$GUARD_DIR/outdoor-delta-validation.env"
 REPORT_MODULE="$M/validation_report.json"
 REPORT_DATA="$DATA_ROOT/validation_report.json"
 
@@ -98,15 +99,38 @@ fi
 polling_mode="$(cfg_get THERMAL_POLLING_MODE)"; [ -n "$polling_mode" ] || polling_mode=mod
 outdoor_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"; [ -n "$outdoor_profile" ] || outdoor_profile=stock
 
+materialization_mode="$(kv_get materialization_mode "$DELTA_REPORT")"; [ -n "$materialization_mode" ] || materialization_mode=unknown
+overlay_files_csv="$(kv_get overlay_files "$DELTA_REPORT")"; [ -n "$overlay_files_csv" ] || overlay_files_csv=none
+overlay_expected_count="$(kv_get overlay_file_count "$DELTA_REPORT")"; [ -n "$overlay_expected_count" ] || overlay_expected_count=invalid
+case "$overlay_expected_count" in ''|*[!0-9]*) overlay_contract_valid=no ;; *) overlay_contract_valid=yes ;; esac
+overlay_file_selected() { case ",$overlay_files_csv," in *",$1,"*) return 0 ;; *) return 1 ;; esac; }
+
 patch_manifest_valid=yes
 patch_rows=0
 patch_source_polling_total=0
 patch_replacement_total=0
 overlay_polling_300000=0
 overlay_polling_5000=0
-if [ "$layout_valid" != yes ] || [ ! -s "$PATCH_MANIFEST" ]; then
+materialized_patch_rows=0
+materialized_patch_files_csv=none
+if [ "$layout_valid" != yes ] || [ ! -s "$PATCH_MANIFEST" ] || [ "$overlay_contract_valid" != yes ]; then
   patch_manifest_valid=no
-else
+elif [ "$materialization_mode" = stock-no-overlay ]; then
+  [ "$overlay_expected_count" -eq 0 ] 2>/dev/null || patch_manifest_valid=no
+  [ "$overlay_files_csv" = none ] || patch_manifest_valid=no
+  _tab="$(printf '\t')"
+  while IFS="$_tab" read -r file _rest; do
+    [ "$file" = file ] && continue
+    [ -n "$file" ] && patch_rows=$((patch_rows + 1))
+  done < "$PATCH_MANIFEST"
+  [ "$patch_rows" -eq 0 ] 2>/dev/null || patch_manifest_valid=no
+  for file in $layout_files; do [ ! -e "$OVERLAY_DIR/$file" ] || patch_manifest_valid=no; done
+elif [ "$materialization_mode" = sparse-overlay ] || [ "$materialization_mode" = overlay ]; then
+  if [ "$materialization_mode" = overlay ]; then
+    [ "$overlay_expected_count" -eq "$layout_count" ] 2>/dev/null || patch_manifest_valid=no
+  else
+    [ "$overlay_expected_count" -gt 0 ] 2>/dev/null || patch_manifest_valid=no
+  fi
   _tab="$(printf '\t')"
   while IFS="$_tab" read -r file source_sha output_sha source_polling replacements output300000 output5000 allowed extra; do
     [ "$file" = file ] && continue
@@ -115,11 +139,6 @@ else
     case " $layout_files " in *" $file "*) ;; *) patch_manifest_valid=no; continue ;; esac
     [ -z "$extra" ] || patch_manifest_valid=no
     [ "$allowed" = yes ] || patch_manifest_valid=no
-    out="$OVERLAY_DIR/$file"
-    [ -s "$out" ] || { patch_manifest_valid=no; continue; }
-    [ "$(sha_file "$out")" = "$output_sha" ] || patch_manifest_valid=no
-    [ "$(count_polling_value "$out" 300000)" = "$output300000" ] || patch_manifest_valid=no
-    [ "$(count_polling_value "$out" 5000)" = "$output5000" ] || patch_manifest_valid=no
     case "$source_polling:$replacements:$output300000:$output5000" in *[!0-9:]*|:*|*:) patch_manifest_valid=no; continue ;; esac
     if [ "$polling_mode" = mod ]; then
       [ "$replacements" = "$source_polling" ] || patch_manifest_valid=no
@@ -130,13 +149,36 @@ else
       [ "$output300000" = "$source_polling" ] || patch_manifest_valid=no
       [ "$output5000" = 0 ] || patch_manifest_valid=no
     fi
+    materialize_required=no
+    if [ "$materialization_mode" = overlay ] || [ "$source_sha" != "$output_sha" ]; then
+      materialize_required=yes
+    fi
+    if [ "$materialize_required" = yes ]; then
+      out="$OVERLAY_DIR/$file"
+      [ -s "$out" ] || { patch_manifest_valid=no; continue; }
+      [ "$(sha_file "$out")" = "$output_sha" ] || patch_manifest_valid=no
+      [ "$(count_polling_value "$out" 300000)" = "$output300000" ] || patch_manifest_valid=no
+      [ "$(count_polling_value "$out" 5000)" = "$output5000" ] || patch_manifest_valid=no
+      materialized_patch_rows=$((materialized_patch_rows + 1))
+      if [ "$materialized_patch_files_csv" = none ]; then
+        materialized_patch_files_csv="$file"
+      else
+        materialized_patch_files_csv="$materialized_patch_files_csv,$file"
+      fi
+      overlay_polling_300000=$((overlay_polling_300000 + output300000))
+      overlay_polling_5000=$((overlay_polling_5000 + output5000))
+    else
+      [ ! -e "$OVERLAY_DIR/$file" ] || patch_manifest_valid=no
+    fi
     patch_source_polling_total=$((patch_source_polling_total + source_polling))
     patch_replacement_total=$((patch_replacement_total + replacements))
-    overlay_polling_300000=$((overlay_polling_300000 + output300000))
-    overlay_polling_5000=$((overlay_polling_5000 + output5000))
   done < "$PATCH_MANIFEST"
   [ "$patch_rows" -eq "$layout_count" ] 2>/dev/null || patch_manifest_valid=no
   [ "$patch_source_polling_total" = "$source_polling_total" ] || patch_manifest_valid=no
+  [ "$materialized_patch_rows" -eq "$overlay_expected_count" ] 2>/dev/null || patch_manifest_valid=no
+  [ "$materialized_patch_files_csv" = "$overlay_files_csv" ] || patch_manifest_valid=no
+else
+  patch_manifest_valid=no
 fi
 
 validation_report_valid=yes
@@ -151,14 +193,18 @@ fi
 
 module_overlay_ready=yes
 overlay_inventory_count=0
-if [ "$layout_valid" != yes ]; then
+if [ "$layout_valid" != yes ] || [ "$overlay_contract_valid" != yes ]; then
   module_overlay_ready=no
 else
   for file in $layout_files; do
-    [ -s "$OVERLAY_DIR/$file" ] || module_overlay_ready=no
-    overlay_inventory_count=$((overlay_inventory_count + 1))
+    if overlay_file_selected "$file"; then
+      [ -s "$OVERLAY_DIR/$file" ] || module_overlay_ready=no
+      overlay_inventory_count=$((overlay_inventory_count + 1))
+    else
+      [ ! -e "$OVERLAY_DIR/$file" ] || module_overlay_ready=no
+    fi
   done
-  [ "$overlay_inventory_count" -eq "$layout_count" ] 2>/dev/null || module_overlay_ready=no
+  [ "$overlay_inventory_count" -eq "$overlay_expected_count" ] 2>/dev/null || module_overlay_ready=no
 fi
 
 materialization_valid=no
@@ -174,10 +220,12 @@ if [ "$layout_valid" != yes ]; then
   active_match=no
 else
   for file in $layout_files; do
-    mf="$OVERLAY_DIR/$file"; vf="$VENDOR_DIR/$file"
-    if [ ! -s "$mf" ] || [ ! -s "$vf" ]; then active_match=no; continue; fi
+    vf="$VENDOR_DIR/$file"
+    expected="$CACHE_DIR/$file"
+    if overlay_file_selected "$file"; then expected="$OVERLAY_DIR/$file"; fi
+    if [ ! -s "$expected" ] || [ ! -s "$vf" ]; then active_match=no; continue; fi
     active_checked=$((active_checked + 1))
-    [ "$(sha_file "$mf")" = "$(sha_file "$vf")" ] || active_match=no
+    [ "$(sha_file "$expected")" = "$(sha_file "$vf")" ] || active_match=no
     active_polling_300000=$((active_polling_300000 + $(count_polling_value "$vf" 300000)))
     active_polling_5000=$((active_polling_5000 + $(count_polling_value "$vf" 5000)))
   done
@@ -265,6 +313,9 @@ case "$_suv" in *KernelSU*Next*|*KSU-Next*) root_impl=kernelsu_next ;; *KernelSU
   printf '%s\n' "DYNAMIC_VALIDATION_REPORT=$REPORT_MODULE"
   printf '%s\n' "DYNAMIC_VALIDATION_REPORT_VALID=$validation_report_valid"
   printf '%s\n' "DYNAMIC_MATERIALIZATION_VALID=$materialization_valid"
+  printf '%s\n' "DYNAMIC_MATERIALIZATION_MODE=$materialization_mode"
+  printf '%s\n' "DYNAMIC_OVERLAY_FILES=$overlay_files_csv"
+  printf '%s\n' "DYNAMIC_OVERLAY_COUNT=$overlay_expected_count"
   printf '%s\n' "POLLING_MODE=$polling_mode"
   printf '%s\n' "OUTDOOR_PROFILE=$outdoor_profile"
   printf '%s\n' "ACTIVE_POLLING_VALID=$active_polling_valid"

@@ -17,7 +17,7 @@ grep -Fq 'warning_count=' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_PASS' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_FAIL' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_STOP' "$verify"
-grep -Fq '2.1.0-alpha.7|2.1.0-alpha.6|2.1.0-alpha.5|2.1.0-alpha.4|2.1.0-alpha.4-dev.2) pass_check vnext_supported_version' "$verify"
+grep -Fq '2.1.0-alpha.8|2.1.0-alpha.7|2.1.0-alpha.6|2.1.0-alpha.5|2.1.0-alpha.4|2.1.0-alpha.4-dev.2) pass_check vnext_supported_version' "$verify"
 grep -Fq 'vnext_device_test' "$verify"
 
 grep -Fq "swap_list=\"\$(awk 'NR > 1 && \$1 ~ /\\/zram[0-9]+$/ { print \$1 }' /proc/swaps 2>/dev/null)\"" "$verify"
@@ -38,7 +38,7 @@ printf '%s\n' 'PASS repository_owned_phase_aware_verifier'
 printf '%s\n' 'PASS self_rooting_termux_entrypoint'
 printf '%s\n' 'PASS dynamic_zram_instance_discovery'
 printf '%s\n' 'PASS config_aware_memory_killer_matrix'
-printf '%s\n' 'PASS alpha7_current_and_previous_bound_identity'
+printf '%s\n' 'PASS alpha8_current_and_previous_bound_identity'
 printf '%s\n' 'PASS collect_all_non_safety_failures'
 printf '%s\n' 'PASS no_heredoc_or_herestring'
 printf '%s\n' 'RESULT: VNEXT_DEVICE_VERIFY_CONTRACT_PASS'

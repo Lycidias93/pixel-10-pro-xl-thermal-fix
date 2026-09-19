@@ -250,8 +250,12 @@ patch_one() {
 DELTA=0
 case "$OUTDOOR_PROFILE" in outdoor-safe) DELTA=1 ;; outdoor-plus) DELTA=2 ;; outdoor-extended) DELTA=3 ;; esac
 MATERIALIZATION=overlay
-if [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then
-  MATERIALIZATION=stock-no-overlay
+if [ "$DEVICE_FAMILY" = pixel11 ]; then
+  if [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then
+    MATERIALIZATION=stock-no-overlay
+  else
+    MATERIALIZATION=sparse-overlay
+  fi
 fi
 mkdir -p "$DATA_ROOT" "$CACHE_PARENT" "$TARGET_PARENT" "$GUARD_DIR"
 
@@ -349,6 +353,8 @@ printf '%s\n' '  "files": {' >> "$REPORT_TMP"
 _tab="$(printf '\t')"; first_json=1; source_files=0; source_polling_total=0; replacement_total=0; output_300000_total=0; output_5000_total=0
 pixel11_hys_arrays=0; pixel11_mrs_targets=0
 pixel11_hys_changes=0; pixel11_mrs_changes=0
+overlay_file_count=0
+overlay_files_csv=none
 if [ "$MATERIALIZATION" = stock-no-overlay ]; then
   while IFS="$_tab" read -r file source_sha source_bytes source_polling; do
     [ "$file" = file ] && continue
@@ -382,6 +388,25 @@ else
     normalize_allowed "$sf" "$ns" "$file"; normalize_allowed "$of" "$no" "$file"
     cmp -s "$ns" "$no" || fail 47 "unallowed_byte_change_$file"
     rm -f "$ns" "$no"
+    if [ "$MATERIALIZATION" = sparse-overlay ]; then
+      if [ "$osh" != "$source_sha" ]; then
+        overlay_file_count=$((overlay_file_count + 1))
+        if [ "$overlay_files_csv" = none ]; then
+          overlay_files_csv="$file"
+        else
+          overlay_files_csv="$overlay_files_csv,$file"
+        fi
+      else
+        rm -f "$of"
+      fi
+    else
+      overlay_file_count=$((overlay_file_count + 1))
+      if [ "$overlay_files_csv" = none ]; then
+        overlay_files_csv="$file"
+      else
+        overlay_files_csv="$overlay_files_csv,$file"
+      fi
+    fi
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$file" "$source_sha" "$osh" "$source_polling" "$replacements" "$o300" "$o5" yes >> "$PATCH_MANIFEST_TMP"
     [ "$first_json" -eq 1 ] || printf '%s\n' '    ,' >> "$REPORT_TMP"; first_json=0
     printf '    "%s": {\n' "$file" >> "$REPORT_TMP"
@@ -396,7 +421,13 @@ else
   done < "$MANIFEST"
 
   [ "$source_files" -eq "$THERMAL_LAYOUT_COUNT" ] 2>/dev/null || fail 48 "output_layout_count_${source_files}_expected_${THERMAL_LAYOUT_COUNT}"
-  for file in $THERMAL_LAYOUT_FILES; do [ -s "$PATCH_STAGE/$file" ] || fail 48 "required_output_missing_$file"; done
+  [ "$overlay_file_count" -gt 0 ] 2>/dev/null || fail 60 sparse_overlay_empty_for_nonstock_request
+  for file in $THERMAL_LAYOUT_FILES; do
+    case ",$overlay_files_csv," in
+      *",$file,"*) [ -s "$PATCH_STAGE/$file" ] || fail 48 "required_sparse_output_missing_$file" ;;
+      *) [ ! -e "$PATCH_STAGE/$file" ] || fail 48 "unexpected_unchanged_overlay_$file" ;;
+    esac
+  done
 
   if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
     [ "$pixel11_hys_arrays" = 7 ] || fail 58 "pixel11_hysteresis_inventory_${pixel11_hys_arrays}_expected_7"
@@ -413,7 +444,10 @@ else
   fi
 fi
 
-printf '%s\n' '  },' '  "totals": {' >> "$REPORT_TMP"
+printf '%s\n' '  },' >> "$REPORT_TMP"
+printf '  "overlay_files": "%s",\n' "$overlay_files_csv" >> "$REPORT_TMP"
+printf '  "overlay_file_count": %s,\n' "$overlay_file_count" >> "$REPORT_TMP"
+printf '%s\n' '  "totals": {' >> "$REPORT_TMP"
 printf '    "source_files": %s,\n' "$source_files" >> "$REPORT_TMP"
 printf '    "source_polling_300000": %s,\n' "$source_polling_total" >> "$REPORT_TMP"
 printf '    "replacements": %s,\n' "$replacement_total" >> "$REPORT_TMP"
@@ -447,6 +481,6 @@ mv "$REPORT_TMP" "$REPORT_MODULE"
 cp -fp "$REPORT_MODULE" "$REPORT_DATA"
 thermal_layout_write_env "$LAYOUT_ENV" "$DEVICE" "$BUILD_ID" || fail 57 layout_state_publish_failed
 chmod 0644 "$PATCH_MANIFEST" "$REPORT_MODULE" "$REPORT_DATA" 2>/dev/null || true
-printf '%s\n' PATCH_THERMAL=pass "PATCH_THERMAL_DEVICE=$DEVICE" "PATCH_THERMAL_BUILD_ID=$BUILD_ID" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR" "PATCH_THERMAL_FILES=$source_files" "PATCH_THERMAL_SOURCE_300000=$source_polling_total" "PATCH_THERMAL_REPLACEMENTS=$replacement_total" "PATCH_THERMAL_OUTPUT_5000=$output_5000_total" "PATCH_THERMAL_MATERIALIZATION=$MATERIALIZATION" "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=$pixel11_hys_changes" "PATCH_THERMAL_PIXEL11_MRS_CHANGES=$pixel11_mrs_changes" "PATCH_THERMAL_MANIFEST=$PATCH_MANIFEST" "PATCH_THERMAL_REPORT=$REPORT_MODULE"
+printf '%s\n' PATCH_THERMAL=pass "PATCH_THERMAL_DEVICE=$DEVICE" "PATCH_THERMAL_BUILD_ID=$BUILD_ID" "PATCH_THERMAL_LAYOUT_FAMILY=$THERMAL_LAYOUT_FAMILY" "PATCH_THERMAL_LAYOUT_FILES=$THERMAL_LAYOUT_FILES_CSV" "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR" "PATCH_THERMAL_FILES=$source_files" "PATCH_THERMAL_SOURCE_300000=$source_polling_total" "PATCH_THERMAL_REPLACEMENTS=$replacement_total" "PATCH_THERMAL_OUTPUT_5000=$output_5000_total" "PATCH_THERMAL_MATERIALIZATION=$MATERIALIZATION" "PATCH_THERMAL_OVERLAY_FILES=$overlay_files_csv" "PATCH_THERMAL_OVERLAY_COUNT=$overlay_file_count" "PATCH_THERMAL_PIXEL11_HYSTERESIS_MODE=$PIXEL11_HYSTERESIS_MODE" "PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=$pixel11_hys_changes" "PATCH_THERMAL_PIXEL11_MRS_CHANGES=$pixel11_mrs_changes" "PATCH_THERMAL_MANIFEST=$PATCH_MANIFEST" "PATCH_THERMAL_REPORT=$REPORT_MODULE"
 trap - EXIT HUP INT TERM
 exit 0

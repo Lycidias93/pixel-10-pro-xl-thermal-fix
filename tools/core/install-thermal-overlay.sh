@@ -3,14 +3,23 @@
 thermal_verify_materialized_layout() {
   _thermal_mode="${THERMAL_MATERIALIZATION_MODE:-overlay}"
   case "$_thermal_mode" in
-    overlay)
+    sparse-overlay)
+      [ -n "${THERMAL_MATERIALIZED_FILES:-}" ] || { thermal_abort "! Sparse Thermal overlay file list missing"; return 1; }
       for _thermal_file in $THERMAL_LAYOUT_FILES; do
-        [ -s "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Failed to materialize active file: $_thermal_file"; return 1; }
+        case " $THERMAL_MATERIALIZED_FILES " in
+          *" $_thermal_file "*) [ -s "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Failed to materialize sparse active file: $_thermal_file"; return 1; } ;;
+          *) [ ! -e "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Unexpected unchanged Thermal overlay file: $_thermal_file"; return 1; } ;;
+        esac
       done
     ;;
     stock-no-overlay)
       for _thermal_file in $THERMAL_LAYOUT_FILES; do
         [ ! -e "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Unexpected thermal overlay file in stock-no-overlay mode: $_thermal_file"; return 1; }
+      done
+    ;;
+    overlay)
+      for _thermal_file in $THERMAL_LAYOUT_FILES; do
+        [ -s "$MODPATH/system/vendor/etc/$_thermal_file" ] || { thermal_abort "! Failed to materialize full active file: $_thermal_file"; return 1; }
       done
     ;;
     *)
@@ -133,6 +142,8 @@ thermal_install_overlay() {
     patch_hys="$(sed -n 's/^PATCH_THERMAL_PIXEL11_HYSTERESIS_CHANGES=//p' "$patch_output" | tail -n 1)"
     patch_mrs="$(sed -n 's/^PATCH_THERMAL_PIXEL11_MRS_CHANGES=//p' "$patch_output" | tail -n 1)"
     patch_materialization="$(sed -n 's/^PATCH_THERMAL_MATERIALIZATION=//p' "$patch_output" | tail -n 1)"
+    patch_overlay_files="$(sed -n 's/^PATCH_THERMAL_OVERLAY_FILES=//p' "$patch_output" | tail -n 1)"
+    patch_overlay_count="$(sed -n 's/^PATCH_THERMAL_OVERLAY_COUNT=//p' "$patch_output" | tail -n 1)"
     [ -n "$patch_source" ] || patch_source=unknown
     [ -n "$patch_replacements" ] || patch_replacements=unknown
     [ -n "$patch_delta" ] || patch_delta=unknown
@@ -141,8 +152,25 @@ thermal_install_overlay() {
     [ -n "$patch_values" ] || patch_values=unknown
     [ -n "$patch_hys" ] || patch_hys=0
     [ -n "$patch_mrs" ] || patch_mrs=0
-    case "$patch_materialization" in overlay|stock-no-overlay) ;; *) thermal_abort "! Invalid Thermal materialization result: ${patch_materialization:-missing}"; return 1 ;; esac
+    case "$patch_materialization" in overlay|sparse-overlay|stock-no-overlay) ;; *) thermal_abort "! Invalid Thermal materialization result: ${patch_materialization:-missing}"; return 1 ;; esac
+    case "$patch_overlay_count" in ''|*[!0-9]*) thermal_abort "! Invalid Thermal overlay count: ${patch_overlay_count:-missing}"; return 1 ;; esac
     THERMAL_MATERIALIZATION_MODE="$patch_materialization"
+    case "$THERMAL_MATERIALIZATION_MODE" in
+      sparse-overlay)
+        [ "$patch_overlay_count" -gt 0 ] 2>/dev/null || { thermal_abort "! Sparse Thermal overlay unexpectedly empty"; return 1; }
+        [ -n "$patch_overlay_files" ] && [ "$patch_overlay_files" != none ] || { thermal_abort "! Sparse Thermal overlay list missing"; return 1; }
+        THERMAL_MATERIALIZED_FILES="$(printf '%s' "$patch_overlay_files" | tr ',' ' ')"
+      ;;
+      overlay)
+        [ "$patch_overlay_count" -gt 0 ] 2>/dev/null || { thermal_abort "! Full Thermal overlay unexpectedly empty"; return 1; }
+        [ -n "$patch_overlay_files" ] && [ "$patch_overlay_files" != none ] || { thermal_abort "! Full Thermal overlay list missing"; return 1; }
+        THERMAL_MATERIALIZED_FILES="$(printf '%s' "$patch_overlay_files" | tr ',' ' ')"
+      ;;
+      stock-no-overlay)
+        [ "$patch_overlay_count" -eq 0 ] 2>/dev/null || { thermal_abort "! Stock Thermal overlay count is nonzero"; return 1; }
+        THERMAL_MATERIALIZED_FILES=
+      ;;
+    esac
     ui_print "- Thermal validation: PASS"
     ui_print "- Polling changes: $patch_replacements/$patch_source"
     if thermal_layout_is_g6_device "$device"; then
@@ -151,6 +179,7 @@ thermal_install_overlay() {
     ui_print "- Outdoor delta: +${patch_delta} C"
     ui_print "- Scope: $patch_files files, $patch_zones zones, $patch_values values"
     ui_print "- Materialization: $THERMAL_MATERIALIZATION_MODE"
+    ui_print "- Thermal overlay files: ${patch_overlay_files:-none}"
     ui_print "- Validation state: canonical"
     rm -f "$patch_output" 2>/dev/null || true
   else
