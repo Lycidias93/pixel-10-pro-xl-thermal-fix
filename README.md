@@ -51,7 +51,7 @@ Stable currently targets the Android 17 Pixel 10 family:
 | `frankel` | Pixel 10 |
 | `rango` | Pixel 10 Pro Fold |
 
-### Public prerelease 2.1.0-alpha.5
+### Public prerelease 2.1.0-alpha.6
 
 The published Alpha6 package carries one Android 17 vNext line for:
 
@@ -70,7 +70,7 @@ The published Alpha6 package carries one Android 17 vNext line for:
 
 Pixel 9-series and Pixel 10a targets remain intentionally conservative: local stock-layout validation is mandatory, pTune Thermal coexistence override is blocked on those experimental targets, and their current admitted Outdoor increase is capped at `+1 °C` where applicable.
 
-### Alpha6: Pixel 11 series
+### Alpha7 candidate: Pixel 11 series
 
 The current vNext development code admits these Android 17 targets for **experimental device testing**:
 
@@ -87,7 +87,7 @@ The initial Tensor G6 safety envelope is intentionally narrow. Module 5-second p
 
 The available Pixel 11 Pro stock Thermal archive established the graph-layout change and confirmed that stock still contains 300-second polling values. Separately, the exact PR #194 candidate (`461b150d6ebfc59dbb905fb0f29070c010a938a4b23dd490210e65a7ef83ff3f`) completed post-reboot runtime acceptance on Pixel 11 Pro / `grizzly`, Android 17 build `CD1A.260714.001.A9`: Bootguard reported `full_pass`, vNext readiness reached `runtime_verified`, the validated 10-file G6 overlay remained active with 35/35 stock `PollingDelay=300000` values and 0 `5000` values, and the final ZRAM + `page-cluster=0` reboot test reconciled the persisted zero state after verified boot. See [the vNext device validation matrix](docs/vnext-device-test-matrix.md).
 
-Alpha6 keeps all Pixel 11 classic `PollingDelay` values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. The exact-head `grizzly` retest passed these feedback gates.
+The Alpha7 candidate keeps all Pixel 11 classic `PollingDelay` values Stock-only, persists an explicitly selected `page-cluster=0` state for guarded post-Bootguard reapplication, exposes Silent/Verbose logging controls in the WebUI, and consumes the shared mobile-input viewport fix so the Android software keyboard does not cover confirmation fields. The exact-head `grizzly` retest passed these feedback gates.
 
 The integrated **G6 recovery path** branches the installer, Action dashboard, WebUI capability/action surface and Thermal materializer by device family. Pixel 9/10-family behavior remains on the established option/patch path. Pixel 11-family installs and runtime controls expose **Recovery (HotHysteresis + MaxReleaseStep)**, Thermal Profile (Stock or Outdoor Safe `+1 C` only), ZRAM/Emerald Hill, guarded ZRAM page-cluster, logging and support snapshots; legacy Pixel 10 classic polling, LMKD and pTune controls are not shown for Pixel 11. Classic `PollingDelay` and `PassiveDelay` are both pinned to stock on Pixel 11 and have no user control. Harish's real `grizzly` test rejected `PassiveDelay 7000 -> 5000`: the 5-second variant severely throttled the prime core and cut single-core performance by roughly 50%, while the recovery changes with PassiveDelay left stock produced about 2.3k single-core / 7k multi-core in Geekbench 7. The recovery patch remains restricted to `thermal_info_config_common.json`: seven named VIRTUAL-SKIN performance sensors, 15 admitted hysteresis-slot changes and 32 admitted `MaxReleaseStep 1 -> 2` cooling-device/profile binding changes across five target sensors. A real-G6-layout threshold regression separately proves Outdoor Safe changes only exact master `VIRTUAL-SKIN`; CPU/SOC derivatives, WLAN/BT/MMW, modem, charge and protection objects remain stock.
 
@@ -126,7 +126,7 @@ Published Alpha5 exposes the guarded experimental `page-cluster 0` action throug
 
 Current vNext development additionally makes page-cluster a separate ZRAM sub-choice during installation and on the family-aware Action/WebUI surfaces. Installation records only the desired Stock/0 state; it does not write the live sysctl. After reboot, the module waits for Bootguard verification and active ZRAM before applying persisted `0`; choosing Stock clears the persisted zero request and restores the same-boot baseline when the module owns it. The write remains a guarded ZRAM experiment, not an unconditional early-boot sysctl mutation. This reboot-persistence path passed the final `grizzly` hardware retest after PR #194 candidate installation.
 
-## Alpha6 / vNext WebUI
+## Alpha7 / vNext WebUI
 
 There are two supported launch paths:
 
@@ -214,7 +214,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins WebUI Core `0.6.6` at template commit `0d5c724711733b6f794790ef96d718e96c64c258`, adding the corrected HUP-safe standalone Action server lifetime contract plus Android/Toybox-safe WebUI dry-run boolean parsing while retaining the post-Alpha5 mobile-input fix; Alpha6 publication now requires a fresh exact-candidate device WebUI release audit after the Core 0.6.6 rebuild; PR #199 Pixel 11 recovery work remains separately hardware-gated.
+Published Alpha5 and the current vNext development line consume the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.1`. Current vNext development pins WebUI Core `0.6.6` at template commit `0d5c724711733b6f794790ef96d718e96c64c258`, adding the corrected HUP-safe standalone Action server lifetime contract plus Android/Toybox-safe WebUI dry-run boolean parsing while retaining the post-Alpha5 mobile-input fix; Alpha7 publication remains blocked until the integrated exact-head candidate passes the fresh `grizzly` hardware and WebUI acceptance gate; the public prerelease channel stays on Alpha6 until that acceptance is complete.
 
 That shared core documents clean adaptations or design references from:
 
