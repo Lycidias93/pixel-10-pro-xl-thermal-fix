@@ -93,14 +93,14 @@ normalize_allowed() {
     case "$PIXEL11_HYSTERESIS_MODE" in hysteresis|combined) _g6_hys=yes ;; esac
     case "$PIXEL11_HYSTERESIS_MODE" in max-release-step|combined) _g6_mrs=yes ;; esac
   fi
-  awk -v policy="$OUTDOOR_POLICY" -v g6_hys="$_g6_hys" -v g6_mrs="$_g6_mrs" '
+  awk -v policy="$OUTDOOR_POLICY" -v file="$_file" -v g6_hys="$_g6_hys" -v g6_mrs="$_g6_mrs" '
     function sensor_name(line, name) {
       if (line !~ /"Name"[[:space:]]*:/) return ""
       if (!match(line, /"Name"[[:space:]]*:[[:space:]]*"[^"]+"/)) return ""
       name=substr(line,RSTART,RLENGTH); sub(/^.*:[[:space:]]*"/,"",name); sub(/"$/,"",name); return name
     }
     function target_allowed(name) {
-      if (policy == "g6_exact_virtual_skin") return name == "VIRTUAL-SKIN"
+      if (policy == "g6_exact_virtual_skin") return file == "thermal_info_config_common.json" && name == "VIRTUAL-SKIN"
       return (index(name,"VIRTUAL-SKIN") == 1 && name !~ /OVER-35C/) || name == "cellular-emergency"
     }
     function g6_target(name) {
@@ -182,14 +182,14 @@ normalize_allowed() {
 patch_one() {
   _src="$1"; _dst="$2"; _file="$3"
   _base="${_dst}.base.$$"
-  awk -v delta="$DELTA" -v poll_mode="$POLLING_MODE" -v policy="$OUTDOOR_POLICY" '
+  awk -v delta="$DELTA" -v poll_mode="$POLLING_MODE" -v policy="$OUTDOOR_POLICY" -v file="$_file" '
     function sensor_name(line, name) {
       if (line !~ /"Name"[[:space:]]*:/) return ""
       if (!match(line, /"Name"[[:space:]]*:[[:space:]]*"[^"]+"/)) return ""
       name=substr(line,RSTART,RLENGTH); sub(/^.*:[[:space:]]*"/,"",name); sub(/"$/,"",name); return name
     }
     function target_allowed(name) {
-      if (policy == "g6_exact_virtual_skin") return name == "VIRTUAL-SKIN"
+      if (policy == "g6_exact_virtual_skin") return file == "thermal_info_config_common.json" && name == "VIRTUAL-SKIN"
       return (index(name,"VIRTUAL-SKIN") == 1 && name !~ /OVER-35C/) || name == "cellular-emergency"
     }
     function adjust_numbers(text, out, tok, dot, dec, fmt, v) {

@@ -33,7 +33,7 @@ Community tester reports that do not include the required post-boot readiness/ru
 
 ## Alpha8 sparse-overlay acceptance gate
 
-Alpha8 narrows Tensor G6 module materialization without widening the Thermal policy: only Pixel 11 Thermal JSON files whose validated candidate bytes differ from the cached stock source are placed under the module overlay. Untouched members of the resolved G6 Include graph remain on stock vendor files. Full Stock continues to use `stock-no-overlay`. Pixel 9/10-family targets remain on the established full three-file `overlay` contract.
+Alpha8 narrows Tensor G6 module materialization without widening the Thermal policy: only Pixel 11 Thermal JSON files whose validated candidate bytes differ from the cached stock source are placed under the module overlay. Outdoor Safe is file-scoped to the master `VIRTUAL-SKIN` definition in `thermal_info_config_common.json`; same-named entries in stats, forecast, background-task, or other peripheral graph files remain stock. Full Stock continues to use `stock-no-overlay`. Pixel 9/10-family targets remain on the established full three-file `overlay` contract.
 
 The exact Alpha8 head must repeat the `grizzly` hardware gate before merge: Stock baseline, HotHysteresis-only, MaxReleaseStep-only, both recovery toggles, Outdoor Safe +1 C -> Stock, Bootguard/readiness/active-file verification, WebUI/Action parity and a quick performance regression check. Static CI proves sparse selection and unchanged-file absence; it does not replace same-head device evidence.
 
