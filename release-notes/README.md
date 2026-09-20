@@ -9,7 +9,8 @@ Release notes are repository documentation and are never included in the flashab
 - [2.0.1](2.0.1.md) — historical stable release.
 
 ## V2 alpha line
-- [2.1.0-alpha.7](2.1.0-alpha.7.md) — current public prerelease with integrated Pixel 11 recovery controls, stock-no-overlay behavior and corrected prerelease updates.
+- [2.1.0-alpha.9](2.1.0-alpha.9.md) — current public prerelease with hardware-accepted Tensor G6 sparse Thermal overlays and byte-exact preservation of untouched stock files.
+- [2.1.0-alpha.7](2.1.0-alpha.7.md) — previous public prerelease with integrated Pixel 11 recovery controls, stock-no-overlay behavior and corrected prerelease updates.
 - [2.1.0-alpha.6](2.1.0-alpha.6.md) — previous public prerelease with experimental Pixel 11 support, HUP-safe standalone WebUI launch and post-Alpha5 reliability fixes.
 - [2.1.0-alpha.5](2.1.0-alpha.5.md) — previous public prerelease with KsuWebUI embedded launch plus the complete user-facing Alpha4 WebUI and reliability changes.
 - [2.1.0-alpha.4](2.1.0-alpha.4.md) — superseded Alpha4 notes retained for history; its user-facing changes are included cumulatively in Alpha5.
