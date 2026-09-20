@@ -35,7 +35,7 @@ is_our_pid() {
   pid=$1
   case "$pid" in ""|*[!0-9]*) return 1 ;; esac
   [ -r "/proc/$pid/cmdline" ] || return 1
-  tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -Fq "$SERVER"
+  grep -Fq "$SERVER" "/proc/$pid/cmdline" 2>/dev/null
 }
 
 stop_server() {

@@ -3,8 +3,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-grep -Fqx 'core_version=0.6.6' webui.lock
-grep -Fqx 'template_commit=0d5c724711733b6f794790ef96d718e96c64c258' webui.lock
+grep -Fqx 'core_version=0.7.1' webui.lock
+grep -Fqx 'template_commit=3f49704701d8ab665139cf3551aa9197610cbaaa' webui.lock
 grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
 grep -Fq 'adivenxnataly/KsuWebUI@20342d280a841f8b317603a7eefb1193a95ab626' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done
@@ -120,11 +120,15 @@ fi
 
 # The package must carry the complete pinned WebUI 0.6.1 asset surface,
 # including the generic Android software-keyboard viewport guard.
-for asset in embedded-host-bootstrap.js mobile-input-viewport.js observability.js observability.css v04.js; do
+for asset in embedded-host-bootstrap.js observability.js observability.css v04.js; do
   grep -Fq "$asset" dev_tools/build-release-module.sh
   grep -Fq "webroot/$asset" dev_tools/verify-release-module.sh
   grep -Fq "webroot/$asset" dev_tools/validate-package.py
 done
+! grep -Fq 'webroot/mobile-input-viewport.js' dev_tools/build-release-module.sh
+grep -Fq 'module/lib/ntfy.sh' dev_tools/build-release-module.sh
+grep -Fq 'lib/ntfy.sh' dev_tools/verify-release-module.sh
+grep -Fq "'lib/ntfy.sh'" dev_tools/validate-package.py
 grep -Fq 'WEBUI_CORE_DIR' dev_tools/build-release-module.sh
 grep -Fq 'webui-server-arm64' dev_tools/build-release-module.sh
 

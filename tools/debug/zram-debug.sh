@@ -2,6 +2,8 @@
 MODDIR="${MODDIR:-/data/adb/modules/pixel-10-pro-xl-thermal-fix}"
 CONFIG_DIR="/data/adb/pixel-10-pro-xl-thermal-fix"
 CONFIG_FILE="$CONFIG_DIR/config.env"
+REDACTOR="$MODDIR/tools/debug/copy-config-redacted.sh"
+CONFIG_SNAPSHOT="/data/local/tmp/pixel_thermal_config_redacted_$$"
 DOWNLOAD="/sdcard/Download"
 ALT_DOWNLOAD="/storage/emulated/0/Download"
 choose_download() { for d in "$DOWNLOAD" "$ALT_DOWNLOAD"; do [ -d "$d" ] && [ -w "$d" ] && { echo "$d"; return 0; }; done; echo "$ALT_DOWNLOAD"; }
@@ -14,7 +16,11 @@ OUT="$DL/pixel_thermal_zram_debug_${TS}.txt"
   echo "module=$MODDIR"
   echo
   echo "== config =="
-  cat "$CONFIG_FILE" 2>/dev/null || true
+  if [ -x "$REDACTOR" ] && "$REDACTOR" "$CONFIG_FILE" "$CONFIG_SNAPSHOT"; then
+    cat "$CONFIG_SNAPSHOT" 2>/dev/null || true
+  else
+    echo "config_snapshot=unavailable"
+  fi
   echo
   echo "== props =="
   for k in mm.zram.maintenance.first_delay_seconds mm.zram.maintenance.periodic_delay_seconds mmd.zram.writeback.max_idle_seconds mmd.zram.comp_algorithm mmd.zram.enabled mmd.zram.size vendor.zram.size persist.device_config.vendor_system_native_boot.zram_size persist.vendor.boot.zram.size; do echo "$k=$(getprop "$k" 2>/dev/null || true)"; done
@@ -36,4 +42,5 @@ OUT="$DL/pixel_thermal_zram_debug_${TS}.txt"
   logcat -d -t 300 2>/dev/null | grep -i -E 'mmd|zram|mm.zram|vendor.zram|pixel-10-pro-xl-thermal-fix' || true
   echo "RESULT: PIXEL_THERMAL_ZRAM_DEBUG_DONE"
 } > "$OUT" 2>&1
+rm -f "$CONFIG_SNAPSHOT" 2>/dev/null || true
 cat "$OUT"

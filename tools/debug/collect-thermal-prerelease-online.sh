@@ -2,6 +2,7 @@
 # Read-only online collector for Pixel Thermal runtime failures and platform-support planning.
 # Works from a private executable path and writes one reviewable archive to Download.
 set -u
+SCRIPT_DIR="${0%/*}"
 
 ID="pixel-10-pro-xl-thermal-fix"
 SCHEMA="pixel-thermal-online-debug-v4"
@@ -207,7 +208,7 @@ for _view in active staged; do
   find "$_mod/system/vendor/etc" -maxdepth 1 -type f -name 'thermal_info_config*.json' -print 2>/dev/null | while IFS= read -r _file; do copy_if_readable "$_file" "$_dst/overlay/${_file##*/}" 4194304; done
  done
 
-copy_if_readable "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env" 1048576
+[ -x "$SCRIPT_DIR/copy-config-redacted.sh" ] && "$SCRIPT_DIR/copy-config-redacted.sh" "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env" || true
 find "$DATA_ROOT/validation" -maxdepth 1 -type f -print 2>/dev/null | while IFS= read -r _file; do copy_if_readable "$_file" "$COLLECT/persistent/validation/${_file##*/}" 4194304; done
 collect_cmd thermal/runtime/dumpsys-thermalservice.txt dumpsys thermalservice
 collect_cmd thermal/runtime/service-list.txt service list

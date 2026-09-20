@@ -141,7 +141,7 @@ for _entry in "caller:$CALLER_MODDIR" "active:$ACTIVE_MOD" "staged:$STAGED_MOD";
   copy_tree_files "$_mod/system/vendor/etc" "$_dst/overlay"
 done
 
-copy_if_readable "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env"
+[ -x "$CALLER_MODDIR/tools/debug/copy-config-redacted.sh" ] && "$CALLER_MODDIR/tools/debug/copy-config-redacted.sh" "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env" || true
 copy_tree_files "$DATA_ROOT/validation" "$COLLECT/persistent/validation"
 copy_tree_files "$DATA_ROOT/lmkd-test" "$COLLECT/persistent/lmkd-test"
 find "$DATA_ROOT/originals" -type f \( -name source-manifest.tsv -o -name thermal_info_config.json -o -name thermal_info_config_charge.json -o -name thermal_info_config_throttling.json \) -print 2>/dev/null | while IFS= read -r _file; do

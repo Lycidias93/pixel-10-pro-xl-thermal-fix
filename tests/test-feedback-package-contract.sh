@@ -13,8 +13,9 @@ grep -Fq 'debug-silent' bin/module-control
 grep -Fq 'debug-verbose' bin/module-control
 grep -Fq 'DEBUG_MODE 0' tools/control/pixel-control.sh
 grep -Fq 'DEBUG_MODE 1' tools/control/pixel-control.sh
-grep -Fq 'template_commit=0d5c724711733b6f794790ef96d718e96c64c258' webui.lock
-grep -Fq 'mobile-input-viewport.js' dev_tools/build-release-module.sh
+grep -Fq 'template_commit=3f49704701d8ab665139cf3551aa9197610cbaaa' webui.lock
+! grep -Fq 'mobile-input-viewport.js' dev_tools/build-release-module.sh
+grep -Fq 'module/lib/ntfy.sh' dev_tools/build-release-module.sh
 grep -Fq 'cubs:17|grizzly:17|kodiak:17|yogi:17' action.sh
 grep -Fq 'cubs:17|grizzly:17|kodiak:17|yogi:17' customize.sh
 printf '%s\n' 'RESULT: PIXEL11_FEEDBACK_PACKAGE_CONTRACT_PASS'

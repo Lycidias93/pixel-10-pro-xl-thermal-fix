@@ -292,5 +292,6 @@ if [ "$verdict" = pass ]; then
   say "RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_PASS phase=$PHASE workflow_exit_code=0"
   exit 0
 fi
+[ -x "$MODDIR/tools/notifications/ntfy-notify.sh" ] && PIXEL_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/notifications/ntfy-notify.sh" fail device-verify verify_failed >/dev/null 2>&1 || true
 say "RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_FAIL phase=$PHASE failure_count=$FAILURES warning_count=$WARNINGS workflow_exit_code=1"
 exit 1
