@@ -17,7 +17,7 @@ grep -Fq 'warning_count=' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_PASS' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_FAIL' "$verify"
 grep -Fq 'RESULT: PIXEL_THERMAL_VNEXT_DEVICE_VERIFY_STOP' "$verify"
-grep -Fq '2.1.0-alpha.8|2.1.0-alpha.7|2.1.0-alpha.6|2.1.0-alpha.5|2.1.0-alpha.4|2.1.0-alpha.4-dev.2) pass_check vnext_supported_version' "$verify"
+grep -Fq '2.1.0-alpha.9|2.1.0-alpha.8|2.1.0-alpha.7|2.1.0-alpha.6|2.1.0-alpha.5|2.1.0-alpha.4|2.1.0-alpha.4-dev.2) pass_check vnext_supported_version' "$verify"
 grep -Fq 'vnext_device_test' "$verify"
 
 grep -Fq "swap_list=\"\$(awk 'NR > 1 && \$1 ~ /\\/zram[0-9]+$/ { print \$1 }' /proc/swaps 2>/dev/null)\"" "$verify"
