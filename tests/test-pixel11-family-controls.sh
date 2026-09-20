@@ -53,7 +53,7 @@ write_graph() {
   mkdir -p "$src"
   cat > "$src/thermal_info_config.json" <<'JSON'
 {
-  "Include": ["thermal_info_config_common.json", "thermal_info_config_charge.json"],
+  "Include": ["thermal_info_config_common.json", "thermal_info_config_charge.json", "thermal_info_config_stats.json", "thermal_info_config_forecast.json", "thermal_info_config_bg_tasks_throttling.json"],
   "Sensors": [
     {"Name": "ROOT-STOCK", "HotThreshold": [40], "PollingDelay": 300000}
   ]
@@ -127,6 +127,23 @@ JSON
   ]
 }
 JSON
+  # Match real G6 stock formatting: these graph members intentionally have no
+  # trailing newline. Recovery-only changes must not make them sparse overlays.
+  printf '%s' '{
+  "Sensors": [
+    {"Name": "STATS-STOCK", "HotThreshold": [40], "PollingDelay": 300000}
+  ]
+}' > "$src/thermal_info_config_stats.json"
+  printf '%s' '{
+  "Sensors": [
+    {"Name": "FORECAST-STOCK", "HotThreshold": [40], "PollingDelay": 300000}
+  ]
+}' > "$src/thermal_info_config_forecast.json"
+  printf '%s' '{
+  "Sensors": [
+    {"Name": "BG-TASKS-STOCK", "HotThreshold": [40], "PollingDelay": 300000}
+  ]
+}' > "$src/thermal_info_config_bg_tasks_throttling.json"
 }
 
 run_phase() {
@@ -134,6 +151,9 @@ run_phase() {
   local root="$tmp/$phase" mod="$tmp/$phase/mod" src="$tmp/$phase/source" data="$tmp/$phase/data"
   make_module "$mod"
   write_graph "$src"
+  for edge_file in thermal_info_config_stats.json thermal_info_config_forecast.json thermal_info_config_bg_tasks_throttling.json; do
+    [[ "$(tail -c 1 "$src/$edge_file")" = '}' ]] || { echo "FAIL fixture_trailing_newline_$edge_file"; return 2; }
+  done
   mkdir -p "$data"
   if [[ "$recovery" = stock ]]; then
     cp "$src/thermal_info_config_common.json" "$mod/system/vendor/etc/thermal_info_config_common.json"
@@ -165,6 +185,9 @@ run_phase() {
   grep -Fxq 'PATCH_THERMAL_OVERLAY_FILES=thermal_info_config_common.json' "$root.log"
   [[ -f "$common" ]]
   [[ ! -e "$mod/system/vendor/etc/thermal_info_config_charge.json" ]]
+  for unchanged in thermal_info_config_stats.json thermal_info_config_forecast.json thermal_info_config_bg_tasks_throttling.json; do
+    [[ ! -e "$mod/system/vendor/etc/$unchanged" ]] || { echo "FAIL newline_only_overlay_present_$unchanged"; return 2; }
+  done
   [[ "$(grep -Fo '"PassiveDelay": 5000' "$common" | wc -l | tr -d ' ')" = 0 ]]
   [[ "$(grep -Fo '"PassiveDelay": 7000' "$common" | wc -l | tr -d ' ')" = 8 ]]
   case "$recovery" in
