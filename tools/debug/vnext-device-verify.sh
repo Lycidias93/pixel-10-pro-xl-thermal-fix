@@ -111,7 +111,7 @@ if [ -r "$MODULE_PROP" ]; then
   module_version_code="$(kv_file versionCode "$MODULE_PROP")"
   say "module_version=${module_version:-unknown}"
   say "module_version_code=${module_version_code:-unknown}"
-  case "$module_version" in 2.1.0-alpha.8|2.1.0-alpha.7|2.1.0-alpha.6|2.1.0-alpha.5|2.1.0-alpha.4|2.1.0-alpha.4-dev.2) pass_check vnext_supported_version ;; *) fail_check "unexpected_module_version=${module_version:-missing}" ;; esac
+  case "$module_version" in 2.1.0-alpha.9|2.1.0-alpha.8|2.1.0-alpha.7|2.1.0-alpha.6|2.1.0-alpha.5|2.1.0-alpha.4|2.1.0-alpha.4-dev.2) pass_check vnext_supported_version ;; *) fail_check "unexpected_module_version=${module_version:-missing}" ;; esac
 else
   EVIDENCE=partial
   fail_check module_prop_missing
