@@ -4,46 +4,33 @@
 
 Dynamic V2 is the active source architecture for the current module line.
 
-[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.7](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.7) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
+[Latest stable — 2.0.4](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.0.4) · [Latest prerelease — 2.1.0-alpha.9](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases/tag/v2.1.0-alpha.9) · [All releases](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/releases) · [Release notes](release-notes/README.md) · [Credits](CREDITS.md) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/pixel-10-pro-xl-thermal-fix/issues)
 
 > [!IMPORTANT]
-> **2.0.4 remains the current stable release. 2.1.0-alpha.7 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha7 completes the Pixel 11 recovery integration, stock-no-overlay Thermal behavior and corrected prerelease update path while retaining the Alpha6 WebUI and vNext reliability fixes.
+> **2.0.4 remains the current stable release. 2.1.0-alpha.9 is the current public prerelease.** Stable users can remain on 2.0.4. Alpha9 promotes the hardware-accepted Tensor G6 sparse-overlay path while retaining the accepted Pixel 11 recovery controls and conservative stock-only polling/timing policy.
 >
-> Alpha7 is the current public Pixel 11 integration with independent HotHysteresis and MaxReleaseStep controls and the accepted stock-only polling/timing policy.
+> Alpha9 is the current public Pixel 11 integration with independent HotHysteresis and MaxReleaseStep controls, stock-only polling/timing, stock-no-overlay for full Stock, and sparse materialization for genuinely changed Tensor G6 Thermal files.
 
 ## Current public releases
 
 | Channel | Version | Main purpose |
 |---|---|---|
 | Stable | `2.0.4` | Pixel 10-family Dynamic V2 stable line with current Thermal materialization hotfixes |
-| Prerelease | `2.1.0-alpha.7` | Pixel 11 recovery integration, stock-no-overlay Thermal mode, corrected prerelease updates, HUP-safe WebUI and the existing Pixel 9 / 9a / 10a vNext support |
+| Prerelease | `2.1.0-alpha.9` | Pixel 11 sparse Thermal overlays with byte-exact preservation of untouched stock files, recovery controls, stock-only G6 timing, HUP-safe WebUI and existing Pixel 9 / 9a / 10a vNext support |
 
 Stable and prerelease update channels are independent. Switching channel changes only the module update metadata path; it does not automatically flash a ZIP.
 
-## Alpha7 highlights
+## Alpha9 highlights
 
-Alpha7 carries forward the Alpha6 WebUI/device line and completes the Pixel 11 recovery/update integration:
+Alpha9 keeps the accepted Alpha7 Pixel 11 policy and makes Tensor G6 Thermal materialization sparse: only files with a real admitted policy mutation are placed in the module overlay. Unchanged graph members remain byte-identical to stock, including files without a trailing newline, while full Stock still creates no Thermal JSON overlay. Pixel 9/10-family targets keep their existing full three-file overlay contract.
 
-- **HotHysteresis and MaxReleaseStep are independent Pixel 11 recovery controls.** Enabling both derives the internal combined state without a redundant third user option.
-- **Stock Pixel 11 Thermal mode no longer mounts generated Thermal JSON overlays.** ZRAM-only installs can keep the ZRAM fstab override while stock Thermal files remain active.
-- **Prerelease updates now advance to Alpha7** instead of resolving an integrated Pixel 11 install back to the older Alpha6 package.
+- **HotHysteresis and MaxReleaseStep remain independent Pixel 11 recovery controls.**
+- **Sparse G6 overlays now keep only genuinely changed Thermal files.** With the accepted recovery/Outdoor Safe path this normally means `thermal_info_config_common.json` only.
+- **Unchanged G6 files are preserved byte-for-byte**, preventing formatting-only differences such as an added trailing newline from creating false overlays.
+- **Stock Pixel 11 Thermal mode remains `stock-no-overlay`.** ZRAM-only installs can keep the ZRAM fstab override while stock Thermal files remain active.
+- **Pixel 11 polling and PassiveDelay remain Stock-only.**
 
-- **Experimental Pixel 11 / 11 Pro / 11 Pro XL / 11 Pro Fold support is included** with Stock-only polling and conservative Outdoor Safe policy.
-- **Magisk Action browser launch is HUP-safe.** The standalone loopback server remains alive after the Action shell exits, fixing immediate `ERR_CONNECTION_REFUSED`.
-- **WebUI previews/dry-runs stay non-mutating on Android.** Android/Toybox-safe boolean parsing prevents `dry_run=true` from falling through to the productive action path.
-- **Stale `skip_mount` recovery rematerializes validated Thermal/Polling state** instead of leaving intended changes pending behind an old marker.
-- **KsuWebUI can open the module WebUI directly inside its WebView**, without the previous `404 Not Found` / disconnected state.
-- **Magisk Action and KsuWebUI work in parallel.** Magisk Action opens the standalone WebUI in the default browser; KsuWebUI keeps it inside its own WebView. Both use the same guarded localhost API.
-- **Magisk Action opens a standalone browser WebUI** for normal control and status work.
-- **Active settings are shown directly** instead of requiring users to infer state from the old text dashboard.
-- **Polling, Thermal, ZRAM, Emerald Hill, LMKD and ZRAM page-cluster controls** are exposed through typed guarded actions.
-- **Inventory switching is fast and cache-first**, avoiding repeated deep validation just to change views.
-- **The intermittent `server_not_ready` Action startup failure is fixed.**
-- **The installer volume-key timeout hang is fixed.**
-- **Thermal numeric validation is locale-stable**, including devices using non-English system locales.
-- **Mobile layout, action cards, tabs and blocked/active states are clearer** on narrow screens.
-
-See [2.1.0-alpha.7 release notes](release-notes/2.1.0-alpha.7.md) for the current public prerelease changelog.
+See [2.1.0-alpha.9 release notes](release-notes/2.1.0-alpha.9.md) for the current public prerelease changelog.
 
 ## Supported devices
 
