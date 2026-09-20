@@ -7,11 +7,12 @@ if not path:
     raise SystemExit('usage: validate-package.py <zip>')
 required = {
     'module.prop','action.sh','service.sh','bin/module-control','bin/webui-server-arm64',
-    'tools/webui/launch.sh','tools/control/pixel-control.sh','tools/zram/page-cluster-control.sh','tools/zram/fstab.zram.100p',
-    'webroot/index.html','webroot/embedded-host-bootstrap.js','webroot/mobile-input-viewport.js','webroot/app.js','webroot/app.css',
+    'tools/webui/launch.sh','tools/control/pixel-control.sh','tools/zram/page-cluster-control.sh',
+    'tools/notifications/ntfy-notify.sh','tools/debug/copy-config-redacted.sh','tools/zram/fstab.zram.100p',
+    'webroot/index.html','webroot/embedded-host-bootstrap.js','webroot/app.js','webroot/app.css',
     'webroot/race-guard.js','webroot/race-guard.css','webroot/observability.js','webroot/observability.css',
     'webroot/v03.js','webroot/v04.js',
-    'common/repo.json','webui.lock','webui-third-party/Supercharger_Pixel_9_Series.LICENSE',
+    'lib/ntfy.sh','common/repo.json','webui.lock','webui-third-party/Supercharger_Pixel_9_Series.LICENSE',
 }
 runtime_names = {'config.env','manager-status.env','manager-status.txt','health.log','server.log','server.pid','server.ready.json','bootstrap.token','status.env','events.log'}
 blocked_prefixes = ('.git/','.github/','dev_tools/','docs/','tests/','test/','server/','dist/','release/','release-notes/')

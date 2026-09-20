@@ -248,8 +248,10 @@ if [ "$NEED" -eq 0 ]; then
   [ "$(getstate last_debug_mode)" = "$(getcfg LAST_DEBUG_MODE)" ] || state_refresh=1
   [ "$(getstate runtime_selection_source)" = config.env ] || state_refresh=1
   if [ "$state_refresh" -eq 1 ]; then
+    [ -x "$MODDIR/tools/notifications/ntfy-notify.sh" ] && PIXEL_CONFIG_FILE="$CFG" sh "$MODDIR/tools/notifications/ntfy-notify.sh" warn auto-profile config_drift >/dev/null 2>&1 || true
     write_state "$PROFILE" dynamic_local_validated yes "$BUILD_EVIDENCE"
     log "AUTO_SWITCH_STATE_REFRESH reason=runtime_state_contract_drift profile=$PROFILE build=$BUILD_ID evidence=$BUILD_EVIDENCE"
+    [ -x "$MODDIR/tools/notifications/ntfy-notify.sh" ] && PIXEL_CONFIG_FILE="$CFG" sh "$MODDIR/tools/notifications/ntfy-notify.sh" success auto-profile config_corrected >/dev/null 2>&1 || true
   fi
   printf '%s\n' current_profile_valid > "$G/auto_profile_switch_state"
   printf '%s\n' "$PROFILE" > "$G/selected_profile"
@@ -267,6 +269,7 @@ if [ ! -s "$VALIDATED_PATCHER" ] ||
   printf '%s\n' 'REINSTALL_REQUIRED=yes' > "$G/reinstall_required"
   transition_phase failed
   log "AUTO_SWITCH_BLOCK reason=validated_patching_failed action=thermal_only_disabled"
+  [ -x "$MODDIR/tools/notifications/ntfy-notify.sh" ] && PIXEL_CONFIG_FILE="$CFG" sh "$MODDIR/tools/notifications/ntfy-notify.sh" fail auto-profile materialization_failed >/dev/null 2>&1 || true
   exit 1
 fi
 
@@ -278,4 +281,5 @@ printf '%s\n' materialized_validated > "$G/auto_profile_switch_state"
 printf '%s\n' "$PROFILE" > "$G/selected_profile"
 transition_phase materialized
 log "AUTO_SWITCH_DONE profile=$PROFILE build=$BUILD_ID incremental=$INCREMENTAL evidence=$BUILD_EVIDENCE validation=independent"
+[ -x "$MODDIR/tools/notifications/ntfy-notify.sh" ] && PIXEL_CONFIG_FILE="$CFG" sh "$MODDIR/tools/notifications/ntfy-notify.sh" success auto-profile materialized >/dev/null 2>&1 || true
 exit 0

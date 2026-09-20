@@ -11,11 +11,12 @@ required=(
   tools/core/supported-build.sh tools/core/validation-state.sh tools/core/outdoor-runtime-policy.sh
   tools/core/thermal-layout.sh tools/core/patch-thermal-vnext-core.sh tools/core/patch-thermal-validated-vnext.sh tools/core/patch-thermal-validated.sh
   tools/bootguard/compat-check-vnext.sh tools/bootguard/compat-check.sh tools/debug/collect-thermal-online-v5.sh
-  tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh tools/zram/fstab.zram.100p
+  tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh
+  tools/notifications/ntfy-notify.sh tools/debug/copy-config-redacted.sh tools/zram/fstab.zram.100p
   bin/module-control bin/webui-server-arm64
-  webroot/index.html webroot/embedded-host-bootstrap.js webroot/mobile-input-viewport.js webroot/app.js webroot/app.css
+  webroot/index.html webroot/embedded-host-bootstrap.js webroot/app.js webroot/app.css
   webroot/race-guard.js webroot/race-guard.css webroot/observability.js webroot/observability.css webroot/v03.js webroot/v04.js
-  common/repo.json webui.lock webui-third-party/core-provenance.env webui-third-party/template.LICENSE webui-third-party/template.NOTICE webui-third-party/Supercharger_Pixel_9_Series.LICENSE
+  lib/ntfy.sh common/repo.json webui.lock webui-third-party/core-provenance.env webui-third-party/template.LICENSE webui-third-party/template.NOTICE webui-third-party/Supercharger_Pixel_9_Series.LICENSE
 )
 for path in "${required[@]}"; do grep -Fxq "$path" "$entries_file" || { printf 'FAIL required_entry_missing path=%s\n' "$path"; exit 3; }; done
 grep -Fxq 'tools/core/patch-thermal-fix5-core.sh' "$entries_file" && { printf '%s\n' 'FAIL superseded_fix5_core_packaged'; exit 4; }

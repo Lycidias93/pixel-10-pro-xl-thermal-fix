@@ -2,6 +2,7 @@
 # Online-first collector for non-stock Thermal boot failures.
 # Read-only against module/runtime state; writes one archive to Download.
 set -u
+SCRIPT_DIR="${0%/*}"
 
 ID="pixel-10-pro-xl-thermal-fix"
 FAILED_PROFILE="${1:-unknown}"
@@ -242,7 +243,7 @@ for _mod in "$ACTIVE_MOD" "$STAGED_MOD"; do
   copy_tree_files "$_mod/system/vendor/etc" "$_dst/overlay"
 done
 
-copy_if_readable "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env"
+[ -x "$SCRIPT_DIR/copy-config-redacted.sh" ] && "$SCRIPT_DIR/copy-config-redacted.sh" "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env" || true
 copy_if_readable "$DATA_ROOT/validation/state.env" "$COLLECT/persistent/validation-state.env"
 copy_if_readable "$DATA_ROOT/validation/validation-report.json" "$COLLECT/persistent/validation-report.json"
 copy_if_readable "$DATA_ROOT/validation/outdoor-delta-validation.env" "$COLLECT/persistent/outdoor-delta-validation.env"

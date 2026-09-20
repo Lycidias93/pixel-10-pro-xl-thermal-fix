@@ -2,6 +2,7 @@
 # Read-only online collector for Pixel Thermal runtime failures and platform-support planning.
 # Helper functions run in subshells so scratch variables cannot corrupt caller state.
 set -u
+SCRIPT_DIR="${0%/*}"
 
 ID="pixel-10-pro-xl-thermal-fix"
 SCHEMA="pixel-thermal-online-debug-v5"
@@ -271,7 +272,7 @@ for view_name in active staged; do
   done
 done
 
-copy_file "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env" 1048576
+[ -x "$SCRIPT_DIR/copy-config-redacted.sh" ] && "$SCRIPT_DIR/copy-config-redacted.sh" "$DATA_ROOT/config.env" "$COLLECT/persistent/config.env" || true
 find "$DATA_ROOT/validation" -maxdepth 1 -type f -print 2>/dev/null | while IFS= read -r validation_file; do
   copy_file "$validation_file" "$COLLECT/persistent/validation/${validation_file##*/}" 4194304
 done

@@ -1,3 +1,11 @@
+# Unreleased vNext
+
+- Adds optional ntfy notifications through the shared WebUI Notifications panel, including secret-safe status and a guarded test action.
+- Reports configuration drift, confirmed corrections, successful actions, verification failures and long support-snapshot starts through bounded lifecycle notifications when explicitly enabled.
+- Keeps ntfy delivery non-fatal so notification outages do not change the result of Thermal, ZRAM, recovery or verification operations.
+- Redacts private ntfy endpoint, topic and token-file path values from packaged diagnostic configuration snapshots.
+- Updates the shared WebUI foundation to Core 0.7.1 and removes the superseded mobile-input viewport asset.
+
 # 2.0.1
 
 Stable Dynamic V2 hotfix. Exact asset: `pixel-10-thermal-memory-control-2.0.1.zip`, SHA-256 `6517cd106acd063e52596d4fc0f2e561cd019cdaa3712e930fcddaf746d4dbaa`, 330935 bytes.

@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: 0d5c724711733b6f794790ef96d718e96c64c258
+          ref: 3f49704701d8ab665139cf3551aa9197610cbaaa
           path: .webui-core
           fetch-depth: 1
 
@@ -113,6 +113,8 @@ jobs:
           bash tests/test-feedback-package-contract.sh
           bash tests/test-webui-integration.sh
           bash tests/test-webui-android-json-bool.sh
+          WEBUI_CORE_DIR=${{ github.workspace }}/.webui-core bash tests/test-webui-ntfy-integration.sh
+          bash tests/test-ntfy-config-redaction.sh
 
       - name: Verify single vNext device family matrix
         run: |
@@ -142,7 +144,6 @@ jobs:
           for asset in \
             bin/webui-server-arm64 \
             webroot/embedded-host-bootstrap.js \
-            webroot/mobile-input-viewport.js \
             webroot/app.js webroot/app.css \
             webroot/race-guard.js webroot/race-guard.css \
             webroot/observability.js webroot/observability.css \

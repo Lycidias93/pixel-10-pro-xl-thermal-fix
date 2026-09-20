@@ -223,7 +223,16 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-Alpha7 consumes the shared **[Android Root Module Standalone WebUI Template](https://github.com/Lycidias93/android-root-module-webui-template)** maintained by Lycidias93, using WebUI Core `0.6.6` pinned at template commit `0d5c724711733b6f794790ef96d718e96c64c258`, including HUP-safe standalone Action lifetime, Android/Toybox-safe WebUI dry-run parsing and the mobile-input viewport fix. The integrated Pixel 11 recovery path completed its exact-device acceptance before Alpha7 publication.
+The published Alpha9 prerelease still uses WebUI Core 0.6.6 pinned at template commit 0d5c724711733b6f794790ef96d718e96c64c258. The current post-Alpha9 vNext development line pins WebUI Core 0.7.1 at template commit 3f49704701d8ab665139cf3551aa9197610cbaaa. This adds the standardized optional ntfy Notifications surface, removes the superseded mobile-input viewport asset, and adopts the current Android Action PID-identity contract. This post-Alpha9 source state is unreleased and requires fresh exact-device WebUI acceptance before publication.
+
+### Optional ntfy notifications (post-Alpha9 vNext)
+
+Notifications are opt-in and reuse the existing private module configuration at /data/adb/pixel-10-pro-xl-thermal-fix/config.env. Supported private keys are NTFY_ENABLED, NTFY_URL, NTFY_TOPIC, NTFY_TOKEN_FILE, NTFY_PRIORITY, and NTFY_TAGS.
+
+The WebUI exposes only provider state, configured/not-configured booleans, lifecycle names, and a guarded test action. Endpoint, topic, token-file path, and token contents are never returned by the API. Diagnostic collectors redact the private ntfy values before including configuration snapshots.
+
+Lifecycle mapping is: config/runtime drift -> warn; confirmed config correction or successful typed action -> success; action/verification failure -> fail; long-running support snapshot start -> start. Notification delivery is bounded and non-fatal: a missing endpoint, missing curl binary, disabled notifications, or transport failure does not change the primary module operation result.
+
 
 That shared core documents clean adaptations or design references from:
 
@@ -235,7 +244,7 @@ That shared core documents clean adaptations or design references from:
 - **AshBorn / AshReXcue / AshLooper** — design reference only for unsaved-change/session diagnostics; no GPL-covered implementation is imported;
 - **Adinata / KsuWebUI** — compatibility/design reference for its embedded WebView host; no GPL-covered KsuWebUI implementation is imported.
 
-Alpha7 also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
+The current vNext line also includes contributions, testing and technical input from **Harish / Codecity001**, **Allen Chang**, **JoshuaDoes / pTune**, **marx161** and other community testers. See [CREDITS.md](CREDITS.md) for detailed attribution and license/provenance boundaries.
 
 ## License
 
