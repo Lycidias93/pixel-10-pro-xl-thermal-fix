@@ -134,17 +134,23 @@ JSON
   for f in thermal_info_config_vt.json thermal_info_config_aa_throttling.json thermal_info_config_earlywarnings.json thermal_info_config_ambient.json; do
     write_fixture "$src/$f" "AUX-${f%.json}"
   done
-  # Real G6 stock layouts may repeat the exact VIRTUAL-SKIN name in peripheral
-  # graph files. Outdoor Safe must still patch only thermal_info_config_common.json.
-  write_fixture "$src/thermal_info_config_bg_tasks_throttling.json" "VIRTUAL-SKIN"
-  write_fixture "$src/thermal_info_config_forecast.json" "VIRTUAL-SKIN"
-  cat > "$src/thermal_info_config_stats.json" <<'JSON'
-{
+  # Real G6 vendor images contain graph members without a trailing newline.
+  # Unchanged members must retain exact stock bytes and stay outside sparse overlay.
+  printf '%s' '{
   "Sensors": [
-    {"Name": "VIRTUAL-SKIN", "HotThreshold": [40], "PollingDelay": 300000},
+    {"Name": "VIRTUAL-SKIN", "HotThreshold": [40, 45, "NaN"], "PollingDelay": 300000}
   ]
-}
-JSON
+}' > "$src/thermal_info_config_bg_tasks_throttling.json"
+  printf '%s' '{
+  "Sensors": [
+    {"Name": "VIRTUAL-SKIN", "HotThreshold": [40, 45, "NaN"], "PollingDelay": 300000}
+  ]
+}' > "$src/thermal_info_config_forecast.json"
+  printf '%s' '{
+  "Sensors": [
+    {"Name": "VIRTUAL-SKIN", "HotThreshold": [40], "PollingDelay": 300000}
+  ]
+}' > "$src/thermal_info_config_stats.json"
 }
 
 run_g6_graph_case() {

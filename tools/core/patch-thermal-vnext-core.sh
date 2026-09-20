@@ -200,15 +200,21 @@ patch_one() {
         if (tok ~ /[.]/) { dot=index(tok,"."); dec=length(tok)-dot; fmt="%." dec "f"; tok=sprintf(fmt,v) }
         else if (v==int(v)) tok=sprintf("%d",v); else tok=sprintf("%.1f",v)
         out=out substr(text,1,RSTART-1) tok; text=substr(text,RSTART+RLENGTH)
+        changed++
       }
       return out text
     }
     function patch_poll(line, token) {
       if (poll_mode != "mod") return line
-      while (match(line, /"PollingDelay"[[:space:]]*:[[:space:]]*300000/)) { token=substr(line,RSTART,RLENGTH); sub(/300000$/, "5000", token); line=substr(line,1,RSTART-1) token substr(line,RSTART+RLENGTH) }
+      while (match(line, /"PollingDelay"[[:space:]]*:[[:space:]]*300000/)) {
+        token=substr(line,RSTART,RLENGTH)
+        sub(/300000$/, "5000", token)
+        line=substr(line,1,RSTART-1) token substr(line,RSTART+RLENGTH)
+        changed++
+      }
       return line
     }
-    BEGIN { target=0; in_hot=0 }
+    BEGIN { target=0; in_hot=0; changed=0 }
     {
       line=$0
       if (!in_hot && line ~ /"Name"[[:space:]]*:/) target=target_allowed(sensor_name(line))
@@ -227,7 +233,18 @@ patch_one() {
       }
       print line
     }
-  ' "$_src" > "$_base" || return 1
+    END {
+      if (changed == 0) exit 10
+    }
+  ' "$_src" > "$_base" || {
+    _awk_rc="$?"
+    if [ "$_awk_rc" -eq 10 ]; then
+      cp -fp "$_src" "$_base" || return 1
+    else
+      rm -f "$_base"
+      return 1
+    fi
+  }
 
   if [ "$DEVICE_FAMILY" = pixel11 ] && [ "$_file" = thermal_info_config_common.json ] &&
      [ "$PIXEL11_HYSTERESIS_MODE" != stock ]; then
