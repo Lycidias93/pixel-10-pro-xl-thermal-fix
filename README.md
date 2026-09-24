@@ -223,7 +223,7 @@ su -c reboot
 
 ## WebUI foundation and credits
 
-The published Alpha9 prerelease still uses WebUI Core 0.6.6 pinned at template commit 0d5c724711733b6f794790ef96d718e96c64c258. The current post-Alpha9 vNext development line pins WebUI Core 0.7.1 at template commit 3f49704701d8ab665139cf3551aa9197610cbaaa. This adds the standardized optional ntfy Notifications surface, removes the superseded mobile-input viewport asset, and adopts the current Android Action PID-identity contract. This post-Alpha9 source state is unreleased and requires fresh exact-device WebUI acceptance before publication.
+The published Alpha9 prerelease still uses WebUI Core 0.6.6 pinned at template commit 0d5c724711733b6f794790ef96d718e96c64c258. The current post-Alpha9 vNext development line pins WebUI Core 0.7.2 at template commit 438377217984c575d9caaa0ce401e990ca5cc343. This keeps the standardized optional ntfy Notifications surface and current Android Action PID-identity contract, and adds visibility-safe inventory cache invalidation so a pre-hide browser read cannot repopulate stale state after resume. This post-Alpha9 source state is unreleased and requires fresh exact-device WebUI acceptance before publication.
 
 ### Optional ntfy notifications (post-Alpha9 vNext)
 
