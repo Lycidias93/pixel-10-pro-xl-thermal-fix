@@ -3,9 +3,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-grep -Fqx 'core_version=0.7.1' webui.lock
-grep -Fqx 'template_commit=3f49704701d8ab665139cf3551aa9197610cbaaa' webui.lock
-grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@be76cbe57d01fa475196b7afb3729b9ad19f0a26' webui.lock
+grep -Fqx 'core_version=0.7.2' webui.lock
+grep -Fqx 'template_commit=438377217984c575d9caaa0ce401e990ca5cc343' webui.lock
+grep -Fq 'Drizzy07x/Supercharger_Pixel_9_Series@0132a0ac6e8ba9844b56e11fdc262560a0131012' webui.lock
 grep -Fq 'adivenxnataly/KsuWebUI@20342d280a841f8b317603a7eefb1193a95ab626' webui.lock
 for file in bin/module-control tools/webui/launch.sh tools/control/pixel-control.sh tools/zram/page-cluster-control.sh common/repo.json; do test -s "$file"; done
 for device in mustang blazer frankel rango stallion tokay caiman komodo comet tegu cubs grizzly kodiak yogi; do grep -Fq "\"$device\"" supported_versions.json; done
@@ -118,7 +118,7 @@ if grep -Eq 'ksu\.exec|apatch\.exec|magisk\.exec|webui\.exec|Android\.exec|eval\
   exit 1
 fi
 
-# The package must carry the complete pinned WebUI 0.6.1 asset surface,
+# The package must carry the complete pinned WebUI 0.7.2 asset surface,
 # including the generic Android software-keyboard viewport guard.
 for asset in embedded-host-bootstrap.js observability.js observability.css v04.js; do
   grep -Fq "$asset" dev_tools/build-release-module.sh
