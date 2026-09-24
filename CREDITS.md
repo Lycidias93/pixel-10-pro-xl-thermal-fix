@@ -17,7 +17,7 @@ Alpha5 consumes the first-party **[Android Root Module Standalone WebUI Template
 - template commit `6fbd1b018a45fe5b1bebba7aeb9142423eab47fb`;
 - WebUI Core `0.6.1`.
 
-The published Alpha9 prerelease remains on template commit 0d5c724711733b6f794790ef96d718e96c64c258, WebUI Core 0.6.6. The current post-Alpha9 vNext development line pins template commit 3f49704701d8ab665139cf3551aa9197610cbaaa, WebUI Core 0.7.1, for the standardized optional ntfy Notifications contract and the current Android Action PID-identity fix. Historical published-release provenance remains unchanged.
+The published Alpha9 prerelease remains on template commit 0d5c724711733b6f794790ef96d718e96c64c258, WebUI Core 0.6.6. The current post-Alpha9 vNext development line pins template commit 438377217984c575d9caaa0ce401e990ca5cc343, WebUI Core 0.7.2, for the standardized optional ntfy Notifications contract, the current Android Action PID-identity fix and visibility-safe inventory cache invalidation. Historical published-release provenance remains unchanged.
 
 The shared core provides the standalone localhost browser transport, one-time bootstrap/session model, typed allowlisted API, capability-driven UI, bounded jobs/logs/inventory, action-state handling, optional secret-safe notification transport and the bounded embedded-host bootstrap used by compatible KsuWebUI hosts. Thermal-specific lifecycle timing, private config ownership, message content and diagnostic redaction remain module-owned.
 
@@ -59,7 +59,7 @@ The shared core provides the standalone localhost browser transport, one-time bo
 #### Drizzy07x / Drizzy11 — Supercharger Pixel 9 Series
 
 - Source: `Drizzy07x/Supercharger_Pixel_9_Series`
-- Pinned source: `be76cbe57d01fa475196b7afb3729b9ad19f0a26`
+- Pinned source: `0132a0ac6e8ba9844b56e11fdc262560a0131012`
 - Role: WebUI readiness/busy-state handling, duplicate-action prevention, task-completion and stale/out-of-order response regression patterns.
 - License: MIT.
 - Integration boundary: clean generic adaptation; Supercharger Thermal profiles, Pixel 9 tuning, VM/network tweaks, IRQ masks, GPU floors, app optimizer, maintenance-domain logic and unrestricted root-manager JavaScript execution are not imported by this module.
@@ -67,7 +67,7 @@ The shared core provides the standalone localhost browser transport, one-time bo
 #### AshBorn — AshReXcue / AshLooper
 
 - Source: `RipperHybrid/AshLooper`
-- Pinned source: `6db87ffba007560eff443a0330037cd6a2563c2b`
+- Pinned source: `fd50bd7b1c095942c8bbe59122c151fb5aeeeaf3`
 - Role: design-review inspiration for unsaved-change awareness, session activity diagnostics and raw-state inspection.
 - License: GPL-3.0.
 - Integration boundary: **design reference only**. No AshLooper/AshReXcue JavaScript, CSS, shell code, assets or other GPL-covered implementation is copied or imported into the MIT shared WebUI core or this module.

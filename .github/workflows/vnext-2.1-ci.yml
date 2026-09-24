@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: 3f49704701d8ab665139cf3551aa9197610cbaaa
+          ref: 438377217984c575d9caaa0ce401e990ca5cc343
           path: .webui-core
           fetch-depth: 1
 
