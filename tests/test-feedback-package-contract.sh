@@ -13,7 +13,7 @@ grep -Fq 'debug-silent' bin/module-control
 grep -Fq 'debug-verbose' bin/module-control
 grep -Fq 'DEBUG_MODE 0' tools/control/pixel-control.sh
 grep -Fq 'DEBUG_MODE 1' tools/control/pixel-control.sh
-grep -Fq 'template_commit=3f49704701d8ab665139cf3551aa9197610cbaaa' webui.lock
+grep -Fq 'template_commit=438377217984c575d9caaa0ce401e990ca5cc343' webui.lock
 ! grep -Fq 'mobile-input-viewport.js' dev_tools/build-release-module.sh
 grep -Fq 'module/lib/ntfy.sh' dev_tools/build-release-module.sh
 grep -Fq 'cubs:17|grizzly:17|kodiak:17|yogi:17' action.sh
