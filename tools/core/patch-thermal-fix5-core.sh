@@ -371,6 +371,7 @@ source_polling_total=0
 replacement_total=0
 output_300000_total=0
 output_5000_total=0
+materialized_files=0
 
 while IFS="$tab" read -r file source_sha source_bytes source_polling; do
   [ "$file" = file ] && continue
@@ -426,15 +427,22 @@ while IFS="$tab" read -r file source_sha source_bytes source_polling; do
   replacement_total=$(( replacement_total + replacements ))
   output_300000_total=$(( output_300000_total + output300000 ))
   output_5000_total=$(( output_5000_total + output5000 ))
+
+  if [ "$output_sha" = "$source_sha" ]; then
+    rm -f "$output_file"
+  else
+    materialized_files=$(( materialized_files + 1 ))
+  fi
 done < "$MANIFEST"
 
 for required in $REQUIRED_FILES; do
-  [ -s "$PATCH_STAGE/$required" ] || fail 48 "required_output_missing_$required"
+  [ -s "$CACHE_DIR/$required" ] || fail 48 "required_source_missing_$required"
 done
 
 printf '%s\n' '  },' >> "$REPORT_TMP"
 printf '%s\n' '  "totals": {' >> "$REPORT_TMP"
 printf '    "source_files": %s,\n' "$source_files" >> "$REPORT_TMP"
+printf '    "materialized_files": %s,\n' "$materialized_files" >> "$REPORT_TMP"
 printf '    "source_polling_300000": %s,\n' "$source_polling_total" >> "$REPORT_TMP"
 printf '    "replacements": %s,\n' "$replacement_total" >> "$REPORT_TMP"
 printf '    "output_polling_300000": %s,\n' "$output_300000_total" >> "$REPORT_TMP"
@@ -469,6 +477,7 @@ printf '%s\n' "PATCH_THERMAL_DEVICE=$DEVICE"
 printf '%s\n' "PATCH_THERMAL_BUILD_ID=$BUILD_ID"
 printf '%s\n' "PATCH_THERMAL_SOURCE_CACHE=$CACHE_DIR"
 printf '%s\n' "PATCH_THERMAL_FILES=$source_files"
+printf '%s\n' "PATCH_THERMAL_MATERIALIZED_FILES=$materialized_files"
 printf '%s\n' "PATCH_THERMAL_SOURCE_300000=$source_polling_total"
 printf '%s\n' "PATCH_THERMAL_REPLACEMENTS=$replacement_total"
 printf '%s\n' "PATCH_THERMAL_OUTPUT_5000=$output_5000_total"
