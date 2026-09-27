@@ -72,6 +72,7 @@ jobs:
           sh -n tools/core/patch-thermal-vnext-core.sh
           sh -n tools/core/patch-thermal-validated.sh
           sh -n tools/core/patch-thermal-validated-vnext.sh
+          bash -n tests/test-vnext-sparse-overlay-parity.sh
           sh -n tools/bootguard/compat-check.sh
           sh -n tools/bootguard/compat-check-vnext.sh
           sh -n tools/menu/menu-cycle.sh
@@ -96,6 +97,7 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-vnext-layouts.sh
+          bash tests/test-vnext-sparse-overlay-parity.sh
           bash tests/test-pixel11-family-controls.sh
           bash tests/test-g6-polling-inventory.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
