@@ -117,10 +117,13 @@ case "$OUTDOOR_PROFILE" in
   outdoor-extended) DELTA=3 ;;
 esac
 
+[ -s "$LEGACY_PATCH_MANIFEST" ] || exit 69
+
 validated_files=0
 target_zone_total=0
 threshold_array_total=0
 threshold_value_total=0
+tab="$(printf '\t')"
 
 for file in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
   source_file="$CACHE_DIR/$file"
@@ -130,12 +133,41 @@ for file in thermal_info_config.json thermal_info_config_charge.json thermal_inf
     printf '%s\n' "PATCH_THERMAL_DELTA_REASON=source_missing_$file"
     exit 60
   }
-  [ -s "$output_file" ] || {
-    printf '%s\n' "PATCH_THERMAL_DELTA_REASON=output_missing_$file"
+
+  manifest_source_sha="$(awk -F "$tab" -v wanted="$file" 'NR > 1 && $1 == wanted { print $2; exit }' "$LEGACY_PATCH_MANIFEST")"
+  manifest_output_sha="$(awk -F "$tab" -v wanted="$file" 'NR > 1 && $1 == wanted { print $3; exit }' "$LEGACY_PATCH_MANIFEST")"
+  manifest_replacements="$(awk -F "$tab" -v wanted="$file" 'NR > 1 && $1 == wanted { print $5; exit }' "$LEGACY_PATCH_MANIFEST")"
+  [ -n "$manifest_source_sha" ] && [ -n "$manifest_output_sha" ] && [ -n "$manifest_replacements" ] || {
+    printf '%s\n' "PATCH_THERMAL_DELTA_REASON=manifest_row_missing_$file"
     exit 61
   }
 
-  if metrics="$(sh "$DELTA_HELPER" "$source_file" "$output_file" "$DELTA")"; then
+  actual_source_sha="$(sha256sum "$source_file" 2>/dev/null | awk '{print $1}')"
+  [ "$actual_source_sha" = "$manifest_source_sha" ] || {
+    printf '%s\n' "PATCH_THERMAL_DELTA_REASON=manifest_source_sha_mismatch_$file"
+    exit 75
+  }
+
+  if [ -s "$output_file" ]; then
+    actual_output_sha="$(sha256sum "$output_file" 2>/dev/null | awk '{print $1}')"
+    [ "$actual_output_sha" = "$manifest_output_sha" ] || {
+      printf '%s\n' "PATCH_THERMAL_DELTA_REASON=manifest_output_sha_mismatch_$file"
+      exit 76
+    }
+    delta_output_file="$output_file"
+  else
+    [ "$manifest_source_sha" = "$manifest_output_sha" ] || {
+      printf '%s\n' "PATCH_THERMAL_DELTA_REASON=missing_changed_output_$file"
+      exit 77
+    }
+    [ "$manifest_replacements" = 0 ] || {
+      printf '%s\n' "PATCH_THERMAL_DELTA_REASON=missing_polling_output_$file"
+      exit 78
+    }
+    delta_output_file="$source_file"
+  fi
+
+  if metrics="$(sh "$DELTA_HELPER" "$source_file" "$delta_output_file" "$DELTA")"; then
     set -- $metrics
     [ "$#" -eq 3 ] || exit 62
     target_zones="$1"
@@ -172,7 +204,6 @@ done
 } > "$DELTA_TMP"
 
 [ -s "$LEGACY_REPORT_MODULE" ] || exit 68
-[ -s "$LEGACY_PATCH_MANIFEST" ] || exit 69
 
 thermal_validation_publish \
   "$LEGACY_REPORT_MODULE" \
