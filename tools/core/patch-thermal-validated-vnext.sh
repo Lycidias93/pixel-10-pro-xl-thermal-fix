@@ -77,11 +77,11 @@ PATCH_DEVICE_FAMILY="$(thermal_device_family "$PATCH_DEVICE")"
 [ -n "$OVERLAY_FILES_CSV" ] || OVERLAY_FILES_CSV=none
 case "$OVERLAY_COUNT" in ''|*[!0-9]*) printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_overlay_count; exit 58 ;; esac
 STOCK_NO_OVERLAY_EXPECTED=0
-if [ "$PATCH_DEVICE_FAMILY" = pixel11 ] && [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then STOCK_NO_OVERLAY_EXPECTED=1; fi
+if [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then STOCK_NO_OVERLAY_EXPECTED=1; fi
 case "$MATERIALIZATION_MODE" in
   stock-no-overlay) [ "$STOCK_NO_OVERLAY_EXPECTED" -eq 1 ] && [ "$OVERLAY_COUNT" -eq 0 ] && [ "$OVERLAY_FILES_CSV" = none ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_stock_no_overlay_contract; exit 58; } ;;
-  sparse-overlay) [ "$PATCH_DEVICE_FAMILY" = pixel11 ] && [ "$STOCK_NO_OVERLAY_EXPECTED" -eq 0 ] && [ "$OVERLAY_COUNT" -gt 0 ] && [ "$OVERLAY_FILES_CSV" != none ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_sparse_overlay_contract; exit 58; } ;;
-  overlay) [ "$PATCH_DEVICE_FAMILY" != pixel11 ] && [ "$OVERLAY_COUNT" -gt 0 ] && [ "$OVERLAY_FILES_CSV" != none ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_full_overlay_contract; exit 58; } ;;
+  sparse-overlay) [ "$STOCK_NO_OVERLAY_EXPECTED" -eq 0 ] && [ "$OVERLAY_COUNT" -gt 0 ] && [ "$OVERLAY_FILES_CSV" != none ] || { printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_sparse_overlay_contract; exit 58; } ;;
+  overlay) printf '%s\n' PATCH_THERMAL_DELTA_REASON=legacy_full_overlay_not_admitted; exit 58 ;;
   *) printf '%s\n' PATCH_THERMAL_DELTA_REASON=invalid_materialization_mode; exit 58 ;;
 esac
 overlay_file_selected() { case ",$OVERLAY_FILES_CSV," in *",$1,"*) return 0 ;; *) return 1 ;; esac; }
