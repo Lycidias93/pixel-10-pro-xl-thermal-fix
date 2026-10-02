@@ -76,8 +76,8 @@ run_case() {
     sh "$mod/tools/core/patch-thermal-validated.sh" mod "$profile" "$mod" | tee "$root/run.log"
 
   grep -q '^PATCH_THERMAL_DELTA_VALIDATION=pass$' "$root/run.log" || { echo "FAIL delta_validation_$device"; exit 10; }
-  grep -q '^PATCH_THERMAL_MATERIALIZATION=overlay$' "$root/run.log" || { echo "FAIL full_overlay_materialization_$device"; exit 10; }
-  grep -q '^PATCH_THERMAL_OVERLAY_COUNT=3$' "$root/run.log" || { echo "FAIL full_overlay_count_$device"; exit 10; }
+  grep -q '^PATCH_THERMAL_MATERIALIZATION=sparse-overlay$' "$root/run.log" || { echo "FAIL sparse_overlay_materialization_$device"; exit 10; }
+  grep -q '^PATCH_THERMAL_OVERLAY_COUNT=3$' "$root/run.log" || { echo "FAIL sparse_overlay_count_$device"; exit 10; }
   grep -q "^family=$expected_family$" "$mod/guard/thermal-layout.env" || { echo "FAIL layout_family_$device"; exit 11; }
   grep -q "^third=$third$" "$mod/guard/thermal-layout.env" || { echo "FAIL layout_third_$device"; exit 12; }
   [[ -s "$mod/system/vendor/etc/thermal_info_config.json" ]]
