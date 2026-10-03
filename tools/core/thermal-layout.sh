@@ -333,12 +333,18 @@ thermal_materialization_load_env() {
   [ -r "$_tm_env" ] || return 1
   _tm_schema="$(sed -n 's/^schema=//p' "$_tm_env" | tail -n 1)"
   _tm_validation="$(sed -n 's/^validation=//p' "$_tm_env" | tail -n 1)"
+  _tm_polling="$(sed -n 's/^polling_mode=//p' "$_tm_env" | tail -n 1)"
+  _tm_hysteresis="$(sed -n 's/^pixel11_hysteresis_mode=//p' "$_tm_env" | tail -n 1)"
+  _tm_outdoor="$(sed -n 's/^outdoor_profile=//p' "$_tm_env" | tail -n 1)"
   _tm_mode="$(sed -n 's/^materialization_mode=//p' "$_tm_env" | tail -n 1)"
   _tm_files="$(sed -n 's/^overlay_files=//p' "$_tm_env" | tail -n 1)"
   _tm_count="$(sed -n 's/^overlay_file_count=//p' "$_tm_env" | tail -n 1)"
   _tm_layout="$(sed -n 's/^layout_files=//p' "$_tm_env" | tail -n 1)"
   [ "$_tm_schema" = pixel-thermal-outdoor-delta-validation-v3 ] || return 1
   [ "$_tm_validation" = passed ] || return 1
+  case "$_tm_polling" in stock|mod) ;; *) return 1 ;; esac
+  case "$_tm_hysteresis" in stock|hysteresis|max-release-step|combined) ;; *) return 1 ;; esac
+  case "$_tm_outdoor" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) return 1 ;; esac
   [ "$_tm_layout" = "${THERMAL_LAYOUT_FILES_CSV:-}" ] || return 1
   case "$_tm_count" in ''|*[!0-9]*) return 1 ;; esac
 
@@ -359,6 +365,9 @@ thermal_materialization_load_env() {
     sparse-overlay) [ "$_tm_count" -gt 0 ] 2>/dev/null && [ "$_tm_files" != none ] || return 1 ;;
     *) return 1 ;;
   esac
+  THERMAL_MATERIALIZATION_POLLING_MODE="$_tm_polling"
+  THERMAL_MATERIALIZATION_HYSTERESIS_MODE="$_tm_hysteresis"
+  THERMAL_MATERIALIZATION_OUTDOOR_PROFILE="$_tm_outdoor"
   THERMAL_MATERIALIZATION_MODE="$_tm_mode"
   THERMAL_OVERLAY_FILES_CSV="$_tm_files"
   THERMAL_OVERLAY_COUNT="$_tm_count"
@@ -369,19 +378,67 @@ thermal_materialization_overlay_selected() {
   case ",${THERMAL_OVERLAY_FILES_CSV:-none}," in *",$1,"*) return 0 ;; *) return 1 ;; esac
 }
 
+thermal_materialization_manifest_row_load() {
+  _tm_manifest="$1"
+  _tm_want="$2"
+  [ -r "$_tm_manifest" ] || return 1
+  _tm_tab="$(printf '\t')"
+  _tm_matches=0
+  THERMAL_MANIFEST_SOURCE_SHA=
+  THERMAL_MANIFEST_OUTPUT_SHA=
+  THERMAL_MANIFEST_REPLACEMENTS=
+  THERMAL_MANIFEST_ALLOWED_DIFF=
+  while IFS="$_tm_tab" read -r _tm_file _tm_source _tm_output _tm_source_polling _tm_replacements _tm_o300 _tm_o5 _tm_allowed; do
+    [ "$_tm_file" = file ] && continue
+    [ "$_tm_file" = "$_tm_want" ] || continue
+    _tm_matches=$((_tm_matches + 1))
+    THERMAL_MANIFEST_SOURCE_SHA="$_tm_source"
+    THERMAL_MANIFEST_OUTPUT_SHA="$_tm_output"
+    THERMAL_MANIFEST_REPLACEMENTS="$_tm_replacements"
+    THERMAL_MANIFEST_ALLOWED_DIFF="$_tm_allowed"
+  done < "$_tm_manifest"
+  [ "$_tm_matches" -eq 1 ] 2>/dev/null || return 1
+  printf '%s\n' "$THERMAL_MANIFEST_SOURCE_SHA" | grep -Eq '^[0-9a-f]{64}$' || return 1
+  printf '%s\n' "$THERMAL_MANIFEST_OUTPUT_SHA" | grep -Eq '^[0-9a-f]{64}$' || return 1
+  case "$THERMAL_MANIFEST_REPLACEMENTS" in ''|*[!0-9]*) return 1 ;; esac
+  [ "$THERMAL_MANIFEST_ALLOWED_DIFF" = yes ] || return 1
+  return 0
+}
+
+thermal_materialization_file_sha256() {
+  sha256sum "$1" 2>/dev/null | sed 's/[[:space:]].*$//'
+}
+
 thermal_materialization_overlay_valid() {
   _tm_moddir="$1"
+  _tm_expected_polling="${2:-}"
+  _tm_expected_outdoor="${3:-}"
+  _tm_expected_hysteresis="${4:-}"
+  case "$_tm_expected_polling" in stock|mod) ;; *) return 1 ;; esac
+  case "$_tm_expected_outdoor" in stock|outdoor-safe|outdoor-plus|outdoor-extended) ;; *) return 1 ;; esac
+  case "$_tm_expected_hysteresis" in mod) _tm_expected_hysteresis=combined ;; stock|hysteresis|max-release-step|combined) ;; *) return 1 ;; esac
 
   _tm_layout_env="$_tm_moddir/guard/thermal-layout.env"
   _tm_delta_env="$_tm_moddir/guard/outdoor-delta-validation.env"
+  _tm_manifest="$_tm_moddir/guard/patch-manifest.tsv"
   _tm_target="$_tm_moddir/system/vendor/etc"
   thermal_layout_load_env "$_tm_layout_env" || return 1
   thermal_materialization_load_env "$_tm_delta_env" || return 1
+  [ "$THERMAL_MATERIALIZATION_POLLING_MODE" = "$_tm_expected_polling" ] || return 1
+  [ "$THERMAL_MATERIALIZATION_OUTDOOR_PROFILE" = "$_tm_expected_outdoor" ] || return 1
+  [ "$THERMAL_MATERIALIZATION_HYSTERESIS_MODE" = "$_tm_expected_hysteresis" ] || return 1
+  thermal_layout_manifest_matches "$_tm_manifest" || return 1
+
   for _tm_name in $THERMAL_LAYOUT_FILES; do
+    thermal_materialization_manifest_row_load "$_tm_manifest" "$_tm_name" || return 1
     if thermal_materialization_overlay_selected "$_tm_name"; then
       [ -s "$_tm_target/$_tm_name" ] || return 1
+      _tm_actual_sha="$(thermal_materialization_file_sha256 "$_tm_target/$_tm_name")"
+      [ "$_tm_actual_sha" = "$THERMAL_MANIFEST_OUTPUT_SHA" ] || return 1
     else
       [ ! -e "$_tm_target/$_tm_name" ] && [ ! -L "$_tm_target/$_tm_name" ] || return 1
+      [ "$THERMAL_MANIFEST_SOURCE_SHA" = "$THERMAL_MANIFEST_OUTPUT_SHA" ] || return 1
+      [ "$THERMAL_MANIFEST_REPLACEMENTS" = 0 ] || return 1
     fi
   done
   for _tm_path in "$_tm_target"/thermal_info_config*.json; do

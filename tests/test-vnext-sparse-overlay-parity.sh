@@ -67,10 +67,10 @@ grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=stock-no-overlay' "$tmp/stock.log"
 grep -Fxq 'PATCH_THERMAL_OVERLAY_COUNT=0' "$tmp/stock.log"
 grep -Fxq 'PATCH_THERMAL_OVERLAY_FILES=none' "$tmp/stock.log"
 [[ ! -e "$tmp/stock/mod/system/vendor/etc" ]]
-bash -c '. "$1"; thermal_materialization_overlay_valid "$2"' _ "$tmp/stock/mod/tools/core/thermal-layout.sh" "$tmp/stock/mod"
+bash -c '. "$1"; thermal_materialization_overlay_valid "$2" stock stock stock' _ "$tmp/stock/mod/tools/core/thermal-layout.sh" "$tmp/stock/mod"
 mkdir -p "$tmp/stock/mod/system/vendor/etc"
 printf '%s\n' '{}' > "$tmp/stock/mod/system/vendor/etc/thermal_info_config_charge.json"
-! bash -c '. "$1"; thermal_materialization_overlay_valid "$2"' _ "$tmp/stock/mod/tools/core/thermal-layout.sh" "$tmp/stock/mod"
+! bash -c '. "$1"; thermal_materialization_overlay_valid "$2" stock stock stock' _ "$tmp/stock/mod/tools/core/thermal-layout.sh" "$tmp/stock/mod"
 rm -f "$tmp/stock/mod/system/vendor/etc/thermal_info_config_charge.json"
 
 run_case outdoor stock outdoor-safe
@@ -84,9 +84,14 @@ grep -Fxq 'PATCH_THERMAL_OVERLAY_FILES=thermal_info_config.json,thermal_info_con
 [[ ! -e "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config_charge.json" ]]
 grep -Fq '"HotThreshold": ["NAN", 40, 44, 46, 47.5, 53, 56]' "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config.json"
 grep -Fq '"HotThreshold": ["NAN", 38, 44, 46, 47.5, 53, 56]' "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config_throttling.json"
-bash -c '. "$1"; thermal_materialization_overlay_valid "$2"' _ "$tmp/outdoor/mod/tools/core/thermal-layout.sh" "$tmp/outdoor/mod"
+bash -c '. "$1"; thermal_materialization_overlay_valid "$2" stock outdoor-safe stock' _ "$tmp/outdoor/mod/tools/core/thermal-layout.sh" "$tmp/outdoor/mod"
+! bash -c '. "$1"; thermal_materialization_overlay_valid "$2" stock stock stock' _ "$tmp/outdoor/mod/tools/core/thermal-layout.sh" "$tmp/outdoor/mod"
+cp "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config.json" "$tmp/outdoor/good.json"
+printf '%s\n' '{"truncated":true}' > "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config.json"
+! bash -c '. "$1"; thermal_materialization_overlay_valid "$2" stock outdoor-safe stock' _ "$tmp/outdoor/mod/tools/core/thermal-layout.sh" "$tmp/outdoor/mod"
+mv "$tmp/outdoor/good.json" "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config.json"
 mv "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config.json" "$tmp/outdoor/missing.json"
-! bash -c '. "$1"; thermal_materialization_overlay_valid "$2"' _ "$tmp/outdoor/mod/tools/core/thermal-layout.sh" "$tmp/outdoor/mod"
+! bash -c '. "$1"; thermal_materialization_overlay_valid "$2" stock outdoor-safe stock' _ "$tmp/outdoor/mod/tools/core/thermal-layout.sh" "$tmp/outdoor/mod"
 mv "$tmp/outdoor/missing.json" "$tmp/outdoor/mod/system/vendor/etc/thermal_info_config.json"
 
 run_case polling mod stock
@@ -95,13 +100,15 @@ grep -Fxq 'PATCH_THERMAL_DELTA_VALIDATION=pass' "$tmp/polling.log"
 grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=sparse-overlay' "$tmp/polling.log"
 grep -Fxq 'PATCH_THERMAL_OVERLAY_COUNT=3' "$tmp/polling.log"
 grep -R -Fq '"PollingDelay": 5000' "$tmp/polling/mod/system/vendor/etc"
-bash -c '. "$1"; thermal_materialization_overlay_valid "$2"' _ "$tmp/polling/mod/tools/core/thermal-layout.sh" "$tmp/polling/mod"
+bash -c '. "$1"; thermal_materialization_overlay_valid "$2" mod stock stock' _ "$tmp/polling/mod/tools/core/thermal-layout.sh" "$tmp/polling/mod"
 
 grep -Fq 'THERMAL_LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"' "$repo_root/tools/core/auto-profile-switch.sh"
 grep -Fq '. "$THERMAL_LAYOUT_HELPER"' "$repo_root/tools/core/auto-profile-switch.sh"
-grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" || NEED=1' "$repo_root/tools/core/auto-profile-switch.sh"
-grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" && ready=yes' "$repo_root/post-fs-data.sh"
-grep -Fq 'thermal_materialization_overlay_valid "$target"' "$repo_root/tools/ptune/enable-ptune-override.sh"
+grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" "$POLLING" "$OUTDOOR" "$RECOVERY" || NEED=1' "$repo_root/tools/core/auto-profile-switch.sh"
+grep -Fq 'AUTO_SWITCH_BLOCK reason=thermal_layout_helper_missing action=thermal_only_disabled' "$repo_root/tools/core/auto-profile-switch.sh"
+grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" "$ready_polling" "$ready_outdoor" "$ready_recovery" && ready=yes' "$repo_root/post-fs-data.sh"
+grep -Fq 'thermal_materialization_overlay_valid "$target" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$PIXEL11_HYSTERESIS_MODE"' "$repo_root/tools/ptune/enable-ptune-override.sh"
+grep -Fq 'thermal_materialization_manifest_row_load' "$repo_root/tools/core/thermal-layout.sh"
 
 printf '%s\n' 'PASS pixel10_stock_stock_zero_overlay'
 printf '%s\n' 'PASS pixel10_outdoor_sparse_changed_files_only'

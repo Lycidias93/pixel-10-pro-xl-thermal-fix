@@ -126,7 +126,11 @@ if [ "$override" = 1 ] && [ -n "$ptune_any" ]; then
   ready=no
   if [ -r "$LAYOUT_HELPER" ]; then
     . "$LAYOUT_HELPER"
-    thermal_materialization_overlay_valid "$MODDIR" && ready=yes
+    ready_polling="$(getcfg THERMAL_POLLING_MODE)"; [ -n "$ready_polling" ] || ready_polling=mod
+    ready_outdoor="$(getcfg THERMAL_OUTDOOR_PROFILE)"; [ -n "$ready_outdoor" ] || ready_outdoor=stock
+    ready_recovery="$(getcfg PIXEL11_HYSTERESIS_MODE)"; [ -n "$ready_recovery" ] || ready_recovery=stock
+    [ "$ready_recovery" = mod ] && ready_recovery=combined
+    thermal_materialization_overlay_valid "$MODDIR" "$ready_polling" "$ready_outdoor" "$ready_recovery" && ready=yes
   fi
   if [ "$ready" = yes ]; then
     printf '%s\n' allow_thermal_with_ptune > "$G/guard_override"

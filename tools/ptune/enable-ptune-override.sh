@@ -31,8 +31,11 @@ cfg_set() {
 
 THERMAL_OUTDOOR_PROFILE="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
 THERMAL_POLLING_MODE="$(cfg_get THERMAL_POLLING_MODE)"
+PIXEL11_HYSTERESIS_MODE="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
 [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE=stock
 [ -n "$THERMAL_POLLING_MODE" ] || THERMAL_POLLING_MODE=mod
+[ -n "$PIXEL11_HYSTERESIS_MODE" ] || PIXEL11_HYSTERESIS_MODE=stock
+[ "$PIXEL11_HYSTERESIS_MODE" = mod ] && PIXEL11_HYSTERESIS_MODE=combined
 
 materialize_one() {
   target="$1"
@@ -40,7 +43,7 @@ materialize_one() {
   validator="$target/tools/core/patch-thermal-validated.sh"
   if [ -s "$validator" ]; then
     chmod 0755 "$validator" 2>/dev/null || true
-    sh "$validator" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$target" || {
+    sh "$validator" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$target" "$PIXEL11_HYSTERESIS_MODE" || {
       echo "ERROR: validated Thermal materialization failed for $target" >&2
       return 1
     }
@@ -53,7 +56,7 @@ materialize_one() {
 verify_one() {
   target="$1"
   [ -d "$target" ] || return 0
-  thermal_materialization_overlay_valid "$target" || {
+  thermal_materialization_overlay_valid "$target" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$PIXEL11_HYSTERESIS_MODE" || {
     echo "ERROR: validated override verify failed for $target" >&2
     return 1
   }
