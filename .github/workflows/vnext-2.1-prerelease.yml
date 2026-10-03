@@ -127,6 +127,7 @@ jobs:
       - name: Build and bind public prerelease asset
         env:
           WEBUI_CORE_DIR: ${{ github.workspace }}/.webui-core
+          SOURCE_DATE_EPOCH: '1790928453'
         run: |
           set -euo pipefail
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh dev_tools/validate-package.py
