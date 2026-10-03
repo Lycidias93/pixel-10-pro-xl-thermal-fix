@@ -7,6 +7,9 @@ STAGEDIR="/data/adb/modules_update/$MODULE_ID"
 CONFIG_DIR="/data/adb/$MODULE_ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 PTUNE_DIR="/data/adb/modules/ptune"
+LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
+[ -r "$LAYOUT_HELPER" ] || { echo "ERROR: thermal-layout helper missing" >&2; exit 1; }
+. "$LAYOUT_HELPER"
 
 cfg_get() {
   _key="$1"
@@ -50,12 +53,7 @@ materialize_one() {
 verify_one() {
   target="$1"
   [ -d "$target" ] || return 0
-  ok=1
-  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
-    [ -s "$target/system/vendor/etc/$f" ] || ok=0
-  done
-  [ -s "$target/guard/outdoor-delta-validation.env" ] || ok=0
-  [ "$ok" = 1 ] || {
+  thermal_materialization_overlay_valid "$target" || {
     echo "ERROR: validated override verify failed for $target" >&2
     return 1
   }

@@ -79,6 +79,7 @@ jobs:
           sh -n tools/menu/install-options-menu.sh
           sh -n tools/menu/zram-menu.sh
           sh -n tools/ptune/ptune-guard.sh
+          sh -n tools/ptune/enable-ptune-override.sh
           sh -n tools/debug/vnext-readiness-summary.sh
           sh -n tools/debug/vnext-device-verify.sh
           sh -n tools/debug/status-lib.sh

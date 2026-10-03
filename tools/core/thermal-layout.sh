@@ -326,3 +326,69 @@ thermal_layout_load_env() {
   THERMAL_LAYOUT_FILES_CSV="$_tl_csv"
   return 0
 }
+
+
+thermal_materialization_load_env() {
+  _tm_env="$1"
+  [ -r "$_tm_env" ] || return 1
+  _tm_schema="$(sed -n 's/^schema=//p' "$_tm_env" | tail -n 1)"
+  _tm_validation="$(sed -n 's/^validation=//p' "$_tm_env" | tail -n 1)"
+  _tm_mode="$(sed -n 's/^materialization_mode=//p' "$_tm_env" | tail -n 1)"
+  _tm_files="$(sed -n 's/^overlay_files=//p' "$_tm_env" | tail -n 1)"
+  _tm_count="$(sed -n 's/^overlay_file_count=//p' "$_tm_env" | tail -n 1)"
+  _tm_layout="$(sed -n 's/^layout_files=//p' "$_tm_env" | tail -n 1)"
+  [ "$_tm_schema" = pixel-thermal-outdoor-delta-validation-v3 ] || return 1
+  [ "$_tm_validation" = passed ] || return 1
+  [ "$_tm_layout" = "${THERMAL_LAYOUT_FILES_CSV:-}" ] || return 1
+  case "$_tm_count" in ''|*[!0-9]*) return 1 ;; esac
+
+  _tm_actual=0
+  _tm_seen=' '
+  if [ "$_tm_files" != none ]; then
+    for _tm_name in $(printf '%s' "$_tm_files" | tr ',' ' '); do
+      thermal_layout_file_allowed "$_tm_name" || return 1
+      case " $THERMAL_LAYOUT_FILES " in *" $_tm_name "*) ;; *) return 1 ;; esac
+      case "$_tm_seen" in *" $_tm_name "*) return 1 ;; esac
+      _tm_seen="$_tm_seen$_tm_name "
+      _tm_actual=$((_tm_actual + 1))
+    done
+  fi
+  [ "$_tm_actual" -eq "$_tm_count" ] 2>/dev/null || return 1
+  case "$_tm_mode" in
+    stock-no-overlay) [ "$_tm_count" -eq 0 ] 2>/dev/null && [ "$_tm_files" = none ] || return 1 ;;
+    sparse-overlay) [ "$_tm_count" -gt 0 ] 2>/dev/null && [ "$_tm_files" != none ] || return 1 ;;
+    *) return 1 ;;
+  esac
+  THERMAL_MATERIALIZATION_MODE="$_tm_mode"
+  THERMAL_OVERLAY_FILES_CSV="$_tm_files"
+  THERMAL_OVERLAY_COUNT="$_tm_count"
+  return 0
+}
+
+thermal_materialization_overlay_selected() {
+  case ",${THERMAL_OVERLAY_FILES_CSV:-none}," in *",$1,"*) return 0 ;; *) return 1 ;; esac
+}
+
+thermal_materialization_overlay_valid() {
+  _tm_moddir="$1"
+
+  _tm_layout_env="$_tm_moddir/guard/thermal-layout.env"
+  _tm_delta_env="$_tm_moddir/guard/outdoor-delta-validation.env"
+  _tm_target="$_tm_moddir/system/vendor/etc"
+  thermal_layout_load_env "$_tm_layout_env" || return 1
+  thermal_materialization_load_env "$_tm_delta_env" || return 1
+  for _tm_name in $THERMAL_LAYOUT_FILES; do
+    if thermal_materialization_overlay_selected "$_tm_name"; then
+      [ -s "$_tm_target/$_tm_name" ] || return 1
+    else
+      [ ! -e "$_tm_target/$_tm_name" ] && [ ! -L "$_tm_target/$_tm_name" ] || return 1
+    fi
+  done
+  for _tm_path in "$_tm_target"/thermal_info_config*.json; do
+    [ -e "$_tm_path" ] || [ -L "$_tm_path" ] || continue
+    _tm_name="${_tm_path##*/}"
+    case " $THERMAL_LAYOUT_FILES " in *" $_tm_name "*) ;; *) return 1 ;; esac
+    thermal_materialization_overlay_selected "$_tm_name" || return 1
+  done
+  return 0
+}

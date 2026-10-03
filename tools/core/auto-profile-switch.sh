@@ -222,9 +222,7 @@ NEED=0
 [ "$(getstate incremental)" = "$INCREMENTAL" ] || NEED=1
 [ "$(getstate fingerprint)" = "$FINGERPRINT" ] || NEED=1
 [ "$(getcfg THERMAL_DISABLED)" = 0 ] || NEED=1
-for required in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
-  [ -s "$MODDIR/system/vendor/etc/$required" ] || NEED=1
-done
+thermal_materialization_overlay_valid "$MODDIR" || NEED=1
 
 if [ "$NEED" -eq 0 ]; then
   state_refresh=0
