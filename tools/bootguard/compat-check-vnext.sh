@@ -98,11 +98,18 @@ fi
 
 polling_mode="$(cfg_get THERMAL_POLLING_MODE)"; [ -n "$polling_mode" ] || polling_mode=mod
 outdoor_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"; [ -n "$outdoor_profile" ] || outdoor_profile=stock
+recovery_mode="$(cfg_get PIXEL11_HYSTERESIS_MODE)"; [ -n "$recovery_mode" ] || recovery_mode=stock
+[ "$recovery_mode" = mod ] && recovery_mode=combined
+case "$recovery_mode" in stock|hysteresis|max-release-step|combined) ;; *) recovery_mode=invalid ;; esac
+device_family="$(thermal_device_family "$DEVICE" 2>/dev/null || true)"; [ -n "$device_family" ] || device_family=unknown
 
 materialization_mode="$(kv_get materialization_mode "$DELTA_REPORT")"; [ -n "$materialization_mode" ] || materialization_mode=unknown
+materialization_recovery_mode="$(kv_get pixel11_hysteresis_mode "$DELTA_REPORT")"; [ -n "$materialization_recovery_mode" ] || materialization_recovery_mode=invalid
 overlay_files_csv="$(kv_get overlay_files "$DELTA_REPORT")"; [ -n "$overlay_files_csv" ] || overlay_files_csv=none
 overlay_expected_count="$(kv_get overlay_file_count "$DELTA_REPORT")"; [ -n "$overlay_expected_count" ] || overlay_expected_count=invalid
 case "$overlay_expected_count" in ''|*[!0-9]*) overlay_contract_valid=no ;; *) overlay_contract_valid=yes ;; esac
+case "$materialization_recovery_mode" in stock|hysteresis|max-release-step|combined) ;; *) overlay_contract_valid=no ;; esac
+if [ "$device_family" = pixel11 ] && [ "$recovery_mode" != "$materialization_recovery_mode" ]; then overlay_contract_valid=no; fi
 overlay_file_selected() { case ",$overlay_files_csv," in *",$1,"*) return 0 ;; *) return 1 ;; esac; }
 
 patch_manifest_valid=yes
@@ -331,6 +338,8 @@ case "$_suv" in *KernelSU*Next*|*KSU-Next*) root_impl=kernelsu_next ;; *KernelSU
   printf '%s\n' "DYNAMIC_OVERLAY_COUNT=$overlay_expected_count"
   printf '%s\n' "POLLING_MODE=$polling_mode"
   printf '%s\n' "OUTDOOR_PROFILE=$outdoor_profile"
+  printf '%s\n' "RECOVERY_MODE=$recovery_mode"
+  printf '%s\n' "MATERIALIZATION_RECOVERY_MODE=$materialization_recovery_mode"
   printf '%s\n' "ACTIVE_POLLING_VALID=$active_polling_valid"
   printf '%s\n' "ACTIVE_POLLING_300000=$active_polling_300000"
   printf '%s\n' "ACTIVE_POLLING_5000=$active_polling_5000"
