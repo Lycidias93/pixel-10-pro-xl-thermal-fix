@@ -28,9 +28,7 @@ cfg_set(){
 }
 prop(){ getprop "$1" 2>/dev/null || true; }
 remove_thermal_overlay(){
-  rm -f "$MODDIR/system/vendor/etc/thermal_info_config.json" \
-        "$MODDIR/system/vendor/etc/thermal_info_config_charge.json" \
-        "$MODDIR/system/vendor/etc/thermal_info_config_throttling.json" 2>/dev/null || true
+  rm -f "$MODDIR/system/vendor/etc"/thermal_info_config*.json 2>/dev/null || true
 }
 transition_phase(){
   [ -s "$TRANSITION_HELPER" ] || return 0

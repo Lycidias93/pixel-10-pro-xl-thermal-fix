@@ -118,6 +118,7 @@ grep -Fq 'THERMAL_LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"' "$repo_r
 grep -Fq '. "$THERMAL_LAYOUT_HELPER"' "$repo_root/tools/core/auto-profile-switch.sh"
 grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" "$POLLING" "$OUTDOOR" "$RECOVERY" || NEED=1' "$repo_root/tools/core/auto-profile-switch.sh"
 grep -Fq 'AUTO_SWITCH_BLOCK reason=thermal_layout_helper_missing action=thermal_only_disabled' "$repo_root/tools/core/auto-profile-switch.sh"
+grep -Fq 'rm -f "$MODDIR/system/vendor/etc"/thermal_info_config*.json' "$repo_root/tools/core/auto-profile-switch.sh"
 grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" "$ready_polling" "$ready_outdoor" "$ready_recovery" && ready=yes' "$repo_root/post-fs-data.sh"
 grep -Fq 'thermal_materialization_overlay_valid "$target" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$PIXEL11_HYSTERESIS_MODE"' "$repo_root/tools/ptune/enable-ptune-override.sh"
 grep -Fq 'thermal_materialization_manifest_row_load' "$repo_root/tools/core/thermal-layout.sh"
