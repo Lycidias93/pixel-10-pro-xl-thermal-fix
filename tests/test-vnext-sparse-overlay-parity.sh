@@ -97,6 +97,8 @@ grep -Fxq 'PATCH_THERMAL_OVERLAY_COUNT=3' "$tmp/polling.log"
 grep -R -Fq '"PollingDelay": 5000' "$tmp/polling/mod/system/vendor/etc"
 bash -c '. "$1"; thermal_materialization_overlay_valid "$2"' _ "$tmp/polling/mod/tools/core/thermal-layout.sh" "$tmp/polling/mod"
 
+grep -Fq 'THERMAL_LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"' "$repo_root/tools/core/auto-profile-switch.sh"
+grep -Fq '. "$THERMAL_LAYOUT_HELPER"' "$repo_root/tools/core/auto-profile-switch.sh"
 grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" || NEED=1' "$repo_root/tools/core/auto-profile-switch.sh"
 grep -Fq 'thermal_materialization_overlay_valid "$MODDIR" && ready=yes' "$repo_root/post-fs-data.sh"
 grep -Fq 'thermal_materialization_overlay_valid "$target"' "$repo_root/tools/ptune/enable-ptune-override.sh"

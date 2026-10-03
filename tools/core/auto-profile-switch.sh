@@ -8,6 +8,7 @@ DATA_ROOT="${THERMAL_DATA_ROOT:-/data/adb/$ID}"
 CFG="${THERMAL_CONFIG_FILE:-$DATA_ROOT/config.env}"
 SUPPORTED_JSON="$MODDIR/supported_versions.json"
 SUPPORTED_HELPER="$MODDIR/tools/core/supported-build.sh"
+THERMAL_LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
 VALIDATED_PATCHER="$MODDIR/tools/core/patch-thermal-validated.sh"
 TRANSITION_HELPER="$MODDIR/tools/core/platform-transition.sh"
 mkdir -p "$G"
@@ -170,6 +171,8 @@ if [ ! -r "$SUPPORTED_HELPER" ]; then
   exit 1
 fi
 . "$SUPPORTED_HELPER"
+[ -r "$THERMAL_LAYOUT_HELPER" ] || { log thermal_layout_helper_missing; exit 0; }
+. "$THERMAL_LAYOUT_HELPER"
 
 if ! thermal_supported_check "$SUPPORTED_JSON" "$DEVICE" "$ANDROID" "$BUILD_ID"; then
   remove_thermal_overlay
