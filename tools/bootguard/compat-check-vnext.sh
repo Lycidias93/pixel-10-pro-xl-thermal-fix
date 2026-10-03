@@ -118,13 +118,26 @@ if [ "$layout_valid" != yes ] || [ ! -s "$PATCH_MANIFEST" ] || [ "$overlay_contr
 elif [ "$materialization_mode" = stock-no-overlay ]; then
   [ "$overlay_expected_count" -eq 0 ] 2>/dev/null || patch_manifest_valid=no
   [ "$overlay_files_csv" = none ] || patch_manifest_valid=no
+  [ "$polling_mode" = stock ] || patch_manifest_valid=no
+  [ "$outdoor_profile" = stock ] || patch_manifest_valid=no
   _tab="$(printf '\t')"
-  while IFS="$_tab" read -r file _rest; do
+  while IFS="$_tab" read -r file source_sha output_sha source_polling replacements output300000 output5000 allowed extra; do
     [ "$file" = file ] && continue
-    [ -n "$file" ] && patch_rows=$((patch_rows + 1))
+    [ -n "$file" ] || continue
+    patch_rows=$((patch_rows + 1))
+    case " $layout_files " in *" $file "*) ;; *) patch_manifest_valid=no; continue ;; esac
+    [ -z "$extra" ] || patch_manifest_valid=no
+    [ "$allowed" = yes ] || patch_manifest_valid=no
+    case "$source_polling:$replacements:$output300000:$output5000" in *[!0-9:]*|:*|*:) patch_manifest_valid=no; continue ;; esac
+    [ "$source_sha" = "$output_sha" ] || patch_manifest_valid=no
+    [ "$replacements" = 0 ] || patch_manifest_valid=no
+    [ "$output300000" = "$source_polling" ] || patch_manifest_valid=no
+    [ "$output5000" = 0 ] || patch_manifest_valid=no
+    [ ! -e "$OVERLAY_DIR/$file" ] || patch_manifest_valid=no
+    patch_source_polling_total=$((patch_source_polling_total + source_polling))
   done < "$PATCH_MANIFEST"
-  [ "$patch_rows" -eq 0 ] 2>/dev/null || patch_manifest_valid=no
-  for file in $layout_files; do [ ! -e "$OVERLAY_DIR/$file" ] || patch_manifest_valid=no; done
+  [ "$patch_rows" -eq "$layout_count" ] 2>/dev/null || patch_manifest_valid=no
+  [ "$patch_source_polling_total" = "$source_polling_total" ] || patch_manifest_valid=no
 elif [ "$materialization_mode" = sparse-overlay ] || [ "$materialization_mode" = overlay ]; then
   if [ "$materialization_mode" = overlay ]; then
     [ "$overlay_expected_count" -eq "$layout_count" ] 2>/dev/null || patch_manifest_valid=no

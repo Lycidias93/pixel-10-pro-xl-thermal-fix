@@ -67,6 +67,18 @@ grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=stock-no-overlay' "$tmp/stock.log"
 grep -Fxq 'PATCH_THERMAL_OVERLAY_COUNT=0' "$tmp/stock.log"
 grep -Fxq 'PATCH_THERMAL_OVERLAY_FILES=none' "$tmp/stock.log"
 [[ ! -e "$tmp/stock/mod/system/vendor/etc" ]]
+cat > "$tmp/stock/data/config.env" <<'CFG'
+THERMAL_POLLING_MODE=stock
+THERMAL_OUTDOOR_PROFILE=stock
+THERMAL_DISABLED=0
+CFG
+THERMAL_DEVICE=mustang THERMAL_ANDROID=17 THERMAL_BUILD_ID=SPARSE_PARITY_TEST \
+  THERMAL_VENDOR_DIR="$tmp/stock/source" THERMAL_DATA_ROOT="$tmp/stock/data" MODDIR="$tmp/stock/mod" \
+  sh "$repo_root/tools/bootguard/compat-check-vnext.sh" > "$tmp/stock/compat.log"
+grep -Fxq 'DYNAMIC_PATCH_MANIFEST_VALID=yes' "$tmp/stock/compat.log"
+grep -Fxq 'DYNAMIC_PATCH_ROWS=3' "$tmp/stock/compat.log"
+grep -Fxq 'DYNAMIC_MATERIALIZATION_VALID=yes' "$tmp/stock/compat.log"
+grep -Fxq 'SAFE_TO_REBOOT=yes' "$tmp/stock/compat.log"
 bash -c '. "$1"; thermal_materialization_overlay_valid "$2" stock stock stock' _ "$tmp/stock/mod/tools/core/thermal-layout.sh" "$tmp/stock/mod"
 mkdir -p "$tmp/stock/mod/system/vendor/etc"
 printf '%s\n' '{}' > "$tmp/stock/mod/system/vendor/etc/thermal_info_config_charge.json"
