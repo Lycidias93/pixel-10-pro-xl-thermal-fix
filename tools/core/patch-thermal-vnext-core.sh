@@ -375,6 +375,12 @@ if [ "$MATERIALIZATION" = stock-no-overlay ]; then
     [ -n "$file" ] || continue
     sf="$CACHE_DIR/$file"
     [ -s "$sf" ] || fail 48 "required_stock_cache_missing_$file"
+    osh="$(sha_file "$sf")"
+    [ "$osh" = "$source_sha" ] || fail 48 "stock_cache_sha_mismatch_$file"
+    o300="$(count_polling_value "$sf" 300000)"
+    o5="$(count_polling_value "$sf" 5000)"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+      "$file" "$source_sha" "$osh" "$source_polling" 0 "$o300" "$o5" yes >> "$PATCH_MANIFEST_TMP"
     source_files=$((source_files + 1))
     source_polling_total=$((source_polling_total + source_polling))
   done < "$MANIFEST"

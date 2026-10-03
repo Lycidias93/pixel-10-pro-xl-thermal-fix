@@ -79,6 +79,7 @@ jobs:
           sh -n tools/menu/install-options-menu.sh
           sh -n tools/menu/zram-menu.sh
           sh -n tools/ptune/ptune-guard.sh
+          sh -n tools/ptune/enable-ptune-override.sh
           sh -n tools/debug/vnext-readiness-summary.sh
           sh -n tools/debug/vnext-device-verify.sh
           sh -n tools/debug/status-lib.sh
@@ -132,6 +133,7 @@ jobs:
       - name: Build prerelease candidate
         env:
           WEBUI_CORE_DIR: ${{ github.workspace }}/.webui-core
+          SOURCE_DATE_EPOCH: '1790928453'
         run: |
           set -euo pipefail
           chmod +x dev_tools/build-release-module.sh dev_tools/verify-release-module.sh dev_tools/validate-package.py
