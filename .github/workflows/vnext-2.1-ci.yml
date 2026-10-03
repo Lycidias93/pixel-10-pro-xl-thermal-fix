@@ -3,10 +3,10 @@ name: vNext 2.1 CI
 on:
   push:
     branches:
-      - vnext-2.1.0-alpha.9
+      - vnext-2.1.0-alpha.10
   pull_request:
     branches:
-      - vnext-2.1.0-alpha.9
+      - vnext-2.1.0-alpha.10
   workflow_dispatch:
 
 permissions:
@@ -72,6 +72,7 @@ jobs:
           sh -n tools/core/patch-thermal-vnext-core.sh
           sh -n tools/core/patch-thermal-validated.sh
           sh -n tools/core/patch-thermal-validated-vnext.sh
+          bash -n tests/test-vnext-sparse-overlay-parity.sh
           sh -n tools/bootguard/compat-check.sh
           sh -n tools/bootguard/compat-check-vnext.sh
           sh -n tools/menu/menu-cycle.sh
@@ -96,6 +97,7 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-vnext-layouts.sh
+          bash tests/test-vnext-sparse-overlay-parity.sh
           bash tests/test-pixel11-family-controls.sh
           bash tests/test-g6-polling-inventory.sh
           bash tests/test-outdoor-delta-validation-runtime.sh
@@ -124,7 +126,7 @@ jobs:
           done
           grep -Fq 'tokay:17|caiman:17|komodo:17|comet:17|tegu:17|stallion:17' customize.sh
           grep -Fq 'cubs:17|grizzly:17|kodiak:17|yogi:17' action.sh
-          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.9'
+          test "$(sed -n 's/^version=//p' module.prop | head -n1)" = '2.1.0-alpha.10'
           printf '%s\n' 'RESULT: VNEXT_SINGLE_DEVICE_FAMILY_MATRIX_PASS'
 
       - name: Build prerelease candidate
@@ -150,14 +152,14 @@ jobs:
             webroot/v03.js webroot/v04.js; do
             grep -Fxq "$asset" dist/package-entries.txt
           done
-          printf '%s\n' 'RESULT: VNEXT_ALPHA9_PACKAGE_PASS'
+          printf '%s\n' 'RESULT: VNEXT_ALPHA10_PACKAGE_PASS'
 
       - name: Upload prerelease candidate
         uses: actions/upload-artifact@v4
         with:
-          name: pixel-thermal-vnext-alpha9-${{ github.sha }}
+          name: pixel-thermal-vnext-alpha10-${{ github.sha }}
           path: |
-            dist/pixel-thermal-memory-control-2.1.0-alpha.9.zip
+            dist/pixel-thermal-memory-control-2.1.0-alpha.10.zip
             dist/build-metadata.txt
             dist/prerelease.sha256.txt
             dist/package-entries.txt

@@ -13,6 +13,7 @@ module_prop="$repo_root/module.prop"
 update_meta="$repo_root/update-prerelease.json"
 supported="$repo_root/supported_versions.json"
 matrix="$repo_root/docs/vnext-device-test-matrix.md"
+publisher="$repo_root/.github/workflows/vnext-2.1-prerelease.yml"
 
 for file in "$menu" "$guard" "$readiness" "$policy" "$customize" "$service" "$status"; do
   sh -n "$file"
@@ -38,13 +39,23 @@ grep -Fq 'readiness_state=runtime_verified' "$readiness"
 grep -Fq 'support-readiness.env' "$service"
 grep -Fq 'VNEXT_READINESS state=' "$service"
 
-grep -Fq 'version=2.1.0-alpha.9' "$module_prop"
-grep -Fq 'versionCode=1016259' "$module_prop"
-# A promoted public prerelease must bind its branch-local release metadata to
-# the same public version before the publisher is allowed to create the tag.
-grep -Fq '"version": "2.1.0-alpha.9"' "$update_meta"
-grep -Fq '"versionCode": 1016259' "$update_meta"
-grep -Fq '/v2.1.0-alpha.9/pixel-thermal-memory-control-2.1.0-alpha.9.zip' "$update_meta"
+grep -Fq 'version=2.1.0-alpha.10' "$module_prop"
+grep -Fq 'versionCode=1016260' "$module_prop"
+# A promoted public prerelease must bind its branch-local release metadata and
+# one-shot publisher to the same user-confirmed public version.
+grep -Fq '"version": "2.1.0-alpha.10"' "$update_meta"
+grep -Fq '"versionCode": 1016260' "$update_meta"
+grep -Fq '/v2.1.0-alpha.10/pixel-thermal-memory-control-2.1.0-alpha.10.zip' "$update_meta"
+grep -Fq "RELEASE_TAG: 'v2.1.0-alpha.10'" "$publisher"
+grep -Fq "RELEASE_ASSET: 'pixel-thermal-memory-control-2.1.0-alpha.10.zip'" "$publisher"
+grep -Fq "test \"\$GITHUB_REF_NAME\" = 'vnext-2.1.0-alpha.10'" "$publisher"
+grep -Fq "test \"\$RELEASE_CONFIRMATION\" = 'PUBLISH_V2_1_0_ALPHA_10'" "$publisher"
+grep -Fq 'test "$GITHUB_SHA" = "$EXPECTED_TARGET_SHA"' "$publisher"
+grep -Fq 'test "$(sha256sum "$zip_path" | awk' "$publisher"
+grep -Fq -- '--draft --prerelease' "$publisher"
+grep -Fq 'gh release download "$RELEASE_TAG"' "$publisher"
+! grep -Fq -- '--clobber' "$publisher"
+! grep -Fq 'v2.1.0-alpha.9' "$publisher"
 
 grep -Fq '"komodo": {' "$supported"
 grep -Fq '"CP2A.260805.005"' "$supported"
@@ -58,7 +69,8 @@ grep -Fq 'runtime_verified' "$matrix"
 
 printf '%s\n' 'PASS experimental_ptune_override_guarded'
 printf '%s\n' 'PASS vnext_readiness_state_wired'
-printf '%s\n' 'PASS alpha9_public_release_identity_bound'
+printf '%s\n' 'PASS alpha10_public_release_identity_bound'
+printf '%s\n' 'PASS alpha10_publisher_user_confirmed_draft_first'
 printf '%s\n' 'PASS komodo_august_runtime_evidence_recorded'
 printf '%s\n' 'PASS readable_status_and_zram_gated_memory_killer'
-printf '%s\n' 'RESULT: VNEXT_ALPHA9_PUBLIC_HARDENING_PASS'
+printf '%s\n' 'RESULT: VNEXT_ALPHA10_PUBLIC_HARDENING_PASS'

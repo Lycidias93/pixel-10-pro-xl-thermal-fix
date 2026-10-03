@@ -266,13 +266,10 @@ patch_one() {
 
 DELTA=0
 case "$OUTDOOR_PROFILE" in outdoor-safe) DELTA=1 ;; outdoor-plus) DELTA=2 ;; outdoor-extended) DELTA=3 ;; esac
-MATERIALIZATION=overlay
-if [ "$DEVICE_FAMILY" = pixel11 ]; then
-  if [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then
-    MATERIALIZATION=stock-no-overlay
-  else
-    MATERIALIZATION=sparse-overlay
-  fi
+if [ "$POLLING_MODE" = stock ] && [ "$OUTDOOR_PROFILE" = stock ] && [ "$PIXEL11_HYSTERESIS_MODE" = stock ]; then
+  MATERIALIZATION=stock-no-overlay
+else
+  MATERIALIZATION=sparse-overlay
 fi
 mkdir -p "$DATA_ROOT" "$CACHE_PARENT" "$TARGET_PARENT" "$GUARD_DIR"
 
