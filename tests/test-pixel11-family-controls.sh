@@ -178,6 +178,20 @@ run_phase() {
     [[ ! -e "$common" ]]
     [[ ! -e "$mod/system/vendor/etc/thermal_info_config_charge.json" ]]
     [[ ! -e "$mod/system/vendor/etc" ]]
+    printf '%s\n' 'THERMAL_POLLING_MODE=stock' 'THERMAL_OUTDOOR_PROFILE=stock' 'PIXEL11_HYSTERESIS_MODE=stock' 'THERMAL_DISABLED=0' > "$data/config.env"
+    THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=G6_FAMILY_TEST THERMAL_VENDOR_DIR="$src" THERMAL_DATA_ROOT="$data" MODDIR="$mod" sh "$repo_root/tools/bootguard/compat-check-vnext.sh" > "$root.compat.stock.log"
+    grep -Fxq 'DYNAMIC_MATERIALIZATION_VALID=yes' "$root.compat.stock.log"
+    grep -Fxq 'RECOVERY_MODE=stock' "$root.compat.stock.log"
+    grep -Fxq 'MATERIALIZATION_RECOVERY_MODE=stock' "$root.compat.stock.log"
+    grep -Fxq 'SAFE_TO_REBOOT=yes' "$root.compat.stock.log"
+    sed -i 's/^PIXEL11_HYSTERESIS_MODE=stock$/PIXEL11_HYSTERESIS_MODE=max-release-step/' "$data/config.env"
+    THERMAL_DEVICE=grizzly THERMAL_ANDROID=17 THERMAL_BUILD_ID=G6_FAMILY_TEST THERMAL_VENDOR_DIR="$src" THERMAL_DATA_ROOT="$data" MODDIR="$mod" sh "$repo_root/tools/bootguard/compat-check-vnext.sh" > "$root.compat.stale-recovery.log"
+    grep -Fxq 'DYNAMIC_MATERIALIZATION_VALID=no' "$root.compat.stale-recovery.log"
+    grep -Fxq 'RECOVERY_MODE=max-release-step' "$root.compat.stale-recovery.log"
+    grep -Fxq 'MATERIALIZATION_RECOVERY_MODE=stock' "$root.compat.stale-recovery.log"
+    grep -Fxq 'SAFE_TO_REBOOT=no' "$root.compat.stale-recovery.log"
+    grep -Fxq 'REASON=dynamic_materialization_invalid' "$root.compat.stale-recovery.log"
+    printf '%s\n' 'PASS pixel11_stale_stock_recovery_manifest_rejected'
     return 0
   fi
   grep -Fxq 'PATCH_THERMAL_MATERIALIZATION=sparse-overlay' "$root.log"
