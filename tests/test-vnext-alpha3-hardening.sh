@@ -14,11 +14,14 @@ update_meta="$repo_root/update-prerelease.json"
 supported="$repo_root/supported_versions.json"
 matrix="$repo_root/docs/vnext-device-test-matrix.md"
 publisher="$repo_root/.github/workflows/vnext-2.1-prerelease.yml"
+release_delta_guard="$repo_root/dev_tools/verify-release-notes-delta.sh"
+release_notes="$repo_root/release-notes/2.1.0-alpha.10.md"
 ci="$repo_root/.github/workflows/vnext-2.1-ci.yml"
 
 for file in "$menu" "$guard" "$readiness" "$policy" "$customize" "$service" "$status"; do
   sh -n "$file"
 done
+bash -n "$release_delta_guard"
 
 grep -Fq 'thermal_outdoor_experimental_platform' "$menu"
 for device in tokay caiman komodo comet tegu stallion; do
@@ -56,6 +59,10 @@ grep -Fq 'test "$GITHUB_SHA" = "$EXPECTED_TARGET_SHA"' "$publisher"
 grep -Fq "SOURCE_DATE_EPOCH: '1790928453'" "$publisher"
 grep -Fq "SOURCE_DATE_EPOCH: '1790928453'" "$ci"
 grep -Fq "grep -Fq '## Supported families' \"\$RELEASE_NOTES\"" "$publisher"
+grep -Fq '## WebUI and shared core' "$release_notes"
+! grep -Fq 'WebUI Core 0.7.2 is retained' "$release_notes"
+test "$(grep -Fc 'dev_tools/verify-release-notes-delta.sh "$RELEASE_NOTES" "$RELEASE_TAG"' "$publisher")" -ge 1
+grep -Fq 'dev_tools/verify-release-notes-delta.sh "$public_notes" "$RELEASE_TAG"' "$publisher"
 ! grep -Fq "## Pixel 11 support" "$publisher"
 grep -Fq 'test "$(sha256sum "$zip_path" | awk' "$publisher"
 grep -Fq -- '--draft --prerelease' "$publisher"

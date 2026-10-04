@@ -88,6 +88,14 @@ jobs:
           (cd .webui-core && ./scripts/verify.sh)
           node --test .webui-core/scripts/webui-race-regression.test.mjs .webui-core/scripts/webui-embedded-host-bootstrap.test.mjs .webui-core/scripts/webui-mobile-input-viewport.test.mjs
 
+      - name: Verify public release delta coverage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          chmod +x dev_tools/verify-release-notes-delta.sh
+          dev_tools/verify-release-notes-delta.sh "$RELEASE_NOTES" "$RELEASE_TAG"
+
       - name: Release regression gate
         run: |
           set -euo pipefail
@@ -212,6 +220,10 @@ jobs:
           printf '%s\n' "$public_body" | grep -Fq '## Supported families'
           printf '%s\n' "$public_body" | grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template'
           ! printf '%s\n' "$public_body" | grep -Eq 'SHA-256|workflow run|RESULT:|versionCode|candidate bytes|package entries'
+          public_notes="$(mktemp)"
+          printf '%s\n' "$public_body" > "$public_notes"
+          dev_tools/verify-release-notes-delta.sh "$public_notes" "$RELEASE_TAG"
+          rm -f "$public_notes"
 
           mkdir -p public-download
           gh release download "$RELEASE_TAG" --pattern "$RELEASE_ASSET" --dir public-download
