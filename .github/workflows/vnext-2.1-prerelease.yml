@@ -164,13 +164,14 @@ jobs:
           set -euo pipefail
           created_tag=no
           created_draft=no
+          draft_release_id=''
           published=no
           cleanup_prepublication() {
             rc=$?
             if [ "$rc" -ne 0 ] && [ "$published" != yes ]; then
-              if [ "$created_draft" = yes ] && gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-                draft_state="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' 2>/dev/null || true)"
-                [ "$draft_state" = true ] && gh release delete "$RELEASE_TAG" --yes >/dev/null 2>&1 || true
+              if [ "$created_draft" = yes ] && [ -n "$draft_release_id" ]; then
+                draft_state="$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq '.draft' 2>/dev/null || true)"
+                [ "$draft_state" = true ] && gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" >/dev/null 2>&1 || true
               fi
               if [ "$created_tag" = yes ]; then
                 remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')"
@@ -189,22 +190,24 @@ jobs:
             --target "$GITHUB_SHA" --draft --prerelease \
             --title "$RELEASE_TITLE" --notes-file "$RELEASE_NOTES"
           created_draft=yes
+          draft_release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq ".[] | select(.tag_name == \"$RELEASE_TAG\" and .draft == true) | .id" | head -n1)"
+          [[ "$draft_release_id" =~ ^[0-9]+$ ]]
 
-          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = true
-          test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = true
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq '.draft')" = true
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq '.prerelease')" = true
           test "$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG" | awk '{print $1}')" = "$GITHUB_SHA"
-          draft_digest="$(gh release view "$RELEASE_TAG" --json assets --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .digest")"
+          draft_digest="$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .digest")"
           test "$draft_digest" = "sha256:$EXPECTED_ASSET_SHA256"
-          draft_bytes="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .size")"
+          draft_bytes="$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq ".assets[] | select(.name == \"$RELEASE_ASSET\") | .size")"
           test "$draft_bytes" = "$EXPECTED_ASSET_BYTES"
 
-          gh release edit "$RELEASE_TAG" --draft=false --prerelease \
-            --title "$RELEASE_TITLE" --notes-file "$RELEASE_NOTES"
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" \
+            -F draft=false -F prerelease=true >/dev/null
           published=yes
 
-          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = false
-          test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq '.isPrerelease')" = true
-          public_body="$(gh release view "$RELEASE_TAG" --json body --jq '.body')"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq '.draft')" = false
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq '.prerelease')" = true
+          public_body="$(gh api "repos/${GITHUB_REPOSITORY}/releases/$draft_release_id" --jq '.body')"
           printf '%s\n' "$public_body" | grep -Fq '## New in 2.1.0-alpha.10'
           printf '%s\n' "$public_body" | grep -Fq '## Supported families'
           printf '%s\n' "$public_body" | grep -Fq 'https://github.com/Lycidias93/android-root-module-webui-template'
