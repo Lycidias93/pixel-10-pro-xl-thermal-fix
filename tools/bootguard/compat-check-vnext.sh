@@ -98,11 +98,18 @@ fi
 
 polling_mode="$(cfg_get THERMAL_POLLING_MODE)"; [ -n "$polling_mode" ] || polling_mode=mod
 outdoor_profile="$(cfg_get THERMAL_OUTDOOR_PROFILE)"; [ -n "$outdoor_profile" ] || outdoor_profile=stock
+recovery_mode="$(cfg_get PIXEL11_HYSTERESIS_MODE)"; [ -n "$recovery_mode" ] || recovery_mode=stock
+[ "$recovery_mode" = mod ] && recovery_mode=combined
+case "$recovery_mode" in stock|hysteresis|max-release-step|combined) ;; *) recovery_mode=invalid ;; esac
+device_family="$(thermal_device_family "$DEVICE" 2>/dev/null || true)"; [ -n "$device_family" ] || device_family=unknown
 
 materialization_mode="$(kv_get materialization_mode "$DELTA_REPORT")"; [ -n "$materialization_mode" ] || materialization_mode=unknown
+materialization_recovery_mode="$(kv_get pixel11_hysteresis_mode "$DELTA_REPORT")"; [ -n "$materialization_recovery_mode" ] || materialization_recovery_mode=invalid
 overlay_files_csv="$(kv_get overlay_files "$DELTA_REPORT")"; [ -n "$overlay_files_csv" ] || overlay_files_csv=none
 overlay_expected_count="$(kv_get overlay_file_count "$DELTA_REPORT")"; [ -n "$overlay_expected_count" ] || overlay_expected_count=invalid
 case "$overlay_expected_count" in ''|*[!0-9]*) overlay_contract_valid=no ;; *) overlay_contract_valid=yes ;; esac
+case "$materialization_recovery_mode" in stock|hysteresis|max-release-step|combined) ;; *) overlay_contract_valid=no ;; esac
+if [ "$device_family" = pixel11 ] && [ "$recovery_mode" != "$materialization_recovery_mode" ]; then overlay_contract_valid=no; fi
 overlay_file_selected() { case ",$overlay_files_csv," in *",$1,"*) return 0 ;; *) return 1 ;; esac; }
 
 patch_manifest_valid=yes
@@ -118,13 +125,26 @@ if [ "$layout_valid" != yes ] || [ ! -s "$PATCH_MANIFEST" ] || [ "$overlay_contr
 elif [ "$materialization_mode" = stock-no-overlay ]; then
   [ "$overlay_expected_count" -eq 0 ] 2>/dev/null || patch_manifest_valid=no
   [ "$overlay_files_csv" = none ] || patch_manifest_valid=no
+  [ "$polling_mode" = stock ] || patch_manifest_valid=no
+  [ "$outdoor_profile" = stock ] || patch_manifest_valid=no
   _tab="$(printf '\t')"
-  while IFS="$_tab" read -r file _rest; do
+  while IFS="$_tab" read -r file source_sha output_sha source_polling replacements output300000 output5000 allowed extra; do
     [ "$file" = file ] && continue
-    [ -n "$file" ] && patch_rows=$((patch_rows + 1))
+    [ -n "$file" ] || continue
+    patch_rows=$((patch_rows + 1))
+    case " $layout_files " in *" $file "*) ;; *) patch_manifest_valid=no; continue ;; esac
+    [ -z "$extra" ] || patch_manifest_valid=no
+    [ "$allowed" = yes ] || patch_manifest_valid=no
+    case "$source_polling:$replacements:$output300000:$output5000" in *[!0-9:]*|:*|*:) patch_manifest_valid=no; continue ;; esac
+    [ "$source_sha" = "$output_sha" ] || patch_manifest_valid=no
+    [ "$replacements" = 0 ] || patch_manifest_valid=no
+    [ "$output300000" = "$source_polling" ] || patch_manifest_valid=no
+    [ "$output5000" = 0 ] || patch_manifest_valid=no
+    [ ! -e "$OVERLAY_DIR/$file" ] || patch_manifest_valid=no
+    patch_source_polling_total=$((patch_source_polling_total + source_polling))
   done < "$PATCH_MANIFEST"
-  [ "$patch_rows" -eq 0 ] 2>/dev/null || patch_manifest_valid=no
-  for file in $layout_files; do [ ! -e "$OVERLAY_DIR/$file" ] || patch_manifest_valid=no; done
+  [ "$patch_rows" -eq "$layout_count" ] 2>/dev/null || patch_manifest_valid=no
+  [ "$patch_source_polling_total" = "$source_polling_total" ] || patch_manifest_valid=no
 elif [ "$materialization_mode" = sparse-overlay ] || [ "$materialization_mode" = overlay ]; then
   if [ "$materialization_mode" = overlay ]; then
     [ "$overlay_expected_count" -eq "$layout_count" ] 2>/dev/null || patch_manifest_valid=no
@@ -318,6 +338,8 @@ case "$_suv" in *KernelSU*Next*|*KSU-Next*) root_impl=kernelsu_next ;; *KernelSU
   printf '%s\n' "DYNAMIC_OVERLAY_COUNT=$overlay_expected_count"
   printf '%s\n' "POLLING_MODE=$polling_mode"
   printf '%s\n' "OUTDOOR_PROFILE=$outdoor_profile"
+  printf '%s\n' "RECOVERY_MODE=$recovery_mode"
+  printf '%s\n' "MATERIALIZATION_RECOVERY_MODE=$materialization_recovery_mode"
   printf '%s\n' "ACTIVE_POLLING_VALID=$active_polling_valid"
   printf '%s\n' "ACTIVE_POLLING_300000=$active_polling_300000"
   printf '%s\n' "ACTIVE_POLLING_5000=$active_polling_5000"

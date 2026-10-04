@@ -7,6 +7,9 @@ STAGEDIR="/data/adb/modules_update/$MODULE_ID"
 CONFIG_DIR="/data/adb/$MODULE_ID"
 CONFIG_FILE="$CONFIG_DIR/config.env"
 PTUNE_DIR="/data/adb/modules/ptune"
+LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
+[ -r "$LAYOUT_HELPER" ] || { echo "ERROR: thermal-layout helper missing" >&2; exit 1; }
+. "$LAYOUT_HELPER"
 
 cfg_get() {
   _key="$1"
@@ -28,8 +31,11 @@ cfg_set() {
 
 THERMAL_OUTDOOR_PROFILE="$(cfg_get THERMAL_OUTDOOR_PROFILE)"
 THERMAL_POLLING_MODE="$(cfg_get THERMAL_POLLING_MODE)"
+PIXEL11_HYSTERESIS_MODE="$(cfg_get PIXEL11_HYSTERESIS_MODE)"
 [ -n "$THERMAL_OUTDOOR_PROFILE" ] || THERMAL_OUTDOOR_PROFILE=stock
 [ -n "$THERMAL_POLLING_MODE" ] || THERMAL_POLLING_MODE=mod
+[ -n "$PIXEL11_HYSTERESIS_MODE" ] || PIXEL11_HYSTERESIS_MODE=stock
+[ "$PIXEL11_HYSTERESIS_MODE" = mod ] && PIXEL11_HYSTERESIS_MODE=combined
 
 materialize_one() {
   target="$1"
@@ -37,7 +43,7 @@ materialize_one() {
   validator="$target/tools/core/patch-thermal-validated.sh"
   if [ -s "$validator" ]; then
     chmod 0755 "$validator" 2>/dev/null || true
-    sh "$validator" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$target" || {
+    sh "$validator" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$target" "$PIXEL11_HYSTERESIS_MODE" || {
       echo "ERROR: validated Thermal materialization failed for $target" >&2
       return 1
     }
@@ -50,12 +56,7 @@ materialize_one() {
 verify_one() {
   target="$1"
   [ -d "$target" ] || return 0
-  ok=1
-  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
-    [ -s "$target/system/vendor/etc/$f" ] || ok=0
-  done
-  [ -s "$target/guard/outdoor-delta-validation.env" ] || ok=0
-  [ "$ok" = 1 ] || {
+  thermal_materialization_overlay_valid "$target" "$THERMAL_POLLING_MODE" "$THERMAL_OUTDOOR_PROFILE" "$PIXEL11_HYSTERESIS_MODE" || {
     echo "ERROR: validated override verify failed for $target" >&2
     return 1
   }

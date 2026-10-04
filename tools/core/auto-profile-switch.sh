@@ -8,6 +8,7 @@ DATA_ROOT="${THERMAL_DATA_ROOT:-/data/adb/$ID}"
 CFG="${THERMAL_CONFIG_FILE:-$DATA_ROOT/config.env}"
 SUPPORTED_JSON="$MODDIR/supported_versions.json"
 SUPPORTED_HELPER="$MODDIR/tools/core/supported-build.sh"
+THERMAL_LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
 VALIDATED_PATCHER="$MODDIR/tools/core/patch-thermal-validated.sh"
 TRANSITION_HELPER="$MODDIR/tools/core/platform-transition.sh"
 mkdir -p "$G"
@@ -27,9 +28,7 @@ cfg_set(){
 }
 prop(){ getprop "$1" 2>/dev/null || true; }
 remove_thermal_overlay(){
-  rm -f "$MODDIR/system/vendor/etc/thermal_info_config.json" \
-        "$MODDIR/system/vendor/etc/thermal_info_config_charge.json" \
-        "$MODDIR/system/vendor/etc/thermal_info_config_throttling.json" 2>/dev/null || true
+  rm -f "$MODDIR/system/vendor/etc"/thermal_info_config*.json 2>/dev/null || true
 }
 transition_phase(){
   [ -s "$TRANSITION_HELPER" ] || return 0
@@ -170,6 +169,16 @@ if [ ! -r "$SUPPORTED_HELPER" ]; then
   exit 1
 fi
 . "$SUPPORTED_HELPER"
+if [ ! -r "$THERMAL_LAYOUT_HELPER" ]; then
+  remove_thermal_overlay
+  cfg_set THERMAL_DISABLED 1
+  printf '%s\n' thermal_layout_helper_missing > "$G/auto_profile_switch_state"
+  printf '%s\n' 'REINSTALL_REQUIRED=yes' > "$G/reinstall_required"
+  transition_phase failed
+  log "AUTO_SWITCH_BLOCK reason=thermal_layout_helper_missing action=thermal_only_disabled"
+  exit 1
+fi
+. "$THERMAL_LAYOUT_HELPER"
 
 if ! thermal_supported_check "$SUPPORTED_JSON" "$DEVICE" "$ANDROID" "$BUILD_ID"; then
   remove_thermal_overlay
@@ -187,9 +196,12 @@ BUILD_EVIDENCE="$(thermal_build_evidence_state "$SUPPORTED_JSON" "$DEVICE" "$AND
 PROFILE="dynamic/${DEVICE}/android${ANDROID}"
 POLLING="$(getcfg THERMAL_POLLING_MODE)"
 OUTDOOR="$(getcfg THERMAL_OUTDOOR_PROFILE)"
+RECOVERY="$(getcfg PIXEL11_HYSTERESIS_MODE)"
 ZRAM_ENABLED="$(getcfg ENABLE_ZRAM_100P)"
 [ -n "$POLLING" ] || POLLING=mod
 [ -n "$OUTDOOR" ] || OUTDOOR=stock
+[ -n "$RECOVERY" ] || RECOVERY=stock
+[ "$RECOVERY" = mod ] && RECOVERY=combined
 [ -n "$ZRAM_ENABLED" ] || ZRAM_ENABLED=0
 ZRAM_MATERIALIZED=no
 if [ "$ZRAM_ENABLED" = 1 ] && [ -s "$MODDIR/system/vendor/etc/fstab.zram.100p" ]; then
@@ -222,9 +234,7 @@ NEED=0
 [ "$(getstate incremental)" = "$INCREMENTAL" ] || NEED=1
 [ "$(getstate fingerprint)" = "$FINGERPRINT" ] || NEED=1
 [ "$(getcfg THERMAL_DISABLED)" = 0 ] || NEED=1
-for required in thermal_info_config.json thermal_info_config_charge.json thermal_info_config_throttling.json; do
-  [ -s "$MODDIR/system/vendor/etc/$required" ] || NEED=1
-done
+thermal_materialization_overlay_valid "$MODDIR" "$POLLING" "$OUTDOOR" "$RECOVERY" || NEED=1
 
 if [ "$NEED" -eq 0 ]; then
   state_refresh=0
@@ -261,7 +271,7 @@ fi
 
 log "AUTO_SWITCH_TRIGGER reason=platform_tuple_or_overlay_changed profile=$PROFILE build=$BUILD_ID incremental=$INCREMENTAL"
 if [ ! -s "$VALIDATED_PATCHER" ] ||
-   ! sh "$VALIDATED_PATCHER" "$POLLING" "$OUTDOOR" "$MODDIR"; then
+   ! sh "$VALIDATED_PATCHER" "$POLLING" "$OUTDOOR" "$MODDIR" "$RECOVERY"; then
   remove_thermal_overlay
   cfg_set THERMAL_DISABLED 1
   write_state "$PROFILE" materialization_failed yes "$BUILD_EVIDENCE"

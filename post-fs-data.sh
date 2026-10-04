@@ -7,6 +7,7 @@ L="$G/bootguard.log"
 BOOTGUARD="$MODDIR/tools/bootguard/bootguard-lib.sh"
 TRANSITION="$MODDIR/tools/core/platform-transition.sh"
 AUTO_SWITCH="$MODDIR/tools/core/auto-profile-switch.sh"
+LAYOUT_HELPER="$MODDIR/tools/core/thermal-layout.sh"
 ZRAM_LAYOUT="$MODDIR/tools/zram/materialize-zram-choice.sh"
 mkdir -p "$G"
 
@@ -122,10 +123,15 @@ fi
 [ -e "$MODDIR/disable" ] && { log "GUARD_BLOCK reason=disable_after_auto_switch action=no_arm"; exit 0; }
 
 if [ "$override" = 1 ] && [ -n "$ptune_any" ]; then
-  ready=yes
-  for f in thermal_info_config_throttling.json thermal_info_config.json thermal_info_config_charge.json; do
-    [ -s "$MODDIR/system/vendor/etc/$f" ] || ready=no
-  done
+  ready=no
+  if [ -r "$LAYOUT_HELPER" ]; then
+    . "$LAYOUT_HELPER"
+    ready_polling="$(getcfg THERMAL_POLLING_MODE)"; [ -n "$ready_polling" ] || ready_polling=mod
+    ready_outdoor="$(getcfg THERMAL_OUTDOOR_PROFILE)"; [ -n "$ready_outdoor" ] || ready_outdoor=stock
+    ready_recovery="$(getcfg PIXEL11_HYSTERESIS_MODE)"; [ -n "$ready_recovery" ] || ready_recovery=stock
+    [ "$ready_recovery" = mod ] && ready_recovery=combined
+    thermal_materialization_overlay_valid "$MODDIR" "$ready_polling" "$ready_outdoor" "$ready_recovery" && ready=yes
+  fi
   if [ "$ready" = yes ]; then
     printf '%s\n' allow_thermal_with_ptune > "$G/guard_override"
     printf '%s\n' "$CFG" > "$G/guard_override_source"
