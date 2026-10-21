@@ -399,6 +399,10 @@ set_thermal() {
 }
 
 show_eh_event_log() {
+  if [ "$DEVICE_FAMILY" = pixel11 ] || { [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); }; then
+    msg "! Emerald Hill hardware is not present on this device."
+    return 0
+  fi
   msg ""
   msg "Emerald Hill event log"
   msg "----------------------------------------"
@@ -411,6 +415,13 @@ show_eh_event_log() {
 }
 
 set_emerald_hill() {
+  if [ "$DEVICE_FAMILY" = pixel11 ] || { [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); }; then
+    msg "! Emerald Hill hardware acceleration is not present on this device."
+    msg "! Hardware state: Unsupported / N/A (No EH Hardware)"
+    sleep 2
+    return 0
+  fi
+
   if [ "$(cfg_get ENABLE_ZRAM_100P)" != 1 ]; then
     msg "! Enable ZRAM 100% first."
     msg "! Adaptive EH remains the daily default."
@@ -538,7 +549,7 @@ set_zram() {
       cfg_set LMKD_SWAP_LOW_RELOAD "$lmkd_reload"
       cfg_set LMKD_SWAP_LOW_RISK_ACK "$lmkd_ack"
       cfg_set LAST_LMKD_SWAP_LOW_RELOAD "$last_lmkd"
-      if [ -s "$EH_CONTROL" ]; then
+      if [ -s "$EH_CONTROL" ] && [ "$DEVICE_FAMILY" != pixel11 ] && (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_enable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
       fi
@@ -550,20 +561,26 @@ set_zram() {
         fi
       fi
       printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
-      msg "- ZRAM: enabled with adaptive EH"
+      if [ "$DEVICE_FAMILY" = pixel11 ] || [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
+        msg "- ZRAM: enabled (lz4, no EH hardware)"
+      else
+        msg "- ZRAM: enabled with adaptive EH"
+      fi
       if [ "$lmkd_reload" = 1 ]; then
         msg "- LMKD: EXPERIMENTAL 1% reload"
       else
         msg "- LMKD: disabled (stock)"
       fi
-      msg "- Experimental max lock is under Advanced"
+      if [ "$DEVICE_FAMILY" != pixel11 ] && [ -s "$EH_CONTROL" ] && (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
+        msg "- Experimental max lock is under Advanced"
+      fi
       msg "- Reboot required for layout guarantee"
     ;;
     1)
       if [ -s "$ZRAM_LAYOUT" ]; then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1 || true
       fi
-      if [ -s "$EH_CONTROL" ]; then
+      if [ -s "$EH_CONTROL" ] && [ "$DEVICE_FAMILY" != pixel11 ] && (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
         MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=action_zram_disable \
           sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
       fi

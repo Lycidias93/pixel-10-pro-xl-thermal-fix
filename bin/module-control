@@ -136,6 +136,14 @@ print_status() {
   polling="$(env_value POLLING_DISPLAY "$STATUS_ENV")"
   thermal="$(env_value THERMAL_DISPLAY "$STATUS_ENV")"
   zram="$(env_value ZRAM_DISPLAY "$STATUS_ENV")"
+  zram_active_algo="$(env_value ZRAM_ACTIVE_ALGO "$STATUS_ENV")"
+  [ -n "$zram_active_algo" ] || zram_active_algo="unknown"
+  zram_prop_algo="$(env_value ZRAM_PROP_ALGO "$STATUS_ENV")"
+  [ -n "$zram_prop_algo" ] || zram_prop_algo="unknown"
+  eh_state="$(env_value EMERALD_HILL_STATE "$STATUS_ENV")"
+  [ -n "$eh_state" ] || eh_state="unknown"
+  eh_display="$(env_value EMERALD_HILL_DISPLAY "$STATUS_ENV")"
+  [ -n "$eh_display" ] || eh_display="unknown"
   lmkd="$(env_value MEMORY_KILLER_DISPLAY "$STATUS_ENV")"
   source_state="$(env_value SOURCE_STATE "$STATUS_ENV")"
   materialized="$(env_value MATERIALIZATION_VALID "$STATUS_ENV")"
@@ -213,9 +221,15 @@ print_status() {
   fi
   if [ "$zram_enabled" = 1 ]; then
     add_active zram-enable
-    if [ "$eh_max" = 1 ]; then add_active eh-max; else add_active eh-adaptive; fi
   else
     add_active zram-disable
+  fi
+  if [ "$family" = pixel11 ] || [ "$eh_state" = unsupported ] || { [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); }; then
+    add_blocked eh-adaptive 'Emerald Hill hardware acceleration is not present on this device (No EH Hardware).'
+    add_blocked eh-max 'Emerald Hill hardware acceleration is not present on this device (No EH Hardware).'
+  elif [ "$zram_enabled" = 1 ]; then
+    if [ "$eh_max" = 1 ]; then add_active eh-max; else add_active eh-adaptive; fi
+  else
     add_blocked eh-adaptive 'Enable module ZRAM 100% first.'
     add_blocked eh-max 'Enable module ZRAM 100% first.'
   fi
@@ -250,8 +264,8 @@ print_status() {
   printf '{"label":"Reboot required","value":"%s","level":"%s"}' "$reboot_required" "$([ "$reboot_required" = yes ] && printf caution || printf good)"
   printf '],'
   printf '"action_state":{"active":[%s],"blocked":{%s}},' "$active_json" "$blocked_json"
-  printf '"runtime":{"device":"%s","model":"%s","device_family":"%s","android":"%s","build_id":"%s","build_evidence":"%s","source_state":"%s","materialization_valid":"%s","active_vendor_match":"%s","safe_to_reboot":"%s","page_cluster_current":"%s","page_cluster_desired":"%s","page_cluster_effective":"%s","page_cluster_owned":"%s","debug_mode":"%s"},' \
-    "$(json_escape "$device")" "$(json_escape "$model")" "$(json_escape "$family")" "$(json_escape "$android")" "$(json_escape "$build")" "$(json_escape "$build_evidence")" "$(json_escape "$source_state")" "$(json_escape "$materialized")" "$(json_escape "$vendor_match")" "$(json_escape "$reboot_safe")" "$(json_escape "$page_current")" "$(json_escape "$page_desired")" "$(json_escape "$page_effective")" "$(json_escape "$page_owned")" "$debug_mode"
+  printf '"runtime":{"device":"%s","model":"%s","device_family":"%s","android":"%s","build_id":"%s","build_evidence":"%s","source_state":"%s","materialization_valid":"%s","active_vendor_match":"%s","safe_to_reboot":"%s","page_cluster_current":"%s","page_cluster_desired":"%s","page_cluster_effective":"%s","page_cluster_owned":"%s","debug_mode":"%s","zram_active_algorithm":"%s","zram_prop_algorithm":"%s","emerald_hill_state":"%s","emerald_hill_display":"%s"},' \
+    "$(json_escape "$device")" "$(json_escape "$model")" "$(json_escape "$family")" "$(json_escape "$android")" "$(json_escape "$build")" "$(json_escape "$build_evidence")" "$(json_escape "$source_state")" "$(json_escape "$materialized")" "$(json_escape "$vendor_match")" "$(json_escape "$reboot_safe")" "$(json_escape "$page_current")" "$(json_escape "$page_desired")" "$(json_escape "$page_effective")" "$(json_escape "$page_owned")" "$debug_mode" "$(json_escape "$zram_active_algo")" "$(json_escape "$zram_prop_algo")" "$(json_escape "$eh_state")" "$(json_escape "$eh_display")"
   printf '"safety":{"loopback_only":true,"arbitrary_shell_blocked":true,"typed_actions_only":true,"dynamic_stock_thermal_validation":true,"zram_config_first":true,"lmkd_requires_zram":true,"page_cluster_persisted_post_guard":true,"boot_dependency_absent":true}}\n'
 }
 
@@ -323,7 +337,7 @@ EOF_MATRIX
       ensure_status_cache
       printf '{"ok":true,"name":"validation","columns":["check","value"],"items":['
       first=1
-      for key in SOURCE_STATE BUILD_EVIDENCE MATERIALIZATION_VALID ACTIVE_VENDOR_MATCH SAFE_TO_REBOOT POLLING_DISPLAY THERMAL_DISPLAY ZRAM_DISPLAY MEMORY_KILLER_DISPLAY; do
+      for key in SOURCE_STATE BUILD_EVIDENCE MATERIALIZATION_VALID ACTIVE_VENDOR_MATCH SAFE_TO_REBOOT POLLING_DISPLAY THERMAL_DISPLAY ZRAM_DISPLAY MEMORY_KILLER_DISPLAY ZRAM_ACTIVE_ALGO ZRAM_PROP_ALGO EMERALD_HILL_STATE EMERALD_HILL_DISPLAY; do
         value="$(env_value "$key" "$STATUS_ENV")"
         [ "$first" = 1 ] || printf ','
         first=0
