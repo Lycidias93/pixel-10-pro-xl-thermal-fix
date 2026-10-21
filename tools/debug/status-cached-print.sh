@@ -29,6 +29,9 @@ printf '%s\n' "Feature Status"
 printf '%s\n' "Polling:       $(get_status_kv POLLING_ICON) $(status_display POLLING_DISPLAY POLLING_STATE)"
 printf '%s\n' "Thermal:       $(get_status_kv THERMAL_ICON) $(status_display THERMAL_DISPLAY THERMAL_STATE)"
 printf '%s\n' "ZRAM:          $(get_status_kv ZRAM_ICON) $(status_display ZRAM_DISPLAY ZRAM_STATE)"
+if [ -n "$(get_status_kv EMERALD_HILL_DISPLAY)" ]; then
+  printf '%s\n' "Emerald Hill:  $(get_status_kv EMERALD_HILL_ICON) $(status_display EMERALD_HILL_DISPLAY EMERALD_HILL_STATE)"
+fi
 printf '%s\n' "Memory Killer: $(get_status_kv MEMORY_KILLER_ICON) $(status_display MEMORY_KILLER_DISPLAY LMKD_TEST_STATE)"
 printf '%s\n' ""
 printf '%s\n' "Validation details"

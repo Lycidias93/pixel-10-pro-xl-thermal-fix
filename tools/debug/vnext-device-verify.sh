@@ -205,6 +205,30 @@ if [ "$PHASE" = baseline ] || [ "$PHASE" = post-reenable ]; then
     case ",$active_paths," in *",$module_fstab_device,"*) pass_check zram_layout_target_active ;; *) fail_check "zram_layout_target_not_active target=$module_fstab_device active=$active_paths" ;; esac
   fi
   if [ -r "$HEALTH" ] && grep -Fq 'SERVICE_ZRAM_POST_BOOT result=zram_properties_reapplied_no_mmd_restart' "$HEALTH" 2>/dev/null; then pass_check zram_post_boot_reapply; else fail_check zram_post_boot_reapply_missing; fi
+  target_comp="lz77eh"
+  case "$DEVICE" in
+    cubs|grizzly|kodiak|yogi) target_comp="lz4" ;;
+    *)
+      first_zram="$(printf '%s' "${active_names:-}" | cut -d',' -f1)"
+      [ -n "$first_zram" ] || first_zram="zram0"
+      if [ -r "/sys/block/$first_zram/comp_algorithm" ] && ! grep -qw "lz77eh" "/sys/block/$first_zram/comp_algorithm" 2>/dev/null; then
+        target_comp="lz4"
+      fi
+    ;;
+  esac
+  active_algo=""
+  first_zram="$(printf '%s' "${active_names:-}" | cut -d',' -f1)"
+  [ -n "$first_zram" ] || first_zram="zram0"
+  if [ -r "/sys/block/$first_zram/comp_algorithm" ]; then
+    active_algo="$(sed -n 's/.*\[\([^]]*\)\].*/\1/p' "/sys/block/$first_zram/comp_algorithm" 2>/dev/null || true)"
+  fi
+  if [ -n "$active_algo" ]; then
+    if [ "$active_algo" = "$target_comp" ] || [ "$active_algo" = lz4 ] || [ "$active_algo" = lz77eh ]; then
+      pass_check "zram_algorithm_verified active=$active_algo target=$target_comp"
+    else
+      warn_check "zram_algorithm_unexpected active=$active_algo target=$target_comp"
+    fi
+  fi
 else
   [ "$zram_enabled" = 0 ] && pass_check zram_config_disabled || fail_check zram_config_not_disabled
   [ ! -e "$module_fstab" ] && pass_check zram_module_layout_absent || fail_check zram_module_layout_still_present
