@@ -74,6 +74,14 @@ The duplicate fstab was package hygiene debt but only 74 bytes; measured candida
 
 The temperature observation remains `reported_unisolated`: the accepted Pixel 11 candidate preserves stock Thermal polling, and the available captures do not provide a matched long-window A/B attribution. Any temperature investigation continues separately from this acceptance, starting with Polling Stock + Thermal Stock + ZRAM disabled + LMKD Stock + Emerald Hill Adaptive + page-cluster Stock + Logging Silent and changing one optional feature at a time under comparable conditions.
 
+## Tensor G6 (Pixel 11 Family) ZRAM & Emerald Hill baseline
+
+Live kernel telemetry on rooted Pixel 11 Pro (`grizzly` via KernelSU Next, Android 17) verified that Google retired the Emerald Hill (`eh` / `lz77eh`) hardware block on Tensor G6:
+- **Kernel modules & symbols:** `zram_gs` is backed exclusively by `zcomp_gs_cpu` and `zsmalloc`; `zcomp_eh` and `CONFIG_EH` are absent.
+- **Sysfs compressor nodes:** `/sys/block/zram0/comp_algorithm` exposes `deflate zstd lz4hc [lz4] lzo lzo-rle` with `[lz4]` active by default. Zero Emerald Hill devfreq nodes exist in `/sys/class/devfreq`.
+- **ZRAM 100% baseline:** Verified with `[lz4]`, `vm.page-cluster=0`, and 2 GiB `mmd` writeback on `grizzly`: 15.29 GiB disksize, 7326.3 MiB orig_data_size, 1832.6 MiB compr_data_size, 1912.1 MiB total physical RAM used (4.3% zsmalloc overhead), achieving ~3.83x effective compression ratio with single-page low-latency CPU decompression.
+- **Dynamic negotiation:** Module scripts dynamically resolve supported algorithms (`lz77eh` -> `lz4` -> active bracketed algorithm) rather than hardcoding `lz77eh`. Emerald Hill frequency lock routines and controls are cleanly gated off as `Unsupported / N/A (No EH Hardware)` on Tensor G6.
+
 ## Existing Mustang runtime gate
 
 The corrected Alpha4 dev.1 runtime package completed the final repository-owned device gate on Pixel 10 Pro XL / `mustang`, Android 17 build `CP2A.260805.005`: reinstall, reboot, WebUI runtime/API, Bootguard, Dynamic Thermal validation, ZRAM, LMKD and Support Snapshot all passed with zero final failures/warnings. That historical evidence remains the stable Pixel 10 regression anchor; it does not promote newly added Pixel 11 targets.
