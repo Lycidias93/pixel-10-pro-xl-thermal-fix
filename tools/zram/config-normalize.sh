@@ -59,6 +59,21 @@ case "$last" in
 esac
 
 if [ "$oc" = 1 ]; then
+  norm_dev="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
+  case "$norm_dev" in
+    cubs|grizzly|kodiak|yogi)
+      oc=0
+      eh_ack=none
+      [ "$enabled" = 1 ] && last=enabled_standard
+      cfg_set ZRAM_EMERALD_OC 0
+      cfg_set ZRAM_EH_RISK_ACK none
+      [ "$enabled" = 1 ] && cfg_set LAST_ZRAM_100P enabled_standard
+      migrated=pixel11_eh_unsupported_to_adaptive
+    ;;
+  esac
+fi
+
+if [ "$oc" = 1 ]; then
   if [ "$last" != enabled_max_lock ] || [ "$eh_ack" != explicit_user_enable_max_lock ]; then
     oc=0
     eh_ack=none

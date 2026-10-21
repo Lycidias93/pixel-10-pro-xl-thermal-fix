@@ -120,10 +120,15 @@ The module does **not** replace the Pixel Thermal HAL, globally disable Android 
 
 ### ZRAM 100%
 
-Optional ZRAM 100% provides approximately total-RAM compressed-memory capacity, uses `lz77eh` when available, sets the intended memory properties, and verifies active swap/non-zero disksize after boot.
+Optional ZRAM 100% provides approximately total-RAM compressed-memory capacity, dynamically negotiates the best supported compression algorithm (`lz77eh` when hardware compression is available, falling back cleanly to `lz4` on Tensor G6 / Pixel 11), sets the intended memory properties (`mmd.zram.comp_algorithm`), and verifies active swap, non-zero disksize, and algorithm alignment after boot.
+
+On Tensor G6 (Pixel 11 series: `cubs`, `grizzly`, `kodiak`, `yogi`), Google retired the dedicated Emerald Hill (`eh` / `lz77eh`) hardware block. ZRAM is driven by `zram_gs` backed by CPU compression (`zcomp_gs_cpu`) with `[lz4]` as default and `mmd` writeback, delivering low 4 KB single-page decompression latency without hardware lockups.
 
 ### Emerald Hill
 
+Emerald Hill hardware frequency lock controls apply only to devices with physical Emerald Hill devfreq hardware (Pixel 9 and Pixel 10 families). On platforms lacking Emerald Hill hardware (such as Tensor G6 / Pixel 11), Emerald Hill controls are automatically gated off and reported as `Unsupported / N/A (No EH Hardware)` in CLI and WebUI surfaces, preventing unsupported devfreq writes.
+
+Where supported (Pixel 9 / 10 families):
 - **Adaptive** is the normal daily mode.
 - **EXPERIMENTAL max lock** raises the minimum accelerator frequency to the validated maximum OPP and is expected to use more power and create more heat.
 
@@ -195,7 +200,7 @@ A reported temperature difference with the module enabled is not attributed to T
 - Pixel 11 development targets remain on Stock Thermal polling; the current `grizzly` runtime acceptance does not by itself admit 5-second polling.
 - Pixel 11 Outdoor changes target only exact `VIRTUAL-SKIN`; emergency, derivative/model/charging and `OVER-35C` sensors are not included in the initial Outdoor allowlist.
 - pTune conflict protection remains authoritative; coexistence override is unavailable on experimental targets.
-- ZRAM, LMKD, Emerald Hill max lock and page-cluster experiments remain independently controlled and reversible where the platform permits it.
+- ZRAM, LMKD, Emerald Hill max lock and page-cluster experiments remain independently controlled and reversible where the platform permits it; Emerald Hill is automatically gated off on Tensor G6 / Pixel 11 where hardware is absent.
 - A failed validation or incompatible firmware transition does not justify blindly mounting an old Thermal overlay.
 - The module does not silently disable emergency/shutdown Thermal protection.
 - WebUI network scope remains loopback-only.

@@ -165,7 +165,7 @@ zram_enable() {
   cfg_set LMKD_SWAP_LOW_RELOAD 0
   cfg_set LMKD_SWAP_LOW_RISK_ACK none
   cfg_set LAST_LMKD_SWAP_LOW_RELOAD disabled
-  if [ -s "$EH_CONTROL" ]; then
+  if [ -s "$EH_CONTROL" ] && [ "$device_family" != pixel11 ] && (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
     MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=webui_zram_enable sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
   fi
   runtime=skipped
@@ -179,7 +179,9 @@ zram_enable() {
 
 zram_disable() {
   [ -s "$ZRAM_LAYOUT" ] && MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_MATERIALIZE_NOW=0 sh "$ZRAM_LAYOUT" disable >/dev/null 2>&1 || true
-  [ -s "$EH_CONTROL" ] && MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=webui_zram_disable sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+  if [ -s "$EH_CONTROL" ] && [ "$device_family" != pixel11 ] && (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
+    MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" ZRAM_EH_CALLER=webui_zram_disable sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
+  fi
   [ -s "$PAGE_CLUSTER" ] && ZRAM_CONFIG_FILE="$CONFIG_FILE" PAGE_CLUSTER_CALLER=webui_zram_disable sh "$PAGE_CLUSTER" restore >/dev/null 2>&1 || true
   cfg_set ENABLE_ZRAM_100P 0
   cfg_set ZRAM_EMERALD_OC 0
@@ -196,6 +198,10 @@ zram_disable() {
 }
 
 eh_adaptive() {
+  if [ "$device_family" = pixel11 ] || { [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); }; then
+    printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=eh_hardware_unsupported'
+    return 2
+  fi
   [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ] || return 2
   cfg_set ZRAM_EMERALD_OC 0
   cfg_set ZRAM_EH_RISK_ACK none
@@ -207,6 +213,10 @@ eh_adaptive() {
 }
 
 eh_max() {
+  if [ "$device_family" = pixel11 ] || { [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); }; then
+    printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=eh_hardware_unsupported'
+    return 2
+  fi
   [ "$(cfg_get ENABLE_ZRAM_100P)" = 1 ] && [ "$(cfg_get ZRAM_RISK_ACK)" = explicit_user_enable ] || {
     printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=zram_required_for_eh_max'
     return 2

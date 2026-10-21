@@ -20,5 +20,14 @@ echo "used_kb=$used_kb"
 echo "swap_pct=$swap_pct"
 test "$swap_pct" -ge 95
 test "$swap_pct" -le 105
+if [ -r /sys/block/zram0/comp_algorithm ]; then
+  sys_comp="$(cat /sys/block/zram0/comp_algorithm 2>/dev/null || true)"
+  active_algo="$(printf '%s' "$sys_comp" | sed -n 's/.*\[\([^]]*\)\].*/\1/p')"
+  echo "active_algo=${active_algo:-unknown}"
+  case "$active_algo" in
+    lz4|lz77eh) echo "PASS zram_comp_algorithm_supported" ;;
+    *) echo "WARN zram_comp_algorithm_unexpected: $active_algo" ;;
+  esac
+fi
 echo "PASS zram_runtime_near_100p_proc_swaps_kb"
 echo "RESULT: PIXEL10_ZRAM_KB_VERIFY_PASS"
