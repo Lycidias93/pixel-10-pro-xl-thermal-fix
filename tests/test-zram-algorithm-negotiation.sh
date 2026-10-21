@@ -45,7 +45,7 @@ printf '%s\n' 'PASS materialize_algorithm_resolution'
 apply="$repo_root/tools/zram/apply-zram-100p.sh"
 bash -n "$apply"
 
-# Mock resetprop to record property writes
+# Mock resetprop and getprop to record property writes and supply device identity
 cat > "$tmp/bin/resetprop-mock" <<'MOCK'
 #!/bin/sh
 if [ "$1" = "-n" ]; then
@@ -54,6 +54,30 @@ fi
 echo "$1=$2" >> "$RESETPROP_LOG"
 MOCK
 chmod +x "$tmp/bin/resetprop-mock"
+ln -sf "$tmp/bin/resetprop-mock" "$tmp/bin/resetprop"
+ln -sf "$tmp/bin/resetprop-mock" "$tmp/bin/setprop"
+
+cat > "$tmp/bin/getprop-mock" <<'MOCK'
+#!/bin/sh
+case "$1" in
+  ro.product.device) printf '%s\n' "${THERMAL_DEVICE:-grizzly}" ;;
+  ro.lmk.swap_free_low_percentage) printf '%s\n' "" ;;
+  *) printf '\n' ;;
+esac
+MOCK
+chmod +x "$tmp/bin/getprop-mock"
+ln -sf "$tmp/bin/getprop-mock" "$tmp/bin/getprop"
+
+cat > "$tmp/bin/stop" <<'MOCK'
+#!/bin/sh
+exit 0
+MOCK
+chmod +x "$tmp/bin/stop"
+cat > "$tmp/bin/start" <<'MOCK'
+#!/bin/sh
+exit 0
+MOCK
+chmod +x "$tmp/bin/start"
 
 # 2A: Tensor G6 (grizzly) with [lz4] sysfs node
 printf '%s\n' 'deflate zstd lz4hc [lz4] lzo lzo-rle' > "$tmp/sys/block/zram0/comp_algorithm"
@@ -62,14 +86,23 @@ printf '%s\n' 'ENABLE_ZRAM_100P=1' 'ZRAM_RISK_ACK=explicit_user_enable' 'LAST_ZR
 export RESETPROP_LOG="$tmp/props_g6.log"
 : > "$RESETPROP_LOG"
 
+PATH="$tmp/bin:$PATH" \
 MODDIR="$repo_root" \
+ZRAM_RESTART_MMD=0 \
+ZRAM_RESETPROP_BIN="$tmp/bin/resetprop-mock" \
 LMKD_SYSTEM_RESETPROP_BIN="$tmp/bin/resetprop-mock" \
+LMKD_GETPROP_BIN="$tmp/bin/getprop-mock" \
+LMKD_SETPROP_BIN="$tmp/bin/resetprop-mock" \
 ZRAM_SYS="$tmp/sys/block/zram0" \
 ZRAM_CONFIG_FILE="$config_g6" \
 THERMAL_DEVICE=grizzly \
-sh -c "exec '$apply' manual" > "$tmp/apply_g6.log" 2>&1 || {
-  # If resetprop mock isn't picked up because of internal RESET path, mock RESET directly:
-  true
+sh "$apply" manual > "$tmp/apply_g6.log" 2>&1 || true
+
+# Assert runtime execution wrote mmd.zram.comp_algorithm=lz4 via resetprop
+grep -Fq 'mmd.zram.comp_algorithm=lz4' "$RESETPROP_LOG" || {
+  echo "FAIL apply-zram-100p did not record mmd.zram.comp_algorithm=lz4 in props log";
+  cat "$tmp/apply_g6.log";
+  exit 1;
 }
 
 # Ensure apply-zram-100p.sh has resolve_zram_algorithm and does not hardcode prop_set ... lz77eh

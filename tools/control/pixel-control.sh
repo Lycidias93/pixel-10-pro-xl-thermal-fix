@@ -379,16 +379,8 @@ case "$command" in
   thermal-outdoor-extended) apply_thermal "$(current_polling)" outdoor-extended "$(current_recovery)" ;;
   zram-enable) zram_enable ;;
   zram-disable) zram_disable ;;
-  eh-adaptive|eh-max)
-    if [ "$device_family" = pixel11 ] || { [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); }; then
-      printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=eh_hardware_unsupported'
-      exit 2
-    fi
-    case "$command" in
-      eh-adaptive) eh_adaptive ;;
-      eh-max) eh_max ;;
-    esac
-  ;;
+  eh-adaptive) eh_adaptive ;;
+  eh-max) eh_max ;;
   lmkd-stock|lmkd-1pct)
     [ "$device_family" != pixel11 ] || { printf '%s\n' 'RESULT: PIXEL_CONTROL_BLOCKED reason=action_not_in_pixel11_family_surface'; exit 2; }
     case "$command" in

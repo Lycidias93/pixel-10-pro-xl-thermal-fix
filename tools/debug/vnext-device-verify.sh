@@ -36,7 +36,7 @@ kv_file() {
 }
 
 cfg_get() { kv_file "$1" "$CONFIG_FILE"; }
-prop_get() { /system/bin/getprop "$1" 2>/dev/null | tr -d '\r'; }
+prop_get() { { /system/bin/getprop "$1" 2>/dev/null || getprop "$1" 2>/dev/null; } | tr -d '\r'; }
 
 stop_now() {
   reason="$1"; code="$2"
@@ -223,10 +223,18 @@ if [ "$PHASE" = baseline ] || [ "$PHASE" = post-reenable ]; then
     active_algo="$(sed -n 's/.*\[\([^]]*\)\].*/\1/p' "/sys/block/$first_zram/comp_algorithm" 2>/dev/null || true)"
   fi
   if [ -n "$active_algo" ]; then
-    if [ "$active_algo" = "$target_comp" ] || [ "$active_algo" = lz4 ] || [ "$active_algo" = lz77eh ]; then
+    if [ "$active_algo" = "$target_comp" ]; then
       pass_check "zram_algorithm_verified active=$active_algo target=$target_comp"
     else
-      warn_check "zram_algorithm_unexpected active=$active_algo target=$target_comp"
+      warn_check "zram_algorithm_mismatch active=$active_algo target=$target_comp"
+    fi
+  fi
+  prop_comp="$(prop_get mmd.zram.comp_algorithm)"
+  if [ -n "$prop_comp" ]; then
+    if [ "$prop_comp" = "$target_comp" ]; then
+      pass_check "zram_prop_algorithm_verified prop=$prop_comp target=$target_comp"
+    else
+      warn_check "zram_prop_algorithm_mismatch prop=$prop_comp target=$target_comp"
     fi
   fi
 else

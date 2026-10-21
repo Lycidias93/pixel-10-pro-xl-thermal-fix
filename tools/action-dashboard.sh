@@ -561,7 +561,7 @@ set_zram() {
         fi
       fi
       printf '%s\n' yes > "$MODDIR/guard/action_cycle_pending_reboot" 2>/dev/null || true
-      if [ "$DEVICE_FAMILY" = pixel11 ] || [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
+      if [ "$DEVICE_FAMILY" = pixel11 ] || { [ -s "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); }; then
         msg "- ZRAM: enabled (lz4, no EH hardware)"
       else
         msg "- ZRAM: enabled with adaptive EH"
