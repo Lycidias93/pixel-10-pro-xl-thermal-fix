@@ -25,6 +25,29 @@ cfg_set() {
   mv "$tmp" "$CONFIG"
 }
 
+resolve_zram_algorithm() {
+  sys_comp="${ZRAM_SYS:-/sys/block/zram0}/comp_algorithm"
+  if [ -r "$sys_comp" ]; then
+    if grep -qw "lz77eh" "$sys_comp" 2>/dev/null; then
+      printf 'lz77eh\n'
+      return 0
+    elif grep -qw "lz4" "$sys_comp" 2>/dev/null; then
+      printf 'lz4\n'
+      return 0
+    fi
+    active_algo="$(sed -n 's/.*\[\([^]]*\)\].*/\1/p' "$sys_comp" 2>/dev/null || true)"
+    if [ -n "$active_algo" ]; then
+      printf '%s\n' "$active_algo"
+      return 0
+    fi
+  fi
+  dev="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
+  case "$dev" in
+    cubs|grizzly|kodiak|yogi) printf 'lz4\n' ;;
+    *) printf 'lz77eh\n' ;;
+  esac
+}
+
 main() {
   printf '%s\n' 'debug_type=pixel_thermal_zram_reinit'
   printf 'time=%s\n' "$(date -Iseconds 2>/dev/null || date)"
@@ -100,11 +123,13 @@ main() {
   printf 'disksize=%s\n' "$(cat "$ZRAM_SYS/disksize" 2>/dev/null || echo unknown)"
   printf 'comp_algorithm=%s\n\n' "$(cat "$ZRAM_SYS/comp_algorithm" 2>/dev/null || echo unknown)"
 
+  target_algo="$(resolve_zram_algorithm)"
+
   printf '%s\n' '== set props =='
   setprop mm.zram.maintenance.first_delay_seconds "$BIGMAX"
   setprop mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
   setprop mmd.zram.writeback.max_idle_seconds "$BIGMAX"
-  setprop mmd.zram.comp_algorithm lz77eh
+  setprop mmd.zram.comp_algorithm "$target_algo"
   setprop mmd.zram.enabled true
   setprop mmd.zram.size 100%
   setprop vendor.zram.size 100p
@@ -139,7 +164,7 @@ main() {
   fi
 
   printf '1\n' > "$ZRAM_SYS/reset" 2>/dev/null || true
-  printf 'lz77eh\n' > "$ZRAM_SYS/comp_algorithm" 2>/dev/null || true
+  printf '%s\n' "$target_algo" > "$ZRAM_SYS/comp_algorithm" 2>/dev/null || true
   printf '%s\n' "$target_bytes" > "$ZRAM_SYS/disksize"
   mkswap "$ZRAM_DEV"
   swapon "$ZRAM_DEV"
@@ -148,7 +173,9 @@ main() {
   sleep 2
 
   eh_state=adaptive
-  if [ -r "$EH_CONTROL" ] &&
+  if [ -r "$EH_CONTROL" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
+    eh_state=unsupported_no_hardware
+  elif [ -r "$EH_CONTROL" ] &&
      [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
      [ "${LAST_ZRAM_100P:-}" = enabled_max_lock ] &&
      [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ] &&

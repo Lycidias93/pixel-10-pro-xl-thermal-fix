@@ -28,7 +28,7 @@ else
   printf "%s\n" "lmk_swap_low_policy=stock_unmodified" >> "$H"
 fi
 
-# Standard lz77eh ZRAM properties may be prepared early. The optional Emerald
+# Standard ZRAM properties (lz77eh on G4/G5, lz4 on G6) may be prepared early. The optional Emerald
 # Hill maximum-frequency minimum lock is deferred until Bootguard verifies the
 # completed Android boot and active Thermal runtime.
 if [ "${ENABLE_ZRAM_100P:-0}" = 1 ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ]; then
@@ -124,7 +124,9 @@ fi
 # The lock is a post-verification enhancement, never a boot prerequisite.
 # Any failure restores adaptive devfreq and remains nonfatal.
 if [ -r "$EH_CONTROL" ]; then
-  if [ "$bootguard_verified" = 1 ] &&
+  if ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
+    printf '%s\n' 'SERVICE_ZRAM_EH result=skipped_unsupported_hardware' >> "$H"
+  elif [ "$bootguard_verified" = 1 ] &&
      [ "${ENABLE_ZRAM_100P:-0}" = 1 ] &&
      [ "${ZRAM_EMERALD_OC:-0}" = 1 ] &&
      [ "${LAST_ZRAM_100P:-}" = enabled_max_lock ] &&

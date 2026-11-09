@@ -200,6 +200,8 @@ pin_pixel11_legacy_controls() {
   apply_polling stock
   apply_ptune 0
   apply_lmkd_reload 0
+  cfg_set ZRAM_EMERALD_OC 0
+  cfg_set ZRAM_EH_RISK_ACK none
   cfg_unset PIXEL11_PASSIVE_MODE
   cfg_unset PIXEL11_PASSIVE_TARGET_MS
   cfg_unset LAST_PIXEL11_PASSIVE_MODE
@@ -510,9 +512,9 @@ if [ "$DEVICE_FAMILY" = pixel11 ]; then
   if [ "$MC_INDEX" = 0 ]; then
     apply_zram disabled
   else
-    oc_index=0
-    mc_cycle2 "Emerald Hill mode" "Adaptive (daily default)" "EXPERIMENTAL max lock (heat/battery)" "$oc_index"
-    [ "$MC_INDEX" = 0 ] && apply_zram enabled_standard || apply_zram enabled_max_lock
+    apply_zram enabled_standard
+    cfg_set ZRAM_EMERALD_OC 0
+    cfg_set ZRAM_EH_RISK_ACK none
 
     page_cluster_index=0
     [ "$(cfg_get ZRAM_PAGE_CLUSTER_MODE)" = zero ] && page_cluster_index=1

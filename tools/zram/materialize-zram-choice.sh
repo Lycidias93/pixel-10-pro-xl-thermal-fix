@@ -79,9 +79,32 @@ materialize_enable() {
   printf '%s\n' "RESULT: ZRAM_LAYOUT_DONE mode=$MODE materialized=yes action=materialized path=$DST caller=$MATERIALIZE_CALLER"
 }
 
+resolve_zram_algorithm() {
+  sys_comp="${ZRAM_SYS:-/sys/block/zram0}/comp_algorithm"
+  if [ -r "$sys_comp" ]; then
+    if grep -qw "lz77eh" "$sys_comp" 2>/dev/null; then
+      printf 'lz77eh\n'
+      return 0
+    elif grep -qw "lz4" "$sys_comp" 2>/dev/null; then
+      printf 'lz4\n'
+      return 0
+    fi
+    active_algo="$(sed -n 's/.*\[\([^]]*\)\].*/\1/p' "$sys_comp" 2>/dev/null || true)"
+    if [ -n "$active_algo" ]; then
+      printf '%s\n' "$active_algo"
+      return 0
+    fi
+  fi
+  dev="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
+  case "$dev" in
+    cubs|grizzly|kodiak|yogi) printf 'lz4\n' ;;
+    *) printf 'lz77eh\n' ;;
+  esac
+}
+
 materialize_disable() {
   rm -f "$DST" || layout_fail destination_remove_failed 9
-  if [ -r "$EH_CONTROL" ]; then
+  if [ -r "$EH_CONTROL" ] && (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
     MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" restore >/dev/null 2>&1 || true
   fi
   [ ! -e "$DST" ] || layout_fail destination_present 10
@@ -116,6 +139,9 @@ case "$MODE" in
     else
       printf '%s\n' "RESULT: ZRAM_LAYOUT_STATUS materialized=no path=$DST"
     fi
+  ;;
+  algorithm)
+    resolve_zram_algorithm
   ;;
   *)
     layout_fail invalid_mode 64

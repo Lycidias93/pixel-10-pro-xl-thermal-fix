@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # Pixel 10 Thermal & Memory Control - consolidated ZRAM 100% and optional LMKD reload helper.
-# lz77eh hardware acceleration remains independent from the optional Emerald Hill lock.
+# Dynamic algorithm negotiation: lz77eh where hardware supported, lz4 fallback (Tensor G6).
 set -eu
 
 ID="pixel-10-pro-xl-thermal-fix"
@@ -8,6 +8,7 @@ CONFIG_FILE="${ZRAM_CONFIG_FILE:-/data/adb/$ID/config.env}"
 MODE="${1:-manual}"
 MODDIR="${MODDIR:-/data/adb/modules/$ID}"
 RESET="$MODDIR/tools/resetprop-rs"
+[ -n "${ZRAM_RESETPROP_BIN:-}" ] && RESET="$ZRAM_RESETPROP_BIN"
 SYSTEM_RESETPROP="${LMKD_SYSTEM_RESETPROP_BIN:-resetprop}"
 NORMALIZE="$MODDIR/tools/zram/config-normalize.sh"
 EH_CONTROL="$MODDIR/tools/zram/emerald-hill-control.sh"
@@ -269,10 +270,35 @@ if [ "$MODE" = lmkd_restore ]; then
   exit 0
 fi
 
+resolve_zram_algorithm() {
+  sys_comp="${ZRAM_SYS:-/sys/block/zram0}/comp_algorithm"
+  if [ -r "$sys_comp" ]; then
+    if grep -qw "lz77eh" "$sys_comp" 2>/dev/null; then
+      printf 'lz77eh\n'
+      return 0
+    elif grep -qw "lz4" "$sys_comp" 2>/dev/null; then
+      printf 'lz4\n'
+      return 0
+    fi
+    active_algo="$(sed -n 's/.*\[\([^]]*\)\].*/\1/p' "$sys_comp" 2>/dev/null || true)"
+    if [ -n "$active_algo" ]; then
+      printf '%s\n' "$active_algo"
+      return 0
+    fi
+  fi
+  dev="${THERMAL_DEVICE:-$("$GETPROP_BIN" ro.product.device 2>/dev/null || true)}"
+  case "$dev" in
+    cubs|grizzly|kodiak|yogi) printf 'lz4\n' ;;
+    *) printf 'lz77eh\n' ;;
+  esac
+}
+
+TARGET_ALGO="$(resolve_zram_algorithm)"
+
 prop_set mm.zram.maintenance.first_delay_seconds "$BIGMAX"
 prop_set mm.zram.maintenance.periodic_delay_seconds "$BIGMAX"
 prop_set mmd.zram.writeback.max_idle_seconds "$BIGMAX"
-prop_set mmd.zram.comp_algorithm lz77eh
+prop_set mmd.zram.comp_algorithm "$TARGET_ALGO"
 prop_set mmd.zram.enabled true
 prop_set mmd.zram.size 100%
 prop_set vendor.zram.size 100p
@@ -309,7 +335,9 @@ if [ "$MODE" = boot_early ]; then
 elif [ "$MODE" = boot_verified ]; then
   eh_state=deferred_to_service_post_bootguard
 elif [ -r "$EH_CONTROL" ]; then
-  if [ "${ZRAM_EMERALD_OC:-0}" = 1 ] && [ "${LAST_ZRAM_100P:-}" = enabled_max_lock ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ] && [ "${ZRAM_EH_RISK_ACK:-}" = explicit_user_enable_max_lock ]; then
+  if ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" supported >/dev/null 2>&1); then
+    eh_state=unsupported_no_hardware
+  elif [ "${ZRAM_EMERALD_OC:-0}" = 1 ] && [ "${LAST_ZRAM_100P:-}" = enabled_max_lock ] && [ "${ZRAM_RISK_ACK:-}" = explicit_user_enable ] && [ "${ZRAM_EH_RISK_ACK:-}" = explicit_user_enable_max_lock ]; then
     if MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$EH_CONTROL" apply; then
       eh_state=max_frequency_minimum_lock_active
     else

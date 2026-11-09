@@ -39,6 +39,7 @@ jobs:
           bash -n tests/test-action-thermal-transaction.sh
           bash -n tests/test-outdoor-runtime-evidence.sh
           bash -n tests/test-zram-eh-dev12.sh
+          bash -n tests/test-zram-algorithm-negotiation.sh
           bash -n tests/test-dev15-menu-matrix.sh
           bash -n tests/test-dev19-lmkd-early-test.sh
           bash -n tests/test-release-notes-layout.sh
@@ -104,6 +105,7 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/test-zram-eh-dev12.sh
+          bash tests/test-zram-algorithm-negotiation.sh
 
       - name: Dev.20 consolidated LMKD reload policy
         shell: bash

@@ -107,6 +107,10 @@ jobs:
           sh -n tools/webui/launch.sh
           sh -n tools/control/pixel-control.sh
           sh -n tools/zram/page-cluster-control.sh
+          sh -n tools/zram/apply-zram-100p.sh
+          sh -n tools/zram/reinit-zram-100p.sh
+          sh -n tools/zram/emerald-hill-control.sh
+          bash -n tests/test-zram-algorithm-negotiation.sh
           sh -n tools/ptune/enable-ptune-override.sh
           sh -n tools/debug/vnext-device-verify.sh
           sh -n tools/debug/g6-polling-inventory.sh
@@ -124,6 +128,7 @@ jobs:
           bash tests/test-single-install-menu.sh
           bash tests/test-zram-eh-dev12.sh
           bash tests/test-page-cluster-control.sh
+          bash tests/test-zram-algorithm-negotiation.sh
           bash tests/test-webui-integration.sh
           bash tests/test-webui-android-json-bool.sh
           WEBUI_CORE_DIR=${{ github.workspace }}/.webui-core bash tests/test-webui-ntfy-integration.sh

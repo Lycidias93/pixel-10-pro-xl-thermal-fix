@@ -98,6 +98,29 @@ is_eh_node() {
   esac
 }
 
+has_eh_devfreq_node() {
+  for dir in $ROOTS; do
+    is_eh_node "$dir" && return 0
+  done
+  return 1
+}
+
+has_lz77eh_algo() {
+  sys_comp="${ZRAM_SYS:-/sys/block/zram0}/comp_algorithm"
+  [ -r "$sys_comp" ] && grep -qw "lz77eh" "$sys_comp" 2>/dev/null
+}
+
+is_eh_hardware_supported() {
+  dev="${THERMAL_DEVICE:-$(getprop ro.product.device 2>/dev/null || true)}"
+  case "$dev" in
+    cubs|grizzly|kodiak|yogi) return 1 ;;
+  esac
+  if has_lz77eh_algo || has_eh_devfreq_node; then
+    return 0
+  fi
+  return 1
+}
+
 frequency_available() {
   dir="$1"
   target="$2"
@@ -198,6 +221,14 @@ normalize_config() {
 apply_lock() {
   normalize_config
   [ -r "$CONFIG_FILE" ] && . "$CONFIG_FILE" 2>/dev/null || true
+
+  if ! is_eh_hardware_supported; then
+    STATUS_ALIASES_SKIPPED=0
+    event_append apply refused none none none none none 0 0 eh_hardware_unsupported
+    status_write unsupported "Unsupported / N/A (No EH Hardware)" 0 none
+    printf '%s\n' 'RESULT: ZRAM_EH_APPLY_REFUSED reason=eh_hardware_unsupported'
+    return 3
+  fi
 
   if [ "${ENABLE_ZRAM_100P:-0}" != 1 ] ||
      [ "${ZRAM_EMERALD_OC:-0}" != 1 ] ||
@@ -320,6 +351,14 @@ apply_lock() {
 }
 
 restore_lock() {
+  if ! is_eh_hardware_supported; then
+    STATUS_ALIASES_SKIPPED=0
+    event_append restore no_op none none none none none 0 0 eh_hardware_unsupported
+    status_write unsupported "Unsupported / N/A (No EH Hardware)" 0 none
+    printf '%s\n' 'RESULT: ZRAM_EH_RESTORE_DONE nodes=0 aliases_skipped=0 reason=unsupported_no_hardware'
+    return 0
+  fi
+
   if [ ! -s "$BASELINE_FILE" ]; then
     STATUS_ALIASES_SKIPPED=0
     event_append restore no_op none none none none none 0 0 no_baseline
@@ -345,6 +384,11 @@ restore_lock() {
 }
 
 show_status() {
+  if ! is_eh_hardware_supported; then
+    status_write unsupported "Unsupported / N/A (No EH Hardware)" 0 none
+    cat "$STATUS_FILE"
+    return 0
+  fi
   [ -r "$STATUS_FILE" ] && cat "$STATUS_FILE" || {
     status_write unknown not_evaluated 0 none
     cat "$STATUS_FILE"
@@ -356,6 +400,15 @@ case "$MODE" in
   apply) apply_lock ;;
   restore|disable) restore_lock ;;
   status) show_status ;;
+  supported|check-supported)
+    if is_eh_hardware_supported; then
+      printf '%s\n' 'RESULT: ZRAM_EH_SUPPORTED supported=yes'
+      exit 0
+    else
+      printf '%s\n' 'RESULT: ZRAM_EH_SUPPORTED supported=no reason=no_eh_hardware'
+      exit 1
+    fi
+  ;;
   *)
     printf '%s\n' "RESULT: ZRAM_EH_CONTROL_FAIL reason=invalid_mode mode=$MODE"
     exit 2

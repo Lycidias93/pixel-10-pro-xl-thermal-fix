@@ -203,6 +203,39 @@ status_collect() {
   zram_prop_vendor="$(prop_get vendor.zram.size)"
   zram_prop_mmd="$(prop_get mmd.zram.size)"
   zram_prop_enabled="$(prop_get mmd.zram.enabled)"
+  zram_prop_algo="$(prop_get mmd.zram.comp_algorithm)"
+  [ -n "$zram_prop_algo" ] || zram_prop_algo="unknown"
+  zram_comp_sysfs=""
+  zram_active_algo="unknown"
+  if [ -r /sys/block/zram0/comp_algorithm ]; then
+    zram_comp_sysfs="$(cat /sys/block/zram0/comp_algorithm 2>/dev/null | tr -d '\r\n')"
+    zram_active_algo="$(printf '%s' "$zram_comp_sysfs" | sed -n 's/.*\[\([^]]*\)\].*/\1/p')"
+    [ -n "$zram_active_algo" ] || zram_active_algo="unknown"
+  fi
+
+  eh_supported=yes
+  if [ "$device_family" = pixel11 ]; then
+    eh_supported=no
+  elif [ -s "$MODDIR/tools/zram/emerald-hill-control.sh" ] && ! (MODDIR="$MODDIR" ZRAM_CONFIG_FILE="$CONFIG_FILE" sh "$MODDIR/tools/zram/emerald-hill-control.sh" supported >/dev/null 2>&1); then
+    eh_supported=no
+  fi
+
+  eh_icon="$OFF"
+  eh_state="adaptive"
+  eh_display="Adaptive"
+  if [ "$eh_supported" = no ]; then
+    eh_icon="$OFF"
+    eh_state="unsupported"
+    eh_display="Unsupported / N/A (No EH Hardware)"
+  else
+    eh_oc="$(cfg_get ZRAM_EMERALD_OC)"
+    eh_ack="$(cfg_get ZRAM_EH_RISK_ACK)"
+    if [ "${eh_oc:-0}" = 1 ] && [ "${eh_ack:-}" = explicit_user_enable_max_lock ]; then
+      eh_icon="$WARN"
+      eh_state="max_lock"
+      eh_display="Max lock active"
+    fi
+  fi
   zram_mod_fstab=no
   zram_vendor_fstab=no
   zram_swap_active=no
@@ -313,7 +346,13 @@ status_collect() {
 
   zram_display="$zram_value"
   case "$zram_value" in
-    100p) zram_display="100%" ;;
+    100p)
+      if [ "$zram_active_algo" != unknown ]; then
+        zram_display="100% ($zram_active_algo)"
+      else
+        zram_display="100%"
+      fi
+    ;;
     100p-pending) zram_display="100% pending" ;;
     off) zram_display="Off" ;;
   esac
@@ -373,6 +412,11 @@ status_collect() {
     printf '%s\n' "ZRAM_RUNTIME_ACTIVE=$zram_runtime_active"
     printf '%s\n' "ZRAM_DISKSIZE=$zram_disk_size"
     printf '%s\n' "ZRAM_DISPLAY=$zram_display"
+    printf '%s\n' "ZRAM_ACTIVE_ALGO=$zram_active_algo"
+    printf '%s\n' "ZRAM_PROP_ALGO=$zram_prop_algo"
+    printf '%s\n' "EMERALD_HILL_STATE=$eh_state"
+    printf '%s\n' "EMERALD_HILL_DISPLAY=$eh_display"
+    printf '%s\n' "EMERALD_HILL_ICON=$eh_icon"
     printf '%s\n' "MODULE_OVERLAY_READY=$overlay_ready"
     printf '%s\n' "ACTIVE_VENDOR_MATCH=$active_match"
     printf '%s\n' "SAFE_TO_REBOOT=$safe_to_reboot"
